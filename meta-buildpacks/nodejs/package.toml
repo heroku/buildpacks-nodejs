@@ -1,0 +1,17 @@
+[buildpack]
+uri = "."
+
+[[dependencies]]
+uri = "https://github.com/heroku/nodejs-engine-buildpack/releases/download/v0.7.0/nodejs-engine-buildpack-v0.7.0.tgz"
+
+[[dependencies]]
+uri = "https://github.com/heroku/nodejs-yarn-buildpack/releases/download/v0.1.0/nodejs-yarn-buildpack-v0.1.0.tgz"
+
+[[dependencies]]
+uri = "https://github.com/heroku/nodejs-typescript-buildpack/releases/download/v0.2.0/nodejs-typescript-buildpack-v0.2.0.tgz"
+
+[[dependencies]]
+uri = "https://github.com/heroku/nodejs-npm-buildpack/releases/download/v0.4.0/nodejs-npm-buildpack-v0.4.0.tgz"
+
+[[dependencies]]
+uri = "https://github.com/heroku/procfile-cnb/releases/download/v0.6/procfile-cnb-v0.6.tgz"

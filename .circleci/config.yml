@@ -1,0 +1,26 @@
+version: 2.1
+
+orbs:
+  pack: buildpacks/pack@0.2.2
+
+jobs:
+  package-buildpack:
+    parameters:
+      package-toml:
+        type: string
+    docker:
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - setup_remote_docker
+      - pack/install-pack
+      - run: pack package-buildpack test --config << parameters.package-toml >>
+
+workflows:
+  version: 2
+  package:
+    jobs:
+      - package-buildpack:
+          matrix:
+            parameters:
+              package-toml: [ "meta-buildpacks/nodejs/package.toml" ]
