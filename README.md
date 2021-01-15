@@ -10,12 +10,14 @@ to build your application.
 
 - `heroku/nodejs` ([Readme](meta-buildpacks/nodejs/README.md), [Changelog](meta-buildpacks/nodejs/CHANGELOG.md))
 
+### Misc
+- `heroku/nodejs-typescript` ([Readme](buildpacks/typescript/README.md), [Changelog](buildpacks/typescript/CHANGELOG.md))
+
 ## External Buildpacks
 In addition to the buildpacks in this repository, some buildpacks live in a dedicated repository.
 
 - `heroku/nodejs-engine` ([GitHub](https://github.com/heroku/nodejs-engine-buildpack))
 - `heroku/nodejs-yarn` ([GitHub](https://github.com/heroku/nodejs-yarn-buildpack))
-- `heroku/nodejs-typescript` ([GitHub](https://github.com/heroku/nodejs-typescript-buildpack))
 - `heroku/nodejs-npm` ([GitHub](https://github.com/heroku/nodejs-npm-buildpack))
 
 ## Classic Heroku Buildpacks

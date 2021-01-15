@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+bp_dir=$(cd "$(dirname "$0")"/..; pwd)
+build_dir=$(pwd)
+
+# shellcheck source=/dev/null
+source "$bp_dir/lib/build.sh"
+
+if check_tsc_binary "$build_dir" ; then
+  export PATH=./node_modules/typescript/bin:$PATH
+fi
+
+# shellcheck disable=SC2034
+TSCONFIG=${CUSTOM_TSCONFIG:-"tsconfig.json"}
