@@ -3,8 +3,10 @@
 set -e
 set -o pipefail
 
+shpec_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
 # shellcheck source=SCRIPTDIR/../lib/detect.sh
-source "./lib/detect.sh"
+source "${shpec_dir}/../lib/detect.sh"
 
 create_temp_project_dir() {
   mktemp -dt project_shpec_XXXXX
