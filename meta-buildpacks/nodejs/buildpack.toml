@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs"
-version = "0.1"
+version = "0.1.1"
 name = "Node.js"
 
 [[order]]
@@ -21,7 +21,7 @@ optional = true
 
 [[order.group]]
 id = "heroku/procfile"
-version = "0.6"
+version = "0.6.1"
 optional = true
 
 [[order]]
@@ -40,5 +40,8 @@ optional = true
 
 [[order.group]]
 id = "heroku/procfile"
-version = "0.6"
+version = "0.6.1"
 optional = true
+
+[metadata.release.docker]
+repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-buildpack"

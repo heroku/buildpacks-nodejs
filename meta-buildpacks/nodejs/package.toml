@@ -14,4 +14,5 @@ uri = "https://github.com/heroku/nodejs-typescript-buildpack/releases/download/v
 uri = "https://github.com/heroku/nodejs-npm-buildpack/releases/download/v0.4.0/nodejs-npm-buildpack-v0.4.0.tgz"
 
 [[dependencies]]
-uri = "https://github.com/heroku/procfile-cnb/releases/download/v0.6/procfile-cnb-v0.6.tgz"
+# Should be urn:cnb:registry:heroku/procfile@0.6.1 as soon as pack supports it. (0.16.1?)
+uri = "docker://docker.io/heroku/procfile-cnb@sha256:74881b33e1e33eea38b419e667b0a99ac50e536727eeefd1b2eeb7ff3a937ffd"
