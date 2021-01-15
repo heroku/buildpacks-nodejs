@@ -13,14 +13,32 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - pack/install-pack
+      - pack/install-pack:
+          version: 0.16.0
       - run: pack package-buildpack test --config << parameters.package-toml >>
+
+  shell-linting:
+    docker:
+      - image: koalaman/shellcheck-alpine:v0.7.1
+    steps:
+      - run: "apk add git"
+      # shfmt is currently (Jan 2021) only available in the edge community repository.
+      - run: "apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community"
+      - checkout
+      - run:
+          name: "shellcheck"
+          command: "shfmt -f . | grep -v ^test/ | xargs shellcheck"
+      - run:
+          name: "shfmt"
+          command: "shfmt -f . | grep -v ^test/ | xargs shfmt -d"
 
 workflows:
   version: 2
-  package:
+  ci:
     jobs:
+      - shell-linting
       - package-buildpack:
           matrix:
             parameters:
-              package-toml: [ "meta-buildpacks/nodejs/package.toml" ]
+              package-toml:
+                - "meta-buildpacks/nodejs/package.toml"
