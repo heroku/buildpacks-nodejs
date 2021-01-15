@@ -3,12 +3,15 @@
 set -e
 set -o pipefail
 
-bp_dir=$(cd "$(dirname "$0")"/..; pwd)
+bp_dir=$(
+	cd "$(dirname "$0")"/..
+	pwd
+)
 build_dir=$(pwd)
 
 # shellcheck source=/dev/null
 source "$bp_dir/lib/detect.sh"
 
-if ! detect_tsconfig_json "$build_dir" ; then
-  exit 100
+if ! detect_tsconfig_json "$build_dir"; then
+	exit 100
 fi
