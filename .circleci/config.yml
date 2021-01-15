@@ -30,13 +30,40 @@ jobs:
           command: "shfmt -f . | grep -v ^test/ | xargs shellcheck"
       - run:
           name: "shfmt"
-          command: "shfmt -f . | grep -v ^test/ | xargs shfmt -d"
+          command: "shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$' | xargs shfmt -d"
+
+  shpec:
+    parameters:
+      stack:
+        type: "string"
+        default: "heroku-20"
+      buildpack-dir:
+        type: "string"
+    docker:
+      - image: "danielleadams/shpec-<<parameters.stack>>:latest"
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Shpec unit tests on <<parameters.stack>>
+          command: shpec << parameters.buildpack-dir >>/shpec/*_shpec.sh
 
 workflows:
   version: 2
   ci:
     jobs:
       - shell-linting
+      - shpec:
+          matrix:
+            parameters:
+              buildpack-dir:
+                - "buildpacks/typescript"
+              stack:
+                - "heroku-16"
+                - "heroku-18"
+                - "heroku-20"
+
       - package-buildpack:
           matrix:
             parameters:

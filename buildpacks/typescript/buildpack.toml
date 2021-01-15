@@ -1,0 +1,18 @@
+api = "0.2"
+
+[buildpack]
+id = "heroku/nodejs-typescript"
+version = "0.2.0"
+name = "TypeScript Buildpack"
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
+
+[metadata.release.docker]
+repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-typescript-buildpack"
