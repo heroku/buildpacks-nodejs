@@ -11,6 +11,7 @@ to build your application.
 - `heroku/nodejs` ([Readme](meta-buildpacks/nodejs/README.md), [Changelog](meta-buildpacks/nodejs/CHANGELOG.md))
 
 ### Misc
+
 - `heroku/nodejs-typescript` ([Readme](buildpacks/typescript/README.md), [Changelog](buildpacks/typescript/CHANGELOG.md))
 
 ## External Buildpacks

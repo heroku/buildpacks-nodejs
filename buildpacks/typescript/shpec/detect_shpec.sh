@@ -3,6 +3,7 @@
 set -e
 set -o pipefail
 
+# shellcheck source=SCRIPTDIR/../lib/detect.sh
 source "./lib/detect.sh"
 
 create_temp_project_dir() {
