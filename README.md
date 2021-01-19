@@ -15,11 +15,7 @@ to build your application.
 - `heroku/nodejs-engine` ([Readme](buildpacks/nodejs/README.md), [Changelog](buildpacks/nodejs/CHANGELOG.md))
 - `heroku/nodejs-npm` ([Readme](buildpacks/npm/README.md), [Changelog](buildpacks/npm/CHANGELOG.md))
 - `heroku/nodejs-typescript` ([Readme](buildpacks/typescript/README.md), [Changelog](buildpacks/typescript/CHANGELOG.md))
-
-## External Buildpacks
-In addition to the buildpacks in this repository, some buildpacks live in a dedicated repository.
-
-- `heroku/nodejs-yarn` ([GitHub](https://github.com/heroku/nodejs-yarn-buildpack))
+- `heroku/nodejs-yarn` ([Readme](buildpacks/yarn/README.md), [Changelog](buildpacks/yarn/CHANGELOG.md))
 
 ## Classic Heroku Buildpacks
 

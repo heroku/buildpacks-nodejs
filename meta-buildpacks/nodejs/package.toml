@@ -5,13 +5,13 @@ uri = "."
 uri = "../../buildpacks/nodejs"
 
 [[dependencies]]
-uri = "https://github.com/heroku/nodejs-yarn-buildpack/releases/download/v0.1.0/nodejs-yarn-buildpack-v0.1.0.tgz"
+uri = "../../buildpacks/npm"
 
 [[dependencies]]
 uri = "../../buildpacks/typescript"
 
 [[dependencies]]
-uri = "https://github.com/heroku/nodejs-npm-buildpack/releases/download/v0.4.0/nodejs-npm-buildpack-v0.4.0.tgz"
+uri = "../../buildpacks/yarn"
 
 [[dependencies]]
 # Should be urn:cnb:registry:heroku/procfile@0.6.1 as soon as pack supports it. (0.16.1?)
