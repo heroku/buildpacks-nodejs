@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+bp_dir=$(
+	cd "$(dirname "$0")"/..
+	pwd
+)
+build_dir=$(pwd)
+layers_dir=$1
+platform_dir=$2
+
+# shellcheck source=/dev/null
+source "$bp_dir/lib/build.sh"
+rm -rf "$build_dir/node_modules"
+
+export_env "$platform_dir/env" "" ""
+
+export PATH=$layers_dir/npm/bin:$PATH
+install_or_reuse_npm "$build_dir" "$layers_dir/npm"
+
+warn_prebuilt_modules "$build_dir"
+
+run_prebuild "$build_dir"
+
+install_or_reuse_node_modules "$build_dir" "$layers_dir/node_modules"
+
+run_build "$build_dir"
+
+write_launch_toml "$build_dir/package.json" "$layers_dir/launch.toml"
+
+prune_devdependencies "$build_dir"
