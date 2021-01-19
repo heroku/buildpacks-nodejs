@@ -52,3 +52,17 @@ jobs:
             Find the changelog here: [CHANGELOG](${{ steps.package.outputs.path }}/CHANGELOG.md)
           draft: false
           prerelease: false
+      - id: prepare-pr
+        name: "Prepare PR with version bumps and CHANGELOG updates"
+        run: ./.github/scripts/release-workflow-prepare-pr.sh "${{ steps.package.outputs.id }}" "${{ steps.package.outputs.version }}"
+        shell: bash
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: "Post-release updates: ${{ steps.package.outputs.id }} ${{ steps.package.outputs.version }}"
+          commit-message: "Post-release updates: ${{ steps.package.outputs.id }} ${{ steps.package.outputs.version }}"
+          branch-suffix: "random"
+          labels: "automation"
+          body: |
+            Automated pull-request to update buildpack versions and changelogs
+            after releasing version `${{ steps.package.outputs.version }}` of `${{ steps.package.outputs.id }}`.
