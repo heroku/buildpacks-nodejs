@@ -11,7 +11,7 @@ source "${shpec_dir}/../lib/utils/json.sh"
 source "${shpec_dir}/../lib/utils/log.sh"
 # shellcheck source=SCRIPTDIR/../lib/utils/toml.sh
 source "${shpec_dir}/../lib/utils/toml.sh"
-# shellcheck source=SCRIPTDIR/../lib/utils/bootstrap.sh
+# shellcheck source=SCRIPTDIR/../lib/bootstrap.sh
 source "${shpec_dir}/../lib/bootstrap.sh"
 # shellcheck source=SCRIPTDIR/../lib/build.sh
 source "${shpec_dir}/../lib/build.sh"
