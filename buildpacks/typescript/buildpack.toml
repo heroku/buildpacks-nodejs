@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-typescript"
-version = "0.2.2"
+version = "0.2.1"
 name = "TypeScript Buildpack"
 
 [[stacks]]
