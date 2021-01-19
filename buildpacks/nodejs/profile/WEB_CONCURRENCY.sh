@@ -5,10 +5,10 @@ calculate_concurrency() {
 	local web_memory=$2
 	local concurrency
 
-	concurrency=${WEB_CONCURRENCY-$((available/web_memory))}
-	if (( concurrency < 1 )); then
+	concurrency=${WEB_CONCURRENCY-$((available / web_memory))}
+	if ((concurrency < 1)); then
 		concurrency=1
-	elif (( concurrency > 200 )); then
+	elif ((concurrency > 200)); then
 		# Ex: This will happen on Dokku on DO
 		concurrency=1
 	fi
@@ -35,7 +35,7 @@ bound_memory() {
 	local detected max_detected_memory=14336
 
 	# The hardcoded value is 16GB of memory
-	if (( detected > max_detected_memory )); then
+	if ((detected > max_detected_memory)); then
 		echo "$max_detected_memory"
 	else
 		echo "$detected"
@@ -43,7 +43,7 @@ bound_memory() {
 }
 
 warn_bad_web_concurrency() {
-	local concurrency=$((MEMORY_AVAILABLE/WEB_MEMORY))
+	local concurrency=$((MEMORY_AVAILABLE / WEB_MEMORY))
 	if [ "$concurrency" -gt "200" ]; then
 		warning "Could not determine a reasonable value for WEB_CONCURRENCY.
 This is likely due to running the Heroku NodeJS buildpack on a non-Heroku

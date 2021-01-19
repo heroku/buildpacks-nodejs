@@ -7,7 +7,7 @@ detect_package_json() {
 
 write_to_build_plan() {
 	local build_plan=$1
-	cat << EOF > "$build_plan"
+	cat <<EOF >"$build_plan"
 	[[provides]]
 	name = "node"
 

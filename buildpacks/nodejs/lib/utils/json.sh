@@ -5,7 +5,7 @@ json_get_key() {
 	local key="$2"
 
 	if test -f "$file"; then
-		jq -c -M --raw-output "$key // \"\"" < "$file" || return 1
+		jq -c -M --raw-output "$key // \"\"" <"$file" || return 1
 	else
 		echo ""
 	fi

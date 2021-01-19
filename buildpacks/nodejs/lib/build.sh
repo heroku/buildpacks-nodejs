@@ -23,7 +23,7 @@ set_up_environment() {
 	mkdir -p "${layer_dir}/env.build"
 
 	if [[ ! -s "${layer_dir}/env.build/NODE_ENV.override" ]]; then
-		echo -e "$node_env\c" >> "${layer_dir}/env.build/NODE_ENV.override"
+		echo -e "$node_env\c" >>"${layer_dir}/env.build/NODE_ENV.override"
 	fi
 	info "Setting NODE_ENV to ${node_env}"
 }
@@ -36,13 +36,13 @@ install_or_reuse_toolbox() {
 
 	if [[ ! -f "${layer_dir}/bin/yj" ]]; then
 		info "- yj"
-		curl -Ls https://github.com/sclevine/yj/releases/download/v2.0/yj-linux > "${layer_dir}/bin/yj" \
-			&& chmod +x "${layer_dir}/bin/yj"
+		curl -Ls https://github.com/sclevine/yj/releases/download/v2.0/yj-linux >"${layer_dir}/bin/yj" &&
+			chmod +x "${layer_dir}/bin/yj"
 	fi
 
-	echo "cache = true" > "${layer_dir}.toml"
-	echo "build = true" >> "${layer_dir}.toml"
-	echo "launch = false" >> "${layer_dir}.toml"
+	echo "cache = true" >"${layer_dir}.toml"
+	echo "build = true" >>"${layer_dir}.toml"
+	echo "launch = false" >>"${layer_dir}.toml"
 }
 
 install_or_reuse_node() {
@@ -71,13 +71,13 @@ install_or_reuse_node() {
 		mkdir -p "${layer_dir}"
 		rm -rf "${layer_dir:?}"/*
 
-		echo "cache = true" > "${layer_dir}.toml"
+		echo "cache = true" >"${layer_dir}.toml"
 
 		{
 			echo "build = true"
 			echo "launch = true"
 			echo -e "[metadata]\nversion = \"$node_version\""
-		} >> "${layer_dir}.toml"
+		} >>"${layer_dir}.toml"
 
 		curl -sL "$node_url" | tar xz --strip-components=1 -C "$layer_dir"
 	fi
@@ -105,7 +105,7 @@ parse_package_json_engines() {
 	yarn_url=$(echo "$resolved_data" | cut -f2 -d " ")
 	yarn_version=$(echo "$resolved_data" | cut -f1 -d " ")
 
-	cat << TOML > "${layer_dir}.toml"
+	cat <<TOML >"${layer_dir}.toml"
 cache = false
 build = true
 launch = false
@@ -140,13 +140,13 @@ install_or_reuse_yarn() {
 		mkdir -p "$layer_dir"
 		rm -rf "${layer_dir:?}"/*
 
-		echo "cache = true" > "${layer_dir}.toml"
+		echo "cache = true" >"${layer_dir}.toml"
 
 		{
 			echo "build = true"
 			echo "launch = true"
 			echo -e "[metadata]\nversion = \"$yarn_version\""
-		} >> "${layer_dir}.toml"
+		} >>"${layer_dir}.toml"
 
 		curl -sL "$yarn_url" | tar xz --strip-components=1 -C "$layer_dir"
 	fi
@@ -158,7 +158,7 @@ set_node_env() {
 
 	mkdir -p "${layer_dir}/env.launch"
 	if [[ ! -s "${layer_dir}/env.launch/NODE_ENV.override" ]]; then
-		echo -e "$node_env\c" >> "${layer_dir}/env.launch/NODE_ENV.override"
+		echo -e "$node_env\c" >>"${layer_dir}/env.launch/NODE_ENV.override"
 	fi
 }
 
@@ -188,7 +188,7 @@ write_launch_toml() {
 		info "No file to start server"
 		info "either use 'docker run' to start container or add index.js or server.js"
 	else
-		cat <<TOML > "$launch_toml"
+		cat <<TOML >"$launch_toml"
 [[processes]]
 type = "web"
 command = "$command"
