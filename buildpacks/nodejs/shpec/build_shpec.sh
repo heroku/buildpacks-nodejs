@@ -3,11 +3,18 @@
 set -e
 set -o pipefail
 
-source "./lib/utils/json.sh"
-source "./lib/utils/log.sh"
-source "./lib/utils/toml.sh"
-source "./lib/bootstrap.sh"
-source "./lib/build.sh"
+shpec_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+# shellcheck source=SCRIPTDIR/../lib/utils/json.sh
+source "${shpec_dir}/../lib/utils/json.sh"
+# shellcheck source=SCRIPTDIR/../lib/utils/log.sh
+source "${shpec_dir}/../lib/utils/log.sh"
+# shellcheck source=SCRIPTDIR/../lib/utils/toml.sh
+source "${shpec_dir}/../lib/utils/toml.sh"
+# shellcheck source=SCRIPTDIR/../lib/utils/bootstrap.sh
+source "${shpec_dir}/../lib/bootstrap.sh"
+# shellcheck source=SCRIPTDIR/../lib/build.sh
+source "${shpec_dir}/../lib/build.sh"
 
 create_temp_layer_dir() {
   mktemp -d -t build_shpec_XXXXX

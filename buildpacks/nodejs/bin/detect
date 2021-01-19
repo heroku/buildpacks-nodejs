@@ -3,7 +3,10 @@
 set -eo pipefail
 
 # shellcheck disable=SC2128
-bp_dir=$(cd "$(dirname "$0")/.."; pwd)
+bp_dir=$(
+	cd "$(dirname "$0")"/..
+	pwd
+)
 build_dir=$(pwd)
 build_plan="$2"
 
