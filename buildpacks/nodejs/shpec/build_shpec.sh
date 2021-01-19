@@ -258,3 +258,5 @@ describe "lib/build.sh"
 	unstub_command "info"
 	rm_binaries
 end
+
+cd ../..
