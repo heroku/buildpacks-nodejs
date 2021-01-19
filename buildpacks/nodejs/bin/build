@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -e
+set -o pipefail
+
+layers_dir=$1
+
+bp_dir="$CNB_BUILDPACK_DIR"
+build_dir=$(pwd)
+
+# shellcheck source=/dev/null
+source "$bp_dir/lib/utils/log.sh"
+
+# shellcheck source=/dev/null
+source "$bp_dir/lib/bootstrap.sh"
+
+# shellcheck source=/dev/null
+source "$bp_dir/lib/build.sh"
+
+info "Node.js Buildpack"
+
+rm -rf node_modules
+
+set_up_environment "$layers_dir/nodejs"
+
+bootstrap_buildpack "$layers_dir/bootstrap"
+
+install_or_reuse_toolbox "$layers_dir/toolbox"
+export PATH=$layers_dir/toolbox/bin:$PATH
+
+install_or_reuse_node "$layers_dir/nodejs" "$build_dir"
+export PATH=$layers_dir/nodejs/bin:$PATH
+
+parse_package_json_engines "$layers_dir/package_manager_metadata" "$build_dir"
+
+if [[ -f "yarn.lock" ]]; then
+	install_or_reuse_yarn "$layers_dir/yarn" "$build_dir"
+	export PATH=$layers_dir/yarn/bin:$PATH
+fi
+
+set_node_env "$layers_dir/nodejs"
+
+copy_profile "$layers_dir/nodejs" "$bp_dir"
+
+write_launch_toml "$build_dir" "$layers_dir/launch.toml"

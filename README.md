@@ -12,12 +12,12 @@ to build your application.
 
 ### Misc
 
+- `heroku/nodejs-engine` ([Readme](buildpacks/nodejs/README.md), [Changelog](buildpacks/nodejs/CHANGELOG.md))
 - `heroku/nodejs-typescript` ([Readme](buildpacks/typescript/README.md), [Changelog](buildpacks/typescript/CHANGELOG.md))
 
 ## External Buildpacks
 In addition to the buildpacks in this repository, some buildpacks live in a dedicated repository.
 
-- `heroku/nodejs-engine` ([GitHub](https://github.com/heroku/nodejs-engine-buildpack))
 - `heroku/nodejs-yarn` ([GitHub](https://github.com/heroku/nodejs-yarn-buildpack))
 - `heroku/nodejs-npm` ([GitHub](https://github.com/heroku/nodejs-npm-buildpack))
 
