@@ -1,0 +1,18 @@
+api = "0.2"
+
+[buildpack]
+id = "heroku/nodejs-yarn"
+version = "0.1.0"
+name = "Yarn Buildpack"
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
+
+[metadata.release.docker]
+repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-yarn-buildpack"
