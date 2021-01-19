@@ -58,6 +58,7 @@ workflows:
           matrix:
             parameters:
               buildpack-dir:
+                - "buildpacks/nodejs"
                 - "buildpacks/typescript"
               stack:
                 - "heroku-16"
