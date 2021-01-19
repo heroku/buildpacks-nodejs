@@ -2,7 +2,7 @@
 uri = "."
 
 [[dependencies]]
-uri = "https://github.com/heroku/nodejs-engine-buildpack/releases/download/v0.7.0/nodejs-engine-buildpack-v0.7.0.tgz"
+uri = "../../buildpacks/nodejs"
 
 [[dependencies]]
 uri = "https://github.com/heroku/nodejs-yarn-buildpack/releases/download/v0.1.0/nodejs-yarn-buildpack-v0.1.0.tgz"
