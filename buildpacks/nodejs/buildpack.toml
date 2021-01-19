@@ -15,4 +15,4 @@ id = "heroku-20"
 id = "io.buildpacks.stacks.bionic"
 
 [metadata.release.docker]
-repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-typescript-buildpack"
+repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-engine-buildpack"
