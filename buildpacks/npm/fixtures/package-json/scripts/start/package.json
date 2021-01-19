@@ -1,0 +1,16 @@
+{
+  "name": "engine-npm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "npm": "6.x"
+  },
+  "scripts": {
+    "start": "echo 'start'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

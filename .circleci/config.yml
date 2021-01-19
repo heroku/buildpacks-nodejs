@@ -59,6 +59,7 @@ workflows:
             parameters:
               buildpack-dir:
                 - "buildpacks/nodejs"
+                - "buildpacks/npm"
                 - "buildpacks/typescript"
               stack:
                 - "heroku-16"
