@@ -3,6 +3,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.1] 2021/01/20
 - Ensure prefix directory exists ([#42](https://github.com/heroku/nodejs-npm-buildpack/pull/44))
 - Use new logging style ([#45](https://github.com/heroku/nodejs-npm-buildpack/pull/45))
 - Change log colors to use ANSI codes ([#47](https://github.com/heroku/nodejs-npm-buildpack/pull/47))
