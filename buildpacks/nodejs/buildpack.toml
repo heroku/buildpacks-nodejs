@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-engine"
-version = "0.7.1"
+version = "0.7.2"
 name = "Node Buildpack"
 
 [[stacks]]

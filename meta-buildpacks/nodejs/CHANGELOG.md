@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 * Upgraded `heroku/nodejs-npm` to `0.4.2`
+* Upgraded `heroku/nodejs-engine` to `0.7.2`
+
 ### Added
 * Automated post-release PRs
 
