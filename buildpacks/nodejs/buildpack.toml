@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-engine"
-version = "0.7.1"
+version = "0.7.2"
 name = "Node Buildpack"
 
 [[stacks]]
@@ -14,5 +14,9 @@ id = "heroku-20"
 [[stacks]]
 id = "io.buildpacks.stacks.bionic"
 
+[metadata]
+
+[metadata.release]
+
 [metadata.release.docker]
-repository="public.ecr.aws/r2f9u0w4/heroku-nodejs-engine-buildpack"
+repository = "public.ecr.aws/r2f9u0w4/heroku-nodejs-engine-buildpack"
