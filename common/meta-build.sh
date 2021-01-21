@@ -20,21 +20,24 @@ if [[ -f "${buildpack_dir}/package.toml" ]]; then
 		if (cd "${buildpack_dir}" && realpath -q "${original_dependency_uri}"); then
 			# Absolute path to the referenced buildpack
 			dependency_buildpack_dir="$(cd "${buildpack_dir}" && realpath "${original_dependency_uri}")"
+			dependency_target_dir="${dependency_buildpack_dir}"
 
 			if [[ -d "${dependency_buildpack_dir}" && -f "${dependency_buildpack_dir}/build.sh" ]]; then
 				echo "Building buildpack at ${dependency_buildpack_dir}..."
 				"${dependency_buildpack_dir}/build.sh"
 				echo "Build complete!"
 
-				updated_dependency_uri="$(
-					realpath --relative-to "${target_dir}" "${dependency_buildpack_dir}/target"
-				)"
-
-				jq_filter=".dependencies |= map(select(.uri == \"${original_dependency_uri}\").uri |= \"${updated_dependency_uri}\")"
-
-				updated_package_toml=$(yj -t <"${target_dir}/package.toml" | jq "${jq_filter}" | yj -jt)
-				echo "${updated_package_toml}" >"${target_dir}/package.toml"
+				dependency_target_dir="${dependency_buildpack_dir}/target"
 			fi
+
+			updated_dependency_uri="$(
+				realpath --relative-to "${target_dir}" "${dependency_target_dir}"
+			)"
+
+			jq_filter=".dependencies |= map(select(.uri == \"${original_dependency_uri}\").uri |= \"${updated_dependency_uri}\")"
+
+			updated_package_toml=$(yj -t <"${target_dir}/package.toml" | jq "${jq_filter}" | yj -jt)
+			echo "${updated_package_toml}" >"${target_dir}/package.toml"
 		fi
 	done
 fi
