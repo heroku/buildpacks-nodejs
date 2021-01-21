@@ -24,5 +24,19 @@ use the links below for your convenience.
 
 - [heroku/nodejs](https://github.com/heroku/heroku-buildpack-nodejs)
 
+## Building
+Many of the buildpacks in this repository require a separate build step before they can be used. By convention, build
+scripts must be located in a file named `build.sh` in the buildpack root directory.
+
+### Build script conventions
+`build.sh` scripts:
+- **MUST NOT** depend on a specific working directory and can be called from anywhere
+- **MUST** write the finished buildpack to `target/` within the buildpack directory
+
+### Dependencies
+- [Bash](https://www.gnu.org/software/bash/) >= `5.0`
+- [yj](https://github.com/sclevine/yj) >= `5.0.0` in `$PATH`
+- [jq](https://github.com/stedolan/jq) >= `1.6` in `$PATH`
+
 ## License
 Licensed under the MIT License. See [LICENSE](./LICENSE) file.

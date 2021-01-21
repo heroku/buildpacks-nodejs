@@ -2,11 +2,26 @@ version: 2.1
 
 orbs:
   pack: buildpacks/pack@0.2.2
+  heroku-buildpacks:
+    commands:
+      install-build-dependencies:
+        steps:
+          - run:
+              name: "Install rsync, jq via apt"
+              command: sudo apt-get update && sudo apt-get install -y rsync jq
+          - run:
+              name: "Install yj 5.0.0"
+              command: |
+                bin_dir="$(mktemp -d)"
+                curl --retry 3 --fail --max-time 10 --location "https://github.com/sclevine/yj/releases/download/v5.0.0/yj-linux" --output "${bin_dir}/yj"
+                chmod +x "${bin_dir}/yj"
+
+                echo "export PATH=\"${bin_dir}:\${PATH}\"" >> $BASH_ENV
 
 jobs:
   package-buildpack:
     parameters:
-      package-toml:
+      buildpack-dir:
         type: string
     docker:
       - image: cimg/base:2020.01
@@ -15,7 +30,17 @@ jobs:
       - setup_remote_docker
       - pack/install-pack:
           version: 0.16.0
-      - run: pack package-buildpack test --config << parameters.package-toml >>
+      - heroku-buildpacks/install-build-dependencies
+      - run:
+          name: "Build and package buildpack"
+          command: |
+            package_toml="<< parameters.buildpack-dir >>/package.toml"
+            if [[ -f "<< parameters.buildpack-dir >>/build.sh" ]]; then
+              "./<< parameters.buildpack-dir >>/build.sh"
+              package_toml="<< parameters.buildpack-dir >>/target/package.toml"
+            fi
+
+            pack buildpack package test --config "${package_toml}"
 
   shell-linting:
     docker:
@@ -69,5 +94,8 @@ workflows:
       - package-buildpack:
           matrix:
             parameters:
-              package-toml:
-                - "meta-buildpacks/nodejs/package.toml"
+              buildpack-dir:
+                - "buildpacks/nodejs"
+                - "buildpacks/npm"
+                - "buildpacks/typescript"
+                - "meta-buildpacks/nodejs"
