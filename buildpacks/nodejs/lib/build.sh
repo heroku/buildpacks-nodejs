@@ -167,7 +167,10 @@ set_node_modules_env() {
 
 	mkdir -p "${layer_dir}/env"
 	if [[ ! -s "${layer_dir}/env/NODE_MODULES_ENV" ]]; then
-		echo "$(cd "$(dirname "${layer_dir}/node_modules")"; pwd -P)/$(basename "${layer_dir}/node_modules")" >>"${layer_dir}/env/NODE_MODULES_ENV"
+		echo "$(
+			cd "$(dirname "${layer_dir}/node_modules")"
+			pwd -P
+		)/$(basename "${layer_dir}/node_modules")" >>"${layer_dir}/env/NODE_MODULES_ENV"
 	fi
 }
 
