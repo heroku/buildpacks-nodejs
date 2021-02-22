@@ -39,7 +39,7 @@ fi
 
 set_node_env "$layers_dir/nodejs"
 
-set_node_modules_env "$layers_dir/node_modules"
+set_node_modules_path "$layers_dir/node_modules"
 
 copy_profile "$layers_dir/nodejs" "$bp_dir"
 

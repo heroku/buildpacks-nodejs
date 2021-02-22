@@ -89,14 +89,14 @@ describe "lib/build.sh"
 		rm_temp_dirs "$layers_dir"
 	end
 
-	describe "set_node_modules_env"
+	describe "set_node_modules_path"
 		layers_dir=$(create_temp_layer_dir)
-		it "sets NODE_MODULES_ENV to node modules directory path"
-			assert file_absent "$layers_dir/nodejs/env/NODE_MODULES_ENV"
+		it "sets NODE_MODULES_PATH to node modules directory path"
+			assert file_absent "$layers_dir/nodejs/env/NODE_MODULES_PATH"
 
-			set_node_modules_env "$layers_dir/nodejs"
+			set_node_modules_path "$layers_dir/nodejs"
 
-			assert file_present "$layers_dir/nodejs/env/NODE_MODULES_ENV"
+			assert file_present "$layers_dir/nodejs/env/NODE_MODULES_PATH"
 		end
 	end
 
