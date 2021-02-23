@@ -89,6 +89,17 @@ describe "lib/build.sh"
 		rm_temp_dirs "$layers_dir"
 	end
 
+	describe "set_node_modules_path"
+		layers_dir=$(create_temp_layer_dir)
+		it "sets NODE_MODULES_PATH to node modules directory path"
+			assert file_absent "$layers_dir/nodejs/env/NODE_MODULES_PATH"
+
+			set_node_modules_path "$layers_dir/nodejs"
+
+			assert file_present "$layers_dir/nodejs/env/NODE_MODULES_PATH"
+		end
+	end
+
 	describe "install_or_reuse_toolbox"
 		export PATH=$layers_dir/toolbox/bin:$PATH
 

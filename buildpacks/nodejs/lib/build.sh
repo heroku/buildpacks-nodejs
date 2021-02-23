@@ -162,6 +162,18 @@ set_node_env() {
 	fi
 }
 
+set_node_modules_path() {
+	local layer_dir=$1
+
+	mkdir -p "${layer_dir}/env"
+	if [[ ! -s "${layer_dir}/env/NODE_MODULES_PATH" ]]; then
+		echo "$(
+			cd "$(dirname "${layer_dir}/node_modules")"
+			pwd -P
+		)/$(basename "${layer_dir}/node_modules")" >>"${layer_dir}/env/NODE_MODULES_PATH"
+	fi
+}
+
 copy_profile() {
 	local layer_dir=$1
 	local bp_dir=$2
