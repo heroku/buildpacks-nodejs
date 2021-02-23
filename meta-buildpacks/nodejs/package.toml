@@ -2,13 +2,13 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack@sha256:c2c80ac9ce1555ab93915f5a644e456f80b629e916ca4173e5af94ba8150605c"
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack@sha256:811fc2e1ee82b8bbf186e2a7f1ffd5d3e0191d14790f473cdb30403ecaa9a076"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha256:a8745e148b92692ecbeccc08df7a72211e389ba0f7f3fee950424216b9e5258c"
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha256:b55bc7270643271658fa65aac6b7ce87f73c3a7d94be1e136e9f62a736cc025f"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack@sha256:79b7b11ef762c1e3b446bf8629115a74eee43307e744f7b2b50f16f34ee3a372"
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack@sha256:18d6283e3d16614946f743ad7db0bfd987c2062c9e16d6eeb1ce9e2a26f6c876"
 
 [[dependencies]]
 uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-typescript-buildpack@sha256:4e4fa2f7b2c45ee135e0c4b0ffb5dcebf9b43ea24d490699f82f95fa64229cee"
