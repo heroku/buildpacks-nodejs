@@ -10,7 +10,7 @@ buildpack_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 target_dir_name="target"
 target_dir="${buildpack_dir}/${target_dir_name}"
 
-mkdir "${target_dir}"
+mkdir -p "${target_dir}"
 rsync -a -L "${buildpack_dir}/" "${target_dir}" --exclude "${target_dir_name}"
 
 if [[ -f "${buildpack_dir}/package.toml" ]]; then

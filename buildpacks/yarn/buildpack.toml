@@ -4,6 +4,10 @@ api = "0.2"
 id = "heroku/nodejs-yarn"
 version = "0.1.2"
 name = "Yarn Buildpack"
+keywords = ["nodejs", "node", "yarn"]
+
+[[buildpack.licenses]]
+type = "MIT"
 
 [[stacks]]
 id = "heroku-18"
@@ -19,4 +23,4 @@ id = "io.buildpacks.stacks.bionic"
 [metadata.release]
 
 [metadata.release.docker]
-repository = "public.ecr.aws/r2f9u0w4/heroku-nodejs-yarn-buildpack"
+repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack"

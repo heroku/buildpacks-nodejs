@@ -4,6 +4,10 @@ api = "0.2"
 id = "heroku/nodejs-typescript"
 version = "0.2.1"
 name = "TypeScript Buildpack"
+keywords = ["nodejs", "node", "typescript"]
+
+[[buildpack.licenses]]
+type = "MIT"
 
 [[stacks]]
 id = "heroku-18"
@@ -19,4 +23,4 @@ id = "io.buildpacks.stacks.bionic"
 [metadata.release]
 
 [metadata.release.docker]
-repository = "public.ecr.aws/r2f9u0w4/heroku-nodejs-typescript-buildpack"
+repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-typescript-buildpack"

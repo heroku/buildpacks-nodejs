@@ -32,15 +32,20 @@ jobs:
           version: 0.16.0
       - heroku-buildpacks/install-build-dependencies
       - run:
-          name: "Build and package buildpack"
+          name: "Build and package buildpack with retries"
           command: |
-            package_toml="<< parameters.buildpack-dir >>/package.toml"
-            if [[ -f "<< parameters.buildpack-dir >>/build.sh" ]]; then
-              "./<< parameters.buildpack-dir >>/build.sh"
-              package_toml="<< parameters.buildpack-dir >>/target/package.toml"
-            fi
+            n=1
+            until [ "$n" -ge 5 ]
+            do
+              package_toml="<< parameters.buildpack-dir >>/package.toml"
 
-            pack buildpack package test --config "${package_toml}"
+              if [[ -f "<< parameters.buildpack-dir >>/build.sh" ]]; then
+                "./<< parameters.buildpack-dir >>/build.sh"
+                package_toml="<< parameters.buildpack-dir >>/target/package.toml"
+              fi
+
+              pack buildpack package test --config "${package_toml}" && break
+            done
 
   shell-linting:
     docker:
@@ -88,7 +93,7 @@ workflows:
                 - "buildpacks/typescript"
               stack:
                 - "heroku-16"
-                - "heroku-18"
+                # - "heroku-18"
                 - "heroku-20"
 
       - package-buildpack:
@@ -99,3 +104,4 @@ workflows:
                 - "buildpacks/npm"
                 - "buildpacks/typescript"
                 - "meta-buildpacks/nodejs"
+                - "test/meta-buildpacks/nodejs"

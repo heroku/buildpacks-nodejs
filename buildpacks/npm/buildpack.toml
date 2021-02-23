@@ -4,6 +4,10 @@ api = "0.2"
 id = "heroku/nodejs-npm"
 version = "0.4.2"
 name = "NPM Buildpack"
+keywords = ["nodejs", "node", "npm"]
+
+[[buildpack.licenses]]
+type = "MIT"
 
 [[stacks]]
 id = "heroku-18"
@@ -19,4 +23,4 @@ id = "io.buildpacks.stacks.bionic"
 [metadata.release]
 
 [metadata.release.docker]
-repository = "public.ecr.aws/r2f9u0w4/heroku-nodejs-npm-buildpack"
+repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack"
