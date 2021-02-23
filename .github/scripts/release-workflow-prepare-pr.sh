@@ -51,7 +51,7 @@ while IFS="" read -r -d "" buildpack_toml_path; do
 	elif is_meta_buildpack_with_dependency "${buildpack_toml_path}" "${released_buildpack_id}"; then
 		target_version_for_meta_buildpack="${released_buildpack_next_version}"
 
-		released_buildpack_image_address_root="${released_buildpack_image_address%:*}"
+		released_buildpack_image_address_root="${released_buildpack_image_address%@*}"
 		if package_toml_contains_image_address_root "${buildpack_package_toml_path}" "${released_buildpack_image_address_root}"; then
 			target_version_for_meta_buildpack="${released_buildpack_version}"
 

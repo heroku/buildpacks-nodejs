@@ -54,7 +54,7 @@ jobs:
           prerelease: false
       - id: prepare-pr
         name: "Prepare PR with version bumps and CHANGELOG updates"
-        run: ./.github/scripts/release-workflow-prepare-pr.sh "${{ steps.package.outputs.id }}" "${{ steps.package.outputs.version }}" "${{ steps.package.outputs.address }}"
+        run: ./.github/scripts/release-workflow-prepare-pr.sh "${{ steps.package.outputs.id }}" "${{ steps.package.outputs.version }}" "docker://${{ steps.package.outputs.address }}"
         shell: bash
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
