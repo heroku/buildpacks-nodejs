@@ -24,8 +24,6 @@ describe "lib/detect.sh"
 	[[provides]]
 	name = "node"
 
-	[[requires]]
-	name = "node"
 EOF
 )
 			assert equal "$actual" "$expected"

@@ -6,7 +6,5 @@ write_to_build_plan() {
 	[[provides]]
 	name = "node"
 
-	[[requires]]
-	name = "node"
 EOF
 }
