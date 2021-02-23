@@ -36,7 +36,7 @@ while IFS="" read -r -d "" buildpack_toml_path; do
 		echo "::set-output name=id::${buildpack_id}"
 		echo "::set-output name=version::${buildpack_version}"
 		echo "::set-output name=path::${buildpack_path}"
-		echo "::set-output name=address::docker://${image_name}"
+		echo "::set-output name=address::docker://${buildpack_docker_repository}@$(crane digest "${image_name}")"
 		exit 0
 	fi
 done < <(find . -name buildpack.toml -print0)
