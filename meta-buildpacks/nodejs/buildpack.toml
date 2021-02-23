@@ -12,7 +12,7 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.7.1"
+version = "0.7.2"
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
@@ -32,7 +32,7 @@ optional = true
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.7.1"
+version = "0.7.2"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
