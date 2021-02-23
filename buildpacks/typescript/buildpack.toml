@@ -4,6 +4,7 @@ api = "0.2"
 id = "heroku/nodejs-typescript"
 version = "0.2.1"
 name = "TypeScript Buildpack"
+keywords = ["nodejs", "node", "typescript"]
 
 [[buildpack.licenses]]
 type = "MIT"

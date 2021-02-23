@@ -4,6 +4,7 @@ api = "0.2"
 id = "heroku/nodejs-npm"
 version = "0.4.2"
 name = "NPM Buildpack"
+keywords = ["nodejs", "node", "npm"]
 
 [[buildpack.licenses]]
 type = "MIT"

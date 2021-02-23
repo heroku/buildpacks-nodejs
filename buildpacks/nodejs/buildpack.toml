@@ -4,6 +4,7 @@ api = "0.2"
 id = "heroku/nodejs-engine"
 version = "0.7.2"
 name = "Node Buildpack"
+keywords = ["nodejs", "node", "javascript"]
 
 [[buildpack.licenses]]
 type = "MIT"
