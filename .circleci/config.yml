@@ -35,6 +35,7 @@ jobs:
           name: "Build and package buildpack"
           command: |
             package_toml="<< parameters.buildpack-dir >>/package.toml"
+
             if [[ -f "<< parameters.buildpack-dir >>/build.sh" ]]; then
               "./<< parameters.buildpack-dir >>/build.sh"
               package_toml="<< parameters.buildpack-dir >>/target/package.toml"
@@ -99,3 +100,4 @@ workflows:
                 - "buildpacks/npm"
                 - "buildpacks/typescript"
                 - "meta-buildpacks/nodejs"
+                - "test/meta-buildpacks/nodejs"
