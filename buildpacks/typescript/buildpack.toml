@@ -5,6 +5,9 @@ id = "heroku/nodejs-typescript"
 version = "0.2.1"
 name = "TypeScript Buildpack"
 
+[[buildpack.licenses]]
+type = "MIT"
+
 [[stacks]]
 id = "heroku-18"
 

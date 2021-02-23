@@ -5,6 +5,9 @@ id = "heroku/nodejs"
 version = "0.2.0"
 name = "Node.js"
 
+[[buildpack.licenses]]
+type = "MIT"
+
 [[order]]
 
 [[order.group]]

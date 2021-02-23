@@ -5,6 +5,9 @@ id = "heroku/nodejs-yarn"
 version = "0.1.2"
 name = "Yarn Buildpack"
 
+[[buildpack.licenses]]
+type = "MIT"
+
 [[stacks]]
 id = "heroku-18"
 

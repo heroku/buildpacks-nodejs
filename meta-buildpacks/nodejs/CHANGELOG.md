@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* Add license to buildpack.toml ([#17](https://github.com/heroku/buildpacks-node/pull/17))
 * Automated post-release PRs
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.

@@ -5,6 +5,9 @@ id = "heroku/nodejs-npm"
 version = "0.4.2"
 name = "NPM Buildpack"
 
+[[buildpack.licenses]]
+type = "MIT"
+
 [[stacks]]
 id = "heroku-18"
 
