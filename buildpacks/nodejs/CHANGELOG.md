@@ -3,6 +3,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.7.2] 2021/02/23
 - Add license to buildpack.toml ([#17](https://github.com/heroku/buildpacks-node/pull/17))
 - Copy node modules directory path into the build ENV ([#15](https://github.com/heroku/buildpacks-node/pull/15))
 - Remove package.json requirement ([#14](https://github.com/heroku/buildpacks-node/pull/14))

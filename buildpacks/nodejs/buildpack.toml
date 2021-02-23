@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-engine"
-version = "0.7.2"
+version = "0.7.3"
 name = "Node Buildpack"
 keywords = ["nodejs", "node", "javascript"]
 
