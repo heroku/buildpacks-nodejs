@@ -4,6 +4,10 @@ api = "0.2"
 id = "heroku/nodejs-yarn"
 version = "0.1.2"
 name = "Yarn Buildpack"
+keywords = ["nodejs", "node", "yarn"]
+
+[[buildpack.licenses]]
+type = "MIT"
 
 [[stacks]]
 id = "heroku-18"
