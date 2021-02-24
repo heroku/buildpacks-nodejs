@@ -74,6 +74,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
+          version: 19.03.13
           docker_layer_caching: true
       - run:
           name: Shpec unit tests on <<parameters.stack>>
@@ -93,7 +94,7 @@ workflows:
                 - "buildpacks/typescript"
               stack:
                 - "heroku-16"
-                # - "heroku-18"
+                - "heroku-18"
                 - "heroku-20"
 
       - package-buildpack:
