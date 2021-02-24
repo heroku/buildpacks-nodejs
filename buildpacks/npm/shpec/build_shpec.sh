@@ -195,10 +195,11 @@ describe "lib/build.sh"
 		project_dir=$(create_temp_project_dir)
 
 		describe "no package-lock.json"
-			it "installs node_modules"
+			it "installs node_modules and creates package-lock.json"
 				install_or_reuse_node_modules "$project_dir" "$layers_dir/node_modules"
 
 				assert file_present "node_modules"
+				assert file_present "package-lock.json"
 			end
 		end
 
@@ -206,15 +207,21 @@ describe "lib/build.sh"
 			use_npm 6
 
 			it "installs node_modules with 'npm ci'"
-				#todo
-			end
+				output=$(install_or_reuse_node_modules "$project_dir" "$layers_dir/node_modules")
+				touch "${project_dir}/package-lock.json"
 
+				assert file_present "node_modules"
+				assert grep output "Installing node modules with package-lock.json"
+			end
 
 			describe "uses npm ci-incompatible version"
 				use_npm 5
 
 				it "installs node_modules with 'npm install'"
-					#todo
+					output=$(install_or_reuse_node_modules "$project_dir" "$layers_dir/node_modules")
+
+					ssert file_present "node_modules"
+					assert grep output "Installing node modules"
 				end
 			end
 		end

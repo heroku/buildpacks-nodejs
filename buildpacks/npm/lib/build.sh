@@ -98,7 +98,7 @@ install_modules() {
 		fi
 	else
 		info "Installing node modules"
-		npm install --no-package-lock
+		npm install
 	fi
 }
 
