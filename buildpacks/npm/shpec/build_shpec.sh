@@ -31,12 +31,12 @@ create_temp_project_dir() {
 
 create_temp_package_lock() {
 	mkdir -p "$1"
-	cp "${shpec_dir}/../fixtures/package-lock/package-lock.json" "$1"
+	cp "${shpec_dir}/fixtures/package-lock/package-lock.json" "$1"
 }
 
 create_temp_package_json() {
 	mkdir -p "$1"
-	cp "${shpec_dir}/../fixtures/package-json$2/package.json" "$1"
+	cp "${shpec_dir}/fixtures/package-json$2/package.json" "$1"
 }
 
 rm_temp_dirs() {
@@ -50,7 +50,7 @@ rm_tools_and_mocks() {
 
 # setup mocks
 use_npm() {
-	PATH="${shpec_dir}/../mocks/npm/v$1/bin:$CURRENT_PATH"
+	PATH="${shpec_dir}/mocks/npm/v$1/bin:$CURRENT_PATH"
 }
 
 describe "lib/build.sh"
