@@ -226,12 +226,6 @@ describe "lib/build.sh"
 			end
 		end
 
-		describe "package-lock.json checksum matches the cached checksum"
-			it "reuses the node_modules cache"
-				#todo
-			end
-		end
-
 		rm_temp_dirs "$project_dir" "$layers_dir"
 	end
 
