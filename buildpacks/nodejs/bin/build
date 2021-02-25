@@ -20,6 +20,11 @@ info "Node.js Buildpack"
 
 rm -rf node_modules
 
+# touch $layers_dir/store.toml
+# echo -e "[metadata]\nhello = \"world\"" >>"$layers_dir/store.toml"
+
+cat $layers_dir/store.toml
+
 set_up_environment "$layers_dir/nodejs"
 
 bootstrap_buildpack "$layers_dir/bootstrap"
