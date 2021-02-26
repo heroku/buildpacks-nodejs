@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Automated post-release PRs
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
-* Bumped the version for pack-cli GitHubAction ([#18](https://github.com/heroku/buildpacks-node/pull/18))
 
 ## [0.1.1]
 * Initial release
