@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] 2021/02/26
+
 ## [0.2.0] 2021/02/23
 * Upgraded `heroku/nodejs-typescript` to `0.2.1`
 * Upgraded `heroku/nodejs-npm` to `0.4.2`
