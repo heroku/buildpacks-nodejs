@@ -17,20 +17,20 @@ source "$bp_dir/lib/utils/log.sh"
 source "$bp_dir/lib/utils/toml.sh"
 
 clear_cache_on_stack_change() {
-	local layer_dir=$1
+	local layers_dir=$1
 
-	if [[ ! -f "${layer_dir}.toml" ]]; then
-		touch "${layer_dir}.toml"
-		cat <<TOML >"${layer_dir}.toml"
+	if [[ ! -f "${layers_dir}/store.toml" ]]; then
+		touch "${layers_dir}/store.toml"
+		cat <<TOML >"${layers_dir}/store.toml"
 [metadata]
 last_stack = "$CNB_STACK_ID"
 TOML
 	else
-		if [[ $CNB_STACK_ID != $(toml_get_key_from_metadata "${layer_dir}.toml" "last_stack") ]]; then
+		if [[ $CNB_STACK_ID != $(toml_get_key_from_metadata "${layers_dir}/store.toml" "last_stack") ]]; then
 			info "Cache not restored due to a stack change."
-			rm -rf $layers_dir/*
-			touch "${layer_dir}.toml"
-			cat <<TOML >"${layer_dir}.toml"
+			rm -rf "${layers_dir:?}"/*
+			touch "${layers_dir}/store.toml"
+			cat <<TOML >"${layers_dir}/store.toml"
 [metadata]
 last_stack = "$CNB_STACK_ID"
 TOML
