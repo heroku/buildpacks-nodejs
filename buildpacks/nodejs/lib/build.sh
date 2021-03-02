@@ -16,6 +16,28 @@ source "$bp_dir/lib/utils/log.sh"
 # shellcheck source=/dev/null
 source "$bp_dir/lib/utils/toml.sh"
 
+clear_cache_on_stack_change() {
+	local layer_dir=$1
+
+	if [[ ! -f "${layer_dir}.toml" ]]; then
+		touch "${layer_dir}.toml"
+		cat <<TOML >"${layer_dir}.toml"
+[metadata]
+last_stack = "$CNB_STACK_ID"
+TOML
+	else
+		if [[ $CNB_STACK_ID != $(toml_get_key_from_metadata "${layer_dir}.toml" "last_stack") ]]; then
+			info "Cache not restored due to a stack change."
+			rm -rf $layers_dir/*
+			touch "${layer_dir}.toml"
+			cat <<TOML >"${layer_dir}.toml"
+[metadata]
+last_stack = "$CNB_STACK_ID"
+TOML
+		fi
+	fi
+}
+
 set_up_environment() {
 	local layer_dir=$1
 	local node_env=${NODE_ENV:-production}

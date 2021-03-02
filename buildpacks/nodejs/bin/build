@@ -20,10 +20,10 @@ info "Node.js Buildpack"
 
 rm -rf node_modules
 
-# touch $layers_dir/store.toml
-# echo -e "[metadata]\nhello = \"world\"" >>"$layers_dir/store.toml"
+install_or_reuse_toolbox "$layers_dir/toolbox"
+export PATH=$layers_dir/toolbox/bin:$PATH
 
-cat $layers_dir/store.toml
+clear_cache_on_stack_change "$layers_dir/store"
 
 set_up_environment "$layers_dir/nodejs"
 
