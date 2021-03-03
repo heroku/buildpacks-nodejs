@@ -3,6 +3,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Flush cache when stack image changes ([#28](https://github.com/heroku/buildpacks-node/pull/28))
 
 ## [0.4.2] 2021/02/23
 - Add license to buildpack.toml ([#17](https://github.com/heroku/buildpacks-node/pull/17))

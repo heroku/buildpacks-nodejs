@@ -5,3 +5,7 @@ log_info() {
 
 	echo "---> $log_text"
 }
+
+info() {
+	echo -e "[INFO] ${1:-""}"
+}
