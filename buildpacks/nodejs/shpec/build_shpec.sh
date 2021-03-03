@@ -50,6 +50,40 @@ describe "lib/build.sh"
 
 	layers_dir=$(create_temp_layer_dir)
 
+	describe "clear_cache_on_stack_change"
+		touch "$layers_dir/my_layer.toml"
+
+		export CNB_STACK_ID="heroku-20"
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			clear_cache_on_stack_change "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
+
+		it "does not delete layers with same stack"
+			assert file_present "$layers_dir/my_layer.toml"
+
+			clear_cache_on_stack_change "$layers_dir"
+
+			assert file_present "$layers_dir/my_layer.toml"
+		end
+
+		it "deletes layers when stack changes"
+			CNB_STACK_ID="heroku-22"
+
+			assert file_present "$layers_dir/my_layer.toml"
+
+			clear_cache_on_stack_change "$layers_dir"
+
+			assert file_absent "$layers_dir/my_layer.toml"
+		end
+
+		unset CNB_STACK_ID
+	end
+
 	describe "boostrap_buildpack"
 		create_binaries "$layers_dir/bootstrap"
 
