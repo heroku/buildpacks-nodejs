@@ -8,6 +8,7 @@ bp_dir=$(
 	pwd
 )
 build_dir=$(pwd)
+layers_dir=$1
 
 # shellcheck source=/dev/null
 source "$bp_dir/lib/build.sh"

@@ -14,6 +14,10 @@ create_temp_project_dir() {
   mktemp -dt project_shpec_XXXXX
 }
 
+create_temp_layer_dir() {
+	mktemp -d -t layer_shpec_XXXXX
+}
+
 describe "lib/build.sh"
 
   layers_dir=$(create_temp_layer_dir)
