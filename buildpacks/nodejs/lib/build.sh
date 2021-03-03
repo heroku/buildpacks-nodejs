@@ -18,10 +18,11 @@ source "$bp_dir/lib/utils/toml.sh"
 
 clear_cache_on_stack_change() {
 	local layers_dir=$1
-	$layers_dir
+
 	if [[ -f "${layers_dir}/store.toml" ]]; then
 		local last_stack
-		last_stack=$(grep -q last_stack "${layers_dir}/store.toml" | cut -d " " -f3)
+		# shellcheck disable=SC2002
+		last_stack=$(cat "${layers_dir}/store.toml" | grep last_stack | cut -d " " -f3)
 
 		if [[ "\"$CNB_STACK_ID\"" != "$last_stack" ]]; then
 			info "Deleting cache because stack changed from $last_stack to \"$CNB_STACK_ID\""
