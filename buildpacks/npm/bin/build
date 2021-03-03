@@ -15,6 +15,8 @@ platform_dir=$2
 source "$bp_dir/lib/build.sh"
 rm -rf "$build_dir/node_modules"
 
+clear_cache_on_stack_change "$layers_dir"
+
 export_env "$platform_dir/env" "" ""
 
 export PATH=$layers_dir/npm/bin:$PATH

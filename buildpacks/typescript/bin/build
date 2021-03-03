@@ -12,6 +12,8 @@ build_dir=$(pwd)
 # shellcheck source=/dev/null
 source "$bp_dir/lib/build.sh"
 
+clear_cache_on_stack_change "$layers_dir"
+
 if check_tsc_binary "$build_dir"; then
 	export PATH=./node_modules/typescript/bin:$PATH
 fi
