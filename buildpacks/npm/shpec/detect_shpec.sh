@@ -36,6 +36,32 @@ describe "lib/detect.sh"
 		rm -rf "$project_dir"
 	end
 
+	describe "detect_two_lock_files"
+		project_dir=$(create_temp_project_dir)
+
+		it "detects if there is not two lock files"
+			touch "$project_dir/package.json"
+
+			set +e
+			detect_two_lock_files "$project_dir"
+			loc_var=$?
+			set -e
+
+			assert equal $loc_var 1
+		end
+
+		it "detects if there is two lock files"
+			touch "$project_dir/package.json"
+			touch "$project_dir/yarn.lock"
+
+			detect_two_lock_files "$project_dir"
+
+			assert equal "$?" 0
+		end
+
+		rm -rf "$project_dir"
+	end
+
 	describe "write_to_build_plan"
 		it "writes node and node_modules as expected in build plan"
 			project_dir=$(create_temp_project_dir)

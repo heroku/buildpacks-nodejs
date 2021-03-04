@@ -15,6 +15,8 @@ source "$bp_dir/lib/detect.sh"
 
 if ! detect_package_json "$build_dir"; then
 	exit 100
+elif detect_two_lock_files "$build_dir"; then
+	exit 100
 else
 	write_to_build_plan "$build_plan"
 fi
