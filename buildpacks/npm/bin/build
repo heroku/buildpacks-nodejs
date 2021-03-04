@@ -15,6 +15,9 @@ platform_dir=$2
 source "$bp_dir/lib/build.sh"
 rm -rf "$build_dir/node_modules"
 
+#Failures that are caught immediately
+fail_multiple_lockfiles "$build_dir"
+
 clear_cache_on_stack_change "$layers_dir"
 
 export_env "$platform_dir/env" "" ""

@@ -92,7 +92,7 @@ describe "lib/build.sh"
 
 		unset CNB_STACK_ID
 	end
-	
+
 	describe "prune_devdependencies"
 		project_dir=$(create_temp_project_dir)
 		use_npm 6
