@@ -9,11 +9,11 @@ name = "Node.js"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.7.3"
+version = "0.7.4"
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
-version = "0.1.3"
+version = "0.1.4"
 
 [[order.group]]
 id = "heroku/nodejs-typescript"
@@ -29,11 +29,11 @@ optional = true
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.7.3"
+version = "0.7.4"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
-version = "0.4.3"
+version = "0.4.4"
 
 [[order.group]]
 id = "heroku/nodejs-typescript"

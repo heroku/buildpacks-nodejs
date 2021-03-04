@@ -4,6 +4,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 * Upgraded `heroku/nodejs-typescript` to `0.2.2`
+* Upgraded `heroku/nodejs-yarn` to `0.1.3`
+* Upgraded `heroku/nodejs-npm` to `0.4.3`
+* Upgraded `heroku/nodejs-engine` to `0.7.3`
 ### Changed
 * Upgrade `heroku/procfile` to `0.6.2`
 
