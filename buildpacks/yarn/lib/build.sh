@@ -22,7 +22,7 @@ fail_multiple_lockfiles() {
 	if [[ -f "$build_dir/yarn.lock" ]]; then
 		has_yarn_lockfile=true
 	fi
-	if $has_yarn_lockfile && [[ -f "$build_dir/package-lock.json" || "$build_dir/npm-shrinkwrap.json" ]]; then
+	if $has_yarn_lockfile && [[ -f "$build_dir/package-lock.json" || -f "$build_dir/npm-shrinkwrap.json" ]]; then
 		error "Build failed because two different lockfiles were detected: package-lock.json and yarn.lock"
 		exit 1
 	fi
