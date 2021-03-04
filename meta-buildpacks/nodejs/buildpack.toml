@@ -20,7 +20,7 @@ version = "0.1.2"
 
 [[order.group]]
 id = "heroku/nodejs-typescript"
-version = "0.2.1"
+version = "0.2.2"
 optional = true
 
 [[order.group]]
@@ -40,7 +40,7 @@ version = "0.4.2"
 
 [[order.group]]
 id = "heroku/nodejs-typescript"
-version = "0.2.1"
+version = "0.2.2"
 optional = true
 
 [[order.group]]
