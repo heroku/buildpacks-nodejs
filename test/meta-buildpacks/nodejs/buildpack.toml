@@ -22,7 +22,7 @@ optional = true
 
 [[order.group]]
 id = "heroku/procfile"
-version = "0.6.1"
+version = "0.6.2"
 optional = true
 
 [[order]]
@@ -42,5 +42,5 @@ optional = true
 
 [[order.group]]
 id = "heroku/procfile"
-version = "0.6.1"
+version = "0.6.2"
 optional = true
