@@ -13,6 +13,4 @@ source "$bp_dir/lib/detect.sh"
 
 if ! detect_yarn_lock "$build_dir"; then
 	exit 100
-elif detect_two_lock_files "$build_dir"; then
-	exit 100
 fi

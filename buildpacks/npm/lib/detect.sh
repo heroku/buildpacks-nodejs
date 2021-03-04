@@ -5,11 +5,6 @@ detect_package_json() {
 	[[ -f "$build_dir/package.json" ]]
 }
 
-detect_two_lock_files() {
-	local build_dir=$1
-	[[ -f "$build_dir/package.json" && -f "$build_dir/yarn.lock" ]]
-}
-
 write_to_build_plan() {
 	local build_plan=$1
 	cat <<EOF >"$build_plan"
