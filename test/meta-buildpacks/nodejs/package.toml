@@ -14,5 +14,4 @@ uri = "../../../buildpacks/yarn"
 uri = "../../../buildpacks/typescript"
 
 [[dependencies]]
-# Should be urn:cnb:registry:heroku/procfile@0.6.1 as soon as pack supports it. (0.16.1?)
-uri = "docker://docker.io/heroku/procfile-cnb@sha256:b078c148796dd3cff2bb1ac7a0632cf9f4b558bda3161cd0f869010f72c87558"
+uri = "docker://docker.io/heroku/procfile-cnb:0.6.2"
