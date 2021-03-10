@@ -68,6 +68,18 @@ install_or_reuse_toolbox() {
 	echo "launch = false" >>"${layer_dir}.toml"
 }
 
+store_node_version() {
+	local layer_dir=$1
+	local prev_node_version
+
+	prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
+	mkdir -p "${layer_dir}/env"
+	if [[ -s "${layer_dir}/env/PREV_NODE_VERSION" ]]; then
+		rm -rf "${layer_dir}/env/PREV_NODE_VERSION"
+	fi
+	echo -e "$prev_node_version" >>"${layer_dir}/env/PREV_NODE_VERSION"
+}
+
 install_or_reuse_node() {
 	local layer_dir=$1
 	local build_dir=$2
@@ -103,6 +115,22 @@ install_or_reuse_node() {
 		} >>"${layer_dir}.toml"
 
 		curl -sL "$node_url" | tar xz --strip-components=1 -C "$layer_dir"
+	fi
+}
+
+clear_cache_if_node_version_change() {
+	local layer_dir=$1
+	local prev_node_version
+	local curr_node_version
+
+	curr_node_version=$(echo $(node -v))
+	curr_node_version=${curr_node_version:1}
+	prev_node_version=$(cat "${layer_dir}/env/PREV_NODE_VERSION")
+
+	if [[ $curr_node_version != $prev_node_version ]]; then
+		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
+		rm -rf "${layers_dir:?}/yarn"
+		rm -rf "${layers_dir:?}/node_modules"
 	fi
 }
 
