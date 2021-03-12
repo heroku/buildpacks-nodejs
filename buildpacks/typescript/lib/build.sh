@@ -43,7 +43,7 @@ clear_cache_on_stack_change() {
 	fi
 
 	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		curr_node_version=$(echo $(node -v))
+		curr_node_version="$(echo $(node -v))"
 		touch "${layers_dir}/store.toml"
 		cat <<TOML >"${layers_dir}/store.toml"
 [metadata]
@@ -60,7 +60,7 @@ clear_cache_on_node_version_change() {
 		local curr_node_version
 		local prev_node_version
 		# shellcheck disable=SC2002
-		curr_node_version=$(echo $(node -v))
+		curr_node_version="$(echo $(node -v))"
 		prev_node_version=$(cat "${layers_dir}/env/PREV_NODE_VERSION")
 
 		if [[ "$curr_node_version" != "$prev_node_version" ]]; then
@@ -71,7 +71,7 @@ clear_cache_on_node_version_change() {
 	fi
 
 	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		curr_node_version=$(echo $(node -v))
+		curr_node_version="$(echo $(node -v))"
 		touch "${layers_dir}/store.toml"
 		cat <<TOML >"${layers_dir}/store.toml"
 [metadata]
