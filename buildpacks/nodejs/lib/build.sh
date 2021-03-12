@@ -119,13 +119,13 @@ install_or_reuse_node() {
 }
 
 clear_cache_if_node_version_change() {
-	local layer_dir=$1
+	local layers_dir=$1
 	local prev_node_version
 	local curr_node_version
 
 	curr_node_version=$(echo $(node -v))
 	curr_node_version=${curr_node_version:1}
-	prev_node_version=$(cat "${layer_dir}/env/PREV_NODE_VERSION")
+	prev_node_version=$(cat "${layers_dir}/env/PREV_NODE_VERSION")
 
 	if [[ $curr_node_version != $prev_node_version ]]; then
 		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""

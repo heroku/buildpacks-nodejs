@@ -69,6 +69,33 @@ describe "lib/build.sh"
     end
   end
 
+  describe "clear_cache_on_node_version_change"
+
+		touch "$layers_dir/node_modules"
+
+		it "does not delete layers with same node version"
+			echo -e "$(echo $(node -v))" >>"${layers_dir}/env/PREV_NODE_VERSION"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_stack_change "$layers_dir"
+
+			assert file_present "$layers_dir/node_modules"
+		end
+
+		it "deletes layers when stack changes"
+			rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
+			echo -e "$(echo $(node -v))" >>"${layers_dir}/env/PREV_NODE_VERSION"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_stack_change "$layers_dir"
+
+			assert file_absent "$layers_dir/node_modules"
+		end
+
+	end
+
   describe "detect_out_dir"
     it "exits with 1 if there is no outDir directory"
       project_dir=$(create_temp_project_dir)

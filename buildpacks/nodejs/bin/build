@@ -34,7 +34,7 @@ store_node_version "$layers_dir"
 install_or_reuse_node "$layers_dir/nodejs" "$build_dir"
 export PATH=$layers_dir/nodejs/bin:$PATH
 
-clear_cache_if_node_version_change "$layers_dir/nodejs"
+clear_cache_if_node_version_change "$layers_dir"
 
 parse_package_json_engines "$layers_dir/package_manager_metadata" "$build_dir"
 
