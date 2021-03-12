@@ -74,7 +74,6 @@ describe "lib/build.sh"
 		touch "$layers_dir/node_modules"
 
 		it "does not delete layers with same node version"
-			mkdir "${layers_dir}/env"
 			echo -e "$(echo $(node -v))" >>"${layers_dir}/env/PREV_NODE_VERSION"
 
 			assert file_present "$layers_dir/node_modules"
