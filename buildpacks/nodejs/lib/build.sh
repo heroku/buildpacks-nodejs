@@ -77,7 +77,7 @@ store_node_version() {
 	if [[ -s "${layers_dir}/env/PREV_NODE_VERSION" ]]; then
 		rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
 	fi
-	echo -e "$prev_node_version" >>"${layer_dir}/env/PREV_NODE_VERSION"
+	echo -e "$prev_node_version" >>"${layers_dir}/env/PREV_NODE_VERSION"
 }
 
 install_or_reuse_node() {
