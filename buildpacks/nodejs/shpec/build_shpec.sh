@@ -89,22 +89,23 @@ describe "lib/build.sh"
 		touch "$layers_dir/node_modules"
 
 		it "does not delete layers with same node version"
+			mkdir "${layers_dir}/env"
 			echo -e "$(echo $(node -v))" >>"${layers_dir}/env/PREV_NODE_VERSION"
 
 			assert file_present "$layers_dir/node_modules"
 
-			clear_cache_on_stack_change "$layers_dir"
+			clear_cache_on_node_version_change "$layers_dir"
 
 			assert file_present "$layers_dir/node_modules"
 		end
 
-		it "deletes layers when stack changes"
+		it "deletes layers when node version changes"
 			rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
-			echo -e "$(echo $(node -v))" >>"${layers_dir}/env/PREV_NODE_VERSION"
+			echo -e "different_version" >>"${layers_dir}/env/PREV_NODE_VERSION"
 
 			assert file_present "$layers_dir/node_modules"
 
-			clear_cache_on_stack_change "$layers_dir"
+			clear_cache_on_node_version_change "$layers_dir"
 
 			assert file_absent "$layers_dir/node_modules"
 		end

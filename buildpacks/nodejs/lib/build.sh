@@ -118,7 +118,7 @@ install_or_reuse_node() {
 	fi
 }
 
-clear_cache_if_node_version_change() {
+clear_cache_on_node_version_change() {
 	local layers_dir=$1
 	local prev_node_version
 	local curr_node_version
