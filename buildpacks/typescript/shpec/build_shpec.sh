@@ -56,6 +56,19 @@ describe "lib/build.sh"
     unset CNB_STACK_ID
   end
 
+  describe "store_node_version"
+    layers_dir=$(create_temp_layer_dir)
+
+    touch "${layers_dir}/store.toml"
+    echo -e "[metadata]\nnode_version = \"test_version\"" > "${layers_dir}/store.toml"
+
+    it "stores node version in PREV_NODE_VERSION env"
+      assert file_absent "$layers_dir/env/PREV_NODE_VERSION"
+      store_node_version "$layers_dir"
+      assert equal "$(cat "$layers_dir/env/PREV_NODE_VERSION")" test_version
+    end
+  end
+
   describe "detect_out_dir"
     it "exits with 1 if there is no outDir directory"
       project_dir=$(create_temp_project_dir)

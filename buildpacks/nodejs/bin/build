@@ -29,7 +29,7 @@ bootstrap_buildpack "$layers_dir/bootstrap"
 install_or_reuse_toolbox "$layers_dir/toolbox"
 export PATH=$layers_dir/toolbox/bin:$PATH
 
-store_node_version "$layers_dir/nodejs"
+store_node_version "$layers_dir"
 
 install_or_reuse_node "$layers_dir/nodejs" "$build_dir"
 export PATH=$layers_dir/nodejs/bin:$PATH

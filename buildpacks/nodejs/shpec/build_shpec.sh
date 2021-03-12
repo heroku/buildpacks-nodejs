@@ -150,6 +150,19 @@ describe "lib/build.sh"
 		end
 	end
 
+	describe "store_node_version"
+		layers_dir=$(create_temp_layer_dir)
+		
+		touch "${layers_dir}/nodejs.toml"
+		echo -e "[metadata]\nversion = \"test_version\"" > "${layers_dir}/nodejs.toml"
+
+		it "stores node version in PREV_NODE_VERSION env"
+			assert file_absent "$layers_dir/env/PREV_NODE_VERSION"
+			store_node_version "$layers_dir"
+			assert equal "$(cat "$layers_dir/env/PREV_NODE_VERSION")" test_version
+		end
+	end
+
 	describe "install_or_reuse_node"
 		layers_dir=$(create_temp_layer_dir)
 		project_dir=$(create_temp_project_dir)

@@ -69,13 +69,13 @@ install_or_reuse_toolbox() {
 }
 
 store_node_version() {
-	local layer_dir=$1
+	local layers_dir=$1
 	local prev_node_version
 
-	prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
-	mkdir -p "${layer_dir}/env"
-	if [[ -s "${layer_dir}/env/PREV_NODE_VERSION" ]]; then
-		rm -rf "${layer_dir}/env/PREV_NODE_VERSION"
+	prev_node_version=$(cat "${layers_dir}/nodejs.toml" | grep version | xargs | cut -d " " -f3)
+	mkdir -p "${layers_dir}/env"
+	if [[ -s "${layers_dir}/env/PREV_NODE_VERSION" ]]; then
+		rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
 	fi
 	echo -e "$prev_node_version" >>"${layer_dir}/env/PREV_NODE_VERSION"
 }
