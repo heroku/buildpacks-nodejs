@@ -91,7 +91,7 @@ install_or_reuse_node() {
 	status "Installing Node"
 	info "Getting Node version"
 	engine_node=$(json_get_key "$build_dir/package.json" ".engines.node")
-	node_version=${engine_node:-12.x}
+	node_version=${engine_node:-14.x}
 
 	info "Resolving Node version"
 	resolved_data=$(resolve-version node "$node_version")
