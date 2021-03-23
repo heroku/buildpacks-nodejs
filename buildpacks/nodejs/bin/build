@@ -22,6 +22,8 @@ rm -rf node_modules
 
 clear_cache_on_stack_change "$layers_dir"
 
+write_to_store_toml "$layers_dir"
+
 set_up_environment "$layers_dir/nodejs"
 
 bootstrap_buildpack "$layers_dir/bootstrap"

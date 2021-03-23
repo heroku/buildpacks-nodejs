@@ -12,21 +12,21 @@ source "$bp_dir/lib/utils/log.sh"
 # shellcheck source=/dev/null
 source "$bp_dir/lib/utils/json.sh"
 
-store_node_version() {
-	local layers_dir=$1
-
-	if [[ -f "${layers_dir}/store.toml" ]]; then
-		local prev_node_version
-		# shellcheck disable=SC2002
-		prev_node_version=$(cat "${layers_dir}/store.toml" | grep node_version | xargs | cut -d " " -f3)
-
-		mkdir -p "${layers_dir}/env"
-		if [[ -s "${layers_dir}/env/PREV_NODE_VERSION" ]]; then
-			rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
-		fi
-		echo -e "$prev_node_version" >>"${layers_dir}/env/PREV_NODE_VERSION"
-	fi
-}
+# store_node_version() {
+# 	local layers_dir=$1
+#
+# 	if [[ -f "${layers_dir}/store.toml" ]]; then
+# 		local prev_node_version
+# 		# shellcheck disable=SC2002
+# 		prev_node_version=$(cat "${layers_dir}/store.toml" | grep node_version | xargs | cut -d " " -f3)
+#
+# 		mkdir -p "${layers_dir}/env"
+# 		if [[ -s "${layers_dir}/env/PREV_NODE_VERSION" ]]; then
+# 			rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
+# 		fi
+# 		echo -e "$prev_node_version" >>"${layers_dir}/env/PREV_NODE_VERSION"
+# 	fi
+# }
 
 clear_cache_on_stack_change() {
 	local layers_dir=$1
@@ -53,31 +53,29 @@ TOML
 	fi
 }
 
-clear_cache_on_node_version_change() {
+write_to_store_toml() {
 	local layers_dir=$1
 
-	if [[ -f "${layers_dir}/store.toml" ]]; then
-		local curr_node_version
-		local prev_node_version
-		# shellcheck disable=SC2002
-		curr_node_version="$(echo $(node -v))"
-		prev_node_version=$(cat "${layers_dir}/env/PREV_NODE_VERSION")
-
-		if [[ "$curr_node_version" != "$prev_node_version" ]]; then
-			info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
-			rm -rf "${layers_dir:?}/node_modules"
-			rm -rf "${layers_dir:?}/store.toml"
-		fi
-	fi
-
 	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		curr_node_version="$(echo $(node -v))"
 		touch "${layers_dir}/store.toml"
 		cat <<TOML >"${layers_dir}/store.toml"
 [metadata]
 last_stack = "$CNB_STACK_ID"
-node_version = "$curr_node_version"
 TOML
+	fi
+}
+
+clear_cache_on_node_version_change() {
+	local layers_dir=$1
+	local curr_node_version
+	local prev_node_version
+	# shellcheck disable=SC2002
+	curr_node_version="$(echo $(node -v))"
+	prev_node_version=$(cat "${layers_dir}/env.build/PREV_NODE_VERSION")
+
+	if [[ "$curr_node_version" != "$prev_node_version" ]]; then
+		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
+		rm -rf "${layers_dir:?}/*"
 	fi
 }
 

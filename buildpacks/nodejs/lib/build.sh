@@ -16,6 +16,18 @@ source "$bp_dir/lib/utils/log.sh"
 # shellcheck source=/dev/null
 source "$bp_dir/lib/utils/toml.sh"
 
+write_to_store_toml() {
+	local layers_dir=$1
+
+	if [[ ! -f "${layers_dir}/store.toml" ]]; then
+		touch "${layers_dir}/store.toml"
+		cat <<TOML >"${layers_dir}/store.toml"
+[metadata]
+last_stack = "$CNB_STACK_ID"
+TOML
+	fi
+}
+
 clear_cache_on_stack_change() {
 	local layers_dir=$1
 
@@ -28,14 +40,6 @@ clear_cache_on_stack_change() {
 			info "Deleting cache because stack changed from \"$last_stack\" to \"$CNB_STACK_ID\""
 			rm -rf "${layers_dir:?}"/*
 		fi
-	fi
-
-	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		touch "${layers_dir}/store.toml"
-		cat <<TOML >"${layers_dir}/store.toml"
-[metadata]
-last_stack = "$CNB_STACK_ID"
-TOML
 	fi
 }
 
@@ -73,11 +77,11 @@ store_node_version() {
 	local prev_node_version
 	# shellcheck disable=SC2002
 	prev_node_version=$(cat "${layers_dir}/nodejs.toml" | grep version | xargs | cut -d " " -f3)
-	mkdir -p "${layers_dir}/env"
-	if [[ -s "${layers_dir}/env/PREV_NODE_VERSION" ]]; then
-		rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
+	mkdir -p "${layers_dir}/env.build"
+	if [[ -s "${layers_dir}/env.build/PREV_NODE_VERSION" ]]; then
+		rm -rf "${layers_dir}/env.build/PREV_NODE_VERSION"
 	fi
-	echo -e "$prev_node_version" >>"${layers_dir}/env/PREV_NODE_VERSION"
+	echo -e "$prev_node_version" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
 }
 
 install_or_reuse_node() {
@@ -130,7 +134,7 @@ clear_cache_on_node_version_change() {
 	if [[ $curr_node_version != "$prev_node_version" ]]; then
 		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
 		rm -rf "${layers_dir:?}/yarn"
-		rm -rf "${layers_dir:?}/node_modules"
+		rm -rf "${layers_dir:?}/yarn.toml"
 	fi
 }
 
