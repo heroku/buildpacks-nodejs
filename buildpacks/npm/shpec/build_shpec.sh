@@ -73,7 +73,7 @@ describe "lib/build.sh"
 		end
 
 		it "deletes layers when stack changes"
-			CNB_STACK_ID="heroku-22"
+			export CNB_STACK_ID="heroku-22"
 
 			assert file_present "$layers_dir/my_layer.toml"
 
@@ -90,8 +90,10 @@ describe "lib/build.sh"
 		touch "$layers_dir/node_modules"
 
 		it "does not delete layers with same node version"
-			mkdir "${layers_dir}/env"
-			echo -e "$(echo $(node -v))" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
+			# shellcheck disable=SC2005
+			version=$(echo "$(node -v)")
+			truncated_version=${version:1}
+			export PREV_NODE_VERSION="$truncated_version"
 
 			assert file_present "$layers_dir/node_modules"
 
@@ -101,8 +103,7 @@ describe "lib/build.sh"
 		end
 
 		it "deletes layers when node version changes"
-			rm -rf "${layers_dir}/env/PREV_NODE_VERSION"
-			echo -e "different_version" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
+			export PREV_NODE_VERSION="different_version"
 
 			assert file_present "$layers_dir/node_modules"
 
@@ -110,7 +111,7 @@ describe "lib/build.sh"
 
 			assert file_absent "$layers_dir/node_modules"
 		end
-
+		unset PREV_NODE_VERSION
 	end
 
 	describe "prune_devdependencies"
@@ -244,19 +245,6 @@ describe "lib/build.sh"
 
 		rm_temp_dirs "$project_dir" "$layers_dir"
 	end
-
-	# describe "store_node_version"
-	# 	layers_dir=$(create_temp_layer_dir)
-	#
-	# 	touch "${layers_dir}/store.toml"
-	# 	echo -e "[metadata]\nnode_version = \"test_version\"" > "${layers_dir}/store.toml"
-	#
-	# 	it "stores node version in PREV_NODE_VERSION env"
-	# 		assert file_absent "$layers_dir/env/PREV_NODE_VERSION"
-	# 		store_node_version "$layers_dir"
-	# 		assert equal "$(cat "$layers_dir/env/PREV_NODE_VERSION")" test_version
-	# 	end
-	# end
 
 	describe "install_or_reuse_node_modules"
 		layers_dir=$(create_temp_layer_dir)

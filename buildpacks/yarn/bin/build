@@ -17,7 +17,6 @@ rm -rf "$build_dir/node_modules"
 #Failures that are caught immediately
 fail_multiple_lockfiles "$build_dir"
 
-# store_node_version "$layers_dir"
 clear_cache_on_stack_change "$layers_dir"
 export_env "$platform_dir/env" "" ""
 run_prebuild "$build_dir"

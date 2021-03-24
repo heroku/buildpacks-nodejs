@@ -73,15 +73,15 @@ install_or_reuse_toolbox() {
 }
 
 store_node_version() {
-	local layers_dir=$1
+	local layer_dir=$1
 	local prev_node_version
 	# shellcheck disable=SC2002
-	prev_node_version=$(cat "${layers_dir}/nodejs.toml" | grep version | xargs | cut -d " " -f3)
-	mkdir -p "${layers_dir}/env.build"
-	if [[ -s "${layers_dir}/env.build/PREV_NODE_VERSION" ]]; then
-		rm -rf "${layers_dir}/env.build/PREV_NODE_VERSION"
+	prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
+	mkdir -p "${layer_dir}/env.build"
+	if [[ -s "${layer_dir}/env.build/PREV_NODE_VERSION.override" ]]; then
+		rm -rf "${layer_dir}/env.build/PREV_NODE_VERSION.override"
 	fi
-	echo -e "$prev_node_version" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
+	echo -e "$prev_node_version\c" >>"${layer_dir}/env.build/PREV_NODE_VERSION.override"
 }
 
 install_or_reuse_node() {
@@ -124,12 +124,14 @@ install_or_reuse_node() {
 
 clear_cache_on_node_version_change() {
 	local layers_dir=$1
+	local layer_dir=$2
 	local prev_node_version
 	local curr_node_version
 
-	curr_node_version="$(echo $(node -v))"
+	# shellcheck disable=SC2005
+	curr_node_version="$(echo "$(node -v)")"
 	curr_node_version=${curr_node_version:1}
-	prev_node_version=$(cat "${layers_dir}/env/PREV_NODE_VERSION")
+	prev_node_version=$(cat "${layer_dir}/env.build/PREV_NODE_VERSION")
 
 	if [[ $curr_node_version != "$prev_node_version" ]]; then
 		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""

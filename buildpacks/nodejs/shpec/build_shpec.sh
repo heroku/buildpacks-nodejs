@@ -59,6 +59,7 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 
 			clear_cache_on_stack_change "$layers_dir"
+			write_to_store_toml "$layers_dir"
 
 			assert file_present "$layers_dir/my_layer.toml"
 		end
@@ -69,6 +70,7 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 
 			clear_cache_on_stack_change "$layers_dir"
+			write_to_store_toml "$layers_dir"
 
 			assert file_absent "$layers_dir/my_layer.toml"
 		end
@@ -78,28 +80,30 @@ describe "lib/build.sh"
 
 	describe "clear_cache_on_node_version_change"
 
-		touch "$layers_dir/node_modules"
+		touch "$layers_dir/yarn"
 
 		it "does not delete layers with same node version"
-			mkdir "${layers_dir}/env.build"
-			echo -e "$(echo $(node -v))" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
+			mkdir "${layers_dir}/nodejs"
+			mkdir "${layers_dir}/nodejs/env.build"
+			# shellcheck disable=SC2005
+			echo -e "$(echo "$(node -v)")\c" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
 
-			assert file_present "$layers_dir/node_modules"
+			assert file_present "$layers_dir/yarn"
 
-			clear_cache_on_node_version_change "$layers_dir"
+			clear_cache_on_node_version_change "$layers_dir" "$layers_dir/nodejs"
 
-			assert file_present "$layers_dir/node_modules"
+			assert file_present "$layers_dir/yarn"
 		end
 
 		it "deletes layers when node version changes"
-			rm -rf "${layers_dir}/env.build/PREV_NODE_VERSION"
-			echo -e "different_version" >>"${layers_dir}/env.build/PREV_NODE_VERSION"
+			rm -rf "${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
+			echo -e "different_version" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
 
-			assert file_present "$layers_dir/node_modules"
+			assert file_present "$layers_dir/yarn"
 
-			clear_cache_on_node_version_change "$layers_dir"
+			clear_cache_on_node_version_change "$layers_dir" "$layers_dir/nodejs"
 
-			assert file_absent "$layers_dir/node_modules"
+			assert file_absent "$layers_dir/yarn"
 		end
 
 	end
@@ -177,9 +181,9 @@ describe "lib/build.sh"
 		echo -e "[metadata]\nversion = \"test_version\"" > "${layers_dir}/nodejs.toml"
 
 		it "stores node version in PREV_NODE_VERSION env"
-			assert file_absent "$layers_dir/env/PREV_NODE_VERSION"
-			store_node_version "$layers_dir"
-			assert equal "$(cat "$layers_dir/env/PREV_NODE_VERSION")" test_version
+			assert file_absent "$layers_dir/nodejs/env.build/PREV_NODE_VERSION.override"
+			store_node_version "$layers_dir/nodejs"
+			assert equal "$(cat "$layers_dir/nodejs/env.build/PREV_NODE_VERSION.override")" test_version
 		end
 	end
 
