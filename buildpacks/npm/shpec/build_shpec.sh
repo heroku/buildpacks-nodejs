@@ -72,6 +72,8 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 		end
 
+		write_to_store_toml "$layers_dir"
+
 		it "deletes layers when stack changes"
 			export CNB_STACK_ID="heroku-22"
 
@@ -91,7 +93,7 @@ describe "lib/build.sh"
 
 		it "does not delete layers with same node version"
 			# shellcheck disable=SC2005
-			version=$(echo "$(node -v)")
+			version="$(echo "$(node -v)")"
 			truncated_version=${version:1}
 			export PREV_NODE_VERSION="$truncated_version"
 
@@ -112,6 +114,21 @@ describe "lib/build.sh"
 			assert file_absent "$layers_dir/node_modules"
 		end
 		unset PREV_NODE_VERSION
+	end
+
+	describe "write_to_store_toml"
+
+		if [[ -s "$layers_dir/store.toml" ]]; then
+			rm -rf "$layers_dir/store.toml"
+		fi
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			write_to_store_toml "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
 	end
 
 	describe "prune_devdependencies"

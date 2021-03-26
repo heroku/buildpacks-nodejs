@@ -47,16 +47,6 @@ clear_cache_on_stack_change() {
 			rm -rf "${layers_dir:?}"/*
 		fi
 	fi
-
-	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		# shellcheck disable=SC2005
-		curr_node_version="$(echo "$(node -v)")"
-		touch "${layers_dir}/store.toml"
-		cat <<TOML >"${layers_dir}/store.toml"
-[metadata]
-last_stack = "$CNB_STACK_ID"
-TOML
-	fi
 }
 
 detect_package_lock() {

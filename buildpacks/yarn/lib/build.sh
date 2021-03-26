@@ -41,17 +41,6 @@ clear_cache_on_stack_change() {
 			rm -rf "${layers_dir:?}"/*
 		fi
 	fi
-
-	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		# shellcheck disable=SC2005
-		curr_node_version="$(echo "$(node -v)")"
-		touch "${layers_dir}/store.toml"
-		cat <<TOML >"${layers_dir}/store.toml"
-[metadata]
-last_stack = "$CNB_STACK_ID"
-node_version = "$curr_node_version"
-TOML
-	fi
 }
 
 run_prebuild() {
@@ -98,7 +87,7 @@ clear_cache_on_node_version_change() {
 
 	if [[ "$curr_node_version" != "$PREV_NODE_VERSION" ]]; then
 		info "Deleting cache because node version changed from \"$PREV_NODE_VERSION\" to \"$curr_node_version\""
-		rm -rf "${layers_dir:?}/*"
+		rm -rf "${layers_dir:?}"/*
 	fi
 }
 

@@ -59,10 +59,11 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 
 			clear_cache_on_stack_change "$layers_dir"
-			write_to_store_toml "$layers_dir"
 
 			assert file_present "$layers_dir/my_layer.toml"
 		end
+
+		write_to_store_toml "$layers_dir"
 
 		it "deletes layers when stack changes"
 			CNB_STACK_ID="heroku-22"
@@ -70,7 +71,6 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 
 			clear_cache_on_stack_change "$layers_dir"
-			write_to_store_toml "$layers_dir"
 
 			assert file_absent "$layers_dir/my_layer.toml"
 		end
@@ -106,6 +106,21 @@ describe "lib/build.sh"
 			assert file_absent "$layers_dir/yarn"
 		end
 
+	end
+
+	describe "write_to_store_toml"
+
+		if [[ -s "$layers_dir/store.toml" ]]; then
+			rm -rf "$layers_dir/store.toml"
+		fi
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			write_to_store_toml "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
 	end
 
 	describe "boostrap_buildpack"

@@ -127,16 +127,14 @@ clear_cache_on_node_version_change() {
 	local layer_dir=$2
 	local prev_node_version
 	local curr_node_version
-
 	# shellcheck disable=SC2005
 	curr_node_version="$(echo "$(node -v)")"
 	curr_node_version=${curr_node_version:1}
 	prev_node_version=$(cat "${layer_dir}/env.build/PREV_NODE_VERSION")
 
-	if [[ $curr_node_version != "$prev_node_version" ]]; then
+	if [[ "$curr_node_version" != "$prev_node_version" ]]; then
 		info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
-		rm -rf "${layers_dir:?}/yarn"
-		rm -rf "${layers_dir:?}/yarn.toml"
+		rm -rf "${layers_dir}/yarn" "${layers_dir}/yarn.toml"
 	fi
 }
 
