@@ -2,7 +2,13 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-buildpack@sha256:33925c80a23b9592b4217fc5e8a6deea0fd412b7d2541a11610604cad131e8b4"
+uri = "../../../buildpacks/nodejs"
+
+[[dependencies]]
+uri = "../../../buildpacks/npm"
+
+[[dependencies]]
+uri = "../../../buildpacks/typescript"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/streaming-http-adapter-buildpack:1.4.0"
