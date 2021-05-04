@@ -53,8 +53,13 @@ use_npm() {
 	PATH="${shpec_dir}/../mocks/npm/v$1/bin:$CURRENT_PATH"
 }
 
+use_node() {
+	PATH="${shpec_dir}/../mocks/node/v$1/bin:$CURRENT_PATH"
+}
+
 describe "lib/build.sh"
 	install_tools
+	stub_command "node"
 
 	CURRENT_PATH=$PATH
 	layers_dir=$(create_temp_layer_dir)
@@ -92,8 +97,8 @@ describe "lib/build.sh"
 		touch "$layers_dir/node_modules"
 
 		it "does not delete layers with same node version"
-			# shellcheck disable=SC2005
-			version="$(echo "$(node -v)")"
+			use_node 14
+			version="$(node -v)"
 			truncated_version=${version:1}
 			export PREV_NODE_VERSION="$truncated_version"
 
@@ -357,5 +362,6 @@ describe "lib/build.sh"
 	end
 
 	unstub_command "log_info"
+	unstub_command "node"
 	rm_tools_and_mocks
 end

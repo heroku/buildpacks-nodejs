@@ -20,6 +20,8 @@ create_temp_layer_dir() {
 
 describe "lib/build.sh"
 
+  stub_command "node"
+
   layers_dir=$(create_temp_layer_dir)
 
   describe "clear_cache_on_stack_change"
@@ -55,8 +57,8 @@ describe "lib/build.sh"
 		touch "$layers_dir/node_modules"
 
     it "does not delete layers with same node version"
-    # shellcheck disable=SC2005
-    version="$(echo "$(node -v)")"
+
+    version="$(node -v)"
     truncated_version=${version:1}
     export PREV_NODE_VERSION="$truncated_version"
 
@@ -119,4 +121,7 @@ describe "lib/build.sh"
       # assert equal "$?" 0
     end
   end
+
+  unstub_command "node"
+
 end

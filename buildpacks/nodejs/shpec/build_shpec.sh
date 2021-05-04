@@ -46,6 +46,7 @@ rm_binaries() {
 
 describe "lib/build.sh"
 	stub_command "info"
+	stub_command "node"
 	rm_binaries
 
 	layers_dir=$(create_temp_layer_dir)
@@ -85,8 +86,8 @@ describe "lib/build.sh"
 		it "does not delete layers with same node version"
 			mkdir "${layers_dir}/nodejs"
 			mkdir "${layers_dir}/nodejs/env.build"
-			# shellcheck disable=SC2005
-			echo -e "$(echo "$(node -v)")\c" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
+			
+			echo -e "$(node -v)\c" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
 
 			assert file_present "$layers_dir/yarn"
 
@@ -353,6 +354,7 @@ describe "lib/build.sh"
 	end
 
 	unstub_command "info"
+	unstub_command "node"
 	rm_binaries
 end
 
