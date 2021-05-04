@@ -153,7 +153,7 @@ clear_cache_on_node_version_change() {
 
 	curr_node_version="$(node -v)"
 	curr_node_version=${curr_node_version:1} #to truncate the "v" that is concatedated to version in node -v
-	if [[ ! -z "$PREV_NODE_VERSION" ]]; then
+	if [[ -n "$PREV_NODE_VERSION" ]]; then
 		if [[ "$curr_node_version" != "$PREV_NODE_VERSION" ]]; then
 			info "Deleting cache because node version changed from \"$PREV_NODE_VERSION\" to \"$curr_node_version\""
 			rm -rf "${layers_dir:?}"/*
