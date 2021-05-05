@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# shellcheck source-path=SCRIPTDIR/..
+
+set -euo pipefail
+
+layers_dir="${1:?}"
+
+source "${CNB_BUILDPACK_DIR}/lib/build.sh"
+
+install_runtime "${layers_dir}"
+write_launch_toml "${layers_dir}"
