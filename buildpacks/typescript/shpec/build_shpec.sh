@@ -20,20 +20,14 @@ create_temp_layer_dir() {
 
 describe "lib/build.sh"
 
+  stub_command "node"
+
   layers_dir=$(create_temp_layer_dir)
 
   describe "clear_cache_on_stack_change"
     touch "$layers_dir/my_layer.toml"
 
     export CNB_STACK_ID="heroku-20"
-
-    it "creates store.toml when not present"
-      assert file_absent "$layers_dir/store.toml"
-
-      clear_cache_on_stack_change "$layers_dir"
-
-      assert file_present "$layers_dir/store.toml"
-    end
 
     it "does not delete layers with same stack"
       assert file_present "$layers_dir/my_layer.toml"
@@ -43,8 +37,10 @@ describe "lib/build.sh"
       assert file_present "$layers_dir/my_layer.toml"
     end
 
+    write_to_store_toml "$layers_dir"
+
     it "deletes layers when stack changes"
-      CNB_STACK_ID="heroku-22"
+      export CNB_STACK_ID="heroku-22"
 
       assert file_present "$layers_dir/my_layer.toml"
 
@@ -55,6 +51,50 @@ describe "lib/build.sh"
 
     unset CNB_STACK_ID
   end
+
+  describe "clear_cache_on_node_version_change"
+
+		touch "$layers_dir/node_modules"
+
+    it "does not delete layers with same node version"
+
+    version="$(node -v)"
+    truncated_version=${version:1}
+    export PREV_NODE_VERSION="$truncated_version"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_node_version_change "$layers_dir"
+
+			assert file_present "$layers_dir/node_modules"
+		end
+
+		it "deletes layers when node version changes"
+			export PREV_NODE_VERSION="different_version"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_node_version_change "$layers_dir"
+
+			assert file_absent "$layers_dir/node_modules"
+		end
+    unset PREV_NODE_VERSION
+	end
+
+  describe "write_to_store_toml"
+
+    if [[ -s "$layers_dir/store.toml" ]]; then
+      rm -rf "$layers_dir/store.toml"
+    fi
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			write_to_store_toml "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
+	end
 
   describe "detect_out_dir"
     it "exits with 1 if there is no outDir directory"
@@ -81,4 +121,7 @@ describe "lib/build.sh"
       # assert equal "$?" 0
     end
   end
+
+  unstub_command "node"
+
 end

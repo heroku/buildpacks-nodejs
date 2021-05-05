@@ -46,6 +46,7 @@ rm_binaries() {
 
 describe "lib/build.sh"
 	stub_command "info"
+	stub_command "node"
 	rm_binaries
 
 	layers_dir=$(create_temp_layer_dir)
@@ -55,14 +56,6 @@ describe "lib/build.sh"
 
 		export CNB_STACK_ID="heroku-20"
 
-		it "creates store.toml when not present"
-			assert file_absent "$layers_dir/store.toml"
-
-			clear_cache_on_stack_change "$layers_dir"
-
-			assert file_present "$layers_dir/store.toml"
-		end
-
 		it "does not delete layers with same stack"
 			assert file_present "$layers_dir/my_layer.toml"
 
@@ -70,6 +63,8 @@ describe "lib/build.sh"
 
 			assert file_present "$layers_dir/my_layer.toml"
 		end
+
+		write_to_store_toml "$layers_dir"
 
 		it "deletes layers when stack changes"
 			CNB_STACK_ID="heroku-22"
@@ -82,6 +77,51 @@ describe "lib/build.sh"
 		end
 
 		unset CNB_STACK_ID
+	end
+
+	describe "clear_cache_on_node_version_change"
+
+		touch "$layers_dir/yarn"
+
+		it "does not delete layers with same node version"
+			mkdir "${layers_dir}/nodejs"
+			mkdir "${layers_dir}/nodejs/env.build"
+			
+			echo -e "$(node -v)\c" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
+
+			assert file_present "$layers_dir/yarn"
+
+			clear_cache_on_node_version_change "$layers_dir" "$layers_dir/nodejs"
+
+			assert file_present "$layers_dir/yarn"
+		end
+
+		it "deletes layers when node version changes"
+			rm -rf "${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
+			echo -e "different_version" >>"${layers_dir}/nodejs/env.build/PREV_NODE_VERSION"
+
+			assert file_present "$layers_dir/yarn"
+
+			clear_cache_on_node_version_change "$layers_dir" "$layers_dir/nodejs"
+
+			assert file_absent "$layers_dir/yarn"
+		end
+
+	end
+
+	describe "write_to_store_toml"
+
+		if [[ -s "$layers_dir/store.toml" ]]; then
+			rm -rf "$layers_dir/store.toml"
+		fi
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			write_to_store_toml "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
 	end
 
 	describe "boostrap_buildpack"
@@ -147,6 +187,19 @@ describe "lib/build.sh"
 			install_or_reuse_toolbox "$layers_dir/toolbox"
 
 			assert file_present "$layers_dir/toolbox.toml"
+		end
+	end
+
+	describe "store_node_version"
+		layers_dir=$(create_temp_layer_dir)
+
+		touch "${layers_dir}/nodejs.toml"
+		echo -e "[metadata]\nversion = \"test_version\"" > "${layers_dir}/nodejs.toml"
+
+		it "stores node version in PREV_NODE_VERSION env"
+			assert file_absent "$layers_dir/nodejs/env.build/PREV_NODE_VERSION.override"
+			store_node_version "$layers_dir/nodejs"
+			assert equal "$(cat "$layers_dir/nodejs/env.build/PREV_NODE_VERSION.override")" test_version
 		end
 	end
 
@@ -301,6 +354,7 @@ describe "lib/build.sh"
 	end
 
 	unstub_command "info"
+	unstub_command "node"
 	rm_binaries
 end
 

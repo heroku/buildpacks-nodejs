@@ -53,8 +53,13 @@ use_npm() {
 	PATH="${shpec_dir}/../mocks/npm/v$1/bin:$CURRENT_PATH"
 }
 
+use_node() {
+	PATH="${shpec_dir}/../mocks/node/v$1/bin:$CURRENT_PATH"
+}
+
 describe "lib/build.sh"
 	install_tools
+	stub_command "node"
 
 	CURRENT_PATH=$PATH
 	layers_dir=$(create_temp_layer_dir)
@@ -64,14 +69,6 @@ describe "lib/build.sh"
 
 		export CNB_STACK_ID="heroku-20"
 
-		it "creates store.toml when not present"
-			assert file_absent "$layers_dir/store.toml"
-
-			clear_cache_on_stack_change "$layers_dir"
-
-			assert file_present "$layers_dir/store.toml"
-		end
-
 		it "does not delete layers with same stack"
 			assert file_present "$layers_dir/my_layer.toml"
 
@@ -80,8 +77,10 @@ describe "lib/build.sh"
 			assert file_present "$layers_dir/my_layer.toml"
 		end
 
+		write_to_store_toml "$layers_dir"
+
 		it "deletes layers when stack changes"
-			CNB_STACK_ID="heroku-22"
+			export CNB_STACK_ID="heroku-22"
 
 			assert file_present "$layers_dir/my_layer.toml"
 
@@ -91,6 +90,50 @@ describe "lib/build.sh"
 		end
 
 		unset CNB_STACK_ID
+	end
+
+	describe "clear_cache_on_node_version_change"
+
+		touch "$layers_dir/node_modules"
+
+		it "does not delete layers with same node version"
+			use_node 14
+			version="$(node -v)"
+			truncated_version=${version:1}
+			export PREV_NODE_VERSION="$truncated_version"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_node_version_change "$layers_dir"
+
+			assert file_present "$layers_dir/node_modules"
+		end
+
+		it "deletes layers when node version changes"
+			export PREV_NODE_VERSION="different_version"
+
+			assert file_present "$layers_dir/node_modules"
+
+			clear_cache_on_node_version_change "$layers_dir"
+
+			assert file_absent "$layers_dir/node_modules"
+		end
+		unset PREV_NODE_VERSION
+	end
+
+	describe "write_to_store_toml"
+
+		if [[ -s "$layers_dir/store.toml" ]]; then
+			rm -rf "$layers_dir/store.toml"
+		fi
+
+		it "creates store.toml when not present"
+			assert file_absent "$layers_dir/store.toml"
+
+			write_to_store_toml "$layers_dir"
+
+			assert file_present "$layers_dir/store.toml"
+		end
 	end
 
 	describe "prune_devdependencies"
@@ -319,5 +362,6 @@ describe "lib/build.sh"
 	end
 
 	unstub_command "log_info"
+	unstub_command "node"
 	rm_tools_and_mocks
 end

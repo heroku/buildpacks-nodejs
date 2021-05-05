@@ -47,14 +47,6 @@ clear_cache_on_stack_change() {
 			rm -rf "${layers_dir:?}"/*
 		fi
 	fi
-
-	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		touch "${layers_dir}/store.toml"
-		cat <<TOML >"${layers_dir}/store.toml"
-[metadata]
-last_stack = "$CNB_STACK_ID"
-TOML
-	fi
 }
 
 detect_package_lock() {
@@ -140,6 +132,32 @@ install_modules() {
 	else
 		info "Installing node modules"
 		npm install --no-package-lock
+	fi
+}
+
+write_to_store_toml() {
+	local layers_dir=$1
+
+	if [[ ! -f "${layers_dir}/store.toml" ]]; then
+		touch "${layers_dir}/store.toml"
+		cat <<TOML >"${layers_dir}/store.toml"
+[metadata]
+last_stack = "$CNB_STACK_ID"
+TOML
+	fi
+}
+
+clear_cache_on_node_version_change() {
+	local layers_dir=$1
+	local curr_node_version
+
+	curr_node_version="$(node -v)"
+	curr_node_version=${curr_node_version:1} #to truncate the "v" that is concatedated to version in node -v
+	if [[ -n "$PREV_NODE_VERSION" ]]; then
+		if [[ "$curr_node_version" != "$PREV_NODE_VERSION" ]]; then
+			info "Deleting cache because node version changed from \"$PREV_NODE_VERSION\" to \"$curr_node_version\""
+			rm -rf "${layers_dir:?}"/*
+		fi
 	fi
 }
 

@@ -16,6 +16,18 @@ source "$bp_dir/lib/utils/log.sh"
 # shellcheck source=/dev/null
 source "$bp_dir/lib/utils/toml.sh"
 
+write_to_store_toml() {
+	local layers_dir=$1
+
+	if [[ ! -f "${layers_dir}/store.toml" ]]; then
+		touch "${layers_dir}/store.toml"
+		cat <<TOML >"${layers_dir}/store.toml"
+[metadata]
+last_stack = "$CNB_STACK_ID"
+TOML
+	fi
+}
+
 clear_cache_on_stack_change() {
 	local layers_dir=$1
 
@@ -28,14 +40,6 @@ clear_cache_on_stack_change() {
 			info "Deleting cache because stack changed from \"$last_stack\" to \"$CNB_STACK_ID\""
 			rm -rf "${layers_dir:?}"/*
 		fi
-	fi
-
-	if [[ ! -f "${layers_dir}/store.toml" ]]; then
-		touch "${layers_dir}/store.toml"
-		cat <<TOML >"${layers_dir}/store.toml"
-[metadata]
-last_stack = "$CNB_STACK_ID"
-TOML
 	fi
 }
 
@@ -68,6 +72,18 @@ install_or_reuse_toolbox() {
 	echo "launch = false" >>"${layer_dir}.toml"
 }
 
+store_node_version() {
+	local layer_dir=$1
+	local prev_node_version
+	# shellcheck disable=SC2002
+	prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
+	mkdir -p "${layer_dir}/env.build"
+	if [[ -s "${layer_dir}/env.build/PREV_NODE_VERSION.override" ]]; then
+		rm -rf "${layer_dir}/env.build/PREV_NODE_VERSION.override"
+	fi
+	echo -e "$prev_node_version\c" >>"${layer_dir}/env.build/PREV_NODE_VERSION.override"
+}
+
 install_or_reuse_node() {
 	local layer_dir=$1
 	local build_dir=$2
@@ -79,7 +95,7 @@ install_or_reuse_node() {
 	status "Installing Node"
 	info "Getting Node version"
 	engine_node=$(json_get_key "$build_dir/package.json" ".engines.node")
-	node_version=${engine_node:-12.x}
+	node_version=${engine_node:-14.x}
 
 	info "Resolving Node version"
 	resolved_data=$(resolve-version node "$node_version")
@@ -103,6 +119,24 @@ install_or_reuse_node() {
 		} >>"${layer_dir}.toml"
 
 		curl -sL "$node_url" | tar xz --strip-components=1 -C "$layer_dir"
+	fi
+}
+
+clear_cache_on_node_version_change() {
+	local layers_dir=$1
+	local layer_dir=$2
+	local prev_node_version
+	local curr_node_version
+
+	curr_node_version="$(node -v)"
+	curr_node_version=${curr_node_version:1} #to truncate the "v" that is concatedated to version in node -v
+	if [[ -s "${layer_dir}/env.build/PREV_NODE_VERSION" ]]; then
+		prev_node_version=$(cat "${layer_dir}/env.build/PREV_NODE_VERSION")
+
+		if [[ "$curr_node_version" != "$prev_node_version" ]]; then
+			info "Deleting cache because node version changed from \"$prev_node_version\" to \"$curr_node_version\""
+			rm -rf "${layers_dir}/yarn" "${layers_dir}/yarn.toml"
+		fi
 	fi
 }
 
