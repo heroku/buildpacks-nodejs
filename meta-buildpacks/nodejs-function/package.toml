@@ -2,7 +2,13 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-buildpack@sha256:33925c80a23b9592b4217fc5e8a6deea0fd412b7d2541a11610604cad131e8b4"
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack@sha256:4fa85f23b1df1138039ec6f5667da48da2af7858767b8840a754c54b39b42ca1"
+
+[[dependencies]]
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha256:248ce84d07d2b9a11ca2433aee91bec48b2e029aac968e14f57711fe4270159a"
+
+[[dependencies]]
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-typescript-buildpack@sha256:accfc74412af9702c86d370f6289dc9674acc33023369e68f9687b6b4a1b63bd"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/streaming-http-adapter-buildpack:1.4.0"

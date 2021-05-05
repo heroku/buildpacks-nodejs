@@ -1,0 +1,20 @@
+[buildpack]
+uri = "."
+
+[[dependencies]]
+uri = "../../../buildpacks/nodejs"
+
+[[dependencies]]
+uri = "../../../buildpacks/npm"
+
+[[dependencies]]
+uri = "../../../buildpacks/typescript"
+
+[[dependencies]]
+uri = "docker://docker.io/heroku/streaming-http-adapter-buildpack:1.4.0"
+
+[[dependencies]]
+uri = "docker://docker.io/heroku/node-function-buildpack:1.5.0"
+
+[[dependencies]]
+uri = "https://github.com/forcedotcom/nodejs-sf-fx-buildpack/releases/download/v2.0.6/nodejs-sf-fx-buildpack-v2.0.6.tgz"

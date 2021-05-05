@@ -105,3 +105,4 @@ workflows:
                 - "buildpacks/typescript"
                 - "meta-buildpacks/nodejs"
                 - "test/meta-buildpacks/nodejs"
+                - "test/meta-buildpacks/nodejs-function"
