@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Change node engine version from 12 to 14 ([#40](https://github.com/heroku/buildpacks-node/pull/40))
 - Clear cache when node version changes ([#40](https://github.com/heroku/buildpacks-node/pull/40))
+- Check for nodejs.toml before read ([#53](https://github.com/heroku/buildpacks-nodejs/pull/53))
+- Change default Node.js version to 16 ([#53](https://github.com/heroku/buildpacks-nodejs/pull/53))
 
 ## [0.7.3] 2021/03/04
 - Flush cache when stack image changes ([#28](https://github.com/heroku/buildpacks-node/pull/28))
