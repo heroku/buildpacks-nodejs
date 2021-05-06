@@ -4,7 +4,7 @@ fail_on_no_main_file() {
 	build_dir=$1
 	fn_entry_file=$(json_get_key "$build_dir/package.json" ".main")
 
-	if [[ ! -f $fn_entry_file ]]; then
+	if [[ ! -f "$build_dir/$fn_entry_file" ]]; then
 		error "File at \"main\" in package.json is missing. Check your function and make sure there is a main file."
 		exit 1
 	fi
