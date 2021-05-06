@@ -9,6 +9,7 @@ source "${CNB_BUILDPACK_DIR}/lib/utils/toml.sh"
 
 run_initial_checks() {
 	build_dir="$1"
+	fail_on_no_main_key "$build_dir"
 	fail_on_no_main_file "$build_dir"
 }
 

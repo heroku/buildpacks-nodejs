@@ -4,10 +4,11 @@
 set -euo pipefail
 
 layers_dir="${1:?}"
+build_dir=$(pwd)
 
 source "${CNB_BUILDPACK_DIR}/lib/build.sh"
 
-run_initial_checks "$(pwd)"
+run_initial_checks "$build_dir"
 
 install_runtime "${layers_dir}"
 write_launch_toml "${layers_dir}" "$(pwd)"
