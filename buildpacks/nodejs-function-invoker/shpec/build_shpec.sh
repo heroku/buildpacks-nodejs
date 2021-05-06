@@ -14,12 +14,17 @@ create_temp_layers_dir() {
 	mktemp -d -t layers_shpec_XXXXX
 }
 
+create_temp_app_dir() {
+	mktemp -d -t layers_shpec_XXXXX
+}
+
 describe "lib/build.sh"
 	describe "install_runtime"
 		it "creates a runtime layer containing the runtime"
+			stub_command "npm"
 			layers_dir=$(create_temp_layers_dir)
 
-			install_runtime "${layers_dir}" > /dev/null
+			output=$(install_runtime "${layers_dir}")
 			result="${?}"
 
 			assert equal "${result}" 0
@@ -34,15 +39,11 @@ describe "lib/build.sh"
 				EOF
 			)
 			assert equal "${actual_layer_manifest}" "${expected_layer_manifest}"
-
-			# TODO: Switch to `bin/sf-fx-runtime-nodejs` when buildpack.toml contains the real archive URL.
-			assert file_present "${layers_dir}/sf-fx-runtime-nodejs/node-v14.16.1-linux-x64/bin/node"
-
 			rm -rf "${layers_dir}"
 		end
 
 		it "handles download failures gracefully"
-			stub_command "download_and_extract_tarball" "return 1"
+			stub_command "download_file" "return 1"
 			layers_dir=$(create_temp_layers_dir)
 
 			set +e
@@ -53,7 +54,7 @@ describe "lib/build.sh"
 			assert equal "${result}" 1
 			assert grep "${output}" "Error: Unable to download the function runtime"
 			rm -rf "${layers_dir}"
-			unstub_command "download_and_extract_tarball"
+			unstub_command "download_file"
 		end
 	end
 
@@ -61,8 +62,9 @@ describe "lib/build.sh"
 		it "configures sf-fx-runtime-nodejs as the web process"
 			layers_dir=$(create_temp_layers_dir)
 			launch_toml="${layers_dir}/launch.toml"
+			app_dir=$(create_temp_app_dir)
 
-			write_launch_toml "${layers_dir}"
+			write_launch_toml "${layers_dir}" "${app_dir}"
 			result="${?}"
 
 			assert equal "${result}" 0
@@ -71,12 +73,13 @@ describe "lib/build.sh"
 			expected=$(cat <<-EOF
 					[[processes]]
 					type = "web"
-					command = "sf-fx-runtime-nodejs ."
+					command = "sf-fx-runtime-nodejs ${app_dir}"
 				EOF
 			)
 			assert equal "${actual}" "${expected}"
 
 			rm -rf "${layers_dir}"
+			rm -rf "${app_dir}"
 		end
 	end
 end
