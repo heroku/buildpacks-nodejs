@@ -1,0 +1,31 @@
+api = "0.6"
+
+[buildpack]
+id = "heroku/nodejs-function-invoker"
+version = "0.1.0"
+name = "Node.js Function Invoker"
+clear-env = true
+homepage = "https://github.com/heroku/buildpacks-nodejs"
+keywords = ["nodejs", "node", "javascript", "function"]
+
+[[licenses]]
+type = "MIT"
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
+
+[metadata]
+
+[metadata.runtime]
+url = "https://sf-fx-nodejs-internal-early-access.s3.us-east-2.amazonaws.com/sf-fx-runtime-nodejs-0.1.0-ea.tgz"
+
+[metadata.release]
+
+[metadata.release.docker]
+repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-invoker-buildpack"
