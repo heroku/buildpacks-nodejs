@@ -75,13 +75,18 @@ install_or_reuse_toolbox() {
 store_node_version() {
 	local layer_dir=$1
 	local prev_node_version
-	# shellcheck disable=SC2002
-	prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
-	mkdir -p "${layer_dir}/env.build"
-	if [[ -s "${layer_dir}/env.build/PREV_NODE_VERSION.override" ]]; then
-		rm -rf "${layer_dir}/env.build/PREV_NODE_VERSION.override"
+
+	if [[ -z "${layer_dir}.toml" ]]; then
+		# shellcheck disable=SC2002
+		prev_node_version=$(cat "${layer_dir}.toml" | grep version | xargs | cut -d " " -f3)
+		echo "read prev node version"
+		mkdir -p "${layer_dir}/env.build"
+		if [[ -s "${layer_dir}/env.build/PREV_NODE_VERSION.override" ]]; then
+			rm -rf "${layer_dir}/env.build/PREV_NODE_VERSION.override"
+		fi
+
+		echo -e "$prev_node_version\c" >"${layer_dir}/env.build/PREV_NODE_VERSION.override"
 	fi
-	echo -e "$prev_node_version\c" >>"${layer_dir}/env.build/PREV_NODE_VERSION.override"
 }
 
 install_or_reuse_node() {
@@ -110,9 +115,8 @@ install_or_reuse_node() {
 		mkdir -p "${layer_dir}"
 		rm -rf "${layer_dir:?}"/*
 
-		echo "cache = true" >"${layer_dir}.toml"
-
 		{
+			echo "cache = true"
 			echo "build = true"
 			echo "launch = true"
 			echo -e "[metadata]\nversion = \"$node_version\""
