@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 # shellcheck source-path=SCRIPTDIR/..
 
+source "${CNB_BUILDPACK_DIR}/lib/failures.sh"
 source "${CNB_BUILDPACK_DIR}/lib/utils/download.sh"
+source "${CNB_BUILDPACK_DIR}/lib/utils/json.sh"
 source "${CNB_BUILDPACK_DIR}/lib/utils/log.sh"
 source "${CNB_BUILDPACK_DIR}/lib/utils/toml.sh"
+
+run_initial_checks() {
+	build_dir="$1"
+	fail_on_no_main_file "$build_dir"
+}
 
 install_runtime() {
 	local layers_dir="${1:?}"

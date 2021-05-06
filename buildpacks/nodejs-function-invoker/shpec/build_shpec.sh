@@ -19,6 +19,20 @@ create_temp_app_dir() {
 }
 
 describe "lib/build.sh"
+	describe "run_initial_checks"
+		it "fails when no main file present"
+			project_dir=$(create_temp_app_dir)
+			cp -r "${bp_dir}"/fixtures/package-json-no-main/* "$project_dir"
+
+			set +e
+			output=$(run_initial_checks "$project_dir")
+			result="${?}"
+			set -e
+
+			# assert equal "${result}" 1
+		end
+	end
+
 	describe "install_runtime"
 		it "creates a runtime layer containing the runtime"
 			stub_command "npm"
