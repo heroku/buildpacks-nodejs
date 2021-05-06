@@ -24,22 +24,27 @@ install_runtime() {
 
 	info "Starting download of function runtime"
 
-	if ! download_and_extract_tarball "${runtime_tarball_url}" "${runtime_layer_dir}"; then
+	if ! download_file "${runtime_tarball_url}" "${runtime_layer_dir}/sf-fx-runtime-nodejs.tar.gz"; then
 		# Ideally this would be a multi-line error message explaining that the cause is
 		# likely network issues and to retry, but error() doesn't support multi-line.
 		error "Unable to download the function runtime from ${runtime_tarball_url}"
 		exit 1
 	fi
 
+	info "Download of function runtime successful"
+
+	npm install -g --prefix "${runtime_layer_dir}" "${runtime_layer_dir}/sf-fx-runtime-nodejs.tar.gz"
+
 	info "Function runtime installation successful"
 }
 
 write_launch_toml() {
 	local layers_dir="${1:?}"
+	local app_dir="${2:?}"
 
 	cat >"${layers_dir}/launch.toml" <<-EOF
 		[[processes]]
 		type = "web"
-		command = "sf-fx-runtime-nodejs ."
+		command = "sf-fx-runtime-nodejs ${app_dir}"
 	EOF
 }

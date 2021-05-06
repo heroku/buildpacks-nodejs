@@ -23,9 +23,7 @@ id = "io.buildpacks.stacks.bionic"
 [metadata]
 
 [metadata.runtime]
-# TODO: Replace this with the actual invoker runtime archive URL.
-# This is currently using a random .tar.gz URL to test download/extraction.
-url = "https://nodejs.org/download/release/latest-v14.x/node-v14.16.1-linux-x64.tar.gz"
+url = "https://sf-fx-nodejs-internal-early-access.s3.us-east-2.amazonaws.com/sf-fx-runtime-nodejs-0.1.0-ea.tgz"
 
 [metadata.release]
 
