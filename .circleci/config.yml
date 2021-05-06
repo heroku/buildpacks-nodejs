@@ -111,5 +111,6 @@ workflows:
                 - "buildpacks/npm"
                 - "buildpacks/typescript"
                 - "meta-buildpacks/nodejs"
+                - "meta-buildpacks/nodejs-function"
                 - "test/meta-buildpacks/nodejs"
                 - "test/meta-buildpacks/nodejs-function"
