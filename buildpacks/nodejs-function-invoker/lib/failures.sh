@@ -15,7 +15,7 @@ fail_on_no_main_key() {
 	fn_entry_file=$(json_get_key "$build_dir/package.json" ".main")
 
 	if [[ -z $fn_entry_file ]]; then
-		error "Key at \"main\" in package.json is missing. Make sure to use \"main\" to specify your root function file."
+		error "Key \"main\" in package.json is missing. Make sure to use \"main\" to specify your root function file."
 		exit 1
 	fi
 }
