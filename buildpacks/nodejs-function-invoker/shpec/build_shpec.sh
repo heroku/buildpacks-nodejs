@@ -15,10 +15,46 @@ create_temp_layers_dir() {
 }
 
 create_temp_app_dir() {
-	mktemp -d -t layers_shpec_XXXXX
+	mktemp -d -t build_shpec_XXXXX
 }
 
 describe "lib/build.sh"
+	describe "run_initial_checks"
+		it "passes when a main key and file are present"
+			project_dir=$(create_temp_app_dir)
+			cp -r "${bp_dir}"/fixtures/valid-project/* "$project_dir"
+
+			output=$(run_initial_checks "$project_dir")
+			result="${?}"
+
+			assert equal "${result}" 0
+		end
+
+		it "fails when no main key present"
+			project_dir=$(create_temp_app_dir)
+			cp -r "${bp_dir}"/fixtures/package-json-no-main-key/* "$project_dir"
+
+			set +e
+			output=$(run_initial_checks "$project_dir")
+			result="${?}"
+			set -e
+
+			assert equal "${result}" 1
+		end
+
+		it "fails when no main file present"
+			project_dir=$(create_temp_app_dir)
+			cp -r "${bp_dir}"/fixtures/package-json-no-main-file/* "$project_dir"
+
+			set +e
+			output=$(run_initial_checks "$project_dir")
+			result="${?}"
+			set -e
+
+			assert equal "${result}" 1
+		end
+	end
+
 	describe "install_runtime"
 		it "creates a runtime layer containing the runtime"
 			stub_command "npm"
