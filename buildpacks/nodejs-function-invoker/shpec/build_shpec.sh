@@ -109,7 +109,7 @@ describe "lib/build.sh"
 			expected=$(cat <<-EOF
 					[[processes]]
 					type = "web"
-					command = "sf-fx-runtime-nodejs ${app_dir}"
+					command = "sf-fx-runtime-nodejs serve ${app_dir} -h 0.0.0.0 -p \${PORT:-8080}"
 				EOF
 			)
 			assert equal "${actual}" "${expected}"
