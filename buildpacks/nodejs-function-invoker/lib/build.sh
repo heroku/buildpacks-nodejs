@@ -53,6 +53,6 @@ write_launch_toml() {
 	cat >"${layers_dir}/launch.toml" <<-EOF
 		[[processes]]
 		type = "web"
-		command = "sf-fx-runtime-nodejs ${app_dir}"
+		command = "sf-fx-runtime-nodejs serve ${app_dir} -h 0.0.0.0 -p \${PORT:-8080}"
 	EOF
 }
