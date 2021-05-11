@@ -110,6 +110,7 @@ describe "lib/build.sh"
 					[[processes]]
 					type = "web"
 					command = "sf-fx-runtime-nodejs serve ${app_dir} -h 0.0.0.0 -p \${PORT:-8080}"
+					default = true
 				EOF
 			)
 			assert equal "${actual}" "${expected}"
