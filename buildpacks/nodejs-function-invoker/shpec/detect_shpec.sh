@@ -23,11 +23,20 @@ describe "lib/detect.sh"
 			assert equal "${result}" 0
 		end
 
-		it "passes detect when there is a project.toml"
+		it "passes detect when there is a project.toml with type"
 			app_dir="${bp_dir}/fixtures/project-toml"
 			detect_function_app "${app_dir}"
 			result="${?}"
 			assert equal "${result}" 0
+		end
+
+		it "fails when type is not set to function"
+			app_dir="${bp_dir}/fixtures/project-toml-invalid"
+			set +e
+			detect_function_app "${app_dir}"
+			result="${?}"
+			set -e
+			assert equal "${result}" 1
 		end
 
 		it "fails detect when there is only a package.json"
