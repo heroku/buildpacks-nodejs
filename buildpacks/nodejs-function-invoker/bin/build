@@ -11,4 +11,5 @@ source "${CNB_BUILDPACK_DIR}/lib/build.sh"
 run_initial_checks "$build_dir"
 
 install_runtime "${layers_dir}"
+install_scripts "${layers_dir}"
 write_launch_toml "${layers_dir}" "${build_dir}"

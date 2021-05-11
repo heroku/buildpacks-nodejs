@@ -94,6 +94,30 @@ describe "lib/build.sh"
 		end
 	end
 
+	describe "install_scripts"
+		it "creates a runtime layer containing the runtime"
+			layers_dir=$(create_temp_layers_dir)
+
+			install_scripts "${layers_dir}"
+			result="${?}"
+
+			assert equal "${result}" 0
+
+			assert file_present "${layers_dir}/opt.toml"
+			actual_layer_manifest=$(cat "${layers_dir}/opt.toml")
+			expected_layer_manifest=$(cat <<-EOF
+					[types]
+					launch = true
+					build = false
+					cache = false
+				EOF
+			)
+			assert equal "${actual_layer_manifest}" "${expected_layer_manifest}"
+			assert file_present "${layers_dir}/opt/run.sh"
+			rm -rf "${layers_dir}"
+		end
+	end
+
 	describe "write_launch_toml"
 		it "configures sf-fx-runtime-nodejs as the web process"
 			layers_dir=$(create_temp_layers_dir)
@@ -109,7 +133,7 @@ describe "lib/build.sh"
 			expected=$(cat <<-EOF
 					[[processes]]
 					type = "web"
-					command = "sf-fx-runtime-nodejs serve ${app_dir} -h 0.0.0.0 -p \${PORT:-8080}"
+					command = "${layers_dir}/opt/run.sh ${app_dir}"
 					default = true
 				EOF
 			)
