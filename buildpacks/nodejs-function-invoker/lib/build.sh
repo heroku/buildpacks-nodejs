@@ -49,6 +49,22 @@ install_runtime() {
 	info "Function runtime installation successful"
 }
 
+install_scripts() {
+	local layers_dir="${1:?}"
+	local opt_layer_dir="${layers_dir}/opt"
+	local opt_layer_toml="${layers_dir}/opt.toml"
+
+	mkdir -p "${opt_layer_dir}"
+	cat >"${opt_layer_toml}" <<-EOF
+		[types]
+		launch = true
+		build = false
+		cache = false
+	EOF
+
+	cp -a "${CNB_BUILDPACK_DIR}/opt/." "${opt_layer_dir}/"
+}
+
 write_launch_toml() {
 	local layers_dir="${1:?}"
 	local app_dir="${2:?}"
@@ -56,7 +72,7 @@ write_launch_toml() {
 	cat >"${layers_dir}/launch.toml" <<-EOF
 		[[processes]]
 		type = "web"
-		command = "sf-fx-runtime-nodejs serve ${app_dir} -h 0.0.0.0 -p \${PORT:-8080}"
+		command = "${layers_dir}/opt/run.sh ${app_dir}"
 		default = true
 	EOF
 }
