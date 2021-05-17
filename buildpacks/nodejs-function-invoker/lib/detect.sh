@@ -2,7 +2,7 @@
 
 detect_function_app() {
 	local app_dir="${1:?}"
-	[[ -f "${app_dir}/function.toml" || -f "${app_dir}/project.toml" ]]
+	[[ -f "${app_dir}/function.toml" || (-f "${app_dir}/project.toml" && $(yj -t <"${app_dir}/project.toml" | jq -r .com.salesforce.type) == "function") ]]
 }
 
 write_to_build_plan() {
