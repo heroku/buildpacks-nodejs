@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-function"
-version = "0.5.6"
+version = "0.5.7"
 name = "Node.js Function"
 
 [[buildpack.licenses]]
