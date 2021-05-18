@@ -7,14 +7,15 @@ app_dir=$(pwd)
 build_plan="${2:?}"
 
 # shellcheck source=/dev/null
-source "${CNB_BUILDPACK_DIR}/utils/download.sh"
+source "${CNB_BUILDPACK_DIR}/lib/utils/download.sh"
 source "${CNB_BUILDPACK_DIR}/lib/detect.sh"
 
-download_yj "$CNB_BUILDPACK_DIR"
-export PATH=$CNB_BUILDPACK_DIR/downloads/bin:$PATH
+download_yj "$app_dir"
+export PATH=$app_dir/.salesforce_functions/downloads/bin:$PATH
 
 if detect_function_app "${app_dir}"; then
 	write_to_build_plan "${build_plan}"
+	rm -rf "$app_dir/.salesforce_functions"
 	exit 0
 fi
 
