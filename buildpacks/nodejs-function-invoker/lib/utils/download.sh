@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-install_yj() {
-	build_dir=$1
+download_yj() {
+	bp_dir=$1
 
-	mkdir -p "${build_dir}/bin"
+	mkdir -p "${bp_dir}/downloads/bin"
 
-	if [[ ! -f "${build_dir}/bin/yj" ]]; then
-		curl -Ls https://github.com/sclevine/yj/releases/download/v2.0/yj-linux >"${build_dir}/bin/yj" &&
-			chmod +x "${build_dir}/bin/yj"
+	if [[ ! -f "${bp_dir}/downloads/bin/yj" ]]; then
+		curl -Ls https://github.com/sclevine/yj/releases/download/v2.0/yj-linux >"${bp_dir}/downloads/bin/yj" &&
+			chmod +x "${bp_dir}/downloads/bin/yj"
 	fi
 }
 
