@@ -6,6 +6,7 @@ set -euo pipefail
 app_dir=$(pwd)
 build_plan="${2:?}"
 
+# shellcheck source=/dev/null
 source "${CNB_BUILDPACK_DIR}/utils/download.sh"
 source "${CNB_BUILDPACK_DIR}/lib/detect.sh"
 
