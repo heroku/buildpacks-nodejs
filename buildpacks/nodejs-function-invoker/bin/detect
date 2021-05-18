@@ -6,7 +6,11 @@ set -euo pipefail
 app_dir=$(pwd)
 build_plan="${2:?}"
 
+source "${CNB_BUILDPACK_DIR}/utils/download.sh"
 source "${CNB_BUILDPACK_DIR}/lib/detect.sh"
+
+install_yj "$CNB_BUILDPACK_DIR"
+export PATH=$CNB_BUILDPACK_DIR/bin:$PATH
 
 if detect_function_app "${app_dir}"; then
 	write_to_build_plan "${build_plan}"
