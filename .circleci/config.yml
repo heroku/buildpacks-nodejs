@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   pack: buildpacks/pack@0.2.2
+  ruby: circleci/ruby@1.1.2
   heroku-buildpacks:
     commands:
       install-yq:
@@ -49,6 +50,23 @@ jobs:
 
               pack buildpack package test --config "${package_toml}" && break
             done
+
+  cutlass-integration-test:
+    parameters:
+      test-dir:
+        type: string
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - checkout
+      - pack/install-pack:
+          version: 0.16.0
+      - ruby/install-deps
+      - heroku-buildpacks/install-build-dependencies
+      - run:
+          name: "Run rspec tests against a given directory"
+          command: |
+            PARALLEL_SPLIT_TEST_PROCESSES=4 bundle exec parallel_split_test << parameters.test-dir >>
 
   shell-linting:
     docker:
@@ -114,3 +132,9 @@ workflows:
                 - "meta-buildpacks/nodejs-function"
                 - "test/meta-buildpacks/nodejs"
                 - "test/meta-buildpacks/nodejs-function"
+
+      - cutlass-integration-test:
+          matrix:
+            parameters:
+              test-dir:
+                - "test/specs/node-function"
