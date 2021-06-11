@@ -140,3 +140,4 @@ workflows:
             parameters:
               test-dir:
                 - "test/specs/node-function"
+                - "test/specs/node"

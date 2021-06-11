@@ -121,7 +121,7 @@ install_or_reuse_node() {
 			echo "build = true"
 			echo "launch = true"
 			echo -e "[metadata]\nversion = \"$node_version\""
-		} >>"${layer_dir}.toml"
+		} >"${layer_dir}.toml"
 
 		curl -sL "$node_url" | tar xz --strip-components=1 -C "$layer_dir"
 	fi
