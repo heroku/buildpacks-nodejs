@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-typescript"
-version = "0.2.3"
+version = "0.2.4"
 name = "TypeScript Buildpack"
 keywords = ["nodejs", "node", "typescript"]
 
