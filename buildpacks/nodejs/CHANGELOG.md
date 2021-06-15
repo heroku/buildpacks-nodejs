@@ -3,6 +3,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.7.4] 2021/06/15
 - Change node engine version from 12 to 14 ([#40](https://github.com/heroku/buildpacks-node/pull/40))
 - Clear cache when node version changes ([#40](https://github.com/heroku/buildpacks-node/pull/40))
 - Check for nodejs.toml before read ([#53](https://github.com/heroku/buildpacks-nodejs/pull/53))
