@@ -9,10 +9,10 @@ def test_dir
   Pathname(__dir__).join("../..")
 end
 
-NODEJS_FUNCTION_BUILDPACK = Cutlass::LocalBuildpack.new(directory: test_dir.join("meta-buildpacks/nodejs"))
+NODEJS_BUILDPACK = Cutlass::LocalBuildpack.new(directory: test_dir.join("meta-buildpacks/nodejs"))
 Cutlass.config do |config|
-  config.default_buildpack_paths = [NODEJS_FUNCTION_BUILDPACK]
-  config.default_builder = "heroku/buildpacks:18"
+  config.default_buildpack_paths = [NODEJS_BUILDPACK]
+  config.default_builder = "heroku/buildpacks:20"
   config.default_repo_dirs = [test_dir.join("fixtures")]
 end
 
@@ -24,7 +24,7 @@ RSpec.configure do |config|
   end
 
   config.after(:suite) do
-    NODEJS_FUNCTION_BUILDPACK.teardown
+    NODEJS_BUILDPACK.teardown
     Cutlass::CleanTestEnv.check
   end
 end
