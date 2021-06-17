@@ -114,7 +114,7 @@ workflows:
           matrix:
             parameters:
               buildpack-dir:
-                - "buildpacks/nodejs"
+                - "buildpacks/nodejs-engine"
                 - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
                 - "buildpacks/typescript"
@@ -126,7 +126,7 @@ workflows:
           matrix:
             parameters:
               buildpack-dir:
-                - "buildpacks/nodejs"
+                - "buildpacks/nodejs-engine"
                 - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
                 - "buildpacks/typescript"
