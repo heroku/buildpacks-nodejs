@@ -26,7 +26,7 @@ describe "Heroku's Nodejs CNB" do
     # The Yarn buildpack currently doesn't write to the build plan, so has to be used alongside
     # the NPM buildpack rather than instead of it, which means we have to specify a custom
     # buildpacks list. See W-9482533.
-    buildpacks = [test_dir.join("../meta-buildpacks/nodejs"), test_dir.join("../buildpacks/yarn")]
+    buildpacks = [test_dir.join("meta-buildpacks/nodejs"), test_dir.join("../buildpacks/yarn")]
     Cutlass::App.new("yarn-project", buildpacks: buildpacks).transaction do |app|
       app.pack_build do |pack_result|
         expect(pack_result.stdout).to include("Installing Node")
