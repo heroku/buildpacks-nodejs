@@ -2,7 +2,7 @@
 uri = "."
 
 [[dependencies]]
-uri = "../../../buildpacks/nodejs"
+uri = "../../../buildpacks/nodejs-engine"
 
 [[dependencies]]
 uri = "../../../buildpacks/npm"
