@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.5] 2021/06/17
 ### Fixed
 - Empty cache builds no longer fail with a `PREV_NODE_VERSION ` unbound variable error ([#86](https://github.com/heroku/buildpacks-node/pull/86))
+- yarn buildpack consumes dependency on node during plan resolution
 
 ## [0.1.4] 2021/06/15
 ### Fixed
