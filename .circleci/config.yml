@@ -66,7 +66,7 @@ jobs:
       - run:
           name: "Run rspec tests against a given directory"
           command: |
-            PARALLEL_SPLIT_TEST_PROCESSES=4 bundle exec parallel_split_test << parameters.test-dir >>
+            bundle exec rspec << parameters.test-dir >>
 
   shell-linting:
     docker:
