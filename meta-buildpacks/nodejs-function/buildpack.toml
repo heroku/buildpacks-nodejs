@@ -25,7 +25,7 @@ optional = true
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
-version = "0.1.6"
+version = "0.1.7"
 
 [metadata]
 
