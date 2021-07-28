@@ -1,4 +1,8 @@
 .idea
+dist/
+node_modules/
+package-lock.json
+
 **/target/
 
 .DS_Store

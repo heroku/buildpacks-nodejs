@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Bump sf-fx-runtime-nodejs to 0.1.2-ea
+
 ## [0.1.6] 2021/06/21
 ### Changed
 - Bump sf-fx-runtime-nodejs to 0.1.1.-ea
