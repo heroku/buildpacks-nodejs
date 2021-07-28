@@ -37,5 +37,10 @@ scripts must be located in a file named `build.sh` in the buildpack root directo
 - [yj](https://github.com/sclevine/yj) >= `5.0.0` in `$PATH`
 - [jq](https://github.com/stedolan/jq) >= `1.6` in `$PATH`
 
+## Releasing
+
+[Deploy Cloud Native Buildpacks](https://github.com/heroku/languages-team/blob/main/languages/cnb/deploy.md)
+
 ## License
+
 Licensed under the MIT License. See [LICENSE](./LICENSE) file.
