@@ -1,8 +1,8 @@
 api = "0.2"
 
 [buildpack]
-id = "heroku/nodejs-function"
-version = "0.5.10"
+id = "heroku/nodejs-function-test"
+version = "0.0.0"
 name = "Node.js Function"
 
 [[buildpack.licenses]]
