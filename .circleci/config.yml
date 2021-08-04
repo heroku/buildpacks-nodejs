@@ -81,7 +81,11 @@ jobs:
           command: "shfmt -f . | grep -v ^test/ | xargs shellcheck"
       - run:
           name: "shfmt"
-          command: "shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$' | xargs shfmt -d"
+          command: |
+            scripts=$(shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$');  \
+            if ! echo $scripts | xargs shfmt -d > /dev/null; then           \
+              echo $scripts | xargs shfmt -w && git diff --exit-code;       \
+            fi
 
   shpec:
     parameters:
