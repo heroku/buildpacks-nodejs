@@ -22,15 +22,37 @@ describe "Heroku's Nodejs CNB" do
     end
   end
 
-  it "installs dependencies using Yarn if a yarn.lock exists" do
-    # The Yarn buildpack currently doesn't write to the build plan, so has to be used alongside
-    # the NPM buildpack rather than instead of it, which means we have to specify a custom
-    # buildpacks list. See W-9482533.
-    buildpacks = [test_dir.join("meta-buildpacks/nodejs"), test_dir.join("../buildpacks/yarn")]
-    Cutlass::App.new("yarn-project", buildpacks: buildpacks).transaction do |app|
+  it "installs dependencies using NPM if no lock file exists" do
+    Cutlass::App.new("npm-project").transaction do |app|
+      app.pack_build do |pack_result|
+        expect(pack_result.stdout).to include("Installing Node")
+        expect(pack_result.stdout).to_not include("Installing yarn")
+        expect(pack_result.stdout).to include("Installing node modules")
+        expect(pack_result.stdout).to_not include("Installing node modules from ./yarn.lock")
+        expect(pack_result.stdout).to_not include("Installing node modules from ./package-lock.json")
+      end
+    end
+  end
+
+  it "installs dependencies using NPM if package-lock.json exists" do
+    Cutlass::App.new("npm-project-with-lockfile").transaction do |app|
+      app.pack_build do |pack_result|
+        expect(pack_result.stdout).to include("Installing Node")
+        expect(pack_result.stdout).to_not include("Installing yarn")
+        expect(pack_result.stdout).to include("Installing node modules")
+        expect(pack_result.stdout).to_not include("Installing node modules from ./yarn.lock")
+        expect(pack_result.stdout).to include("Installing node modules from ./package-lock.json")
+      end
+    end
+  end
+
+  it "installs dependencies using Yarn if yarn.lock exists" do
+    Cutlass::App.new("yarn-project").transaction do |app|
       app.pack_build do |pack_result|
         expect(pack_result.stdout).to include("Installing Node")
         expect(pack_result.stdout).to include("Installing yarn")
+        expect(pack_result.stdout).to include("Installing node modules from ./yarn.lock")
+        expect(pack_result.stdout).to_not include("Installing node modules from ./package-lock.json")
       end
     end
   end
