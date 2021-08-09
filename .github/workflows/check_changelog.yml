@@ -2,10 +2,10 @@ name: Check Changelog
 
 on:
   pull_request:
-    types: [opened, reopened, edited, synchronize, labeled]
+    types: [opened, reopened, edited, labeled, unlabeled, synchronize]
 
 jobs:
-  check:
+  check-changelog:
     runs-on: ubuntu-latest
     if: |
       !contains(github.event.pull_request.body, '[skip changelog]') &&
