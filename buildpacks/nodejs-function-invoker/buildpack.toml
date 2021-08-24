@@ -2,7 +2,7 @@ api = "0.6"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
-version = "0.1.8"
+version = "0.2.0"
 name = "Node.js Function Invoker"
 clear-env = true
 homepage = "https://github.com/heroku/buildpacks-nodejs"
@@ -23,7 +23,7 @@ id = "io.buildpacks.stacks.bionic"
 [metadata]
 
 [metadata.runtime]
-url = "https://sf-fx-nodejs-internal-early-access.s3.us-east-2.amazonaws.com/sf-fx-runtime-nodejs-0.1.2-ea.tgz"
+url = "https://sf-fx-nodejs-internal-early-access.s3.us-east-2.amazonaws.com/sf-fx-runtime-nodejs-0.4.0.tgz"
 
 [metadata.release]
 
