@@ -4,7 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Bump sf-fx-runtime-nodejs to 0.3.1, adding support for JavaScript Modules
+- Bump sf-fx-runtime-nodejs to 0.4.0, adding support for JavaScript Modules
 
 ## [0.1.7] 2021/07/28
 
