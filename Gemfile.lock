@@ -12,7 +12,7 @@ GEM
     java-properties (0.3.0)
     multi_json (1.15.0)
     parallel (1.20.1)
-    parallel_split_test (0.9.1)
+    parallel_split_test (0.10.0)
       parallel (>= 0.5.13)
       rspec-core (>= 3.9.0)
     rspec-core (3.10.1)
