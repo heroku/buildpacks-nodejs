@@ -28,25 +28,14 @@ install_runtime() {
 		cache = false
 	EOF
 
-	runtime_package_url=$(toml_get_key_from_metadata "${CNB_BUILDPACK_DIR}/buildpack.toml" "runtime.url")
-
-	info "Starting download of function runtime"
-
 	local runtime_package
-	runtime_package=$(mktemp -t sf-fx-runtime-nodejs.XXXXX.tar.gz)
-	if ! download_file "${runtime_package_url}" "${runtime_package}"; then
-		# Ideally this would be a multi-line error message explaining that the cause is
-		# likely network issues and to retry, but error() doesn't support multi-line.
-		error "Unable to download the function runtime from ${runtime_package_url}"
-		exit 1
-	fi
+	runtime_package=$(toml_get_key_from_metadata "${CNB_BUILDPACK_DIR}/buildpack.toml" "runtime.package")
 
-	info "Download of function runtime successful"
+	info "Installing ${runtime_package}..."
 
 	npm install -g --prefix "${runtime_layer_dir}" "${runtime_package}"
-	rm "${runtime_package}"
 
-	info "Function runtime installation successful"
+	info "${runtime_package} installation successful"
 }
 
 install_scripts() {
