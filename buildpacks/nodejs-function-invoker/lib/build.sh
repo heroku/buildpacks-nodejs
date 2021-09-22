@@ -33,7 +33,10 @@ install_runtime() {
 
 	info "Installing ${runtime_package}..."
 
-	npm install -g --prefix "${runtime_layer_dir}" "${runtime_package}"
+	if ! npm install -g --prefix "${runtime_layer_dir}" "${runtime_package}"; then
+		error "Unable to install ${runtime_package}"
+		exit 1
+	fi
 
 	info "${runtime_package} installation successful"
 }
