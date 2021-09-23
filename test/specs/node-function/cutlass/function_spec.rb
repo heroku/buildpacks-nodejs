@@ -10,6 +10,7 @@ describe "Heroku's Nodejs CNB" do
       end
 
       app.start_container(expose_ports: 8080) do |container|
+        sleep 2
         body = { }
         query = Cutlass::FunctionQuery.new(
           port: container.get_host_port(8080),
@@ -29,6 +30,7 @@ describe "Heroku's Nodejs CNB" do
       end
 
       app.start_container(expose_ports: 8080) do |container|
+        sleep 2
         body = { }
         query = Cutlass::FunctionQuery.new(
           port: container.get_host_port(8080),
