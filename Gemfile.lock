@@ -1,14 +1,8 @@
-GIT
-  remote: https://github.com/heroku/cutlass
-  revision: 1081d85a665bb0fb4ccb88bad762daa01f0408a6
-  branch: jwl/container_memory
-  specs:
-    cutlass (0.2.1)
-      docker-api (>= 2.0)
-
 GEM
   remote: https://rubygems.org/
   specs:
+    cutlass (0.2.2)
+      docker-api (>= 2.0)
     dead_end (1.1.7)
     diff-lcs (1.4.4)
     docker-api (2.2.0)
@@ -36,7 +30,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  cutlass!
+  cutlass
   dead_end
   java-properties
   parallel_split_test
