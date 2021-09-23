@@ -78,8 +78,8 @@ describe "lib/build.sh"
 			rm -rf "${layers_dir}"
 		end
 
-		it "handles download failures gracefully"
-			stub_command "download_file" "return 1"
+		it "handles installation failures gracefully"
+			stub_command "npm" "return 1"
 			layers_dir=$(create_temp_layers_dir)
 
 			set +e
@@ -88,9 +88,9 @@ describe "lib/build.sh"
 			set -e
 
 			assert equal "${result}" 1
-			assert grep "${output}" "Error: Unable to download the function runtime"
+			assert grep "${output}" "Error: Unable to install"
 			rm -rf "${layers_dir}"
-			unstub_command "download_file"
+			unstub_command "npm"
 		end
 	end
 
