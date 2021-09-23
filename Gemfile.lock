@@ -1,14 +1,20 @@
-GEM
-  remote: https://rubygems.org/
+GIT
+  remote: https://github.com/heroku/cutlass
+  revision: 1081d85a665bb0fb4ccb88bad762daa01f0408a6
+  branch: jwl/container_memory
   specs:
     cutlass (0.2.1)
       docker-api (>= 2.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
     dead_end (1.1.7)
     diff-lcs (1.4.4)
-    docker-api (2.1.0)
+    docker-api (2.2.0)
       excon (>= 0.47.0)
       multi_json
-    excon (0.81.0)
+    excon (0.85.0)
     java-properties (0.3.0)
     multi_json (1.15.0)
     parallel (1.20.1)
@@ -30,7 +36,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  cutlass
+  cutlass!
   dead_end
   java-properties
   parallel_split_test
@@ -38,4 +44,4 @@ DEPENDENCIES
   rspec-retry
 
 BUNDLED WITH
-   2.2.16
+   2.2.22

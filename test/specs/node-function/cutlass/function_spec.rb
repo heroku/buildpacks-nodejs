@@ -9,8 +9,7 @@ describe "Heroku's Nodejs CNB" do
         expect(pack_result.stdout).to include("Installing Node.js function runtime")
       end
 
-      app.start_container(expose_ports: 8080) do |container|
-        sleep 15
+      app.start_container(expose_ports: 8080, memory: 1e9) do |container|
         body = { }
         query = Cutlass::FunctionQuery.new(
           port: container.get_host_port(8080),
@@ -29,8 +28,7 @@ describe "Heroku's Nodejs CNB" do
         expect(pack_result.stdout).to include("Installing Node.js function runtime")
       end
 
-      app.start_container(expose_ports: 8080) do |container|
-        sleep 15
+      app.start_container(expose_ports: 8080, memory: 1e9) do |container|
         body = { }
         query = Cutlass::FunctionQuery.new(
           port: container.get_host_port(8080),
