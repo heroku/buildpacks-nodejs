@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] 2021/09/23
+
 - Update sf-fx-runtime-nodejs to 0.6.0 and install from npmjs.org
 
 ## [0.2.1] 2021/09/08
