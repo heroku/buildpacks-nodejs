@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.8] 2021/09/29
+
 ## [0.3.7] 2021/08/04
 * Upgraded `heroku/nodejs-yarn` to `0.1.6`
 

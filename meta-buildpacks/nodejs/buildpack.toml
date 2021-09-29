@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs"
-version = "0.3.8"
+version = "0.3.9"
 name = "Node.js"
 
 [[buildpack.licenses]]
