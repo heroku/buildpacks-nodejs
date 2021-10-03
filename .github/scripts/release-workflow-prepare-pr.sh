@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-released_buildpack_id="${1:?}"
+released_buildpack_id=$(echo "${1:?}" | tr -d '[:space:]')
 released_buildpack_version="${2:?}"
 released_buildpack_image_address="${3:?}"
 
