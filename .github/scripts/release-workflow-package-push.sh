@@ -6,6 +6,7 @@ shopt -s globstar
 # It requires the following environment variables to function correctly:
 #
 # REQUESTED_BUILDPACK_ID - The ID of the buildpack to package and push to the container registry.
+# for example `heroku/nodejs-function` or `heroku/nodejs-engine`.
 
 function find_buildpack_toml_path() {
 	local requested_buildpack_id="${1}"
@@ -21,17 +22,17 @@ function find_buildpack_toml_path() {
 
 	num_paths=${#matching_buildpack_toml_paths[@]}
 	if [[ num_paths -eq 0 ]]; then
-		echo "Could not find requested buildpack with ID ${requested_buildpack_id}!" >&2
+		echo "Could not find requested buildpack with ID '${requested_buildpack_id}'" >&2
 		exit 1
 	elif [[ num_paths -gt 1 ]]; then
-		echo "Found multiple buildpacks matching ID ${requested_buildpack_id}!" >&2
+		echo "Found multiple buildpacks matching ID '${requested_buildpack_id}'" >&2
 		echo "${matching_buildpack_toml_paths[@]}" >&2
 		exit 1
 	fi
 	echo "${matching_buildpack_toml_paths[0]}"
 }
 
-buildpack_id="${REQUESTED_BUILDPACK_ID:?Must be set to a valid buildpack ID!}"
+buildpack_id=$(echo "${REQUESTED_BUILDPACK_ID:?Must be set to a valid buildpack ID!}" | tr -d '[:space:]')
 buildpack_toml_path="$(find_buildpack_toml_path "${buildpack_id}")"
 buildpack_version="$(yj -t <"${buildpack_toml_path}" | jq -r .buildpack.version)"
 buildpack_docker_repository="$(yj -t <"${buildpack_toml_path}" | jq -r .metadata.release.docker.repository)"
