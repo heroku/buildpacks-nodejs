@@ -18,6 +18,8 @@ describe "Heroku's Nodejs CNB" do
 
         expect(query.as_json).to eq("hello world")
         expect(query.success?).to be_truthy
+
+        expect(container.logs.stdout).to include("logging info is a fun 1")
       end
     end
   end
