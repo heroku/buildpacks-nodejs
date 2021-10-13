@@ -3,7 +3,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
 * Upgraded `heroku/nodejs-function-invoker` to `0.2.6`
+
+## [0.6.6] 2021/10/13
 * Upgraded `heroku/nodejs-function-invoker` to `0.2.5`
 
 ## [0.6.5] 2021/10/04
