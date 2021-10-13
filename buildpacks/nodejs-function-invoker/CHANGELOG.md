@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] 2021/10/13
+
 - Update sf-fx-runtime-nodejs to 0.9.0
 - Allow sf-fx-runtime-nodejs to manage it's own --inspect port handling
 
