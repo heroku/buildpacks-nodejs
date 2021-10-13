@@ -5,6 +5,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Update sf-fx-runtime-nodejs to 0.9.1
+- Set sf-fx-runtime-nodejs --workers to $WEB_CONCURRENCY
 
 ## [0.2.5] 2021/10/13
 
