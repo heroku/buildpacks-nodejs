@@ -1,14 +1,14 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    cutlass (0.2.4)
+    cutlass (0.3.0)
       docker-api (>= 2.0)
     dead_end (2.0.0)
     diff-lcs (1.4.4)
     docker-api (2.2.0)
       excon (>= 0.47.0)
       multi_json
-    excon (0.86.0)
+    excon (0.87.0)
     java-properties (0.3.0)
     multi_json (1.15.0)
     parallel (1.20.1)
