@@ -52,6 +52,14 @@ jobs:
             Find the changelog here: [CHANGELOG](${{ steps.package.outputs.path }}/CHANGELOG.md)
           draft: false
           prerelease: false
+      - id: release_package
+        name: Upload buildpackage to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.package.outputs.package }}
+          tag: ${{ steps.package.outputs.id }}_${{ steps.package.outputs.version }}
+          overwrite: true
       - id: prepare-pr
         name: "Prepare PR with version bumps and CHANGELOG updates"
         run: ./.github/scripts/release-workflow-prepare-pr.sh "${{ steps.package.outputs.id }}" "${{ steps.package.outputs.version }}" "docker://${{ steps.package.outputs.address }}"
