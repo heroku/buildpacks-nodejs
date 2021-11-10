@@ -16,7 +16,7 @@ version = "0.7.4"
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
-version = "0.1.6"
+version = "0.1.7"
 
 [[order.group]]
 id = "heroku/nodejs-typescript"

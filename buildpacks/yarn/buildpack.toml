@@ -2,7 +2,7 @@ api = "0.6"
 
 [buildpack]
 id = "heroku/nodejs-yarn"
-version = "0.1.7"
+version = "0.1.8"
 name = "Yarn Buildpack"
 keywords = ["nodejs", "node", "yarn"]
 
