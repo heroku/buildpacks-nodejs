@@ -4,6 +4,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- install yarn
+- upgrade to buildpack api 0.6
+- support '*' stack
+
 ## [0.1.6] 2021/08/04
 ### Fixed
 - yarn buildpack consumes dependency on node during plan resolution
