@@ -38,7 +38,7 @@ buildpack_version="$(yj -t <"${buildpack_toml_path}" | jq -r .buildpack.version)
 buildpack_docker_repository="$(yj -t <"${buildpack_toml_path}" | jq -r .metadata.release.docker.repository)"
 buildpack_path=$(dirname "${buildpack_toml_path}")
 buildpack_build_path="${buildpack_path}"
-buildpackage_file="$(echo -n "${buildpack_id}" | tr '/' '-').cnb"
+buildpackage_file="/tmp/$(echo -n "${buildpack_id}" | tr '/' '-').cnb"
 
 echo "Found buildpack ${buildpack_id} at ${buildpack_path}"
 
