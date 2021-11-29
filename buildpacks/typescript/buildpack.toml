@@ -4,6 +4,7 @@ api = "0.2"
 id = "heroku/nodejs-typescript"
 version = "0.2.4"
 name = "TypeScript Buildpack"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["nodejs", "node", "typescript"]
 
 [[buildpack.licenses]]

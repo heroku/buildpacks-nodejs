@@ -4,6 +4,7 @@ api = "0.2"
 id = "heroku/nodejs-function"
 version = "0.6.9"
 name = "Node.js Function"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
 
 [[buildpack.licenses]]
 type = "MIT"

@@ -4,6 +4,7 @@ api = "0.6"
 id = "heroku/nodejs-yarn"
 version = "0.1.9"
 name = "Yarn Buildpack"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["nodejs", "node", "yarn"]
 
 [[buildpack.licenses]]
