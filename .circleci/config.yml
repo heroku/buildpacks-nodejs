@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  pack: buildpacks/pack@0.2.2
+  pack: buildpacks/pack@0.2.4
   ruby: circleci/ruby@1.1.2
   heroku-buildpacks:
     commands:
@@ -33,7 +33,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - pack/install-pack:
-          version: 0.16.0
+          version: 0.23.0
       - heroku-buildpacks/install-build-dependencies
       - run:
           name: "Build and package buildpack with retries"
@@ -60,7 +60,7 @@ jobs:
     steps:
       - checkout
       - pack/install-pack:
-          version: 0.16.0
+          version: 0.23.0
       - ruby/install-deps
       - heroku-buildpacks/install-build-dependencies
       - run:
