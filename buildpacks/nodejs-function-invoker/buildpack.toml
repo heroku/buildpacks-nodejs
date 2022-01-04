@@ -23,7 +23,7 @@ id = "io.buildpacks.stacks.bionic"
 [metadata]
 
 [metadata.runtime]
-package = "@heroku/sf-fx-runtime-nodejs@0.9.1"
+package = "@heroku/sf-fx-runtime-nodejs@0.9.2"
 
 [metadata.release]
 
