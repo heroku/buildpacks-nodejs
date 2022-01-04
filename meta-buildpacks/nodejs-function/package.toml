@@ -11,4 +11,4 @@ uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha
 uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-typescript-buildpack@sha256:ea72bb1caedfc4b6bee8b5c603d9d80febc2a442974cfcf3c95ac02f1b288ee5"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-invoker-buildpack@sha256:51d4c47e3e499fd3b10b4b5a5ae5060eb30902fdfa680010de04f546f4c37dde"
+uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-invoker-buildpack@sha256:0859d6acf9e6e56a1c591430cf55999da41e44e7963da2929578aeb7a489928f"
