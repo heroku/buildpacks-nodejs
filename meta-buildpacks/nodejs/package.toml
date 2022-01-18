@@ -11,7 +11,4 @@ uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha
 uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack@sha256:2af2cf7b38c5dec4e4507ac50d3a1def29e0737d061dda405c195ccac8d89951"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-typescript-buildpack@sha256:ea72bb1caedfc4b6bee8b5c603d9d80febc2a442974cfcf3c95ac02f1b288ee5"
-
-[[dependencies]]
 uri = "docker://docker.io/heroku/procfile-cnb:0.6.2"

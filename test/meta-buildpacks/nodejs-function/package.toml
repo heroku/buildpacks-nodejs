@@ -8,7 +8,4 @@ uri = "../../../buildpacks/nodejs-engine"
 uri = "../../../buildpacks/npm"
 
 [[dependencies]]
-uri = "../../../buildpacks/typescript"
-
-[[dependencies]]
 uri = "../../../buildpacks/nodejs-function-invoker"
