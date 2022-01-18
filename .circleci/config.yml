@@ -49,6 +49,7 @@ jobs:
               fi
 
               pack buildpack package test --config "${package_toml}" && break
+              ((n++))
             done
 
   cutlass-integration-test:
