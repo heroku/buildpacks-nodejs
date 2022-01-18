@@ -20,11 +20,6 @@ id = "heroku/nodejs-npm"
 version = "0.4.4"
 
 [[order.group]]
-id = "heroku/nodejs-typescript"
-version = "0.2.3"
-optional = true
-
-[[order.group]]
 id = "heroku/nodejs-function-invoker"
 version = "0.2.8"
 
