@@ -122,7 +122,6 @@ workflows:
                 - "buildpacks/nodejs-engine"
                 - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
-                - "buildpacks/typescript"
               stack-version:
                 - "18"
                 - "20"
@@ -134,7 +133,6 @@ workflows:
                 - "buildpacks/nodejs-engine"
                 - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
-                - "buildpacks/typescript"
                 - "meta-buildpacks/nodejs"
                 - "meta-buildpacks/nodejs-function"
                 - "test/meta-buildpacks/nodejs"
