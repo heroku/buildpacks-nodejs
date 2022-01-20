@@ -1,0 +1,16 @@
+api = "0.6"
+
+[buildpack]
+id = "heroku/nodejs-runtime"
+version = "0.1.0"
+name = "Node.JS Runtime"
+keywords = ["Node", "Node.js", "JavaScript"]
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
