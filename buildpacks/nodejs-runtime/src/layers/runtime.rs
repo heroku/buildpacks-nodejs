@@ -32,16 +32,16 @@ impl Layer for RuntimeLayer {
     ) -> Result<LayerResult<Self::Metadata>, NodejsBuildpackError> {
         println!("---> Download and extracting Node.js");
 
-        let ruby_tgz =
+        let node_tgz =
             NamedTempFile::new().map_err(NodejsBuildpackError::CouldNotCreateTemporaryFile)?;
 
         util::download(
             &context.buildpack_descriptor.metadata.nodejs_runtime_url,
-            ruby_tgz.path(),
+            node_tgz.path(),
         )
         .map_err(NodejsBuildpackError::NodejsDownloadError)?;
 
-        util::untar(ruby_tgz.path(), &layer_path).map_err(NodejsBuildpackError::NodejsUntarError)?;
+        util::untar(node_tgz.path(), &layer_path).map_err(NodejsBuildpackError::NodejsUntarError)?;
 
         LayerResultBuilder::new(GenericMetadata::default())
             .env(
