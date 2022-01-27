@@ -127,7 +127,7 @@ install_modules() {
 		if use_npm_ci; then
 			npm ci --production=false
 		else
-		  npm install --production=false
+			npm install --production=false
 		fi
 	else
 		info "Installing node modules"
