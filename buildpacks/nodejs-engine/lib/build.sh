@@ -43,18 +43,6 @@ clear_cache_on_stack_change() {
 	fi
 }
 
-set_up_environment() {
-	local layer_dir=$1
-	local node_env=${NODE_ENV:-production}
-
-	mkdir -p "${layer_dir}/env.build"
-
-	if [[ ! -s "${layer_dir}/env.build/NODE_ENV.override" ]]; then
-		echo -e "$node_env\c" >>"${layer_dir}/env.build/NODE_ENV.override"
-	fi
-	info "Setting NODE_ENV to ${node_env}"
-}
-
 install_or_reuse_toolbox() {
 	local layer_dir=$1
 
@@ -218,10 +206,11 @@ set_node_env() {
 	local layer_dir=$1
 	local node_env=${NODE_ENV:-production}
 
-	mkdir -p "${layer_dir}/env.launch"
-	if [[ ! -s "${layer_dir}/env.launch/NODE_ENV.override" ]]; then
-		echo -e "$node_env\c" >>"${layer_dir}/env.launch/NODE_ENV.override"
+	mkdir -p "${layer_dir}/env"
+	if [[ ! -s "${layer_dir}/env/NODE_ENV.override" ]]; then
+		echo -e "$node_env\c" >>"${layer_dir}/env/NODE_ENV.override"
 	fi
+	info "Setting NODE_ENV to ${node_env}"
 }
 
 set_node_modules_path() {

@@ -24,8 +24,6 @@ clear_cache_on_stack_change "$layers_dir"
 
 write_to_store_toml "$layers_dir"
 
-set_up_environment "$layers_dir/nodejs"
-
 bootstrap_buildpack "$layers_dir/bootstrap"
 
 install_or_reuse_toolbox "$layers_dir/toolbox"
@@ -38,14 +36,14 @@ export PATH=$layers_dir/nodejs/bin:$PATH
 
 clear_cache_on_node_version_change "$layers_dir" "$layers_dir/nodejs"
 
+set_node_env "$layers_dir/nodejs"
+
 parse_package_json_engines "$layers_dir/package_manager_metadata" "$build_dir"
 
 if [[ -f "yarn.lock" ]]; then
 	install_or_reuse_yarn "$layers_dir/yarn" "$build_dir"
 	export PATH=$layers_dir/yarn/bin:$PATH
 fi
-
-set_node_env "$layers_dir/nodejs"
 
 set_node_modules_path "$layers_dir/node_modules"
 
