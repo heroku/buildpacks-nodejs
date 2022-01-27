@@ -182,7 +182,6 @@ install_or_reuse_node_modules() {
 		info "Reusing node modules"
 		cp -r "$layer_dir" "$build_dir/node_modules"
 	else
-		rm -rf "${layer_dir:?}"/*
 		echo "cache = true" >"${layer_dir}.toml"
 
 		{
@@ -196,7 +195,6 @@ install_or_reuse_node_modules() {
 		if [[ -d "$build_dir/node_modules" && -n "$(ls -A "$build_dir/node_modules")" ]]; then
 			cp -r "$build_dir/node_modules/." "$layer_dir"
 		fi
-
 	fi
 }
 
