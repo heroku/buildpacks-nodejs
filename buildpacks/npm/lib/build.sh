@@ -125,9 +125,9 @@ install_modules() {
 	if detect_package_lock "$build_dir"; then
 		info "Installing node modules from ./package-lock.json"
 		if use_npm_ci; then
-			npm ci
+			npm ci --production=false
 		else
-			npm install
+		  npm install --production=false
 		fi
 	else
 		info "Installing node modules"
@@ -182,6 +182,7 @@ install_or_reuse_node_modules() {
 		info "Reusing node modules"
 		cp -r "$layer_dir" "$build_dir/node_modules"
 	else
+    rm -rf "$layer_dir"/*
 		echo "cache = true" >"${layer_dir}.toml"
 
 		{
@@ -195,6 +196,7 @@ install_or_reuse_node_modules() {
 		if [[ -d "$build_dir/node_modules" && -n "$(ls -A "$build_dir/node_modules")" ]]; then
 			cp -r "$build_dir/node_modules/." "$layer_dir"
 		fi
+
 	fi
 }
 
