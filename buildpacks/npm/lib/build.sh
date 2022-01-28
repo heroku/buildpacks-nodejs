@@ -125,13 +125,13 @@ install_modules() {
 	if detect_package_lock "$build_dir"; then
 		info "Installing node modules from ./package-lock.json"
 		if use_npm_ci; then
-			npm ci
+			npm ci --production=false
 		else
-			npm install
+			npm install --production=false
 		fi
 	else
 		info "Installing node modules"
-		npm install --no-package-lock
+		npm install --production=false --no-package-lock
 	fi
 }
 

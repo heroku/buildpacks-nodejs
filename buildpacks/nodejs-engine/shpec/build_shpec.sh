@@ -136,33 +136,6 @@ describe "lib/build.sh"
 		end
 	end
 
-	describe "set_up_environment"
-		layers_dir=$(create_temp_layer_dir)
-		it "sets env.build/NODE_ENV.override to production when NODE_ENV is blank"
-			assert file_absent "$layers_dir/nodejs/env.build/NODE_ENV.override"
-
-			set_up_environment "$layers_dir/nodejs"
-
-			assert file_present "$layers_dir/nodejs/env.build/NODE_ENV.override"
-			assert equal "$(cat "$layers_dir/nodejs/env.build/NODE_ENV.override")" production
-
-			rm "$layers_dir/nodejs/env.build/NODE_ENV.override"
-		end
-
-		it "sets env.build/NODE_ENV.override to NODE_ENV"
-			export NODE_ENV="test"
-
-			set_up_environment "$layers_dir/nodejs"
-
-			assert file_present "$layers_dir/nodejs/env.build/NODE_ENV.override"
-			assert equal "$(cat "$layers_dir/nodejs/env.build/NODE_ENV.override")" test
-
-			unset NODE_ENV
-		end
-
-		rm_temp_dirs "$layers_dir"
-	end
-
 	describe "set_node_modules_path"
 		layers_dir=$(create_temp_layer_dir)
 		it "sets NODE_MODULES_PATH to node modules directory path"
@@ -272,24 +245,24 @@ describe "lib/build.sh"
 
 	describe "set_node_env"
 		layers_dir=$(create_temp_layer_dir)
-		it "sets env.launch/NODE_ENV.override to production when NODE_ENV is blank"
-			assert file_absent "$layers_dir/nodejs/env.launch/NODE_ENV.override"
+		it "sets env/NODE_ENV.override to production when NODE_ENV is blank"
+			assert file_absent "$layers_dir/nodejs/env/NODE_ENV.override"
 
 			set_node_env "$layers_dir/nodejs"
 
-			assert file_present "$layers_dir/nodejs/env.launch/NODE_ENV.override"
-			assert equal "$(cat "$layers_dir/nodejs/env.launch/NODE_ENV.override")" production
+			assert file_present "$layers_dir/nodejs/env/NODE_ENV.override"
+			assert equal "$(cat "$layers_dir/nodejs/env/NODE_ENV.override")" production
 
-			rm "$layers_dir/nodejs/env.launch/NODE_ENV.override"
+			rm "$layers_dir/nodejs/env/NODE_ENV.override"
 		end
 
-		it "sets env.launch/NODE_ENV.override to NODE_ENV"
+		it "sets env/NODE_ENV.override to NODE_ENV"
 			export NODE_ENV="test"
 
 			set_node_env "$layers_dir/nodejs"
 
-			assert file_present "$layers_dir/nodejs/env.launch/NODE_ENV.override"
-			assert equal "$(cat "$layers_dir/nodejs/env.launch/NODE_ENV.override")" test
+			assert file_present "$layers_dir/nodejs/env/NODE_ENV.override"
+			assert equal "$(cat "$layers_dir/nodejs/env/NODE_ENV.override")" test
 
 			unset NODE_ENV
 		end
