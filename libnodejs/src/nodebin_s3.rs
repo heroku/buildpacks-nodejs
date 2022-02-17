@@ -4,11 +4,11 @@ use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use reqwest::Url;
-use semver::Version;
+use node_semver::Version;
 use serde::Deserialize;
 use std::convert::TryFrom;
 
-use crate::resolve_version::{Release, SemVersion, Software, BUCKET};
+use crate::resolve_version::{Release, Software, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]
@@ -79,7 +79,7 @@ impl TryFrom<BucketContent> for Software {
 
                 Ok(Release {
                     arch: arch.map(|a| a.as_str().to_string()),
-                    version: SemVersion::new(Version::parse(version_number.as_str())?),
+                    version: Version::parse(version_number.as_str())?,
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
                     etag: content.etag.replace("\"", ""),

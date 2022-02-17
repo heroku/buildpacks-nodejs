@@ -1,4 +1,4 @@
-use semver::{Version, VersionReq};
+use node_semver::{Range, Version};
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
 use std::{fmt, ops::Deref};
 
@@ -19,7 +19,7 @@ impl Software {
     /// If no Release can be found, then `None` is returned.
     pub fn resolve(
         &self,
-        version_requirements: VersionReq,
+        version_requirements: Range,
         arch: &str,
         channel: &str,
     ) -> Option<&Release> {
@@ -32,83 +32,25 @@ impl Software {
             .collect();
         // reverse sort, so latest is at the top
         filtered_versions.sort_by(|a, b| b.version.cmp(&a.version));
+        println!("**vs**");
+        for v in filtered_versions.clone() {
+            println!("v: {}", v.version);
+        }
 
         filtered_versions
             .into_iter()
-            .find(|&version| version_requirements.matches(&version.version))
+            .find(|&version| version_requirements.satisfies(&version.version))
     }
 }
 
 /// Represents a software release.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Release {
-    pub version: SemVersion,
+    pub version: Version,
     pub channel: String,
     pub arch: Option<String>,
     pub url: String,
     pub etag: String,
-}
-
-/// Custom struct for [`semver::Version`](https://docs.rs/semver/0.9.0/semver/struct.Version.html].
-///
-/// This way [serde](https://serde.rs) Serializer / Deserializer Traits can be implemented.
-#[derive(Debug)]
-pub struct SemVersion(semver::Version);
-
-impl SemVersion {
-    pub fn new(version: Version) -> Self {
-        Self { 0: version }
-    }
-}
-
-impl Deref for SemVersion {
-    type Target = Version;
-
-    fn deref(&self) -> &Version {
-        &self.0
-    }
-}
-
-impl Serialize for SemVersion {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        serializer.serialize_str(&format!("{}", self.0))
-    }
-}
-
-impl<'de> Deserialize<'de> for SemVersion {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct SemVersionVisitor;
-
-        impl<'de> Visitor<'de> for SemVersionVisitor {
-            type Value = SemVersion;
-
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("not in a valid Semantic Version format")
-            }
-
-            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where
-                E: serde::de::Error,
-            {
-                Version::parse(s)
-                    .map(|version| SemVersion::new(version))
-                    .map_err(|_| {
-                        serde::de::Error::invalid_value(
-                            serde::de::Unexpected::Str(s),
-                            &"Semantic Version",
-                        )
-                    })
-            }
-        }
-
-        deserializer.deserialize_str(SemVersionVisitor)
-    }
 }
 
 #[cfg(test)]
@@ -124,7 +66,7 @@ mod tests {
 
     fn release(version: &str, arch: &str, channel: &str) -> Release {
         Release {
-            version: SemVersion::new(Version::parse(version).unwrap()),
+            version: Version::parse(version).unwrap(),
             channel: channel.to_string(),
             arch: Some(arch.to_string()),
             url: url(version, arch, channel),
@@ -152,12 +94,12 @@ mod tests {
     #[test]
     fn it_resolves_based_on_arch_and_channel() {
         let software = setup();
-        let version_req = VersionReq::STAR;
+        let version_req = Range::any();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_some());
         if let Some(release) = option {
-            assert_eq!("14.0.0", format!("{}", *release.version));
+            assert_eq!("14.0.0", format!("{}", release.version));
             assert_eq!("linux-x64", release.arch.as_ref().unwrap());
             assert_eq!("release", release.channel);
         }
@@ -166,12 +108,12 @@ mod tests {
     #[test]
     fn it_handles_x_in_version_requirement() {
         let software = setup();
-        let version_req = VersionReq::parse("13.10.x").unwrap();
+        let version_req = Range::parse("13.10.x").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_some());
         if let Some(release) = option {
-            assert_eq!("13.10.1", format!("{}", *release.version));
+            assert_eq!("13.10.1", format!("{}", release.version));
             assert_eq!("linux-x64", release.arch.as_ref().unwrap());
             assert_eq!("release", release.channel);
         }
@@ -180,7 +122,7 @@ mod tests {
     #[test]
     fn it_returns_none_if_no_valid_version() {
         let software = setup();
-        let version_req = VersionReq::parse("15.0.0").unwrap();
+        let version_req = Range::parse("15.0.0").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_none());
@@ -223,18 +165,19 @@ mod tests {
             (">= 6.0.0", "11.14.0"),
             ("^6.9.0 || ^8.9.0 || ^10.13.0", "10.15.3"),
             ("6.* || 8.* || >= 10.*", "11.14.0"),
-            (">= 6.11.1 <= 10", "10.15.3"),
+            (">= 6.11.1 <= 10", "8.16.0"),
             (">=8.10 <11", "10.15.3"),
         ]
         .iter()
         {
-            let version_req = VersionReq::parse(input).unwrap();
-            let option = software.resolve(version_req, "linux-x64", "release");
+            let version_req = Range::parse(input).unwrap();
+            let option = software.resolve(version_req.clone(), "linux-x64", "release");
 
             assert!(option.is_some());
 
+            println!("vr: {:?}, v: {:?}", version_req, option.unwrap());
             if let Some(release) = option {
-                assert_eq!(version, &format!("{}", *release.version));
+                assert_eq!(version, &format!("{}", release.version));
                 assert_eq!("linux-x64", release.arch.as_ref().unwrap());
                 assert_eq!("release", release.channel);
             }
