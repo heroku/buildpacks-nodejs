@@ -102,7 +102,7 @@ impl TryFrom<BucketContent> for Software {
 ///
 /// * Parsing errors for an invalid S3 URL.
 /// * XML Parsing errors for an invalid XML document.
-pub async fn list_s3_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
+pub async fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
     b: B,
     r: R,
     p: P,
