@@ -1,4 +1,4 @@
-use libnodejs::resolve_version::{Software, BUCKET, REGION};
+use libnodejs::version::{Software, BUCKET, REGION};
 use libnodejs::nodebin_s3;
 use std::convert::TryFrom;
 

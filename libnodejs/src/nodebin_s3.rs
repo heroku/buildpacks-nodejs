@@ -8,7 +8,7 @@ use node_semver::Version;
 use serde::Deserialize;
 use std::convert::TryFrom;
 
-use crate::resolve_version::{Release, Software, BUCKET};
+use crate::version::{Release, Software, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]

@@ -1,11 +1,34 @@
-use node_semver::{Range, Version};
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
-use std::{fmt, ops::Deref};
+use node_semver::{Range, Version, SemverError};
 
 /// Heroku nodebin AWS S3 Bucket name
 pub const BUCKET: &str = "heroku-nodebin";
 /// Heroku nodebin AWS S3 Region
 pub const REGION: &str = "us-east-1";
+
+/// Parses `package.json` version requirements into `semver-node::Range`. It 
+/// handles these cases:
+///
+/// * "latest" as "*"
+/// * "~=" as "="
+/// * any other node semver compatible requirements
+///
+/// # Failures
+/// Invalid versions wil return an error
+pub fn parse(requirement: &str) -> Result<Range, SemverError> {
+    let trimmed = requirement.trim();
+
+    if requirement == "latest" {
+        Ok(Range::any())
+    } else if let Ok(range) = Range::parse(&trimmed) {
+        Ok(range)
+    } else if trimmed.starts_with("~=") {
+        let version = trimmed.replacen("=", "", 1);
+        Range::parse(version)
+    } else {
+        Range::parse(&trimmed)
+    }
+}
 
 /// Represents a software with releases.
 #[derive(Debug, Deserialize, Serialize)]
@@ -15,7 +38,7 @@ pub struct Software {
 }
 
 impl Software {
-    /// Resolves the [`Release`](struct.Release.html) based on [`semver::VersionReq`](https://docs.rs/semver/0.9.0/semver/struct.VersionReq.html).
+    /// Resolves the [`Release`](struct.Release.html) based on `semver-node::Range'.
     /// If no Release can be found, then `None` is returned.
     pub fn resolve(
         &self,
@@ -32,10 +55,6 @@ impl Software {
             .collect();
         // reverse sort, so latest is at the top
         filtered_versions.sort_by(|a, b| b.version.cmp(&a.version));
-        println!("**vs**");
-        for v in filtered_versions.clone() {
-            println!("v: {}", v.version);
-        }
 
         filtered_versions
             .into_iter()
@@ -74,7 +93,7 @@ mod tests {
         }
     }
 
-    fn setup() -> Software {
+    fn create_software() -> Software {
         Software {
             name: "node".to_string(),
             releases: vec![
@@ -92,8 +111,8 @@ mod tests {
     }
 
     #[test]
-    fn it_resolves_based_on_arch_and_channel() {
-        let software = setup();
+    fn resolve_resolves_based_on_arch_and_channel() {
+        let software = create_software();
         let version_req = Range::any();
 
         let option = software.resolve(version_req, "linux-x64", "release");
@@ -106,8 +125,8 @@ mod tests {
     }
 
     #[test]
-    fn it_handles_x_in_version_requirement() {
-        let software = setup();
+    fn resolve_handles_x_in_version_requirement() {
+        let software = create_software();
         let version_req = Range::parse("13.10.x").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
@@ -120,8 +139,8 @@ mod tests {
     }
 
     #[test]
-    fn it_returns_none_if_no_valid_version() {
-        let software = setup();
+    fn resolve_returns_none_if_no_valid_version() {
+        let software = create_software();
         let version_req = Range::parse("15.0.0").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
@@ -129,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn it_handles_semver_from_apps() {
+    fn resolve_handles_semver_from_apps() {
         let releases: Vec<Release> = vec![
             "10.0.0", "10.1.0", "10.10.0", "10.11.0", "10.12.0", "10.13.0", "10.14.0", "10.14.1",
             "10.14.2", "10.15.0", "10.15.1", "10.15.2", "10.15.3", "10.2.0", "10.2.1", "10.3.0",
@@ -182,5 +201,116 @@ mod tests {
                 assert_eq!("release", release.channel);
             }
         }
+    }
+
+    #[test]
+    fn parse_handles_latest() {
+        let result = parse("latest");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!("*", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_exact_versions() {
+        let result = parse("14.0.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!("14.0.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_starts_with_v() {
+        let result = parse("v14.0.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!("14.0.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_semver_semantics() {
+        let result = parse(">= 12.0.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(">=12.0.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_pipe_statements() {
+        let result = parse("^12 || ^13 || ^14");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(
+                ">=12.0.0 <13.0.0-0||>=13.0.0 <14.0.0-0||>=14.0.0 <15.0.0-0",
+                format!("{}", reqs)
+            );
+        }
+    }
+
+    #[test]
+    fn parse_handles_tilde_with_equals() {
+        let result = parse("~=14.4");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(">=14.4.0 <14.5.0-0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_tilde_with_equals_and_patch() {
+        let result = parse("~=14.4.3");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(">=14.4.3 <14.5.0-0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_v_within_string() {
+        let result = parse(">v15.5.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(">15.5.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_v_with_space() {
+        let result = parse(">= v10.0.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!(">=10.0.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_handles_equal_with_v() {
+        let result = parse("=v10.22.0");
+
+        assert!(result.is_ok());
+        if let Ok(reqs) = result {
+            assert_eq!("10.22.0", format!("{}", reqs));
+        }
+    }
+
+    #[test]
+    fn parse_returns_error_for_invalid_reqs() {
+        let result = parse("12.%");
+        println!("{:?}", result);
+
+        assert!(result.is_err());
     }
 }
