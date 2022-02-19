@@ -1,34 +1,11 @@
-use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};
-use node_semver::{Range, Version, SemverError};
+use std::{error::Error, fmt};
+use serde::{Deserialize, Serialize};
+use node_semver::{Range, Version};
 
 /// Heroku nodebin AWS S3 Bucket name
 pub const BUCKET: &str = "heroku-nodebin";
 /// Heroku nodebin AWS S3 Region
 pub const REGION: &str = "us-east-1";
-
-/// Parses `package.json` version requirements into `semver-node::Range`. It 
-/// handles these cases:
-///
-/// * "latest" as "*"
-/// * "~=" as "="
-/// * any other node semver compatible requirements
-///
-/// # Failures
-/// Invalid versions wil return an error
-pub fn parse(requirement: &str) -> Result<Range, SemverError> {
-    let trimmed = requirement.trim();
-
-    if requirement == "latest" {
-        Ok(Range::any())
-    } else if let Ok(range) = Range::parse(&trimmed) {
-        Ok(range)
-    } else if trimmed.starts_with("~=") {
-        let version = trimmed.replacen("=", "", 1);
-        Range::parse(version)
-    } else {
-        Range::parse(&trimmed)
-    }
-}
 
 /// Represents a software with releases.
 #[derive(Debug, Deserialize, Serialize)]
@@ -42,7 +19,7 @@ impl Software {
     /// If no Release can be found, then `None` is returned.
     pub fn resolve(
         &self,
-        version_requirements: Range,
+        version_requirements: Req,
         arch: &str,
         channel: &str,
     ) -> Option<&Release> {
@@ -54,22 +31,104 @@ impl Software {
             })
             .collect();
         // reverse sort, so latest is at the top
-        filtered_versions.sort_by(|a, b| b.version.cmp(&a.version));
+        filtered_versions.sort_by(|a, b| b.version.0.cmp(&a.version.0));
 
         filtered_versions
             .into_iter()
-            .find(|&version| version_requirements.satisfies(&version.version))
+            .find(|rel| version_requirements.satisfies(rel.version.clone()))
     }
 }
 
 /// Represents a software release.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Release {
-    pub version: Version,
+    pub version: Ver,
     pub channel: String,
     pub arch: Option<String>,
     pub url: String,
     pub etag: String,
+}
+
+#[derive(Debug)]
+pub struct VerErr(String);
+impl Error for VerErr {}
+impl fmt::Display for VerErr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Deserialize,Serialize,Debug,Clone,PartialEq,Eq)]
+#[serde(try_from = "String")]
+pub struct Ver(Version);
+impl Ver {
+    pub fn parse(version: &str) -> Result<Self, VerErr> {
+        let trimmed = version.trim();
+        match Version::parse(trimmed) {
+            Ok(v) => Ok(Ver(v)),
+            Err(e) => Err(VerErr(format!("{}", e))),
+        }
+    }
+}
+impl TryFrom<String> for Ver {
+    type Error = VerErr;
+    fn try_from(val: String) -> Result<Self, Self::Error> {
+        Ver::parse(&val)
+    }
+}
+impl fmt::Display for Ver {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+#[derive(Deserialize,Debug,Clone)]
+#[serde(try_from = "String")]
+pub struct Req(Range);
+
+impl Req {
+    /// Parses `package.json` version string into a Req. Handles
+    /// these cases:
+    ///
+    /// * Any node-semver compatible string
+    /// * "latest" as "*"
+    /// * "~=" as "="
+    ///
+    /// # Failures
+    /// Invalid versions wil return an error
+    pub fn parse(requirement: &str) -> Result<Self, VerErr> {
+        let trimmed = requirement.trim();
+        if requirement == "latest" {
+            return Ok(Req(Range::any()))
+        }
+        if trimmed.starts_with("~=") {
+            let version = trimmed.replacen("=", "", 1);
+            if let Ok(range) = Range::parse(version) {
+                return Ok(Req(range))
+            }
+        }
+        match Range::parse(&trimmed) {
+            Ok(range) => Ok(Req(range)),
+            Err(error) => Err(VerErr(format!("{}", error)))
+        }
+    }
+
+    pub fn satisfies(&self, ver: Ver) -> bool {
+        self.0.satisfies(&ver.0)
+    }
+}
+
+impl TryFrom<String> for Req {
+    type Error = VerErr;
+    fn try_from(val: String) -> Result<Self, Self::Error> {
+        Req::parse(&val)
+    }
+}
+
+impl fmt::Display for Req {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
 }
 
 #[cfg(test)]
@@ -83,12 +142,12 @@ mod tests {
         )
     }
 
-    fn release(version: &str, arch: &str, channel: &str) -> Release {
+    fn release(ver: Ver, arch: &str, channel: &str) -> Release {
         Release {
-            version: Version::parse(version).unwrap(),
+            version: ver.clone(),
             channel: channel.to_string(),
             arch: Some(arch.to_string()),
-            url: url(version, arch, channel),
+            url: url(&ver.to_string(), arch, channel),
             etag: "a586044d93acb053d28dd6c0ddf95362".to_string(),
         }
     }
@@ -97,15 +156,15 @@ mod tests {
         Software {
             name: "node".to_string(),
             releases: vec![
-                release("13.10.0", "linux-x64", "release"),
-                release("13.10.1", "linux-x64", "release"),
-                release("13.11.0", "linux-x64", "release"),
-                release("13.12.0", "linux-x64", "release"),
-                release("13.13.0", "linux-x64", "release"),
-                release("13.14.0", "linux-x64", "release"),
-                release("14.0.0", "linux-x64", "release"),
-                release("15.0.0", "linux-x64", "staging"),
-                release("15.0.0", "darwin-x64", "release"),
+                release(Ver::parse("13.10.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("13.10.1").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("13.11.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("13.12.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("13.13.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("13.14.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("14.0.0").unwrap(), "linux-x64", "release"),
+                release(Ver::parse("15.0.0").unwrap(), "linux-x64", "staging"),
+                release(Ver::parse("15.0.0").unwrap(), "darwin-x64", "release"),
             ],
         }
     }
@@ -113,7 +172,7 @@ mod tests {
     #[test]
     fn resolve_resolves_based_on_arch_and_channel() {
         let software = create_software();
-        let version_req = Range::any();
+        let version_req = Req::parse("*").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_some());
@@ -127,7 +186,7 @@ mod tests {
     #[test]
     fn resolve_handles_x_in_version_requirement() {
         let software = create_software();
-        let version_req = Range::parse("13.10.x").unwrap();
+        let version_req = Req::parse("13.10.x").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_some());
@@ -141,7 +200,7 @@ mod tests {
     #[test]
     fn resolve_returns_none_if_no_valid_version() {
         let software = create_software();
-        let version_req = Range::parse("15.0.0").unwrap();
+        let version_req = Req::parse("15.0.0").unwrap();
 
         let option = software.resolve(version_req, "linux-x64", "release");
         assert!(option.is_none());
@@ -166,7 +225,7 @@ mod tests {
             "8.7.0", "8.8.0", "8.8.1", "8.9.0", "8.9.1", "8.9.2", "8.9.3", "8.9.4",
         ]
         .iter()
-        .map(|v| release(v, "linux-x64", "release"))
+        .map(|v| release(Ver::parse(v).unwrap(), "linux-x64", "release"))
         .collect();
 
         let software = Software {
@@ -189,12 +248,12 @@ mod tests {
         ]
         .iter()
         {
-            let version_req = Range::parse(input).unwrap();
+            let version_req = Req::parse(input).unwrap();
             let option = software.resolve(version_req.clone(), "linux-x64", "release");
 
             assert!(option.is_some());
 
-            println!("vr: {:?}, v: {:?}", version_req, option.unwrap());
+            println!("vr: {}, v: {:?}", version_req, option.unwrap());
             if let Some(release) = option {
                 assert_eq!(version, &format!("{}", release.version));
                 assert_eq!("linux-x64", release.arch.as_ref().unwrap());
@@ -205,7 +264,7 @@ mod tests {
 
     #[test]
     fn parse_handles_latest() {
-        let result = parse("latest");
+        let result = Req::parse("latest");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -215,7 +274,7 @@ mod tests {
 
     #[test]
     fn parse_handles_exact_versions() {
-        let result = parse("14.0.0");
+        let result = Req::parse("14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -225,7 +284,7 @@ mod tests {
 
     #[test]
     fn parse_handles_starts_with_v() {
-        let result = parse("v14.0.0");
+        let result = Req::parse("v14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -235,7 +294,7 @@ mod tests {
 
     #[test]
     fn parse_handles_semver_semantics() {
-        let result = parse(">= 12.0.0");
+        let result = Req::parse(">= 12.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -245,7 +304,7 @@ mod tests {
 
     #[test]
     fn parse_handles_pipe_statements() {
-        let result = parse("^12 || ^13 || ^14");
+        let result = Req::parse("^12 || ^13 || ^14");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -258,7 +317,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals() {
-        let result = parse("~=14.4");
+        let result = Req::parse("~=14.4");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -268,7 +327,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals_and_patch() {
-        let result = parse("~=14.4.3");
+        let result = Req::parse("~=14.4.3");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -278,7 +337,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_within_string() {
-        let result = parse(">v15.5.0");
+        let result = Req::parse(">v15.5.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -288,7 +347,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_with_space() {
-        let result = parse(">= v10.0.0");
+        let result = Req::parse(">= v10.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -298,7 +357,7 @@ mod tests {
 
     #[test]
     fn parse_handles_equal_with_v() {
-        let result = parse("=v10.22.0");
+        let result = Req::parse("=v10.22.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -308,7 +367,7 @@ mod tests {
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
-        let result = parse("12.%");
+        let result = Req::parse("12.%");
         println!("{:?}", result);
 
         assert!(result.is_err());

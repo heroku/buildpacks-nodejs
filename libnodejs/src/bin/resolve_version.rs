@@ -1,4 +1,4 @@
-use libnodejs::version::{parse, Software};
+use libnodejs::version::{Req, Software};
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
@@ -22,7 +22,7 @@ fn main() {
         std::process::exit(ARGS_EXIT_CODE);
     }
     let filename = &args[1];
-    let version_requirements = parse(&args[2]).unwrap_or_else(|e| {
+    let version_requirements = Req::parse(&args[2]).unwrap_or_else(|e| {
         eprintln!("Could not parse Version Requirements '{}': {}", &args[2], e);
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });

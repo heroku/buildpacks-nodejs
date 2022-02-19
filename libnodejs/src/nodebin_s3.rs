@@ -8,7 +8,7 @@ use node_semver::Version;
 use serde::Deserialize;
 use std::convert::TryFrom;
 
-use crate::version::{Release, Software, BUCKET};
+use crate::version::{Ver, Release, Software, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]
@@ -79,7 +79,7 @@ impl TryFrom<BucketContent> for Software {
 
                 Ok(Release {
                     arch: arch.map(|a| a.as_str().to_string()),
-                    version: Version::parse(version_number.as_str())?,
+                    version: Ver::parse(version_number.as_str())?,
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
                     etag: content.etag.replace("\"", ""),
