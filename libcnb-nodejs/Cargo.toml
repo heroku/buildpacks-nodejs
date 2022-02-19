@@ -1,5 +1,5 @@
 [package]
-name = "libnodejs"
+name = "libcnb-nodejs"
 version = "0.1.0"
 edition = "2021"
 

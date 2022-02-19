@@ -1,5 +1,5 @@
-use libnodejs::versions::{Software, BUCKET, REGION};
-use libnodejs::nodebin_s3;
+use libcnb_nodejs::versions::{Software, BUCKET, REGION};
+use libcnb_nodejs::nodebin_s3;
 use std::convert::TryFrom;
 
 const FAILED_EXIT_CODE: i32 = 1;

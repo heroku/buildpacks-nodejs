@@ -1,4 +1,4 @@
-use libnodejs::versions::{Req, Software};
+use libcnb_nodejs::versions::{Req, Software};
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
