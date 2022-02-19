@@ -1,14 +1,10 @@
-//! A module wrapping up S3 functionality
-
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use reqwest::Url;
-use node_semver::Version;
 use serde::Deserialize;
 use std::convert::TryFrom;
-
-use crate::version::{Ver, Release, Software, BUCKET};
+use crate::versions::{Ver, Release, Software, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]

@@ -1,3 +1,3 @@
 pub mod package_json;
-pub mod version;
+pub mod versions;
 pub mod nodebin_s3;
