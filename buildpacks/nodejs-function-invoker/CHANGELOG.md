@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update sf-fx-runtime-nodejs to 0.11.0
+
 ## [0.2.9] 2022/02/10
 
 - Update sf-fx-runtime-nodejs to 0.10.0
