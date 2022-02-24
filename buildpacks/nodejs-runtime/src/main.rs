@@ -3,13 +3,11 @@ use libcnb::data::launch::{Launch, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
-use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack};
 
 use crate::layers::{RuntimeLayer};
 use crate::util::{DownloadError, UntarError};
 use serde::Deserialize;
-use std::process::ExitStatus;
 
 mod util;
 mod layers;
@@ -32,7 +30,7 @@ impl Buildpack for NodejsRuntimeBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         println!("---> Node.js Runtime Buildpack");
 
-        let runtime_layer = context.handle_layer(layer_name!("runtime"), RuntimeLayer)?;
+        context.handle_layer(layer_name!("runtime"), RuntimeLayer)?;
 
         BuildResultBuilder::new()
             .launch(
@@ -56,9 +54,13 @@ pub struct NodejsBuildpackMetadata {
 
 #[derive(Debug)]
 pub enum NodejsBuildpackError {
+    InventoryReadError(std::io::Error),
+    InventoryParseError(toml::de::Error),
+    PackageJsonError(libcnb_nodejs::package_json::PackageJsonError),
+    UnknownVersionError(),
     NodejsDownloadError(DownloadError),
     NodejsUntarError(UntarError),
-    CouldNotCreateTemporaryFile(std::io::Error),
+    CreateTempFileError(std::io::Error),
 }
 
 buildpack_main!(NodejsRuntimeBuildpack);

@@ -113,6 +113,10 @@ impl Req {
         }
     }
 
+    pub fn any() -> Self {
+        Req(Range::any())
+    }
+
     pub fn satisfies(&self, ver: Ver) -> bool {
         self.0.satisfies(&ver.0)
     }

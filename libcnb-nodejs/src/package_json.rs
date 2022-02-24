@@ -1,38 +1,34 @@
-use crate::versions::Ver;
+use crate::versions::{Ver,Req};
 use serde::{Deserialize};
 use std::io::BufReader;
 use std::fs::File;
 use std::path::Path;
 
-fn read<P: AsRef<Path>>(path: P) -> Result<Package, PackageError> {
-    let file = match File::open(path) {
-        Err(e) => return Err(PackageError(format!("could not open package.json: {}", e))),
-        Ok(f) => f
-    };
+pub fn read<P: AsRef<Path>>(path: P) -> Result<PackageJson, PackageJsonError> {
+    let file = File::open(path).map_err(PackageJsonError::AccessError)?;
     let rdr = BufReader::new(file);
-
-    return match serde_json::from_reader(rdr) {
-        Ok(p) => Ok(p),
-        Err(e) => Err(PackageError(format!("could not parse package.json: {}", e))),
-    }
+    return serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError)
 }
 
 #[derive(Deserialize,Debug)]
-struct Package {
-    name: String,
-    version: Ver,
-    engines: Option<Engines>,
+pub struct PackageJson {
+    pub name: String,
+    pub version: Ver,
+    pub engines: Option<Engines>,
 }
 
 #[derive(Deserialize,Debug)]
-struct Engines {
-    node: Option<Ver>,
-    yarn: Option<Ver>,
-    npm: Option<Ver>,
+pub struct Engines {
+    pub node: Option<Req>,
+    pub yarn: Option<Req>,
+    pub npm: Option<Req>,
 }
 
-#[derive(Deserialize,Debug,PartialEq)]
-struct PackageError(String);
+#[derive(Debug)]
+pub enum PackageJsonError {
+    AccessError(std::io::Error),
+    ParseError(serde_json::Error),
+}
 
 #[cfg(test)]
 mod tests {
