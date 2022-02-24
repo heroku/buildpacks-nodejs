@@ -3,6 +3,7 @@ use libcnb::data::launch::{Launch, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
+use libcnb::generic::GenericMetadata;
 use libcnb::{buildpack_main, Buildpack};
 
 use crate::layers::{RuntimeLayer};
@@ -16,14 +17,15 @@ pub struct NodejsRuntimeBuildpack;
 
 impl Buildpack for NodejsRuntimeBuildpack {
     type Platform = GenericPlatform;
-    type Metadata = NodejsBuildpackMetadata;
+    type Metadata = GenericMetadata;
     type Error = NodejsBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
+
         if context.app_dir.join("package.json").exists() {
             DetectResultBuilder::pass().build()
         } else {
-            DetectResultBuilder::fail().build()
+            DetectResultBuilder::pass().build()
         }
     }
 
@@ -46,12 +48,6 @@ impl Buildpack for NodejsRuntimeBuildpack {
     }
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct NodejsBuildpackMetadata {
-    pub nodejs_runtime_url: String,
-}
-
 #[derive(Debug)]
 pub enum NodejsBuildpackError {
     InventoryReadError(std::io::Error),
@@ -64,4 +60,3 @@ pub enum NodejsBuildpackError {
 }
 
 buildpack_main!(NodejsRuntimeBuildpack);
-
