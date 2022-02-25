@@ -5,23 +5,25 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
 use libcnb::generic::GenericMetadata;
 use libcnb::{buildpack_main, Buildpack};
+use libcnb_nodejs::versions::{Software,Req};
+use libcnb_nodejs::package_json::{PackageJson,PackageJsonError};
 
 use crate::layers::{RuntimeLayer};
 use crate::util::{DownloadError, UntarError};
-use serde::Deserialize;
 
 mod util;
 mod layers;
 
-pub struct NodejsRuntimeBuildpack;
+const INVENTORY: &str = include_str!("../inventory.toml");
 
-impl Buildpack for NodejsRuntimeBuildpack {
+pub struct NodeJsRuntimeBuildpack;
+
+impl Buildpack for NodeJsRuntimeBuildpack {
     type Platform = GenericPlatform;
     type Metadata = GenericMetadata;
-    type Error = NodejsBuildpackError;
+    type Error = NodeJsBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-
         if context.app_dir.join("package.json").exists() {
             DetectResultBuilder::pass().build()
         } else {
@@ -30,9 +32,22 @@ impl Buildpack for NodejsRuntimeBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        println!("---> Node.js Runtime Buildpack");
+        let software: Software = toml::from_str(INVENTORY).map_err(NodeJsBuildpackError::InventoryParseError)?;
 
-        context.handle_layer(layer_name!("runtime"), RuntimeLayer)?;
+        println!("---> Node.js Runtime Buildpack");
+        println!("---> Checking Node.js version");
+        let pjson_path = context.app_dir.join("package.json");
+        let pjson = PackageJson::read(pjson_path).map_err(NodeJsBuildpackError::PackageJsonError)?;
+        let node_version_range = pjson.engines
+            .and_then(|e| e.node)
+            .unwrap_or(Req::any());
+        println!("---> Detected Node.js version range: {}", node_version_range.to_string());
+        let target_release = software.resolve(node_version_range, "linux-x64", "release")
+            .ok_or(NodeJsBuildpackError::UnknownVersionError())?;
+        println!("---> Resolved Node.js version: {}", target_release.version);
+
+        let runtime_layer = RuntimeLayer{release: target_release.clone()};
+        context.handle_layer(layer_name!("runtime"), runtime_layer)?;
 
         BuildResultBuilder::new()
             .launch(
@@ -49,14 +64,20 @@ impl Buildpack for NodejsRuntimeBuildpack {
 }
 
 #[derive(Debug)]
-pub enum NodejsBuildpackError {
-    InventoryReadError(std::io::Error),
+pub enum NodeJsBuildpackError {
     InventoryParseError(toml::de::Error),
-    PackageJsonError(libcnb_nodejs::package_json::PackageJsonError),
+    PackageJsonError(PackageJsonError),
     UnknownVersionError(),
-    NodejsDownloadError(DownloadError),
-    NodejsUntarError(UntarError),
+    DownloadError(DownloadError),
+    ReadBinError(),
+    UntarError(UntarError),
     CreateTempFileError(std::io::Error),
 }
 
-buildpack_main!(NodejsRuntimeBuildpack);
+impl From<NodeJsBuildpackError> for libcnb::Error<NodeJsBuildpackError> {
+    fn from(e: NodeJsBuildpackError) -> Self {
+        libcnb::Error::BuildpackError(e)
+    }
+}
+
+buildpack_main!(NodeJsRuntimeBuildpack);

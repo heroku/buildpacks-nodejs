@@ -3,62 +3,53 @@ use std::path::Path;
 use crate::util;
 
 use tempfile::NamedTempFile;
+use std::ffi::OsString;
 
-use crate::{NodejsRuntimeBuildpack, NodejsBuildpackError};
+use crate::{NodeJsRuntimeBuildpack, NodeJsBuildpackError};
 use libcnb::build::BuildContext;
+use libcnb::Buildpack;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
-use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
+use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingLayerStrategy};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb_nodejs::package_json::{PackageJson};
-use libcnb_nodejs::versions::{Software,Req};
+use libcnb_nodejs::versions::{Release};
 
-pub struct RuntimeLayer;
-
-const INVENTORY: &str = include_str!("../../inventory.toml");
+pub struct RuntimeLayer {
+    pub release: Release
+}
 
 impl Layer for RuntimeLayer {
-    type Buildpack = NodejsRuntimeBuildpack;
+    type Buildpack = NodeJsRuntimeBuildpack;
     type Metadata = GenericMetadata;
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
             build: true,
             launch: true,
-            cache: false,
+            cache: true,
         }
     }
 
     fn create(
         &self,
-        context: &BuildContext<Self::Buildpack>,
+        _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, NodejsBuildpackError> {
-        println!("---> Checking Node.js version");
-        let software: Software = toml::from_str(INVENTORY).map_err(NodejsBuildpackError::InventoryParseError)?;
-        let pjson_path = context.app_dir.join("package.json");
-        let pjson = PackageJson::read(pjson_path).map_err(NodejsBuildpackError::PackageJsonError)?;
-        let node_version_range = match pjson.engines {
-            None => Req::any(),
-            Some(engines) => match engines.node {
-                None => Req::any(),
-                Some(v) => v
-            }
-        };
-        println!("---> Detected Node.js version {}", node_version_range.to_string());
-        let target_node_release = software.resolve(node_version_range, "linux-x64", "release").ok_or(NodejsBuildpackError::UnknownVersionError())?;
-
-        println!("---> Downloading and Installing Node.js {}", target_node_release.version);
-
-        let node_tgz = NamedTempFile::new().map_err(NodejsBuildpackError::CreateTempFileError)?;
-
+    ) -> Result<LayerResult<Self::Metadata>, NodeJsBuildpackError> {
+        println!("---> Downloading and Installing Node.js {}", self.release.version);
+        let node_tgz = NamedTempFile::new().map_err(NodeJsBuildpackError::CreateTempFileError)?;
         util::download(
-            target_node_release.url.clone(),
+            self.release.url.clone(),
             node_tgz.path(),
         )
-        .map_err(NodejsBuildpackError::NodejsDownloadError)?;
+        .map_err(NodeJsBuildpackError::DownloadError)?;
 
-        util::untar(node_tgz.path(), &layer_path).map_err(NodejsBuildpackError::NodejsUntarError)?;
+        util::untar(node_tgz.path(), &layer_path).map_err(NodeJsBuildpackError::UntarError)?;
+
+        let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
+        let bin_path = Path::new(layer_path).join(dist_name).join("bin");
+        if !bin_path.exists() {
+            return Err(NodeJsBuildpackError::ReadBinError())
+        }
 
         LayerResultBuilder::new(GenericMetadata::default())
             .env(
@@ -67,9 +58,40 @@ impl Layer for RuntimeLayer {
                         Scope::All,
                         ModificationBehavior::Prepend,
                         "PATH",
-                        context.app_dir.join("/where/is/node"),
+                        bin_path
+                    )
+                    .chainable_insert(
+                        Scope::All,
+                        ModificationBehavior::Delimiter,
+                        "PATH",
+                        ":"
+                    )
+                    .chainable_insert(
+                        Scope::Build,
+                        ModificationBehavior::Override,
+                        "HEROKU_NODE_VERSION",
+                        self.release.version.to_string()
                     )
             )
             .build()
+    }
+
+    fn existing_layer_strategy(
+        &self,
+        _context: &BuildContext<Self::Buildpack>,
+        layer_data: &LayerData<Self::Metadata>,
+    ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
+        let new_version: OsString = self.release.version.to_string().into();
+        let old_version = layer_data.env
+            .apply_to_empty(Scope::All)
+            .get("HEROKU_NODE_VERSION");
+
+        match old_version {
+            Some(ov) if ov == new_version => {
+                println!("---> Reusing Node.js {}", self.release.version.to_string());
+                return Ok(ExistingLayerStrategy::Keep);
+            },
+            _ => Ok(ExistingLayerStrategy::Recreate)
+        }
     }
 }

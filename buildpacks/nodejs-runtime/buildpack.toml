@@ -3,8 +3,8 @@ api = "0.6"
 [buildpack]
 id = "heroku/nodejs-runtime"
 version = "0.1.0"
-name = "Node.JS Runtime"
-keywords = ["Node", "Node.js", "JavaScript"]
+name = "Heroku Node.js Runtime"
+keywords = ["Node", "Node.js", "JavaScript", "JS"]
 
 [[stacks]]
 id = "heroku-18"

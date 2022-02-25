@@ -40,7 +40,7 @@ impl Software {
 }
 
 /// Represents a software release.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Release {
     pub version: Ver,
     pub channel: String,
