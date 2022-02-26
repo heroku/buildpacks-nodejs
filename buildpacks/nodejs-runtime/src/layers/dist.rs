@@ -14,11 +14,12 @@ use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingL
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb_nodejs::versions::{Release};
 
-pub struct RuntimeLayer {
+/// A layer that downloads the Node.js distribution artifacts
+pub struct DistLayer {
     pub release: Release
 }
 
-impl Layer for RuntimeLayer {
+impl Layer for DistLayer {
     type Buildpack = NodeJsRuntimeBuildpack;
     type Metadata = GenericMetadata;
 
@@ -69,7 +70,7 @@ impl Layer for RuntimeLayer {
                     .chainable_insert(
                         Scope::Build,
                         ModificationBehavior::Override,
-                        "HEROKU_NODE_VERSION",
+                        "HEROKU_NODEJS_VERSION",
                         self.release.version.to_string()
                     )
             )
@@ -84,7 +85,7 @@ impl Layer for RuntimeLayer {
         let new_version: OsString = self.release.version.to_string().into();
         let old_version = layer_data.env
             .apply_to_empty(Scope::All)
-            .get("HEROKU_NODE_VERSION");
+            .get("HEROKU_NODEJS_VERSION");
 
         match old_version {
             Some(ov) if ov == new_version => {

@@ -8,7 +8,7 @@ use libcnb::{buildpack_main, Buildpack};
 use libcnb_nodejs::versions::{Inventory,Req};
 use libcnb_nodejs::package_json::{PackageJson,PackageJsonError};
 
-use crate::layers::{RuntimeLayer};
+use crate::layers::{DistLayer};
 use crate::util::{DownloadError, UntarError};
 
 mod util;
@@ -27,7 +27,7 @@ impl Buildpack for NodeJsRuntimeBuildpack {
         if context.app_dir.join("package.json").exists() {
             DetectResultBuilder::pass().build()
         } else {
-            DetectResultBuilder::pass().build()
+            DetectResultBuilder::fail().build()
         }
     }
 
@@ -46,8 +46,8 @@ impl Buildpack for NodeJsRuntimeBuildpack {
             .ok_or(NodeJsBuildpackError::UnknownVersionError())?;
         println!("---> Resolved Node.js version: {}", target_release.version);
 
-        let runtime_layer = RuntimeLayer{release: target_release.clone()};
-        context.handle_layer(layer_name!("runtime"), runtime_layer)?;
+        let dist_layer = DistLayer{release: target_release.clone()};
+        context.handle_layer(layer_name!("dist"), dist_layer)?;
 
         BuildResultBuilder::new()
             .launch(
