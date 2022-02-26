@@ -1,4 +1,4 @@
-use libcnb_nodejs::versions::{Software, BUCKET, REGION};
+use libcnb_nodejs::versions::{Inventory, BUCKET, REGION};
 use libcnb_nodejs::nodebin_s3;
 use std::convert::TryFrom;
 
@@ -12,19 +12,19 @@ async fn main() {
         std::process::exit(FAILED_EXIT_CODE);
     }
 
-    let software_name = &args[1];
-    let result = nodebin_s3::list_objects(BUCKET, REGION, software_name)
+    let name = &args[1];
+    let result = nodebin_s3::list_objects(BUCKET, REGION, name)
         .await
         .unwrap_or_else(|e| {
             eprintln!("Failed to fetch from S3: {}", e);
             std::process::exit(FAILED_EXIT_CODE);
         });
-    let software = Software::try_from(result).unwrap_or_else(|e| {
+    let inv = Inventory::try_from(result).unwrap_or_else(|e| {
         eprintln!("Failed to parse AWS S3 XML: {}", e);
         std::process::exit(FAILED_EXIT_CODE);
     });
 
-    let toml_string = toml::to_string(&software).unwrap_or_else(|e| {
+    let toml_string = toml::to_string(&inv).unwrap_or_else(|e| {
         eprintln!("Failed to convert to toml: {}", e);
         std::process::exit(FAILED_EXIT_CODE);
     });

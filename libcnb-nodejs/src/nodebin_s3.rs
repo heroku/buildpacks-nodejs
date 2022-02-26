@@ -4,7 +4,7 @@ use regex::Regex;
 use reqwest::Url;
 use serde::Deserialize;
 use std::convert::TryFrom;
-use crate::versions::{Ver, Release, Software, BUCKET};
+use crate::versions::{Ver, Release, Inventory, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]
@@ -43,7 +43,7 @@ pub struct BucketContent {
     contents: Vec<Content>,
 }
 
-impl TryFrom<BucketContent> for Software {
+impl TryFrom<BucketContent> for Inventory {
     type Error = anyhow::Error;
 
     /// # Failures
@@ -52,10 +52,10 @@ impl TryFrom<BucketContent> for Software {
     /// * Regex missing matching captures against `Content#key`
     /// * `Version::parse` fails to parse the version found in the `Content#key`
     fn try_from(result: BucketContent) -> Result<Self, Self::Error> {
-        let software = &result.prefix;
+        let inv = &result.prefix;
         let version_regex = Regex::new(&format!(
             r"{}/(?P<channel>\w+)/(?P<arch>[\w-]+)?/?{}-v(?P<version>\d+\.\d+\.\d+)([\w-]+)?\.tar\.gz",
-            software, software
+            inv, inv
         ))?;
 
         let releases: Result<Vec<Release>, Error> = result
@@ -85,7 +85,7 @@ impl TryFrom<BucketContent> for Software {
             .collect();
 
         Ok(Self {
-            name: software.to_string(),
+            name: inv.to_string(),
             releases: releases?,
         })
     }
@@ -139,7 +139,7 @@ mod tests {
     use chrono::Utc;
 
     #[test]
-    fn it_converts_s3_result_to_software() {
+    fn it_converts_s3_result_to_inv() {
         let etag = "739c200ca266266ff150ad4d89b83205";
         let content = Content {
             key: "node/release/darwin-x64/node-v0.10.0-darwin-x64.tar.gz".to_string(),
@@ -153,15 +153,15 @@ mod tests {
             contents: vec![content],
         };
 
-        let result = Software::try_from(bucket_content);
+        let result = Inventory::try_from(bucket_content);
         assert!(result.is_ok());
-        if let Ok(software) = result {
-            assert_eq!(etag, software.releases[0].etag);
+        if let Ok(inv) = result {
+            assert_eq!(etag, inv.releases[0].etag);
         }
     }
 
     #[test]
-    fn it_converts_s3_result_to_software_arch_optional() {
+    fn it_converts_s3_result_to_inv_arch_optional() {
         let content = Content {
             key: "yarn/release/yarn-v0.16.0.tar.gz".to_string(),
             last_modified: Utc::now(),
@@ -174,12 +174,12 @@ mod tests {
             contents: vec![content],
         };
 
-        let result = Software::try_from(bucket_content);
+        let result = Inventory::try_from(bucket_content);
         assert!(result.is_ok());
     }
 
     #[test]
-    fn it_fails_to_convert_s3_result_to_software() {
+    fn it_fails_to_convert_s3_result_to_inv() {
         let content = Content {
             key: "garbage".to_string(),
             last_modified: Utc::now(),
@@ -192,7 +192,7 @@ mod tests {
             contents: vec![content],
         };
 
-        let result = Software::try_from(bucket_content);
+        let result = Inventory::try_from(bucket_content);
         assert!(result.is_err());
     }
 }

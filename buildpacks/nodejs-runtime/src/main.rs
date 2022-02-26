@@ -5,7 +5,7 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
 use libcnb::generic::GenericMetadata;
 use libcnb::{buildpack_main, Buildpack};
-use libcnb_nodejs::versions::{Software,Req};
+use libcnb_nodejs::versions::{Inventory,Req};
 use libcnb_nodejs::package_json::{PackageJson,PackageJsonError};
 
 use crate::layers::{RuntimeLayer};
@@ -32,7 +32,7 @@ impl Buildpack for NodeJsRuntimeBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let software: Software = toml::from_str(INVENTORY).map_err(NodeJsBuildpackError::InventoryParseError)?;
+        let inv: Inventory = toml::from_str(INVENTORY).map_err(NodeJsBuildpackError::InventoryParseError)?;
 
         println!("---> Node.js Runtime Buildpack");
         println!("---> Checking Node.js version");
@@ -42,7 +42,7 @@ impl Buildpack for NodeJsRuntimeBuildpack {
             .and_then(|e| e.node)
             .unwrap_or(Req::any());
         println!("---> Detected Node.js version range: {}", node_version_range.to_string());
-        let target_release = software.resolve(node_version_range, "linux-x64", "release")
+        let target_release = inv.resolve(node_version_range)
             .ok_or(NodeJsBuildpackError::UnknownVersionError())?;
         println!("---> Resolved Node.js version: {}", target_release.version);
 

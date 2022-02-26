@@ -1,4 +1,4 @@
-use libcnb_nodejs::versions::{Req, Software};
+use libcnb_nodejs::versions::{Req, Inventory};
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
@@ -29,12 +29,12 @@ fn main() {
         eprintln!("Could not read file '{}': {}", filename, e);
         std::process::exit(IO_EXIT_CODE);
     });
-    let software: Software = toml::from_str(&contents).unwrap_or_else(|e| {
+    let inv: Inventory = toml::from_str(&contents).unwrap_or_else(|e| {
         eprintln!("Could not parse toml of '{}': {}", filename, e);
         std::process::exit(TOML_EXIT_CODE);
     });
 
-    let version = software.resolve(version_requirements);
+    let version = inv.resolve(version_requirements);
     if let Some(version) = version {
         println!("{} {}", version.version, version.url);
     } else {
