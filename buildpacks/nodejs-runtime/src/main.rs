@@ -1,3 +1,4 @@
+use std::path::Path;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::launch::{Launch, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
@@ -49,17 +50,27 @@ impl Buildpack for NodeJsRuntimeBuildpack {
         let dist_layer = DistLayer{release: target_release.clone()};
         context.handle_layer(layer_name!("dist"), dist_layer)?;
 
-        BuildResultBuilder::new()
-            .launch(
-                Launch::new()
-                    .process(
-                        ProcessBuilder::new(process_type!("web"), "npm")
-                            .args(vec!["start"])
+        let launchjs = ["server.js", "index.js"]
+            .map(|f| Path::new(&context.app_dir).join(f))
+            .iter()
+            .find(|p| p.exists())
+            .and_then(|p| p.to_str())
+            .and_then(|p| Some(
+                    Launch::new().process(
+                        ProcessBuilder::new(process_type!("web"), "node")
+                            .args(vec![p])
                             .default(true)
-                            .build(),
+                            .build()
                     )
-            )
-            .build()
+                )
+            );
+
+
+        let resulter = BuildResultBuilder::new();
+        match launchjs {
+            Some(l) => resulter.launch(l).build(),
+            None => resulter.build()
+        }
     }
 }
 
