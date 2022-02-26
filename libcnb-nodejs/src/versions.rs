@@ -7,6 +7,16 @@ pub const BUCKET: &str = "heroku-nodebin";
 /// Heroku nodebin AWS S3 Region
 pub const REGION: &str = "us-east-1";
 
+/// Default/assumed operating system for software lookups
+#[cfg(target_os = "macos")]
+pub const OS: &str = "darwin";
+#[cfg(target_os = "linux")]
+pub const OS: &str = "linux";
+
+/// Default Architecture for software lookups
+#[cfg(target_arch = "x86_64")]
+pub const ARCH: &str = "x64";
+
 /// Represents a software with releases.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Software {
@@ -17,7 +27,13 @@ pub struct Software {
 impl Software {
     /// Resolves the [`Release`](struct.Release.html) based on `semver-node::Range'.
     /// If no Release can be found, then `None` is returned.
-    pub fn resolve(
+    pub fn resolve(&self, req: Req) -> Option<&Release> {
+        let arch = format!("{}-{}", OS, ARCH);
+        println!("arch: {}", arch);
+        self.resolve_other(req, &arch, "release")
+    }
+
+    pub fn resolve_other(
         &self,
         version_requirements: Req,
         arch: &str,

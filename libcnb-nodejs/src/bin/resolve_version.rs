@@ -5,8 +5,6 @@ const ARGS_EXIT_CODE: i32 = 1;
 const VERSION_REQS_EXIT_CODE: i32 = 2;
 const IO_EXIT_CODE: i32 = 3;
 const TOML_EXIT_CODE: i32 = 4;
-const ARCH: &str = "x64";
-const OS: &str = "linux";
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
@@ -26,6 +24,7 @@ fn main() {
         eprintln!("Could not parse Version Requirements '{}': {}", &args[2], e);
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
+    println!("Req: {}", version_requirements);
 
     let contents = std::fs::read_to_string(filename).unwrap_or_else(|e| {
         eprintln!("Could not read file '{}': {}", filename, e);
@@ -36,8 +35,7 @@ fn main() {
         std::process::exit(TOML_EXIT_CODE);
     });
 
-    let current_arch = format!("{}-{}", OS, ARCH);
-    let version = software.resolve(version_requirements, &current_arch, "release");
+    let version = software.resolve(version_requirements);
     if let Some(version) = version {
         println!("{} {}", version.version, version.url);
     } else {
