@@ -24,7 +24,6 @@ fn main() {
         eprintln!("Could not parse Version Requirements '{}': {}", &args[2], e);
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
-    println!("Req: {}", version_requirements);
 
     let contents = std::fs::read_to_string(filename).unwrap_or_else(|e| {
         eprintln!("Could not read file '{}': {}", filename, e);
