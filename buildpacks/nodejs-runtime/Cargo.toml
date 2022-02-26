@@ -13,3 +13,6 @@ ureq = "2.4.0"
 tar = "0.4.38"
 tempfile = "3.3.0"
 toml = "0.5"
+
+[dev-dependencies]
+libcnb-test = "0.1"
