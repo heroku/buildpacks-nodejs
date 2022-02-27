@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "buildpacks/nodejs-runtime",
+  "libcnb-nodejs"
+]
