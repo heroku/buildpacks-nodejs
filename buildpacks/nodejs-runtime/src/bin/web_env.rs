@@ -52,7 +52,6 @@ fn detect_web_memory() -> usize {
         .unwrap_or(DEFAULT_WEB_MEMORY_MB)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
