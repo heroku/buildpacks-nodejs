@@ -3,25 +3,33 @@ use std::path::Path;
 use crate::util;
 
 use tempfile::NamedTempFile;
-use std::ffi::OsString;
 
 use crate::{NodeJsRuntimeBuildpack, NodeJsBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::Buildpack;
 use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::generic::GenericMetadata;
 use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingLayerStrategy};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb_nodejs::versions::{Release};
+use serde::{Deserialize, Serialize};
 
 /// A layer that downloads the Node.js distribution artifacts
 pub struct DistLayer {
     pub release: Release
 }
 
+#[derive(Deserialize,Serialize,Clone)]
+pub struct DistLayerMetadata {
+    layer_version: String,
+    nodejs_version: String,
+    stack_id: String
+}
+
+const LAYER_VERSION: &str = "1";
+
 impl Layer for DistLayer {
     type Buildpack = NodeJsRuntimeBuildpack;
-    type Metadata = GenericMetadata;
+    type Metadata = DistLayerMetadata;
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
@@ -33,7 +41,7 @@ impl Layer for DistLayer {
 
     fn create(
         &self,
-        _context: &BuildContext<Self::Buildpack>,
+        context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsBuildpackError> {
         println!("---> Downloading and Installing Node.js {}", self.release.version);
@@ -52,7 +60,13 @@ impl Layer for DistLayer {
             return Err(NodeJsBuildpackError::ReadBinError())
         }
 
-        LayerResultBuilder::new(GenericMetadata::default())
+        let metadata = DistLayerMetadata {
+            layer_version: LAYER_VERSION.to_string(),
+            nodejs_version: self.release.version.to_string(),
+            stack_id: context.stack_id.to_string()
+        };
+
+        LayerResultBuilder::new(metadata)
             .env(
                 LayerEnv::new()
                     .chainable_insert(
@@ -67,32 +81,30 @@ impl Layer for DistLayer {
                         "PATH",
                         ":"
                     )
-                    .chainable_insert(
-                        Scope::Build,
-                        ModificationBehavior::Override,
-                        "HEROKU_NODEJS_VERSION",
-                        self.release.version.to_string()
-                    )
             )
             .build()
     }
 
     fn existing_layer_strategy(
         &self,
-        _context: &BuildContext<Self::Buildpack>,
+        context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let new_version: OsString = self.release.version.to_string().into();
-        let old_version = layer_data.env
-            .apply_to_empty(Scope::All)
-            .get("HEROKU_NODEJS_VERSION");
+        let metadata = layer_data.content_metadata.metadata.clone();
 
-        match old_version {
-            Some(ov) if ov == new_version => {
-                println!("---> Reusing Node.js {}", self.release.version.to_string());
-                return Ok(ExistingLayerStrategy::Keep);
-            },
-            _ => Ok(ExistingLayerStrategy::Recreate)
+        if self.release.version.to_string() != metadata.nodejs_version {
+            return Ok(ExistingLayerStrategy::Recreate)
         }
+
+        if context.stack_id.to_string() != metadata.stack_id {
+            return Ok(ExistingLayerStrategy::Recreate)
+        }
+
+        if LAYER_VERSION != metadata.layer_version {
+            return Ok(ExistingLayerStrategy::Recreate)
+        }
+
+        println!("---> Reusing Node.js {}", self.release.version.to_string());
+        return Ok(ExistingLayerStrategy::Keep);
     }
 }
