@@ -1,6 +1,7 @@
 use std::path::Path;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::launch::{Launch, ProcessBuilder};
+use libcnb::data::build_plan::{BuildPlanBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
@@ -25,11 +26,15 @@ impl Buildpack for NodeJsRuntimeBuildpack {
     type Error = NodeJsBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        if context.app_dir.join("package.json").exists() {
-            DetectResultBuilder::pass().build()
-        } else {
-            DetectResultBuilder::fail().build()
+        if !context.app_dir.join("package.json").exists() {
+            return DetectResultBuilder::fail().build();
         }
+        DetectResultBuilder::pass().build_plan(
+            BuildPlanBuilder::new()
+                .provides("node")
+                .requires("node")
+                .build()
+        ).build()
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
