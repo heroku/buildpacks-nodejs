@@ -1,6 +1,6 @@
 [package]
-name = "heroku-nodejs-runtime-buildpack"
-version = "0.1.0"
+name = "heroku-nodejs-engine-buildpack"
+version = "0.8.0"
 edition = "2021"
 
 [dependencies]

@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Convert buildpack from bash to rust leveraging libcnb.rs ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
 ## [0.7.5] 2022/01/28
 - Ensure NODE_ENV is set consistently during build, no matter the cache state ([186](https://github.com/heroku/buildpacks-nodejs/pull/186)
 
