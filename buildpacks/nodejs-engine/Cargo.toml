@@ -15,4 +15,4 @@ tempfile = "3.3.0"
 toml = "0.5"
 
 [dev-dependencies]
-libcnb-test = { path = "../../../libcnb.rs/libcnb-test" }
+libcnb-test = { git = "https://github.com/Malax/libcnb.rs" }

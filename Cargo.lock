@@ -763,8 +763,8 @@ name = "libcnb"
 version = "0.5.0"
 source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
 dependencies = [
- "libcnb-data 0.4.0 (git+https://github.com/Malax/libcnb.rs)",
- "libcnb-proc-macros 0.1.1 (git+https://github.com/Malax/libcnb.rs)",
+ "libcnb-data",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -773,11 +773,12 @@ dependencies = [
 [[package]]
 name = "libcnb-cargo"
 version = "0.2.1"
+source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
 dependencies = [
  "cargo_metadata",
  "clap",
  "fs_extra",
- "libcnb-data 0.4.0",
+ "libcnb-data",
  "log",
  "pathdiff",
  "size_format",
@@ -789,21 +790,10 @@ dependencies = [
 [[package]]
 name = "libcnb-data"
 version = "0.4.0"
-dependencies = [
- "fancy-regex",
- "libcnb-proc-macros 0.1.1",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb-data"
-version = "0.4.0"
 source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros 0.1.1 (git+https://github.com/Malax/libcnb.rs)",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -830,16 +820,6 @@ dependencies = [
 [[package]]
 name = "libcnb-proc-macros"
 version = "0.1.1"
-dependencies = [
- "cargo_metadata",
- "fancy-regex",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "libcnb-proc-macros"
-version = "0.1.1"
 source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
 dependencies = [
  "cargo_metadata",
@@ -851,6 +831,7 @@ dependencies = [
 [[package]]
 name = "libcnb-test"
 version = "0.1.1"
+source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
 dependencies = [
  "bollard",
  "cargo_metadata",
