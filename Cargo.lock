@@ -550,6 +550,7 @@ dependencies = [
  "libcnb",
  "libcnb-nodejs",
  "libcnb-test",
+ "libherokubuildpack",
  "serde",
  "sha2",
  "tar",
@@ -802,6 +803,22 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-stream",
+]
+
+[[package]]
+name = "libherokubuildpack"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a0cb037fca587c5a7e8203631121c1ff0844718c42ba55f678533ae32dcee425"
+dependencies = [
+ "flate2",
+ "libcnb",
+ "pathdiff",
+ "sha2",
+ "tar",
+ "termcolor",
+ "thiserror",
+ "ureq",
 ]
 
 [[package]]

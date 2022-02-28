@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 libcnb = "0.6"
 libcnb-nodejs = { path = "../../libcnb-nodejs" }
+libherokubuildpack = "0.6"
 serde = "1.0.136"
 flate2 = "1.0.22"
 sha2 = "0.10.1"

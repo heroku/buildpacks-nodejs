@@ -1,11 +1,10 @@
 use std::path::Path;
 
-use crate::util;
-
 use tempfile::NamedTempFile;
 
 use crate::{NodeJsRuntimeBuildpack, NodeJsBuildpackError};
 use libcnb::build::BuildContext;
+use libherokubuildpack::{download_file, decompress_tarball};
 use libcnb::Buildpack;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingLayerStrategy};
@@ -44,15 +43,20 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsBuildpackError> {
-        println!("---> Downloading and Installing Node.js {}", self.release.version);
-        let node_tgz = NamedTempFile::new().map_err(NodeJsBuildpackError::CreateTempFileError)?;
-        util::download(
-            self.release.url.clone(),
-            node_tgz.path(),
-        )
-        .map_err(NodeJsBuildpackError::DownloadError)?;
 
-        util::untar(node_tgz.path(), &layer_path).map_err(NodeJsBuildpackError::UntarError)?;
+        println!("---> Downloading and Installing Node.js {}", self.release.version);
+
+        let node_tgz = NamedTempFile::new()
+            .map_err(NodeJsBuildpackError::CreateTempFileError)?;
+
+        download_file(
+                self.release.url.clone(),
+                node_tgz.path(),
+            )
+            .map_err(NodeJsBuildpackError::DownloadError)?;
+
+        decompress_tarball(&mut node_tgz.into_file(), &layer_path)
+            .map_err(NodeJsBuildpackError::UntarError)?;
 
         let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
         let bin_path = Path::new(layer_path).join(dist_name).join("bin");

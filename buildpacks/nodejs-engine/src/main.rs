@@ -9,11 +9,10 @@ use libcnb::generic::GenericMetadata;
 use libcnb::{buildpack_main, Buildpack};
 use libcnb_nodejs::versions::{Inventory,Req};
 use libcnb_nodejs::package_json::{PackageJson,PackageJsonError};
+use libherokubuildpack::DownloadError;
 
 use crate::layers::{DistLayer, WebEnvLayer};
-use crate::util::{DownloadError, UntarError};
 
-mod util;
 mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
@@ -89,7 +88,7 @@ pub enum NodeJsBuildpackError {
     UnknownVersionError(),
     DownloadError(DownloadError),
     ReadBinError(),
-    UntarError(UntarError),
+    UntarError(std::io::Error),
     CreateTempFileError(std::io::Error),
 }
 
