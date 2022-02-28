@@ -10,9 +10,9 @@ use libcnb::{additional_buildpack_binary_path};
 
 
 /// A layer that sets WEB_MEMORY and WEB_CONCURRENCY via exec.d
-pub struct WebLayer;
+pub struct WebEnvLayer;
 
-impl Layer for WebLayer {
+impl Layer for WebEnvLayer {
     type Buildpack = NodeJsRuntimeBuildpack;
     type Metadata = GenericMetadata;
 

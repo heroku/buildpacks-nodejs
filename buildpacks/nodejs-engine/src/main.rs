@@ -10,7 +10,7 @@ use libcnb::{buildpack_main, Buildpack};
 use libcnb_nodejs::versions::{Inventory,Req};
 use libcnb_nodejs::package_json::{PackageJson,PackageJsonError};
 
-use crate::layers::{DistLayer, WebLayer};
+use crate::layers::{DistLayer, WebEnvLayer};
 use crate::util::{DownloadError, UntarError};
 
 mod util;
@@ -55,8 +55,8 @@ impl Buildpack for NodeJsRuntimeBuildpack {
         let dist_layer = DistLayer{release: target_release.clone()};
         context.handle_layer(layer_name!("dist"), dist_layer)?;
 
-        let web_layer = WebLayer{};
-        context.handle_layer(layer_name!("web"), web_layer)?;
+        let web_env_layer = WebEnvLayer{};
+        context.handle_layer(layer_name!("web_env"), web_env_layer)?;
 
         let launchjs = ["server.js", "index.js"]
             .map(|f| Path::new(&context.app_dir).join(f))
