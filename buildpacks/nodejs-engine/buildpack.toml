@@ -4,6 +4,7 @@ api = "0.6"
 id = "heroku/nodejs-engine"
 version = "0.8.0"
 name = "Heroku Node.js Engine Buildpack"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["Node", "Node.js", "JavaScript", "JS"]
 
 [[buildpack.licenses]]
