@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;
-use reqwest::Url;
 use serde::Deserialize;
 use std::convert::TryFrom;
+use url::Url;
 use crate::versions::{Ver, Release, Inventory, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
@@ -98,7 +98,7 @@ impl TryFrom<BucketContent> for Inventory {
 ///
 /// * Parsing errors for an invalid S3 URL.
 /// * XML Parsing errors for an invalid XML document.
-pub async fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
+pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
     b: B,
     r: R,
     p: P,
@@ -117,12 +117,13 @@ pub async fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
         if continuation_token != "" {
             params.push(("continuation-token", continuation_token.as_str()));
         }
+
         let url = Url::parse_with_params(
-            &format!("https://{}.s3.{}.amazonaws.com", bucket, region),
-            &params,
+            &format!("https://{}.s3.{}.amazonaws.com/", bucket, region),
+            params
         )?;
-        let mut page: ListBucketResult =
-            serde_xml_rs::from_str(&reqwest::get(url).await?.text().await?)?;
+        let res = ureq::get(&url.to_string()).call()?.into_string()?;
+        let mut page: ListBucketResult = serde_xml_rs::from_str(&res)?;
         bucket_content.contents.append(&mut page.contents);
 
         match page.next_continuation_token {
