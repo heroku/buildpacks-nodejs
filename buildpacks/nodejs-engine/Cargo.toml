@@ -4,7 +4,7 @@ version = "0.8.0"
 edition = "2021"
 
 [dependencies]
-libcnb = { git = "https://github.com/Malax/libcnb.rs" }
+libcnb = "0.6"
 libcnb-nodejs = { path = "../../libcnb-nodejs" }
 serde = "1.0.136"
 flate2 = "1.0.22"
@@ -15,4 +15,4 @@ tempfile = "3.3.0"
 toml = "0.5"
 
 [dev-dependencies]
-libcnb-test = { git = "https://github.com/Malax/libcnb.rs" }
+libcnb-test = "0.2"

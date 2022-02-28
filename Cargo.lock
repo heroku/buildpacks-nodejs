@@ -717,8 +717,9 @@ checksum = "1bf2e165bb3457c8e098ea76f3e3bc9db55f87aa90d52d0e6be741470916aaa4"
 
 [[package]]
 name = "libcnb"
-version = "0.5.0"
-source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "010b09da618d7791fb4ff0b21d0ed7f69d751d448d0f7645ed8c4bce2419c7df"
 dependencies = [
  "libcnb-data",
  "libcnb-proc-macros",
@@ -729,8 +730,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-cargo"
-version = "0.2.1"
-source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "546bedf1cece80a7805489d78191461fd0d17212817850dd78c9eb7e1aa13ce0"
 dependencies = [
  "cargo_metadata",
  "clap",
@@ -746,8 +748,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-data"
-version = "0.4.0"
-source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7c57e6314a73ca253b971b1d69d69cd4943df64b9befaeca7e5a3ef3fe1b1999"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -775,8 +778,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.1.1"
-source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e04dc71ac6c17f87b62c62ccf3b1168f9d28f84f1dca776473530a25ccfeeb5"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -786,8 +790,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.1.1"
-source = "git+https://github.com/Malax/libcnb.rs#0ca9e3ed828f174633367c748c33164331513cf9"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b5911037310c2ce7c582ee9a9c30a525006c58a21a74ffd7da66c04cf8dd8fb"
 dependencies = [
  "bollard",
  "cargo_metadata",
