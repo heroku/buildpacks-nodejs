@@ -2,10 +2,10 @@
 use libcnb::data::exec_d::ExecDProgramOutputKey;
 use libcnb::data::exec_d_program_output_key;
 use libcnb::exec_d::write_exec_d_program_output;
+use std::cmp;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
-use std::cmp;
 
 const MAX_AVAILABLE_MEMORY_MB: usize = 14336;
 const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
@@ -39,12 +39,16 @@ fn calculate_web_concurrency(web_mem: usize, available_mem: usize) -> usize {
 
 fn detect_available_memory() -> usize {
     fs::read_to_string("/sys/fs/cgroup/memory.max")
-        .or(fs::read_to_string("/sys/fs/cgroup/memory/memory.limit_in_bytes"))
+        .or(fs::read_to_string(
+            "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+        ))
         .ok()
         .and_then(|m| Some(m.trim().to_string()))
         .and_then(|m| m.parse::<usize>().ok())
         .and_then(|m| Some(m / 1_048_576))
-        .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |m| cmp::min(m, MAX_AVAILABLE_MEMORY_MB))
+        .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |m| {
+            cmp::min(m, MAX_AVAILABLE_MEMORY_MB)
+        })
 }
 
 fn detect_web_memory() -> usize {
@@ -58,15 +62,19 @@ fn detect_web_memory() -> usize {
 mod tests {
     use super::*;
 
-     #[test]
+    #[test]
     fn test_web_env() {
         let web_env = web_env();
         let web_memory: usize = web_env
-            .get("WEB_MEMORY").expect("WEB_MEMORY should exist")
-            .parse().expect("WEB_MEMORY should be a number");
+            .get("WEB_MEMORY")
+            .expect("WEB_MEMORY should exist")
+            .parse()
+            .expect("WEB_MEMORY should be a number");
         let web_concurrency: usize = web_env
-            .get("WEB_CONCURRENCY").expect("WEB_CONCURRENCY should exist")
-            .parse().expect("WEB_CONCURRENCY should be a number");
+            .get("WEB_CONCURRENCY")
+            .expect("WEB_CONCURRENCY should exist")
+            .parse()
+            .expect("WEB_CONCURRENCY should be a number");
 
         assert!((1..=32).contains(&web_concurrency));
         assert!((256..=2048).contains(&web_memory));

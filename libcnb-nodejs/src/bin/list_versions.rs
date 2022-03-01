@@ -1,5 +1,5 @@
-use libcnb_nodejs::versions::{Inventory, BUCKET, REGION};
 use libcnb_nodejs::nodebin_s3;
+use libcnb_nodejs::versions::{Inventory, BUCKET, REGION};
 use std::convert::TryFrom;
 
 const FAILED_EXIT_CODE: i32 = 1;
@@ -12,12 +12,11 @@ fn main() {
     }
 
     let name = &args[1];
-    let result = nodebin_s3::list_objects(BUCKET, REGION, name)
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to fetch from S3: {}", e);
-            std::process::exit(FAILED_EXIT_CODE);
-        });
-    println!("{:?}",result);
+    let result = nodebin_s3::list_objects(BUCKET, REGION, name).unwrap_or_else(|e| {
+        eprintln!("Failed to fetch from S3: {}", e);
+        std::process::exit(FAILED_EXIT_CODE);
+    });
+    println!("{:?}", result);
     let inv = Inventory::try_from(result).unwrap_or_else(|e| {
         eprintln!("Failed to parse AWS S3 XML: {}", e);
         std::process::exit(FAILED_EXIT_CODE);

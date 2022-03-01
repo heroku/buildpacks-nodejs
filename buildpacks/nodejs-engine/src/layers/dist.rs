@@ -4,25 +4,25 @@ use tempfile::NamedTempFile;
 
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use libcnb::build::BuildContext;
-use libherokubuildpack::{download_file, decompress_tarball};
-use libcnb::Buildpack;
 use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingLayerStrategy};
+use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb_nodejs::versions::{Release};
+use libcnb::Buildpack;
+use libcnb_nodejs::versions::Release;
+use libherokubuildpack::{decompress_tarball, download_file};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// A layer that downloads the Node.js distribution artifacts
 pub struct DistLayer {
-    pub release: Release
+    pub release: Release,
 }
 
-#[derive(Deserialize,Serialize,Clone)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct DistLayerMetadata {
     layer_version: String,
     nodejs_version: String,
-    stack_id: String
+    stack_id: String,
 }
 
 #[derive(Error, Debug)]
@@ -56,16 +56,14 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
+        println!(
+            "---> Downloading and Installing Node.js {}",
+            self.release.version
+        );
 
-        println!("---> Downloading and Installing Node.js {}", self.release.version);
+        let node_tgz = NamedTempFile::new().map_err(DistLayerError::CreateTempFileError)?;
 
-        let node_tgz = NamedTempFile::new()
-            .map_err(DistLayerError::CreateTempFileError)?;
-
-        download_file(
-                self.release.url.clone(),
-                node_tgz.path(),
-            )
+        download_file(self.release.url.clone(), node_tgz.path())
             .map_err(DistLayerError::DownloadError)?;
 
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
@@ -74,30 +72,22 @@ impl Layer for DistLayer {
         let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
         let bin_path = Path::new(layer_path).join(dist_name).join("bin");
         if !bin_path.exists() {
-            Err(DistLayerError::ReadBinError(bin_path.to_string_lossy().to_string()))?;
+            Err(DistLayerError::ReadBinError(
+                bin_path.to_string_lossy().to_string(),
+            ))?;
         }
 
         let metadata = DistLayerMetadata {
             layer_version: LAYER_VERSION.to_string(),
             nodejs_version: self.release.version.to_string(),
-            stack_id: context.stack_id.to_string()
+            stack_id: context.stack_id.to_string(),
         };
 
         LayerResultBuilder::new(metadata)
             .env(
                 LayerEnv::new()
-                    .chainable_insert(
-                        Scope::All,
-                        ModificationBehavior::Prepend,
-                        "PATH",
-                        bin_path
-                    )
-                    .chainable_insert(
-                        Scope::All,
-                        ModificationBehavior::Delimiter,
-                        "PATH",
-                        ":"
-                    )
+                    .chainable_insert(Scope::All, ModificationBehavior::Prepend, "PATH", bin_path)
+                    .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":"),
             )
             .build()
     }
@@ -110,15 +100,15 @@ impl Layer for DistLayer {
         let metadata = layer_data.content_metadata.metadata.clone();
 
         if self.release.version.to_string() != metadata.nodejs_version {
-            return Ok(ExistingLayerStrategy::Recreate)
+            return Ok(ExistingLayerStrategy::Recreate);
         }
 
         if context.stack_id.to_string() != metadata.stack_id {
-            return Ok(ExistingLayerStrategy::Recreate)
+            return Ok(ExistingLayerStrategy::Recreate);
         }
 
         if LAYER_VERSION != metadata.layer_version {
-            return Ok(ExistingLayerStrategy::Recreate)
+            return Ok(ExistingLayerStrategy::Recreate);
         }
 
         println!("---> Reusing Node.js {}", self.release.version.to_string());

@@ -1,18 +1,18 @@
-use crate::versions::{Ver,Req};
-use serde::{Deserialize};
-use std::io::BufReader;
-use std::fs::File;
-use std::path::Path;
+use crate::versions::{Req, Ver};
+use serde::Deserialize;
 use std::fmt;
+use std::fs::File;
+use std::io::BufReader;
+use std::path::Path;
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 pub struct PackageJson {
     pub name: String,
     pub version: Ver,
     pub engines: Option<Engines>,
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 pub struct Engines {
     pub node: Option<Req>,
     pub yarn: Option<Req>,
@@ -29,7 +29,7 @@ impl PackageJson {
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);
-        return serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError)
+        return serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError);
     }
 }
 
@@ -45,8 +45,8 @@ impl fmt::Display for PackageJsonError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
     use tempfile::Builder;
-    use std::io::{Write};
 
     #[test]
     fn read_valid_package() {
@@ -60,13 +60,18 @@ mod tests {
     #[test]
     fn read_valid_package_with_node_engine() {
         let mut f = Builder::new().tempfile().unwrap();
-        write!(f, "{}", "{
+        write!(
+            f,
+            "{}",
+            "{
             \"name\": \"foo\",
             \"version\": \"0.0.0\",
             \"engines\": {
                 \"node\": \"16.0.0\"
             }
-        }").unwrap();
+        }"
+        )
+        .unwrap();
         let pkg = PackageJson::read(f.path()).unwrap();
         assert_eq!(&pkg.engines.unwrap().node.unwrap().to_string(), "16.0.0")
     }

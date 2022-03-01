@@ -1,10 +1,10 @@
+use crate::versions::{Inventory, Release, Ver, BUCKET};
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use serde::Deserialize;
 use std::convert::TryFrom;
 use url::Url;
-use crate::versions::{Ver, Release, Inventory, BUCKET};
 
 /// Content Node in the XML document returned by Amazon S3 for a public bucket.
 #[derive(Debug, Deserialize)]
@@ -120,7 +120,7 @@ pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
 
         let url = Url::parse_with_params(
             &format!("https://{}.s3.{}.amazonaws.com/", bucket, region),
-            params
+            params,
         )?;
         let res = ureq::get(&url.to_string()).call()?.into_string()?;
         let mut page: ListBucketResult = serde_xml_rs::from_str(&res)?;

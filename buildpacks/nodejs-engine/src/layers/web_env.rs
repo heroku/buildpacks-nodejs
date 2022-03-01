@@ -2,12 +2,11 @@
 use std::path::Path;
 
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use libcnb::additional_buildpack_binary_path;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
-use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 use libcnb::generic::GenericMetadata;
-use libcnb::{additional_buildpack_binary_path};
-
+use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 
 /// A layer that sets WEB_MEMORY and WEB_CONCURRENCY via exec.d
 pub struct WebEnvLayer;
@@ -30,10 +29,7 @@ impl Layer for WebEnvLayer {
         _layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         LayerResultBuilder::new(GenericMetadata::default())
-            .exec_d_program(
-                "web_env",
-                additional_buildpack_binary_path!("web_env"),
-            )
+            .exec_d_program("web_env", additional_buildpack_binary_path!("web_env"))
             .build()
     }
 }

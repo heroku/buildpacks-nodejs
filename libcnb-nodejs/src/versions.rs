@@ -1,6 +1,6 @@
-use std::{error::Error, fmt};
-use serde::{Deserialize, Serialize};
 use node_semver::{Range, Version};
+use serde::{Deserialize, Serialize};
+use std::{error::Error, fmt};
 
 /// Heroku nodebin AWS S3 Bucket name
 pub const BUCKET: &str = "heroku-nodebin";
@@ -42,7 +42,8 @@ impl Inventory {
             .releases
             .iter()
             .filter(|version| {
-                version.arch.as_deref().unwrap_or(platform) == platform && version.channel == channel
+                version.arch.as_deref().unwrap_or(platform) == platform
+                    && version.channel == channel
             })
             .collect();
         // reverse sort, so latest is at the top
@@ -73,7 +74,7 @@ impl fmt::Display for VerErr {
     }
 }
 
-#[derive(Deserialize,Serialize,Debug,Clone,PartialEq,Eq)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
 #[serde(try_from = "String")]
 pub struct Ver(Version);
 impl Ver {
@@ -97,7 +98,7 @@ impl fmt::Display for Ver {
     }
 }
 
-#[derive(Deserialize,Debug,Clone)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
 pub struct Req(Range);
 
@@ -114,17 +115,17 @@ impl Req {
     pub fn parse(requirement: &str) -> Result<Self, VerErr> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
-            return Ok(Req(Range::any()))
+            return Ok(Req(Range::any()));
         }
         if trimmed.starts_with("~=") {
             let version = trimmed.replacen("=", "", 1);
             if let Ok(range) = Range::parse(version) {
-                return Ok(Req(range))
+                return Ok(Req(range));
             }
         }
         match Range::parse(&trimmed) {
             Ok(range) => Ok(Req(range)),
-            Err(error) => Err(VerErr(format!("{}", error)))
+            Err(error) => Err(VerErr(format!("{}", error))),
         }
     }
 
@@ -173,7 +174,7 @@ mod tests {
 
     fn create_inventory() -> Inventory {
         let versions = vec![
-            "13.10.0","13.10.1","13.11.0","13.12.0","13.13.0","13.14.0","14.0.0","15.0.0"
+            "13.10.0", "13.10.1", "13.11.0", "13.12.0", "13.13.0", "13.14.0", "14.0.0", "15.0.0",
         ];
         let mut releases = vec![];
         for v in versions {
@@ -182,7 +183,7 @@ mod tests {
         }
         Inventory {
             name: "node".to_string(),
-            releases: releases
+            releases: releases,
         }
     }
 
