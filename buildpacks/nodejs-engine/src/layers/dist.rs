@@ -27,14 +27,14 @@ pub struct DistLayerMetadata {
 
 #[derive(Error, Debug)]
 pub enum DistLayerError {
-    #[error("Couldn't create tempfile for Node.js: {0}")]
+    #[error("Couldn't create tempfile for Node.js distribution: {0}")]
     CreateTempFileError(std::io::Error),
-    #[error("Couldn't download Node.js: {0}")]
+    #[error("Couldn't download Node.js distribution: {0}")]
     DownloadError(libherokubuildpack::DownloadError),
-    #[error("Couldn't decompress Node.js: {0}")]
+    #[error("Couldn't decompress Node.js distribution: {0}")]
     UntarError(std::io::Error),
-    #[error("Couldn't locate Node.js binary")]
-    ReadBinError(),
+    #[error("Couldn't find Node.js binaries at expected location: {0}")]
+    ReadBinError(String),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -74,7 +74,7 @@ impl Layer for DistLayer {
         let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
         let bin_path = Path::new(layer_path).join(dist_name).join("bin");
         if !bin_path.exists() {
-            Err(DistLayerError::ReadBinError())?;
+            Err(DistLayerError::ReadBinError(bin_path.to_string_lossy().to_string()))?;
         }
 
         let metadata = DistLayerMetadata {
