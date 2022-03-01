@@ -8,6 +8,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 use libcnb_nodejs::package_json::{PackageJson, PackageJsonError};
 use libcnb_nodejs::versions::{Inventory, Req};
+use libherokubuildpack::log_error;
 use std::path::Path;
 use thiserror::Error;
 
@@ -90,6 +91,36 @@ impl Buildpack for NodeJsEngineBuildpack {
             None => resulter.build(),
         }
     }
+
+    fn on_error(&self, error: libcnb::Error<Self::Error>) -> i32 {
+        match error {
+            libcnb::Error::BuildpackError(bp_err) => {
+                let err_string = bp_err.to_string();
+                match bp_err {
+                    NodeJsEngineBuildpackError::DistLayerError(_) => {
+                        log_error("Node.js engine distribution error", err_string);
+                        40
+                    }
+                    NodeJsEngineBuildpackError::InventoryParseError(_) => {
+                        log_error("Node.js engine inventory parse error", err_string);
+                        41
+                    }
+                    NodeJsEngineBuildpackError::PackageJsonError(_) => {
+                        log_error("Node.js engine package.json error", err_string);
+                        42
+                    }
+                    NodeJsEngineBuildpackError::UnknownVersionError(_) => {
+                        log_error("Node.js engine version error", err_string);
+                        43
+                    }
+                }
+            }
+            err => {
+                log_error("Internal Buildpack Error", err.to_string());
+                100
+            }
+        }
+    }
 }
 
 #[derive(Error, Debug)]
@@ -100,7 +131,7 @@ pub enum NodeJsEngineBuildpackError {
     PackageJsonError(PackageJsonError),
     #[error("Couldn't resolve Node.js version: {0}")]
     UnknownVersionError(String),
-    #[error("dist layer error: {0}")]
+    #[error("{0}")]
     DistLayerError(#[from] DistLayerError),
 }
 
