@@ -9,7 +9,7 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Buildpack;
 use libcnb_nodejs::versions::Release;
-use libherokubuildpack::{decompress_tarball, download_file};
+use libherokubuildpack::{decompress_tarball, download_file, log_header, log_info};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -56,15 +56,14 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
-        println!(
-            "---> Downloading and Installing Node.js {}",
+        log_header(format!(
+            "Downloading and Installing Node.js {}",
             self.release.version
-        );
+        ));
 
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::CreateTempFileError)?;
 
-        download_file(self.release.url.clone(), node_tgz.path())
-            .map_err(DistLayerError::DownloadError)?;
+        download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::DownloadError)?;
 
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
             .map_err(DistLayerError::UntarError)?;
@@ -97,7 +96,7 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let metadata = layer_data.content_metadata.metadata.clone();
+        let metadata = &layer_data.content_metadata.metadata;
 
         if self.release.version.to_string() != metadata.nodejs_version {
             return Ok(ExistingLayerStrategy::Recreate);
@@ -111,7 +110,10 @@ impl Layer for DistLayer {
             return Ok(ExistingLayerStrategy::Recreate);
         }
 
-        println!("---> Reusing Node.js {}", self.release.version.to_string());
+        log_info(format!(
+            "Reusing Node.js {}",
+            self.release.version.to_string()
+        ));
         return Ok(ExistingLayerStrategy::Keep);
     }
 }

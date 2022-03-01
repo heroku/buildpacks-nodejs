@@ -8,7 +8,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 use libcnb_nodejs::package_json::{PackageJson, PackageJsonError};
 use libcnb_nodejs::versions::{Inventory, Req};
-use libherokubuildpack::log_error;
+use libherokubuildpack::{log_error, log_header, log_info};
 use std::path::Path;
 use thiserror::Error;
 
@@ -43,23 +43,23 @@ impl Buildpack for NodeJsEngineBuildpack {
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
-        println!("---> Node.js Runtime Buildpack");
-        println!("---> Checking Node.js version");
+        log_header("Checking Node.js version");
+
         let pjson_path = context.app_dir.join("package.json");
         let pjson =
             PackageJson::read(pjson_path).map_err(NodeJsEngineBuildpackError::PackageJsonError)?;
         let version_range = pjson.engines.and_then(|e| e.node).unwrap_or(Req::any());
         let version_range_string = version_range.to_string();
-        println!(
-            "---> Detected Node.js version range: {}",
-            version_range_string
-        );
+
+        log_info(format!("Detected Node.js version range: {version_range_string}"));
+
         let target_release =
             inv.resolve(version_range)
                 .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
                     version_range_string,
                 ))?;
-        println!("---> Resolved Node.js version: {}", target_release.version);
+
+        log_info(format!("Resolved Node.js version: {}", target_release.version));
 
         let dist_layer = DistLayer {
             release: target_release.clone(),
