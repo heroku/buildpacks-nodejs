@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic)]
 use std::path::Path;
 
-use crate::{NodeJsRuntimeBuildpack, NodeJsBuildpackError};
+use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
@@ -13,7 +13,7 @@ use libcnb::{additional_buildpack_binary_path};
 pub struct WebEnvLayer;
 
 impl Layer for WebEnvLayer {
-    type Buildpack = NodeJsRuntimeBuildpack;
+    type Buildpack = NodeJsEngineBuildpack;
     type Metadata = GenericMetadata;
 
     fn types(&self) -> LayerTypes {
@@ -28,7 +28,7 @@ impl Layer for WebEnvLayer {
         &self,
         _context: &BuildContext<Self::Buildpack>,
         _layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, NodeJsBuildpackError> {
+    ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         LayerResultBuilder::new(GenericMetadata::default())
             .exec_d_program(
                 "web_env",

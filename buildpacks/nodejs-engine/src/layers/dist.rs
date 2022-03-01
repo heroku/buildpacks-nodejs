@@ -2,7 +2,7 @@ use std::path::Path;
 
 use tempfile::NamedTempFile;
 
-use crate::{NodeJsRuntimeBuildpack, NodeJsBuildpackError};
+use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use libcnb::build::BuildContext;
 use libherokubuildpack::{download_file, decompress_tarball};
 use libcnb::Buildpack;
@@ -11,6 +11,7 @@ use libcnb::layer::{Layer, LayerResult, LayerData, LayerResultBuilder, ExistingL
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb_nodejs::versions::{Release};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 /// A layer that downloads the Node.js distribution artifacts
 pub struct DistLayer {
@@ -24,10 +25,22 @@ pub struct DistLayerMetadata {
     stack_id: String
 }
 
+#[derive(Error, Debug)]
+pub enum DistLayerError {
+    #[error("Couldn't create tempfile for Node.js: {0}")]
+    CreateTempFileError(std::io::Error),
+    #[error("Couldn't download Node.js: {0}")]
+    DownloadError(libherokubuildpack::DownloadError),
+    #[error("Couldn't decompress Node.js: {0}")]
+    UntarError(std::io::Error),
+    #[error("Couldn't locate Node.js binary")]
+    ReadBinError(),
+}
+
 const LAYER_VERSION: &str = "1";
 
 impl Layer for DistLayer {
-    type Buildpack = NodeJsRuntimeBuildpack;
+    type Buildpack = NodeJsEngineBuildpack;
     type Metadata = DistLayerMetadata;
 
     fn types(&self) -> LayerTypes {
@@ -42,26 +55,26 @@ impl Layer for DistLayer {
         &self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, NodeJsBuildpackError> {
+    ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
 
         println!("---> Downloading and Installing Node.js {}", self.release.version);
 
         let node_tgz = NamedTempFile::new()
-            .map_err(NodeJsBuildpackError::CreateTempFileError)?;
+            .map_err(DistLayerError::CreateTempFileError)?;
 
         download_file(
                 self.release.url.clone(),
                 node_tgz.path(),
             )
-            .map_err(NodeJsBuildpackError::DownloadError)?;
+            .map_err(DistLayerError::DownloadError)?;
 
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
-            .map_err(NodeJsBuildpackError::UntarError)?;
+            .map_err(DistLayerError::UntarError)?;
 
         let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
         let bin_path = Path::new(layer_path).join(dist_name).join("bin");
         if !bin_path.exists() {
-            return Err(NodeJsBuildpackError::ReadBinError())
+            Err(DistLayerError::ReadBinError())?;
         }
 
         let metadata = DistLayerMetadata {
