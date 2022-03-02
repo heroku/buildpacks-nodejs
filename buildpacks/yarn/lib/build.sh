@@ -57,7 +57,8 @@ install_or_reuse_toolbox() {
 			chmod +x "${layer_dir}/bin/yj"
 	fi
 
-	echo "cache = true" >"${layer_dir}.toml"
+	echo "[types]" > "${layer_dir}.toml"
+	echo "cache = true" >>"${layer_dir}.toml"
 	echo "build = true" >>"${layer_dir}.toml"
 	echo "launch = false" >>"${layer_dir}.toml"
 }
