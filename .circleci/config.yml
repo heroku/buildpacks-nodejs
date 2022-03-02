@@ -125,7 +125,6 @@ jobs:
       image: ubuntu-2004:202010-01
     steps:
       - checkout
-      - setup_remote_docker
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust-toolchain
       - run:
