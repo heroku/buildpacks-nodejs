@@ -8,7 +8,7 @@ pushd "${buildpack_dir}"
 cargo libcnb package --release
 
 rm -rf target
-cp -R ../../target/buildpack/debug/heroku_nodejs-engine target
+cp -R ../../target/buildpack/release/heroku_nodejs-engine target
 cp package.toml target/
 
 popd
