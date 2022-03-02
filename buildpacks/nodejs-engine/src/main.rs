@@ -26,17 +26,26 @@ impl Buildpack for NodeJsEngineBuildpack {
     type Error = NodeJsEngineBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        if !context.app_dir.join("package.json").exists() {
-            return DetectResultBuilder::fail().build();
+        let pass_result = DetectResultBuilder::pass();
+        let plan_builder = BuildPlanBuilder::new().provides("node");
+        let app_dir = context.app_dir;
+
+        // If there are common node artifacts, this buildpack should both
+        // provide and require node so that it may be used without other
+        // buildpacks.
+        if app_dir.join("package.json").exists()
+            || app_dir.join("index.js").exists()
+            || app_dir.join("server.js").exists()
+        {
+            return pass_result
+                .build_plan(plan_builder.requires("node").build())
+                .build();
         }
-        DetectResultBuilder::pass()
-            .build_plan(
-                BuildPlanBuilder::new()
-                    .provides("node")
-                    .requires("node")
-                    .build(),
-            )
-            .build()
+
+        // This buildpack may provide node when required by other buildpacks
+        // even if no common Node.js artifacts are detected. If no other
+        // buildpacks require node, detection will fail.
+        pass_result.build_plan(plan_builder.build()).build()
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
@@ -51,7 +60,9 @@ impl Buildpack for NodeJsEngineBuildpack {
         let version_range = pjson.engines.and_then(|e| e.node).unwrap_or(Req::any());
         let version_range_string = version_range.to_string();
 
-        log_info(format!("Detected Node.js version range: {version_range_string}"));
+        log_info(format!(
+            "Detected Node.js version range: {version_range_string}"
+        ));
 
         let target_release =
             inv.resolve(version_range)
@@ -59,7 +70,10 @@ impl Buildpack for NodeJsEngineBuildpack {
                     version_range_string,
                 ))?;
 
-        log_info(format!("Resolved Node.js version: {}", target_release.version));
+        log_info(format!(
+            "Resolved Node.js version: {}",
+            target_release.version
+        ));
 
         let dist_layer = DistLayer {
             release: target_release.clone(),
