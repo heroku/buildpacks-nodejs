@@ -62,7 +62,7 @@ install_or_reuse_toolbox() {
 		echo "cache = true"
 		echo "build = true"
 		echo "launch = false"
-	} > "${layer_dir}.toml"
+	} >"${layer_dir}.toml"
 }
 
 run_prebuild() {
