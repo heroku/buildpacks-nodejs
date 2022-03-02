@@ -18,8 +18,8 @@ orbs:
       install-build-dependencies:
         steps:
           - run:
-              name: "Install rsync, jq, libssl-dev, musl-tools, pkg-config via apt"
-              command: sudo apt-get update && sudo apt-get install -y rsync jq libssl-dev musl-tools pkg-config
+              name: "Install pack-cli, rsync, jq, libssl-dev, musl-tools, pkg-config via apt"
+              command: sudo add-apt-repository ppa:cncf-buildpacks/pack-cli && sudo apt-get update && sudo apt-get install -y rsync jq libssl-dev musl-tools pkg-config pack-cli
           - install-yq
       install-rust-toolchain:
         steps:
