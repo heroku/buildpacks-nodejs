@@ -75,6 +75,7 @@ jobs:
           version: 0.23.0
       - ruby/install-deps
       - heroku-buildpacks/install-build-dependencies
+      - heroku-buildpacks/install-rust-toolchain
       - run:
           name: "Run rspec tests against a given directory"
           command: |
