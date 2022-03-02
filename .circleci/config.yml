@@ -18,9 +18,19 @@ orbs:
       install-build-dependencies:
         steps:
           - run:
-              name: "Install rsync, jq via apt"
-              command: sudo apt-get update && sudo apt-get install -y rsync jq
+              name: "Install rsync, jq, libssl-dev, musl-tools, pkg-config via apt"
+              command: sudo apt-get update && sudo apt-get install -y rsync jq libssl-dev musl-tools pkg-config
           - install-yq
+      install-rust-toolchain:
+        steps:
+          - run:
+              name: "Install rustc stable"
+              command: |
+                curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y -t x86_64-unknown-linux-musl
+                echo "export PATH=\"$HOME/.cargo/bin:$PATH\"" >> $BASH_ENV
+          - run:
+              name: "Install libcnb-cargo"
+              command: cargo install libcnb-cargo
 
 jobs:
   package-buildpack:
@@ -110,10 +120,34 @@ jobs:
           name: Shpec unit tests on heroku-<<parameters.stack-version>>
           command: shpec << parameters.buildpack-dir >>/shpec/*_shpec.sh
 
+  cargo-test:
+    docker:
+      - image: cimg/rust:1.58
+    steps:
+      - checkout
+      - setup_remote_docker
+      - heroku-buildpacks/install-build-dependencies
+      - heroku-buildpacks/install-rust-toolchain
+      - run:
+          command: cargo test
+
+  rustfmt:
+    docker:
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - setup_remote_docker
+      - heroku-buildpacks/install-build-dependencies
+      - heroku-buildpacks/install-rust-toolchain
+      - run:
+          command: cargo fmt --all -- --check
+
 workflows:
   version: 2
   ci:
     jobs:
+      - cargo-test
+      - rustfmt
       - shell-linting
       - shpec:
           matrix:
