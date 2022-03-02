@@ -131,10 +131,9 @@ install_or_reuse_node_modules() {
 	if [[ "$local_lock_checksum" == "$cached_lock_checksum" ]]; then
 		echo "---> Reusing node modules"
 	else
-		echo "[types]" >"${layer_dir}.toml"
-		echo "cache = true" >>"${layer_dir}.toml"
-
 		{
+			echo "[types]"
+			echo "cache = true"
 			echo "build = false"
 			echo "launch = false"
 			echo -e "[metadata]\nyarn_lock_checksum = \"$local_lock_checksum\""

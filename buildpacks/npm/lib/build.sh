@@ -119,6 +119,7 @@ install_or_reuse_npm() {
 			npm install -g "npm@${engine_npm}" --prefix "$layer_dir" --quiet
 
 			cat <<TOML >"${layer_dir}.toml"
+[types]
 cache = true
 build = true
 launch = true
@@ -202,13 +203,13 @@ install_or_reuse_node_modules() {
 		info "Reusing node modules"
 		cp -r "$layer_dir" "$build_dir/node_modules"
 	else
-		echo "cache = true" >"${layer_dir}.toml"
-
 		{
+			echo "[types]"
+			echo "cache = true"
 			echo "build = false"
 			echo "launch = false"
 			echo -e "[metadata]\npackage_lock_checksum = \"$local_lock_checksum\""
-		} >>"${layer_dir}.toml"
+		} >"${layer_dir}.toml"
 
 		install_modules "$build_dir" "$layer_dir"
 
