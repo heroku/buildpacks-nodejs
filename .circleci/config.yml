@@ -45,6 +45,7 @@ jobs:
       - pack/install-pack:
           version: 0.23.0
       - heroku-buildpacks/install-build-dependencies
+      - heroku-buildpacks/install-rust-toolchain
       - run:
           name: "Build and package buildpack with retries"
           command: |
