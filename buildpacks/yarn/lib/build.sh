@@ -15,6 +15,8 @@ source "$bp_dir/lib/utils/env.sh"
 source "$bp_dir/lib/utils/json.sh"
 # shellcheck source=/dev/null
 source "$bp_dir/lib/detect.sh"
+# shellcheck source=/dev/null
+source "$bp_dir/lib/utils/log.sh"
 
 fail_multiple_lockfiles() {
 	local build_dir=$1
