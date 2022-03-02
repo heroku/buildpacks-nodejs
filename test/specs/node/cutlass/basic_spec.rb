@@ -9,15 +9,13 @@ describe "Heroku's Nodejs CNB" do
       set_node_version_in_dir(app.tmpdir, version: "^14.0")
 
       app.pack_build do |pack_result|
-        expect(pack_result.stdout).to include("Installing Node")
-        expect(pack_result.stdout).to include("Downloading and extracting Node v14.")
+        expect(pack_result.stdout).to include("Installing Node.js 14.")
       end
 
       set_node_version_in_dir(app.tmpdir, version: "^16.0")
 
       app.pack_build do |pack_result|
-        expect(pack_result.stdout).to include("Installing Node")
-        expect(pack_result.stdout).to include("Downloading and extracting Node v16.")
+        expect(pack_result.stdout).to include("Installing Node.js 16.")
       end
     end
   end
