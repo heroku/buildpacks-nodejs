@@ -9,12 +9,13 @@ fn test_node_with_indexjs() {
     )
     .buildpacks(vec![BuildpackReference::Crate])
     .run_test(|ctx| {
+        println!("{}", ctx.pack_stdout);
         assert!(ctx
             .pack_stdout
-            .contains("---> Detected Node.js version range: *"));
+            .contains("Detected Node.js version range: *"));
         assert!(ctx
             .pack_stdout
-            .contains("---> Downloading and Installing Node.js"));
+            .contains("Downloading and Installing Node.js"));
         let port = 8080;
         ctx.start_container(&[port], |container| {
             std::thread::sleep(Duration::from_secs(1));
@@ -39,9 +40,10 @@ fn test_node_with_serverjs() {
     )
     .buildpacks(vec![BuildpackReference::Crate])
     .run_test(|ctx| {
+        println!("{}", ctx.pack_stdout);
         assert!(ctx
             .pack_stdout
-            .contains("---> Downloading and Installing Node.js 16.0.0"));
+            .contains("Downloading and Installing Node.js 16.0.0"));
         let port = 8080;
         ctx.start_container(&[port], |container| {
             std::thread::sleep(Duration::from_secs(1));
