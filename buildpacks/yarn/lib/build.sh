@@ -43,6 +43,23 @@ clear_cache_on_stack_change() {
 	fi
 }
 
+install_or_reuse_toolbox() {
+	local layer_dir=$1
+
+	info "Installing toolbox"
+	mkdir -p "${layer_dir}/bin"
+
+	if [[ ! -f "${layer_dir}/bin/yj" ]]; then
+		info "- yj"
+		curl -Ls https://github.com/sclevine/yj/releases/download/v2.0/yj-linux >"${layer_dir}/bin/yj" &&
+			chmod +x "${layer_dir}/bin/yj"
+	fi
+
+	echo "cache = true" >"${layer_dir}.toml"
+	echo "build = true" >>"${layer_dir}.toml"
+	echo "launch = false" >>"${layer_dir}.toml"
+}
+
 run_prebuild() {
 	local build_dir=$1
 	local heroku_prebuild_script

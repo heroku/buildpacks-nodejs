@@ -19,6 +19,10 @@ fail_multiple_lockfiles "$build_dir"
 
 clear_cache_on_stack_change "$layers_dir"
 export_env "$platform_dir/env" "" ""
+
+install_or_reuse_toolbox "$layers_dir/toolbox"
+export PATH=$layers_dir/toolbox/bin:$PATH
+
 run_prebuild "$build_dir"
 clear_cache_on_node_version_change "$layers_dir"
 write_to_store_toml "$layers_dir"
