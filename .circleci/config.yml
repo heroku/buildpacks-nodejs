@@ -121,8 +121,8 @@ jobs:
           command: shpec << parameters.buildpack-dir >>/shpec/*_shpec.sh
 
   cargo-test:
-    docker:
-      - image: cimg/rust:1.58
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
       - setup_remote_docker
