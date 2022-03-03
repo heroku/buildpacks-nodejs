@@ -49,10 +49,11 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        log_header("Heroku Node.js Engine Buildpack");
+        log_header("Checking Node.js version");
+
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
-
-        log_header("Checking Node.js version");
 
         let pjson_path = context.app_dir.join("package.json");
         let pjson =
@@ -75,6 +76,7 @@ impl Buildpack for NodeJsEngineBuildpack {
             target_release.version
         ));
 
+        log_header("Installing Node.js distribution");
         let dist_layer = DistLayer {
             release: target_release.clone(),
         };

@@ -56,15 +56,12 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
-        log_header(format!(
-            "Downloading and Installing Node.js {}",
-            self.release.version
-        ));
-
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::CreateTempFileError)?;
 
+        log_info(format!("Downloading Node.js {}", self.release.version));
         download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::DownloadError)?;
 
+        log_info(format!("Extracting Node.js {}", self.release.version));
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
             .map_err(DistLayerError::UntarError)?;
 
