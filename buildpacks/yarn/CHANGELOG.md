@@ -3,6 +3,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- `yarn install` now run with `--production=false` to ensure `devDependencies` are installed ([201](https://github.com/heroku/buildpacks-nodejs/pull/201))
 
 ## [0.1.8] 2021/11/10
 
