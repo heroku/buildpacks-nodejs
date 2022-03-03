@@ -132,23 +132,24 @@ jobs:
       - run:
           command: cargo test
 
-  rustfmt:
+  rust-linting:
     docker:
-      - image: cimg/base:2020.01
+      - image: cimg/rust:1.58
     steps:
       - checkout
-      - setup_remote_docker
-      - heroku-buildpacks/install-build-dependencies
-      - heroku-buildpacks/install-rust-toolchain
       - run:
+          name: rustfmt
           command: cargo fmt --all -- --check
+      - run:
+          name: clippy
+          command: cargo clippy --all -- --deny warnings
 
 workflows:
   version: 2
   ci:
     jobs:
       - cargo-test
-      - rustfmt
+      - rust-linting
       - shell-linting
       - shpec:
           matrix:
