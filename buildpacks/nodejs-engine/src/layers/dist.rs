@@ -28,13 +28,13 @@ pub struct DistLayerMetadata {
 #[derive(Error, Debug)]
 pub enum DistLayerError {
     #[error("Couldn't create tempfile for Node.js distribution: {0}")]
-    CreateTempFileError(std::io::Error),
+    TempFile(std::io::Error),
     #[error("Couldn't download Node.js distribution: {0}")]
-    DownloadError(libherokubuildpack::DownloadError),
+    Download(libherokubuildpack::DownloadError),
     #[error("Couldn't decompress Node.js distribution: {0}")]
-    UntarError(std::io::Error),
+    Untar(std::io::Error),
     #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
-    InstallationError(std::io::Error),
+    Installation(std::io::Error),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -56,20 +56,19 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
-        let node_tgz = NamedTempFile::new().map_err(DistLayerError::CreateTempFileError)?;
+        let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
         log_info(format!("Downloading Node.js {}", self.release.version));
-        download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::DownloadError)?;
+        download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
         log_info(format!("Extracting Node.js {}", self.release.version));
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
-            .map_err(DistLayerError::UntarError)?;
+            .map_err(DistLayerError::Untar)?;
 
         log_info(format!("Installing Node.js {}", self.release.version));
         let dist_name = format!("node-v{}-{}", self.release.version, "linux-x64");
         let dist_path = Path::new(layer_path).join(dist_name);
-        move_directory_contents(dist_path, layer_path)
-            .map_err(DistLayerError::InstallationError)?;
+        move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
 
         let metadata = DistLayerMetadata {
             layer_version: LAYER_VERSION.to_string(),
