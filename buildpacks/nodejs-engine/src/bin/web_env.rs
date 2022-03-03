@@ -42,10 +42,8 @@ fn detect_available_memory() -> usize {
         .or(fs::read_to_string(
             "/sys/fs/cgroup/memory/memory.limit_in_bytes",
         ))
-        .ok()
-        .and_then(|m| Some(m.trim().to_string()))
-        .and_then(|m| m.parse::<usize>().ok())
-        .and_then(|m| Some(m / 1_048_576))
+        .ok().map(|m| m.trim().to_string())
+        .and_then(|m| m.parse::<usize>().ok()).map(|m| m / 1_048_576)
         .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |m| {
             cmp::min(m, MAX_AVAILABLE_MEMORY_MB)
         })

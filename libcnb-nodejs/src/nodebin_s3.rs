@@ -114,7 +114,7 @@ pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
     let mut continuation_token = "".to_string();
     loop {
         let mut params = vec![("prefix", prefix), ("list-type", "2")];
-        if continuation_token != "" {
+        if !continuation_token.is_empty() {
             params.push(("continuation-token", continuation_token.as_str()));
         }
 

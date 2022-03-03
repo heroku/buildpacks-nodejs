@@ -8,7 +8,7 @@ use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 
-/// A layer that sets WEB_MEMORY and WEB_CONCURRENCY via exec.d
+/// A layer that sets `WEB_MEMORY` and `WEB_CONCURRENCY` via exec.d
 pub struct WebEnvLayer;
 
 impl Layer for WebEnvLayer {

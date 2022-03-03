@@ -10,7 +10,7 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
 
     if &args[1] == "-v" || &args[1] == "--version" {
-        const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+        const VERSION: &str = env!("CARGO_PKG_VERSION");
         println!("v{}", VERSION);
         std::process::exit(SUCCESS_EXIT_CODE);
     }

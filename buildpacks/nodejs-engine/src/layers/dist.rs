@@ -6,11 +6,11 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
-use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
+
 use libcnb::Buildpack;
 use libcnb_nodejs::versions::Release;
 use libherokubuildpack::{
-    decompress_tarball, download_file, log_header, log_info, move_directory_contents,
+    decompress_tarball, download_file, log_info, move_directory_contents,
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -68,7 +68,7 @@ impl Layer for DistLayer {
             .map_err(DistLayerError::UntarError)?;
 
         log_info(format!("Installing Node.js {}", self.release.version));
-        let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
+        let dist_name = format!("node-v{}-{}", self.release.version, "linux-x64");
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path)
             .map_err(DistLayerError::InstallationError)?;
@@ -103,8 +103,8 @@ impl Layer for DistLayer {
 
         log_info(format!(
             "Reusing Node.js {}",
-            self.release.version.to_string()
+            self.release.version
         ));
-        return Ok(ExistingLayerStrategy::Keep);
+        Ok(ExistingLayerStrategy::Keep)
     }
 }

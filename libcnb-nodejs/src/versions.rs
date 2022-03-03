@@ -183,7 +183,7 @@ mod tests {
         }
         Inventory {
             name: "node".to_string(),
-            releases: releases,
+            releases,
         }
     }
 
