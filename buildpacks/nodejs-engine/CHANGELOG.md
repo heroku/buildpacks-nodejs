@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Convert buildpack from bash to rust leveraging libcnb.rs ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- Now conditionally `requires` node, making the buildpack independently usable ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- No longer installs `yarn`, that is now a function of `heroku/nodejs-yarn` ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- No longer installs `yq` or the toolbox build layer ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- Replaces go-based version resolver with rust implementation ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- Replaces bash based WEB_CONCURRENCY profile.d script with rust / exec.d implementation ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+
 ## [0.7.5] 2022/01/28
 - Ensure NODE_ENV is set consistently during build, no matter the cache state ([186](https://github.com/heroku/buildpacks-nodejs/pull/186)
 

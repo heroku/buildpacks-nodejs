@@ -4,6 +4,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Upgraded to buildpack api 0.6 ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+- Installs `yq` in the build toolbox layer ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
+
 ## [0.4.5] 2022/01/28
 - `npm ci` and `npm install` now run with `--production=false` to ensure `devDependencies` are installed ([186](https://github.com/heroku/buildpacks-nodejs/pull/186))
 
