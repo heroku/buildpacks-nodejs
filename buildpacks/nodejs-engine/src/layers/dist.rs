@@ -9,7 +9,9 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Buildpack;
 use libcnb_nodejs::versions::Release;
-use libherokubuildpack::{decompress_tarball, download_file, log_header, log_info};
+use libherokubuildpack::{
+    decompress_tarball, download_file, log_header, log_info, move_directory_contents,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -33,8 +35,8 @@ pub enum DistLayerError {
     DownloadError(libherokubuildpack::DownloadError),
     #[error("Couldn't decompress Node.js distribution: {0}")]
     UntarError(std::io::Error),
-    #[error("Couldn't find Node.js binaries at expected location: {0}")]
-    ReadBinError(String),
+    #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
+    InstallationError(std::io::Error),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -65,13 +67,11 @@ impl Layer for DistLayer {
         decompress_tarball(&mut node_tgz.into_file(), &layer_path)
             .map_err(DistLayerError::UntarError)?;
 
+        log_info(format!("Installing Node.js {}", self.release.version));
         let dist_name = format!("node-v{}-{}", self.release.version.to_string(), "linux-x64");
-        let bin_path = Path::new(layer_path).join(dist_name).join("bin");
-        if !bin_path.exists() {
-            Err(DistLayerError::ReadBinError(
-                bin_path.to_string_lossy().to_string(),
-            ))?;
-        }
+        let dist_path = Path::new(layer_path).join(dist_name);
+        move_directory_contents(dist_path, layer_path)
+            .map_err(DistLayerError::InstallationError)?;
 
         let metadata = DistLayerMetadata {
             layer_version: LAYER_VERSION.to_string(),
@@ -79,13 +79,7 @@ impl Layer for DistLayer {
             stack_id: context.stack_id.to_string(),
         };
 
-        LayerResultBuilder::new(metadata)
-            .env(
-                LayerEnv::new()
-                    .chainable_insert(Scope::All, ModificationBehavior::Prepend, "PATH", bin_path)
-                    .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":"),
-            )
-            .build()
+        LayerResultBuilder::new(metadata).build()
     }
 
     fn existing_layer_strategy(
