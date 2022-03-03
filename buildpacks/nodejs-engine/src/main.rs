@@ -89,12 +89,15 @@ impl Buildpack for NodeJsEngineBuildpack {
             .map(|f| Path::new(&context.app_dir).join(f))
             .iter()
             .find(|p| p.exists())
-            .and_then(|p| p.to_str()).map(|p| Launch::new().process(
-                        ProcessBuilder::new(process_type!("web"), "node")
-                            .args(vec![p])
-                            .default(true)
-                            .build(),
-                    ));
+            .and_then(|p| p.to_str())
+            .map(|p| {
+                Launch::new().process(
+                    ProcessBuilder::new(process_type!("web"), "node")
+                        .args(vec![p])
+                        .default(true)
+                        .build(),
+                )
+            });
 
         let resulter = BuildResultBuilder::new();
         match launchjs {

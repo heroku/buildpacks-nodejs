@@ -9,9 +9,7 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 
 use libcnb::Buildpack;
 use libcnb_nodejs::versions::Release;
-use libherokubuildpack::{
-    decompress_tarball, download_file, log_info, move_directory_contents,
-};
+use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -101,10 +99,7 @@ impl Layer for DistLayer {
             return Ok(ExistingLayerStrategy::Recreate);
         }
 
-        log_info(format!(
-            "Reusing Node.js {}",
-            self.release.version
-        ));
+        log_info(format!("Reusing Node.js {}", self.release.version));
         Ok(ExistingLayerStrategy::Keep)
     }
 }
