@@ -38,9 +38,7 @@ fn calculate_web_concurrency(web_mem: usize, available_mem: usize) -> usize {
 
 fn detect_available_memory() -> usize {
     fs::read_to_string("/sys/fs/cgroup/memory.max")
-        .or(fs::read_to_string(
-            "/sys/fs/cgroup/memory/memory.limit_in_bytes",
-        ))
+        .or_else(|_| fs::read_to_string("/sys/fs/cgroup/memory/memory.limit_in_bytes"))
         .ok()
         .map(|m| m.trim().to_string())
         .and_then(|m| m.parse::<usize>().ok())

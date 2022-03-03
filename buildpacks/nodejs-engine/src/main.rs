@@ -58,7 +58,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         let pjson_path = context.app_dir.join("package.json");
         let pjson =
             PackageJson::read(pjson_path).map_err(NodeJsEngineBuildpackError::PackageJsonError)?;
-        let version_range = pjson.engines.and_then(|e| e.node).unwrap_or(Req::any());
+        let version_range = pjson.engines.and_then(|e| e.node).unwrap_or_else(Req::any);
         let version_range_string = version_range.to_string();
 
         log_info(format!(
