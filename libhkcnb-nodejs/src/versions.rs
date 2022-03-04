@@ -27,11 +27,13 @@ pub struct Inventory {
 impl Inventory {
     /// Resolves the [`Release`](struct.Release.html) based on `semver-node::Range'.
     /// If no Release can be found, then `None` is returned.
+    #[must_use]
     pub fn resolve(&self, req: Req) -> Option<&Release> {
         let platform = format!("{}-{}", OS, ARCH);
         self.resolve_other(req, &platform, "release")
     }
 
+    #[must_use]
     pub fn resolve_other(
         &self,
         version_requirements: Req,
@@ -129,10 +131,12 @@ impl Req {
         }
     }
 
+    #[must_use]
     pub fn any() -> Self {
         Req(Range::any())
     }
 
+    #[must_use]
     pub fn satisfies(&self, ver: Ver) -> bool {
         self.0.satisfies(&ver.0)
     }
