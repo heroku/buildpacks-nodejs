@@ -8,6 +8,7 @@ readme = "README.md"
 license = "MIT"
 keywords = ["node", "nodejs", "buildpack", "cnb"]
 categories = ["development-tools", "development-tools::build-utils"]
+rust-version = "1.58"
 
 [dependencies]
 ureq = "2.4.0"
