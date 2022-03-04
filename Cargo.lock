@@ -548,9 +548,9 @@ version = "0.8.0"
 dependencies = [
  "flate2",
  "libcnb",
- "libcnb-nodejs",
  "libcnb-test",
  "libherokubuildpack",
+ "libhkcnb-nodejs",
  "serde",
  "sha2",
  "tar",
@@ -762,23 +762,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libcnb-nodejs"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "node-semver",
- "regex",
- "serde",
- "serde-xml-rs",
- "serde_json",
- "tempfile",
- "toml",
- "ureq",
- "url",
-]
-
-[[package]]
 name = "libcnb-proc-macros"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -820,6 +803,23 @@ dependencies = [
  "termcolor",
  "thiserror",
  "ureq",
+]
+
+[[package]]
+name = "libhkcnb-nodejs"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "node-semver",
+ "regex",
+ "serde",
+ "serde-xml-rs",
+ "serde_json",
+ "tempfile",
+ "toml",
+ "ureq",
+ "url",
 ]
 
 [[package]]

@@ -8,7 +8,7 @@ use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 
 use libcnb::Buildpack;
-use libcnb_nodejs::versions::Release;
+use libhkcnb_nodejs::versions::Release;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

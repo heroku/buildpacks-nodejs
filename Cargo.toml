@@ -1,5 +1,5 @@
 [workspace]
 members = [
   "buildpacks/nodejs-engine",
-  "libcnb-nodejs"
+  "libhkcnb-nodejs"
 ]
