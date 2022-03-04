@@ -813,7 +813,6 @@ dependencies = [
  "serde",
  "serde-xml-rs",
  "serde_json",
- "tempfile",
  "toml",
  "ureq",
  "url",
