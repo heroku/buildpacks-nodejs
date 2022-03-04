@@ -4,6 +4,7 @@ version = "0.8.0"
 edition = "2021"
 description = "Heroku Node.js Engine Cloud Native Buildpack"
 repository = "https://github.com/heroku/buildpacks-nodejs"
+readme = "README.md"
 license = "MIT"
 keywords = ["node", "nodejs", "buildpack", "cnb"]
 categories = ["development-tools", "development-tools::build-utils"]
