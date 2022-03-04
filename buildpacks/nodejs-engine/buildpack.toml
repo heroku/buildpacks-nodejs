@@ -5,7 +5,7 @@ id = "heroku/nodejs-engine"
 version = "0.8.0"
 name = "Heroku Node.js Engine Buildpack"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["Node", "Node.js", "JavaScript", "JS"]
+keywords = ["node", "node.js", "nodejs", "javascript", "js"]
 
 [[buildpack.licenses]]
 type = "MIT"
