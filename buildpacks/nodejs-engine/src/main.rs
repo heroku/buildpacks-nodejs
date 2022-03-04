@@ -71,7 +71,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         ));
 
         let target_release =
-            inv.resolve(version_range)
+            inv.resolve(&version_range)
                 .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
                     version_range_string,
                 ))?;

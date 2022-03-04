@@ -28,7 +28,7 @@ impl Inventory {
     /// Resolves the `Release` based on `semver-node::Range`.
     /// If no Release can be found, then `None` is returned.
     #[must_use]
-    pub fn resolve(&self, req: Req) -> Option<&Release> {
+    pub fn resolve(&self, req: &Req) -> Option<&Release> {
         let platform = format!("{}-{}", OS, ARCH);
         self.resolve_other(req, &platform, "release")
     }
@@ -36,7 +36,7 @@ impl Inventory {
     #[must_use]
     pub fn resolve_other(
         &self,
-        version_requirements: Req,
+        version_requirements: &Req,
         platform: &str,
         channel: &str,
     ) -> Option<&Release> {
@@ -53,7 +53,7 @@ impl Inventory {
 
         filtered_versions
             .into_iter()
-            .find(|rel| version_requirements.satisfies(rel.version.clone()))
+            .find(|rel| version_requirements.satisfies(&rel.version))
     }
 }
 
@@ -119,7 +119,7 @@ impl Req {
     ///
     /// # Errors
     ///
-    /// Invalid version strings wil return a VerErr
+    /// Invalid version strings wil return a `VerErr`
     pub fn parse(requirement: &str) -> Result<Self, VerErr> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
@@ -143,7 +143,7 @@ impl Req {
     }
 
     #[must_use]
-    pub fn satisfies(&self, ver: Ver) -> bool {
+    pub fn satisfies(&self, ver: &Ver) -> bool {
         self.0.satisfies(&ver.0)
     }
 }

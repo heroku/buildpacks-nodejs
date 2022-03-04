@@ -34,7 +34,7 @@ fn main() {
         std::process::exit(TOML_EXIT_CODE);
     });
 
-    let version = inv.resolve(version_requirements);
+    let version = inv.resolve(&version_requirements);
     if let Some(version) = version {
         println!("{} {}", version.version, version.url);
     } else {
