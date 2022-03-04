@@ -93,11 +93,11 @@ impl TryFrom<BucketContent> for Inventory {
 
 /// Fetch all s3 buckets for a given folder.
 ///
-/// # Failures
-/// These are the possible errors that can occur when calling this function:
+/// # Errors
 ///
-/// * Parsing errors for an invalid S3 URL.
-/// * XML Parsing errors for an invalid XML document.
+/// * Failed http requests
+/// * Parsing errors for an invalid S3 URL
+/// * XML Parsing errors for an invalid XML document
 pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
     b: B,
     r: R,

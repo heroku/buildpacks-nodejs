@@ -25,7 +25,7 @@ pub struct Inventory {
 }
 
 impl Inventory {
-    /// Resolves the [`Release`](struct.Release.html) based on `semver-node::Range'.
+    /// Resolves the `Release` based on `semver-node::Range`.
     /// If no Release can be found, then `None` is returned.
     #[must_use]
     pub fn resolve(&self, req: Req) -> Option<&Release> {
@@ -80,6 +80,11 @@ impl fmt::Display for VerErr {
 #[serde(try_from = "String")]
 pub struct Ver(Version);
 impl Ver {
+    /// Parses a Node.js semver string as a `Ver`.
+    ///
+    /// # Errors
+    ///
+    /// Invalid Node.js semver strings will return a `VerErr`
     pub fn parse(version: &str) -> Result<Self, VerErr> {
         let trimmed = version.trim();
         match Version::parse(trimmed) {
@@ -112,8 +117,9 @@ impl Req {
     /// * "latest" as "*"
     /// * "~=" as "="
     ///
-    /// # Failures
-    /// Invalid versions wil return an error
+    /// # Errors
+    ///
+    /// Invalid version strings wil return a VerErr
     pub fn parse(requirement: &str) -> Result<Self, VerErr> {
         let trimmed = requirement.trim();
         if requirement == "latest" {

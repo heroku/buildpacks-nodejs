@@ -26,6 +26,13 @@ pub enum PackageJsonError {
 }
 
 impl PackageJson {
+    /// Reads a package.json from a path into a `PackageJson` struct.
+    ///
+    /// # Errors
+    ///
+    /// * Invalid/malformed JSON
+    /// * Path does not exist or is unreadable
+    /// * Version strings are invalid/malformed
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);
