@@ -126,7 +126,7 @@ impl Req {
             return Ok(Req(Range::any()));
         }
         if trimmed.starts_with("~=") {
-            let version = trimmed.replacen("=", "", 1);
+            let version = trimmed.replacen('=', "", 1);
             if let Ok(range) = Range::parse(version) {
                 return Ok(Req(range));
             }

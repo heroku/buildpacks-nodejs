@@ -78,7 +78,7 @@ impl TryFrom<BucketContent> for Inventory {
                     version: Ver::parse(version_number.as_str())?,
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
-                    etag: content.etag.replace("\"", ""),
+                    etag: content.etag.replace('\"', ""),
                     url: format!("https://s3.amazonaws.com/{}/{}", BUCKET, &content.key),
                 })
             })
