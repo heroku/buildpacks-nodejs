@@ -11,9 +11,9 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
+use libherokubuildpack::{log_error, log_header, log_info};
 use libhkcnb_nodejs::package_json::{PackageJson, PackageJsonError};
 use libhkcnb_nodejs::versions::{Inventory, Req};
-use libherokubuildpack::{log_error, log_header, log_info};
 use std::path::Path;
 use thiserror::Error;
 
