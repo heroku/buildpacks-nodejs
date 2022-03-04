@@ -1,3 +1,7 @@
+#![warn(unused_crate_dependencies)]
+#![warn(clippy::pedantic)]
+#![warn(clippy::cargo)]
+
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{Launch, ProcessBuilder};
