@@ -546,14 +546,11 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.8.0"
 dependencies = [
- "flate2",
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
  "libhkcnb-nodejs",
  "serde",
- "sha2",
- "tar",
  "tempfile",
  "thiserror",
  "toml",

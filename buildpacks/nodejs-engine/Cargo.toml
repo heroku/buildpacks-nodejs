@@ -8,13 +8,10 @@ libcnb = "0.6"
 libhkcnb-nodejs = { path = "../../libhkcnb-nodejs" }
 libherokubuildpack = "0.6"
 serde = "1.0.136"
-flate2 = "1.0.22"
-sha2 = "0.10.1"
-ureq = "2.4.0"
-tar = "0.4.38"
 tempfile = "3.3.0"
 toml = "0.5"
 thiserror = "1.0"
 
 [dev-dependencies]
 libcnb-test = "0.2"
+ureq = "2.4.0"
