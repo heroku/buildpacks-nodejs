@@ -1,7 +1,7 @@
 #[cfg(test)]
 use libcnb_test::{BuildpackReference, IntegrationTest};
-use ureq;
 use std::time::Duration;
+use ureq;
 
 #[test]
 fn test_node_with_indexjs() {
