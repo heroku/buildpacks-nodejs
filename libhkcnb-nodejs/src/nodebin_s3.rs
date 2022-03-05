@@ -1,4 +1,5 @@
-use crate::versions::{Inventory, Release, Ver, BUCKET};
+use crate::inv::{Inventory, Release, BUCKET};
+use crate::versions::Ver;
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;

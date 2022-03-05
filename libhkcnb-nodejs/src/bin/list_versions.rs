@@ -1,5 +1,5 @@
+use libhkcnb_nodejs::inv::{Inventory, BUCKET, REGION};
 use libhkcnb_nodejs::nodebin_s3;
-use libhkcnb_nodejs::versions::{Inventory, BUCKET, REGION};
 use std::convert::TryFrom;
 
 const FAILED_EXIT_CODE: i32 = 1;

@@ -9,7 +9,7 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 
 use libcnb::Buildpack;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
-use libhkcnb_nodejs::versions::Release;
+use libhkcnb_nodejs::inv::Release;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

@@ -1,4 +1,5 @@
-use libhkcnb_nodejs::versions::{Inventory, Req};
+use libhkcnb_nodejs::inv::Inventory;
+use libhkcnb_nodejs::versions::Req;
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
