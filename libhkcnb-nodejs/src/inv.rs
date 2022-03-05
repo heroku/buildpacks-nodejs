@@ -1,5 +1,8 @@
+use std::fs;
+
 use crate::versions::{Req, Ver};
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 /// Heroku nodebin AWS S3 Bucket name
 pub const BUCKET: &str = "heroku-nodebin";
@@ -24,6 +27,18 @@ pub struct Inventory {
 }
 
 impl Inventory {
+    /// Reads a software inventory toml file from a path into a `Inventory`.
+    ///
+    /// # Errors
+    ///
+    /// * File access error
+    /// * Toml parsing error
+    /// * Deserialization error
+    pub fn read(path: &str) -> Result<Self, InventoryReadError> {
+        let data = fs::read_to_string(path).map_err(InventoryReadError::Access)?;
+        toml::from_str(&data).map_err(InventoryReadError::Parse)
+    }
+
     /// Resolves the `Release` based on `semver-node::Range`.
     /// If no Release can be found, then `None` is returned.
     #[must_use]
@@ -54,6 +69,14 @@ impl Inventory {
             .into_iter()
             .find(|rel| version_requirements.satisfies(&rel.version))
     }
+}
+
+#[derive(Error, Debug)]
+pub enum InventoryReadError {
+    #[error("Could not access inventory: {0}")]
+    Access(std::io::Error),
+    #[error("Could not parse inventory: {0}")]
+    Parse(toml::de::Error),
 }
 
 /// Represents a inv release.

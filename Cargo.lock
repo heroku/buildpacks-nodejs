@@ -814,6 +814,7 @@ dependencies = [
  "serde-xml-rs",
  "serde_json",
  "tempfile",
+ "thiserror",
  "toml",
  "ureq",
  "url",

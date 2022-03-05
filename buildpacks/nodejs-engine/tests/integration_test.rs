@@ -1,4 +1,6 @@
+#[cfg(test)]
 use libcnb_test::{BuildpackReference, IntegrationTest};
+use ureq;
 use std::time::Duration;
 
 #[test]
