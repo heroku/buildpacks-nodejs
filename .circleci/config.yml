@@ -130,7 +130,7 @@ jobs:
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust-toolchain
       - run:
-          command: cargo test
+          command: cargo test --locked
 
   rust-linting:
     docker:
