@@ -142,7 +142,7 @@ jobs:
           command: cargo fmt --all -- --check
       - run:
           name: clippy
-          command: cargo clippy --all -- --deny warnings
+          command: cargo clippy --all-targets --all-features --locked -- --deny warnings
 
 workflows:
   version: 2
