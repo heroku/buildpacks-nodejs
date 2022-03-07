@@ -124,7 +124,7 @@ jobs:
 
   cargo-test:
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2004:202201-02
     steps:
       - checkout
       - heroku-buildpacks/install-build-dependencies
