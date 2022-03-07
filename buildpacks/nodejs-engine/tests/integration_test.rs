@@ -9,7 +9,6 @@ fn test_node_with_indexjs() {
         "heroku/buildpacks:20",
         "../../test/fixtures/node-with-indexjs",
     )
-    .buildpacks(vec![BuildpackReference::Crate])
     .run_test(|ctx| {
         println!("{}", ctx.pack_stdout);
         assert!(ctx
