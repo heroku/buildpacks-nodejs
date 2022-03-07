@@ -139,7 +139,7 @@ jobs:
       - checkout
       - run:
           name: rustfmt
-          command: cargo fmt --all -- --check
+          command: cargo fmt -- --check --verbose
       - run:
           name: clippy
           command: cargo clippy --all-targets --all-features --locked -- --deny warnings
