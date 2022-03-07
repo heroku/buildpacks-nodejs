@@ -15,7 +15,6 @@ use libherokubuildpack::{log_error, log_header, log_info};
 use libhkcnb_nodejs::inv::Inventory;
 use libhkcnb_nodejs::package_json::{PackageJson, PackageJsonError};
 use libhkcnb_nodejs::vrs::Requirement;
-use std::path::Path;
 use thiserror::Error;
 
 use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
@@ -32,26 +31,25 @@ impl Buildpack for NodeJsEngineBuildpack {
     type Error = NodeJsEngineBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let pass_result = DetectResultBuilder::pass();
-        let plan_builder = BuildPlanBuilder::new().provides("node");
-        let app_dir = context.app_dir;
+        let mut plan_builder = BuildPlanBuilder::new().provides("node");
 
         // If there are common node artifacts, this buildpack should both
         // provide and require node so that it may be used without other
         // buildpacks.
-        if app_dir.join("package.json").exists()
-            || app_dir.join("index.js").exists()
-            || app_dir.join("server.js").exists()
+        if ["package.json", "index.js", "server.js"]
+            .map(|name| context.app_dir.join(name))
+            .iter()
+            .any(|path| path.exists())
         {
-            return pass_result
-                .build_plan(plan_builder.requires("node").build())
-                .build();
+            plan_builder = plan_builder.requires("node");
         }
 
-        // This buildpack may provide node when required by other buildpacks
-        // even if no common Node.js artifacts are detected. If no other
-        // buildpacks require node, detection will fail.
-        pass_result.build_plan(plan_builder.build()).build()
+        // This buildpack may provide node when required by other buildpacks,
+        // so it always explicitly passes. However, if no other group
+        // buildpacks require node, group detection will fail.
+        DetectResultBuilder::pass()
+            .build_plan(plan_builder.build())
+            .build()
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
