@@ -32,7 +32,7 @@ impl PackageJson {
     ///
     /// * Invalid/malformed JSON
     /// * Path does not exist or is unreadable
-    /// * Versionsion strings are invalid/malformed
+    /// * Version strings are invalid/malformed
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);
