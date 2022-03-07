@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::versions::{Requirement, Version};
+use crate::vrs::{Requirement, Version};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

@@ -1,4 +1,4 @@
-use crate::versions::{Requirement, Version};
+use crate::vrs::{Requirement, Version};
 use serde::Deserialize;
 use std::fmt;
 use std::fs::File;

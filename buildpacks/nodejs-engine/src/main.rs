@@ -14,7 +14,7 @@ use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::{log_error, log_header, log_info};
 use libhkcnb_nodejs::inv::Inventory;
 use libhkcnb_nodejs::package_json::{PackageJson, PackageJsonError};
-use libhkcnb_nodejs::versions::Requirement;
+use libhkcnb_nodejs::vrs::Requirement;
 use std::path::Path;
 use thiserror::Error;
 

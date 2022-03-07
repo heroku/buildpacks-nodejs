@@ -6,4 +6,4 @@
 pub mod inv;
 pub mod nodebin_s3;
 pub mod package_json;
-pub mod versions;
+pub mod vrs;

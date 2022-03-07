@@ -1,5 +1,5 @@
 use libhkcnb_nodejs::inv::Inventory;
-use libhkcnb_nodejs::versions::Requirement;
+use libhkcnb_nodejs::vrs::Requirement;
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
@@ -23,10 +23,7 @@ fn main() {
     let filename = &args[1];
 
     let version_requirements = Requirement::parse(&args[2]).unwrap_or_else(|e| {
-        eprintln!(
-            "Could not parse Version Requirementuirements '{}': {}",
-            &args[2], e
-        );
+        eprintln!("Could not parse Version Requirements '{}': {}", &args[2], e);
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
 
