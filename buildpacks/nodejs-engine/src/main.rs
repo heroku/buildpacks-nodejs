@@ -61,13 +61,14 @@ impl Buildpack for NodeJsEngineBuildpack {
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
-        let pjson_path = context.app_dir.join("package.json");
-        let pjson =
-            PackageJson::read(pjson_path).map_err(NodeJsEngineBuildpackError::PackageJsonError)?;
-        let version_range = pjson
-            .engines
-            .and_then(|e| e.node)
-            .unwrap_or_else(Requirement::any);
+        let version_range = PackageJson::read(context.app_dir.join("package.json"))
+            .map_err(NodeJsEngineBuildpackError::PackageJsonError)
+            .map(|package_json| {
+                package_json
+                    .engines
+                    .and_then(|e| e.node)
+                    .unwrap_or_else(Requirement::any)
+            })?;
         let version_range_string = version_range.to_string();
 
         log_info(format!(
