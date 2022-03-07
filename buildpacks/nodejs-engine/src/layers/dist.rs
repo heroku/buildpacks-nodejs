@@ -7,6 +7,7 @@ use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 
+use libcnb::data::buildpack::StackId;
 use libcnb::Buildpack;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
 use libhkcnb_nodejs::inv::Release;
@@ -22,7 +23,7 @@ pub struct DistLayer {
 pub struct DistLayerMetadata {
     layer_version: String,
     nodejs_version: String,
-    stack_id: String,
+    stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
@@ -73,7 +74,7 @@ impl Layer for DistLayer {
         let metadata = DistLayerMetadata {
             layer_version: LAYER_VERSION.to_string(),
             nodejs_version: self.release.version.to_string(),
-            stack_id: context.stack_id.to_string(),
+            stack_id: context.stack_id.clone(),
         };
 
         LayerResultBuilder::new(metadata).build()
@@ -90,7 +91,7 @@ impl Layer for DistLayer {
             return Ok(ExistingLayerStrategy::Recreate);
         }
 
-        if context.stack_id.to_string() != metadata.stack_id {
+        if context.stack_id != metadata.stack_id {
             return Ok(ExistingLayerStrategy::Recreate);
         }
 
