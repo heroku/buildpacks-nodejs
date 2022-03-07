@@ -19,7 +19,7 @@ pub struct DistLayer {
     pub release: Release,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct DistLayerMetadata {
     layer_version: String,
     nodejs_version: String,
@@ -85,21 +85,17 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let metadata = &layer_data.content_metadata.metadata;
+        let current_metadata = DistLayerMetadata {
+            nodejs_version: self.release.version.to_string(),
+            stack_id: context.stack_id.clone(),
+            layer_version: String::from(LAYER_VERSION),
+        };
 
-        if self.release.version.to_string() != metadata.nodejs_version {
+        if current_metadata == layer_data.content_metadata.metadata {
+            log_info(format!("Reusing Node.js {}", self.release.version));
+            Ok(ExistingLayerStrategy::Keep)
+        } else {
             return Ok(ExistingLayerStrategy::Recreate);
         }
-
-        if context.stack_id != metadata.stack_id {
-            return Ok(ExistingLayerStrategy::Recreate);
-        }
-
-        if LAYER_VERSION != metadata.layer_version {
-            return Ok(ExistingLayerStrategy::Recreate);
-        }
-
-        log_info(format!("Reusing Node.js {}", self.release.version));
-        Ok(ExistingLayerStrategy::Keep)
     }
 }
