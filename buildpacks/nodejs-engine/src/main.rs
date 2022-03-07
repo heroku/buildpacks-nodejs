@@ -95,14 +95,13 @@ impl Buildpack for NodeJsEngineBuildpack {
         context.handle_layer(layer_name!("web_env"), web_env_layer)?;
 
         let launchjs = ["server.js", "index.js"]
-            .map(|f| Path::new(&context.app_dir).join(f))
+            .map(|name| context.app_dir.join(name))
             .iter()
-            .find(|p| p.exists())
-            .and_then(|p| p.to_str())
-            .map(|p| {
+            .find(|path| path.exists())
+            .map(|path| {
                 Launch::new().process(
                     ProcessBuilder::new(process_type!("web"), "node")
-                        .args(vec![p])
+                        .args(vec![path.to_string_lossy()])
                         .default(true)
                         .build(),
                 )
