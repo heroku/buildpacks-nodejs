@@ -85,13 +85,14 @@ impl Buildpack for NodeJsEngineBuildpack {
         ));
 
         log_header("Installing Node.js distribution");
-        let dist_layer = DistLayer {
-            release: target_release.clone(),
-        };
-        context.handle_layer(layer_name!("dist"), dist_layer)?;
+        context.handle_layer(
+            layer_name!("dist"),
+            DistLayer {
+                release: target_release.clone(),
+            },
+        )?;
 
-        let web_env_layer = WebEnvLayer {};
-        context.handle_layer(layer_name!("web_env"), web_env_layer)?;
+        context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
 
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
