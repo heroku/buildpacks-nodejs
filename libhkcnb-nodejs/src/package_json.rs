@@ -1,4 +1,4 @@
-use crate::versions::{Req, Ver};
+use crate::versions::{Requirement, Version};
 use serde::Deserialize;
 use std::fmt;
 use std::fs::File;
@@ -8,15 +8,15 @@ use std::path::Path;
 #[derive(Deserialize, Debug)]
 pub struct PackageJson {
     pub name: String,
-    pub version: Ver,
+    pub version: Version,
     pub engines: Option<Engines>,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct Engines {
-    pub node: Option<Req>,
-    pub yarn: Option<Req>,
-    pub npm: Option<Req>,
+    pub node: Option<Requirement>,
+    pub yarn: Option<Requirement>,
+    pub npm: Option<Requirement>,
 }
 
 #[derive(Debug)]
@@ -32,7 +32,7 @@ impl PackageJson {
     ///
     /// * Invalid/malformed JSON
     /// * Path does not exist or is unreadable
-    /// * Version strings are invalid/malformed
+    /// * Versionsion strings are invalid/malformed
     pub fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);

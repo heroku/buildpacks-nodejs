@@ -14,7 +14,7 @@ use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::{log_error, log_header, log_info};
 use libhkcnb_nodejs::inv::Inventory;
 use libhkcnb_nodejs::package_json::{PackageJson, PackageJsonError};
-use libhkcnb_nodejs::versions::Req;
+use libhkcnb_nodejs::versions::Requirement;
 use std::path::Path;
 use thiserror::Error;
 
@@ -64,7 +64,10 @@ impl Buildpack for NodeJsEngineBuildpack {
         let pjson_path = context.app_dir.join("package.json");
         let pjson =
             PackageJson::read(pjson_path).map_err(NodeJsEngineBuildpackError::PackageJsonError)?;
-        let version_range = pjson.engines.and_then(|e| e.node).unwrap_or_else(Req::any);
+        let version_range = pjson
+            .engines
+            .and_then(|e| e.node)
+            .unwrap_or_else(Requirement::any);
         let version_range_string = version_range.to_string();
 
         log_info(format!(

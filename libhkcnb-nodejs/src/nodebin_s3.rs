@@ -1,5 +1,5 @@
 use crate::inv::{Inventory, Release, BUCKET};
-use crate::versions::Ver;
+use crate::versions::Version;
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
 use regex::Regex;
@@ -76,7 +76,7 @@ impl TryFrom<BucketContent> for Inventory {
 
                 Ok(Release {
                     arch: arch.map(|a| a.as_str().to_string()),
-                    version: Ver::parse(version_number.as_str())?,
+                    version: Version::parse(version_number.as_str())?,
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
                     etag: content.etag.replace('\"', ""),

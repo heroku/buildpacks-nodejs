@@ -1,6 +1,6 @@
 use std::fs;
 
-use crate::versions::{Req, Ver};
+use crate::versions::{Requirement, Version};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -42,7 +42,7 @@ impl Inventory {
     /// Resolves the `Release` based on `semver-node::Range`.
     /// If no Release can be found, then `None` is returned.
     #[must_use]
-    pub fn resolve(&self, req: &Req) -> Option<&Release> {
+    pub fn resolve(&self, req: &Requirement) -> Option<&Release> {
         let platform = format!("{}-{}", OS, ARCH);
         self.resolve_other(req, &platform, "release")
     }
@@ -50,7 +50,7 @@ impl Inventory {
     #[must_use]
     pub fn resolve_other(
         &self,
-        version_requirements: &Req,
+        version_requirements: &Requirement,
         platform: &str,
         channel: &str,
     ) -> Option<&Release> {
@@ -82,7 +82,7 @@ pub enum InventoryReadError {
 /// Represents a inv release.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Release {
-    pub version: Ver,
+    pub version: Version,
     pub channel: String,
     pub arch: Option<String>,
     pub url: String,
@@ -100,7 +100,7 @@ mod tests {
         )
     }
 
-    fn release(ver: Ver, arch: &str, channel: &str) -> Release {
+    fn release(ver: Version, arch: &str, channel: &str) -> Release {
         Release {
             version: ver.clone(),
             channel: channel.to_string(),
@@ -116,8 +116,8 @@ mod tests {
         ];
         let mut releases = vec![];
         for v in versions {
-            releases.push(release(Ver::parse(v).unwrap(), "linux-x64", "release"));
-            releases.push(release(Ver::parse(v).unwrap(), "darwin-x64", "release"));
+            releases.push(release(Version::parse(v).unwrap(), "linux-x64", "release"));
+            releases.push(release(Version::parse(v).unwrap(), "darwin-x64", "release"));
         }
         Inventory {
             name: "node".to_string(),
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn resolve_other_resolves_based_on_arch_and_channel() {
         let inv = create_inventory();
-        let version_req = Req::parse("*").unwrap();
+        let version_req = Requirement::parse("*").unwrap();
 
         let option = inv.resolve_other(&version_req, "linux-x64", "release");
         assert!(option.is_some());
@@ -142,7 +142,7 @@ mod tests {
     #[test]
     fn resolve_other_handles_x_in_version_requirement() {
         let inv = create_inventory();
-        let version_req = Req::parse("13.10.x").unwrap();
+        let version_req = Requirement::parse("13.10.x").unwrap();
 
         let option = inv.resolve_other(&version_req, "linux-x64", "release");
         assert!(option.is_some());
@@ -156,7 +156,7 @@ mod tests {
     #[test]
     fn resolve_returns_none_if_no_valid_version() {
         let inv = create_inventory();
-        let version_req = Req::parse("18.0.0").unwrap();
+        let version_req = Requirement::parse("18.0.0").unwrap();
 
         let option = inv.resolve(&version_req);
         assert!(option.is_none());
@@ -182,8 +182,8 @@ mod tests {
         ];
         let mut releases = vec![];
         for v in versions {
-            releases.push(release(Ver::parse(v).unwrap(), "linux-x64", "release"));
-            releases.push(release(Ver::parse(v).unwrap(), "darwin-x64", "release"));
+            releases.push(release(Version::parse(v).unwrap(), "linux-x64", "release"));
+            releases.push(release(Version::parse(v).unwrap(), "darwin-x64", "release"));
         }
 
         let inv = Inventory {
@@ -206,7 +206,7 @@ mod tests {
         ]
         .iter()
         {
-            let version_req = Req::parse(input).unwrap();
+            let version_req = Requirement::parse(input).unwrap();
             let option = inv.resolve(&version_req);
 
             println!("vr: {}", version_req);
