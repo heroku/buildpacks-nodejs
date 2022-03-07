@@ -37,7 +37,6 @@ fn test_node_with_serverjs() {
         "heroku/buildpacks:20",
         "../../test/fixtures/node-with-serverjs",
     )
-    .buildpacks(vec![BuildpackReference::Crate])
     .run_test(|ctx| {
         println!("{}", ctx.pack_stdout);
         assert!(ctx.pack_stdout.contains("Installing Node.js 16.0.0"));
