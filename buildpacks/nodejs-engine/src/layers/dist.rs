@@ -71,13 +71,7 @@ impl Layer for DistLayer {
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
 
-        let metadata = DistLayerMetadata {
-            layer_version: LAYER_VERSION.to_string(),
-            nodejs_version: self.release.version.to_string(),
-            stack_id: context.stack_id.clone(),
-        };
-
-        LayerResultBuilder::new(metadata).build()
+        LayerResultBuilder::new(DistLayerMetadata::current(self, context)).build()
     }
 
     fn existing_layer_strategy(
@@ -85,17 +79,21 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        let current_metadata = DistLayerMetadata {
-            nodejs_version: self.release.version.to_string(),
-            stack_id: context.stack_id.clone(),
-            layer_version: String::from(LAYER_VERSION),
-        };
-
-        if current_metadata == layer_data.content_metadata.metadata {
+        if layer_data.content_metadata.metadata == DistLayerMetadata::current(self, context) {
             log_info(format!("Reusing Node.js {}", self.release.version));
             Ok(ExistingLayerStrategy::Keep)
         } else {
-            return Ok(ExistingLayerStrategy::Recreate);
+            Ok(ExistingLayerStrategy::Recreate)
+        }
+    }
+}
+
+impl DistLayerMetadata {
+    fn current(layer: &DistLayer, context: &BuildContext<NodeJsEngineBuildpack>) -> Self {
+        DistLayerMetadata {
+            nodejs_version: layer.release.version.to_string(),
+            stack_id: context.stack_id.clone(),
+            layer_version: String::from(LAYER_VERSION),
         }
     }
 }
