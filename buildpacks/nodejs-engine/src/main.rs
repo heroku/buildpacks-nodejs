@@ -21,6 +21,12 @@ use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
 
 mod layers;
 
+#[cfg(test)]
+use libcnb_test as _;
+
+#[cfg(test)]
+use ureq as _;
+
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 pub struct NodeJsEngineBuildpack;
