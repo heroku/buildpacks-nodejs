@@ -1,13 +1,9 @@
 [package]
 name = "libhkcnb-nodejs"
-version = "0.1.0"
+# This crate is not published.
+version = "0.0.0"
+publish = false
 edition = "2021"
-description = "Libs and bins for the Heroku Node.js Cloud Native Buildpack"
-repository = "https://github.com/heroku/buildpacks-nodejs"
-readme = "README.md"
-license = "MIT"
-keywords = ["node", "nodejs", "buildpack", "cnb"]
-categories = ["development-tools", "development-tools::build-utils"]
 rust-version = "1.58"
 
 [dependencies]
