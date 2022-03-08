@@ -1,8 +1,8 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{BuildpackReference, IntegrationTest};
+use libcnb_test::{IntegrationTest};
 use std::time::Duration;
-use ureq;
+
 
 #[test]
 fn test_node_with_indexjs() {
