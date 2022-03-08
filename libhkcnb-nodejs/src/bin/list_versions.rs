@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use libhkcnb_nodejs::inv::{Inventory, BUCKET, REGION};
 use libhkcnb_nodejs::nodebin_s3;
 use std::convert::TryFrom;

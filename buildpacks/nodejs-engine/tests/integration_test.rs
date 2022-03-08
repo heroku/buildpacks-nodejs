@@ -1,4 +1,5 @@
-#[cfg(test)]
+#![warn(clippy::pedantic)]
+
 use libcnb_test::{BuildpackReference, IntegrationTest};
 use std::time::Duration;
 use ureq;

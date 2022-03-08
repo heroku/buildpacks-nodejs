@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 use libhkcnb_nodejs::inv::Inventory;
 use libhkcnb_nodejs::vrs::Requirement;
 
