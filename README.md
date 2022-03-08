@@ -24,21 +24,21 @@ please see [heroku/nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
 ## Development
 
 ### Dependencies
+
+#### For all buildpacks:
 - [Bash](https://www.gnu.org/software/bash/) >= `5.0`
-- [yj](https://github.com/sclevine/yj) >= `5.0.0` in `$PATH`
-- [jq](https://github.com/stedolan/jq) >= `1.6` in `$PATH`
-- [rust](https://rust-lang.org/) > 1.58
-- Rust musl target: `rustup target add x86_64-unknown-linux-musl`
-- [musl libc](https://www.musl-libc.org/)
-  - Linux: `sudo apt install musl-tools`
-  - MacOS: `brew install FiloSottile/musl-cross/musl-cross`
-- `libssl-dev`
-  - Linux: `sudo apt install libssl-dev`
-  - MacOS: `brew install openssl`
-- `libcnb-cargo` via `cargo install libcnb-cargo`
+
+#### For libcnb.rs buildpacks:
+- All [libcnb.rs dependencies](https://https://github.com/Malax/libcnb.rs#development-environment-setup)
+
+#### For bash buildpacks:
+- [`yj`](https://github.com/sclevine/yj) >= `5.0.0`
+- [`jq`](https://github.com/stedolan/jq) >= `1.6`
+- [`shpec`](https://github.com/rylnd/shpec)
+
+#### For cutlass integration tests
 - `Ruby` >= `2.7`
 - `bundler` via `gem install bundler`
-- [pack](https://buildpacks.io/docs/tools/pack/)
 
 ### Building
 
