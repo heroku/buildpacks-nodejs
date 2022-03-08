@@ -21,13 +21,15 @@ orbs:
               name: "Install rsync, jq, and musl-tools via apt"
               command: sudo apt-get update && sudo apt-get install -y --no-install-recommends rsync jq musl-tools
           - install-yq
-      install-rust-toolchain:
+      install-rust:
         steps:
           - run:
               name: "Install rustc stable"
               command: |
                 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y -t x86_64-unknown-linux-musl
                 echo "export PATH=\"$HOME/.cargo/bin:$PATH\"" >> $BASH_ENV
+      install-libcnb-cargo:
+        steps:
           - run:
               name: "Install libcnb-cargo"
               command: cargo install libcnb-cargo
@@ -45,7 +47,8 @@ jobs:
       - pack/install-pack:
           version: 0.24.0
       - heroku-buildpacks/install-build-dependencies
-      - heroku-buildpacks/install-rust-toolchain
+      - heroku-buildpacks/install-rust
+      - heroku-buildpacks/install-libcnb-cargo
       - run:
           name: "Build and package buildpack with retries"
           command: |
@@ -75,7 +78,8 @@ jobs:
           version: 0.24.0
       - ruby/install-deps
       - heroku-buildpacks/install-build-dependencies
-      - heroku-buildpacks/install-rust-toolchain
+      - heroku-buildpacks/install-rust
+      - heroku-buildpacks/install-libcnb-cargo
       - run:
           name: "Run rspec tests against a given directory"
           command: |
@@ -130,7 +134,7 @@ jobs:
       - pack/install-pack:
           version: 0.24.0
       - heroku-buildpacks/install-build-dependencies
-      - heroku-buildpacks/install-rust-toolchain
+      - heroku-buildpacks/install-rust
       - run:
           command: cargo test --locked -- --ignored
 
