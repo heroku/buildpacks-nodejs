@@ -1,7 +1,7 @@
 [package]
 name = "libhkcnb-nodejs"
-# This crate is not published.
 version = "0.0.0"
+description = "Libs and bins for the Heroku Node.js Cloud Native Buildpack"
 publish = false
 edition = "2021"
 rust-version = "1.58"
