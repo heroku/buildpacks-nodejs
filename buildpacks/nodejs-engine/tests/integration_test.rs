@@ -55,7 +55,7 @@ fn test_node_with_serverjs() {
                     .expect("request to container failed")
                     .into_string()
                     .expect("response read error");
-                assert!(resp.contains("node-with-serverjs"));
+                assert_contains!(resp, "node-with-serverjs");
             });
     });
 }
