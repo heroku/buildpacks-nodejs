@@ -1,5 +1,6 @@
 #![warn(clippy::pedantic)]
 
+use libcnb_test::assert_contains;
 use libcnb_test::IntegrationTest;
 use std::time::Duration;
 
@@ -11,11 +12,8 @@ fn test_node_with_indexjs() {
         "../../test/fixtures/node-with-indexjs",
     )
     .run_test(|ctx| {
-        println!("{}", ctx.pack_stdout);
-        assert!(ctx
-            .pack_stdout
-            .contains("Detected Node.js version range: *"));
-        assert!(ctx.pack_stdout.contains("Installing Node.js"));
+        assert_contains!(ctx.pack_stdout, "Detected Node.js version range: *");
+        assert_contains!(ctx.pack_stdout, "Installing Node.js");
         let port = 8080;
         ctx.prepare_container()
             .expose_port(port)
@@ -29,7 +27,8 @@ fn test_node_with_indexjs() {
                     .expect("request to container failed")
                     .into_string()
                     .expect("response read error");
-                assert!(resp.contains("node-with-indexjs"));
+
+                assert_contains!(resp, "node-with-indexjs");
             });
     });
 }
@@ -42,8 +41,7 @@ fn test_node_with_serverjs() {
         "../../test/fixtures/node-with-serverjs",
     )
     .run_test(|ctx| {
-        println!("{}", ctx.pack_stdout);
-        assert!(ctx.pack_stdout.contains("Installing Node.js 16.0.0"));
+        assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0");
         let port = 8080;
         ctx.prepare_container()
             .expose_port(port)
