@@ -79,7 +79,7 @@ mod tests {
         )
         .unwrap();
         let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(&pkg.engines.unwrap().node.unwrap().to_string(), "16.0.0")
+        assert_eq!(&pkg.engines.unwrap().node.unwrap().to_string(), "16.0.0");
     }
 
     #[test]

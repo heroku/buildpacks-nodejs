@@ -100,7 +100,7 @@ mod tests {
         )
     }
 
-    fn release(ver: Version, arch: &str, channel: &str) -> Release {
+    fn release(ver: &Version, arch: &str, channel: &str) -> Release {
         Release {
             version: ver.clone(),
             channel: channel.to_string(),
@@ -111,14 +111,17 @@ mod tests {
     }
 
     fn create_inventory() -> Inventory {
-        let versions = vec![
+        let releases = [
             "13.10.0", "13.10.1", "13.11.0", "13.12.0", "13.13.0", "13.14.0", "14.0.0", "15.0.0",
-        ];
-        let mut releases = vec![];
-        for v in versions {
-            releases.push(release(Version::parse(v).unwrap(), "linux-x64", "release"));
-            releases.push(release(Version::parse(v).unwrap(), "darwin-x64", "release"));
-        }
+        ]
+        .iter()
+        .fold(vec![], |mut rels, ver| {
+            let version = Version::parse(ver).unwrap();
+            rels.push(release(&version, "darwin-x64", "release"));
+            rels.push(release(&version, "linux-x64", "release"));
+            rels
+        });
+
         Inventory {
             name: "node".to_string(),
             releases,
@@ -164,7 +167,7 @@ mod tests {
 
     #[test]
     fn resolve_handles_semver_from_apps() {
-        let versions = vec![
+        let releases = [
             "10.0.0", "10.1.0", "10.10.0", "10.11.0", "10.12.0", "10.13.0", "10.14.0", "10.14.1",
             "10.14.2", "10.15.0", "10.15.1", "10.15.2", "10.15.3", "10.2.0", "10.2.1", "10.3.0",
             "10.4.0", "10.4.1", "10.5.0", "10.6.0", "10.7.0", "10.8.0", "10.9.0", "11.0.0",
@@ -179,19 +182,21 @@ mod tests {
             "8.11.1", "8.11.2", "8.11.3", "8.11.4", "8.12.0", "8.13.0", "8.14.0", "8.14.1",
             "8.15.0", "8.15.1", "8.16.0", "8.2.0", "8.2.1", "8.3.0", "8.4.0", "8.5.0", "8.6.0",
             "8.7.0", "8.8.0", "8.8.1", "8.9.0", "8.9.1", "8.9.2", "8.9.3", "8.9.4",
-        ];
-        let mut releases = vec![];
-        for v in versions {
-            releases.push(release(Version::parse(v).unwrap(), "linux-x64", "release"));
-            releases.push(release(Version::parse(v).unwrap(), "darwin-x64", "release"));
-        }
+        ]
+        .map(|vers| Version::parse(vers).unwrap())
+        .iter()
+        .fold(vec![], |mut releases, version| {
+            releases.push(release(version, "linux-x64", "release"));
+            releases.push(release(version, "darwin-x64", "release"));
+            releases
+        });
 
         let inv = Inventory {
             name: "node".to_string(),
             releases,
         };
 
-        for (input, version) in vec![
+        for (input, version) in [
             ("10.x", "10.15.3"),
             ("10.*", "10.15.3"),
             ("10", "10.15.3"),
@@ -203,9 +208,7 @@ mod tests {
             ("6.* || 8.* || >= 10.*", "11.14.0"),
             (">= 6.11.1 <= 10", "8.16.0"),
             (">=8.10 <11", "10.15.3"),
-        ]
-        .iter()
-        {
+        ] {
             let version_req = Requirement::parse(input).unwrap();
             let option = inv.resolve(&version_req);
 

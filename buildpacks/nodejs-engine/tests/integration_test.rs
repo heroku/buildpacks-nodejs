@@ -1,10 +1,10 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{IntegrationTest};
+use libcnb_test::IntegrationTest;
 use std::time::Duration;
 
-
 #[test]
+#[ignore]
 fn test_node_with_indexjs() {
     IntegrationTest::new(
         "heroku/buildpacks:20",
@@ -27,12 +27,13 @@ fn test_node_with_indexjs() {
                 .expect("request to container failed")
                 .into_string()
                 .expect("response read error");
-            assert!(resp.contains("node-with-indexjs"))
-        })
+            assert!(resp.contains("node-with-indexjs"));
+        });
     });
 }
 
 #[test]
+#[ignore]
 fn test_node_with_serverjs() {
     IntegrationTest::new(
         "heroku/buildpacks:20",
@@ -52,7 +53,7 @@ fn test_node_with_serverjs() {
                 .expect("request to container failed")
                 .into_string()
                 .expect("response read error");
-            assert!(resp.contains("node-with-serverjs"))
-        })
+            assert!(resp.contains("node-with-serverjs"));
+        });
     });
 }

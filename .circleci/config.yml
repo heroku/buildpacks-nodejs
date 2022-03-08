@@ -18,8 +18,8 @@ orbs:
       install-build-dependencies:
         steps:
           - run:
-              name: "Install pack-cli, rsync, jq, libssl-dev, musl-tools, pkg-config via apt"
-              command: sudo add-apt-repository ppa:cncf-buildpacks/pack-cli && sudo apt-get update && sudo apt-get install -y rsync jq libssl-dev musl-tools pkg-config pack-cli
+              name: "Install rsync, jq, and musl-tools via apt"
+              command: sudo apt-get update && sudo apt-get install -y --no-install-recommends rsync jq musl-tools
           - install-yq
       install-rust-toolchain:
         steps:
@@ -43,7 +43,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - pack/install-pack:
-          version: 0.23.0
+          version: 0.24.0
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust-toolchain
       - run:
@@ -72,7 +72,7 @@ jobs:
     steps:
       - checkout
       - pack/install-pack:
-          version: 0.23.0
+          version: 0.24.0
       - ruby/install-deps
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust-toolchain
@@ -122,13 +122,23 @@ jobs:
           name: Shpec unit tests on heroku-<<parameters.stack-version>>
           command: shpec << parameters.buildpack-dir >>/shpec/*_shpec.sh
 
-  cargo-test:
+  rust-integration-test:
     machine:
       image: ubuntu-2004:202201-02
     steps:
       - checkout
+      - pack/install-pack:
+          version: 0.24.0
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust-toolchain
+      - run:
+          command: cargo test --locked -- --ignored
+
+  rust-unit-test:
+    docker:
+      - image: cimg/rust:1.59
+    steps:
+      - checkout
       - run:
           command: cargo test --locked
 
@@ -148,9 +158,10 @@ workflows:
   version: 2
   ci:
     jobs:
-      - cargo-test
-      - rust-linting
       - shell-linting
+      - rust-linting
+      - rust-unit-test
+      - rust-integration-test
       - shpec:
           matrix:
             parameters:
