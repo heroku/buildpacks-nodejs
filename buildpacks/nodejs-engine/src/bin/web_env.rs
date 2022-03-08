@@ -32,20 +32,20 @@ fn web_env() -> HashMap<ExecDProgramOutputKey, String> {
 }
 
 fn calculate_web_concurrency(web_mem: usize, available_mem: usize) -> usize {
-    let concurrency = available_mem / web_mem;
-    cmp::max(1, concurrency)
+    cmp::max(1, available_mem / web_mem)
 }
 
 fn detect_available_memory() -> usize {
-    fs::read_to_string("/sys/fs/cgroup/memory.max")
-        .or_else(|_| fs::read_to_string("/sys/fs/cgroup/memory/memory.limit_in_bytes"))
-        .ok()
-        .map(|m| m.trim().to_string())
-        .and_then(|m| m.parse::<usize>().ok())
-        .map(|m| m / 1_048_576)
-        .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |m| {
-            cmp::min(m, MAX_AVAILABLE_MEMORY_MB)
-        })
+    [
+        "/sys/fs/cgroup/memory.max",
+        "/sys/fs/cgroup/memory/memory.limit_in_bytes",
+    ]
+    .iter()
+    .find_map(|path| fs::read_to_string(path).ok())
+    .and_then(|contents| contents.trim().parse().ok())
+    .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |max_bytes: usize| {
+        cmp::min(MAX_AVAILABLE_MEMORY_MB, max_bytes / 1_048_576)
+    })
 }
 
 fn detect_web_memory() -> usize {
