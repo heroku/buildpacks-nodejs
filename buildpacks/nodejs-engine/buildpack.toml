@@ -1,11 +1,11 @@
-api = "0.2"
+api = "0.6"
 
 [buildpack]
 id = "heroku/nodejs-engine"
-version = "0.7.6"
-name = "Node Buildpack"
+version = "0.8.0"
+name = "Heroku Node.js Engine"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["nodejs", "node", "javascript"]
+keywords = ["node", "node.js", "nodejs", "javascript", "js"]
 
 [[buildpack.licenses]]
 type = "MIT"
@@ -18,10 +18,6 @@ id = "heroku-20"
 
 [[stacks]]
 id = "io.buildpacks.stacks.bionic"
-
-[metadata]
-
-[metadata.release]
 
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack"

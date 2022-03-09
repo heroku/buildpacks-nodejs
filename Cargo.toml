@@ -1,0 +1,5 @@
+[workspace]
+members = [
+  "buildpacks/nodejs-engine",
+  "common/nodejs-utils"
+]

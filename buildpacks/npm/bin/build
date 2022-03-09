@@ -22,6 +22,9 @@ clear_cache_on_stack_change "$layers_dir"
 
 export_env "$platform_dir/env" "" ""
 
+install_or_reuse_toolbox "$layers_dir/toolbox"
+export PATH=$layers_dir/toolbox/bin:$PATH
+
 export PATH=$layers_dir/npm/bin:$PATH
 install_or_reuse_npm "$build_dir" "$layers_dir/npm"
 

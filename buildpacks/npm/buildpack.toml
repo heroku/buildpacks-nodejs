@@ -1,8 +1,8 @@
-api = "0.2"
+api = "0.6"
 
 [buildpack]
 id = "heroku/nodejs-npm"
-version = "0.4.6"
+version = "0.5.0"
 name = "NPM Buildpack"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["nodejs", "node", "npm"]

@@ -1,0 +1,23 @@
+[package]
+name = "heroku-nodejs-utils"
+version = "0.0.0"
+description = "Libs and bins for Heroku Node.js Buildpacks"
+publish = false
+edition = "2021"
+rust-version = "1.58"
+
+[dependencies]
+ureq = "2.4.0"
+url = "2.2"
+serde = { version = "1.0.133", features = ['derive'] }
+serde-xml-rs = "0.5.1"
+serde_json = "1.0.59"
+node-semver = "2.0"
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+regex = "1.5"
+toml = "0.5"
+thiserror = "1.0"
+
+[dev-dependencies]
+tempfile = "3.3.0"
