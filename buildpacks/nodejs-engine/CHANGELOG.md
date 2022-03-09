@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] 2022/03/09
+
 - Convert buildpack from bash to rust leveraging libcnb.rs ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
 - Now conditionally `requires` node, making the buildpack independently usable ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
 - No longer installs `yarn`, that is now a function of `heroku/nodejs-yarn` ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
