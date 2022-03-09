@@ -1,17 +1,14 @@
-use std::path::Path;
-
-use tempfile::NamedTempFile;
-
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
+use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
-
-use heroku_nodejs_utils::inv::Release;
-use libcnb::data::buildpack::StackId;
 use libcnb::Buildpack;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
 use serde::{Deserialize, Serialize};
+use std::path::Path;
+use tempfile::NamedTempFile;
 use thiserror::Error;
 
 /// A layer that downloads the Node.js distribution artifacts

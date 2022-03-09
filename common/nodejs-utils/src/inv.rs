@@ -1,7 +1,6 @@
-use std::fs;
-
 use crate::vrs::{Requirement, Version};
 use serde::{Deserialize, Serialize};
+use std::fs;
 use thiserror::Error;
 
 /// Heroku nodebin AWS S3 Bucket name

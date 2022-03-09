@@ -3,6 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
@@ -16,8 +17,6 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::{log_error, log_header, log_info};
 use thiserror::Error;
-
-use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
 
 mod layers;
 
