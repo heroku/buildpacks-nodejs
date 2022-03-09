@@ -3,6 +3,9 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
+use heroku_nodejs_utils::vrs::Requirement;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{Launch, ProcessBuilder};
@@ -12,9 +15,6 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::{log_error, log_header, log_info};
-use libhkcnb_nodejs::inv::Inventory;
-use libhkcnb_nodejs::package_json::{PackageJson, PackageJsonError};
-use libhkcnb_nodejs::vrs::Requirement;
 use thiserror::Error;
 
 use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};

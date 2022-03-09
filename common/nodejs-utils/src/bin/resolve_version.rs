@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic)]
 
-use libhkcnb_nodejs::inv::Inventory;
-use libhkcnb_nodejs::vrs::Requirement;
+use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::vrs::Requirement;
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;

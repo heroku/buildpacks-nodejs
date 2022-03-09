@@ -7,10 +7,10 @@ use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 
+use heroku_nodejs_utils::inv::Release;
 use libcnb::data::buildpack::StackId;
 use libcnb::Buildpack;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
-use libhkcnb_nodejs::inv::Release;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

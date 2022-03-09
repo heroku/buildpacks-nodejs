@@ -463,15 +463,33 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "heroku-nodejs-utils",
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
- "libhkcnb-nodejs",
  "serde",
  "tempfile",
  "thiserror",
  "toml",
  "ureq",
+]
+
+[[package]]
+name = "heroku-nodejs-utils"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "node-semver",
+ "regex",
+ "serde",
+ "serde-xml-rs",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+ "toml",
+ "ureq",
+ "url",
 ]
 
 [[package]]
@@ -695,24 +713,6 @@ dependencies = [
  "termcolor",
  "thiserror",
  "ureq",
-]
-
-[[package]]
-name = "libhkcnb-nodejs"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "chrono",
- "node-semver",
- "regex",
- "serde",
- "serde-xml-rs",
- "serde_json",
- "tempfile",
- "thiserror",
- "toml",
- "ureq",
- "url",
 ]
 
 [[package]]

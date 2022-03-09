@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic)]
 
-use libhkcnb_nodejs::inv::{Inventory, BUCKET, REGION};
-use libhkcnb_nodejs::nodebin_s3;
+use heroku_nodejs_utils::inv::{Inventory, BUCKET, REGION};
+use heroku_nodejs_utils::nodebin_s3;
 use std::convert::TryFrom;
 
 const FAILED_EXIT_CODE: i32 = 1;
