@@ -32,7 +32,7 @@ version = "0.7.5"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
-version = "0.4.5"
+version = "0.5.0"
 
 [[order.group]]
 id = "heroku/procfile"
