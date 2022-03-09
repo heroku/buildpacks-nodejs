@@ -17,7 +17,7 @@ version = "0.8.0"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
-version = "0.4.6"
+version = "0.5.0"
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
