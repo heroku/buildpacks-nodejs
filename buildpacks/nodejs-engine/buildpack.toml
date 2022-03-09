@@ -19,5 +19,9 @@ id = "heroku-20"
 [[stacks]]
 id = "io.buildpacks.stacks.bionic"
 
+[metadata]
+
+[metadata.release]
+
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack"
