@@ -1,7 +1,5 @@
 {
   "name": "node-with-indexjs",
-  "version": "1.0.0",
-  "description": "A simple http server in server.js",
   "engines": {
     "node": "16.0.0"
   }

@@ -1,5 +1,3 @@
 {
-  "name": "node-with-indexjs",
-  "version": "1.0.0",
-  "description": "A simple http server in index.js"
+  "name": "node-with-indexjs"
 }
