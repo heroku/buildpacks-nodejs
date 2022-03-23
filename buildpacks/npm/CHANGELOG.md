@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The `web` process affiliated with `package.json`'s `scripts.start` is now a `default` process ([#214](https://github.com/heroku/buildpacks-nodejs/pull/214))
+
 ## [0.5.0] 2022/03/09
 
 - Upgraded to buildpack api 0.6 ([#184](https://github.com/heroku/buildpacks-nodejs/pull/184))
