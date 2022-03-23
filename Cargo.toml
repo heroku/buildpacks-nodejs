@@ -1,5 +1,6 @@
 [workspace]
 members = [
   "buildpacks/nodejs-engine",
+  "buildpacks/nodejs-function-invoker",
   "common/nodejs-utils"
 ]
