@@ -8,7 +8,7 @@ use std::path::Path;
 #[derive(Deserialize, Debug)]
 pub struct PackageJson {
     pub name: String,
-    pub version: Version,
+    pub version: Option<Version>,
     pub engines: Option<Engines>,
 }
 
@@ -61,7 +61,7 @@ mod tests {
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
         let pkg = PackageJson::read(f.path()).unwrap();
         assert_eq!(pkg.name, "foo");
-        assert_eq!(pkg.version.to_string(), "0.0.0");
+        assert_eq!(pkg.version.unwrap().to_string(), "0.0.0");
     }
 
     #[test]
