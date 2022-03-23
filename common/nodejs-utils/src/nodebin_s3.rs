@@ -79,7 +79,7 @@ impl TryFrom<BucketContent> for Inventory {
                     version: Version::parse(version_number.as_str())?,
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
-                    etag: content.etag.replace('\"', ""),
+                    etag: Some(content.etag.replace('\"', "")),
                     url: format!("https://s3.amazonaws.com/{}/{}", BUCKET, &content.key),
                 })
             })
@@ -158,7 +158,7 @@ mod tests {
         let result = Inventory::try_from(bucket_content);
         assert!(result.is_ok());
         if let Ok(inv) = result {
-            assert_eq!(etag, inv.releases[0].etag);
+            assert_eq!(Some(String::from(etag)), inv.releases[0].etag);
         }
     }
 
