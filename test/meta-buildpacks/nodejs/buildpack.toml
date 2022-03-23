@@ -10,7 +10,7 @@ homepage = "https://github.com/heroku/buildpacks-nodejs"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.8.1"
+version = "0.8.2"
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
@@ -25,7 +25,7 @@ optional = true
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.8.1"
+version = "0.8.2"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
