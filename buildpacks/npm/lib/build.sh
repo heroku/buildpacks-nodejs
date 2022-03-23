@@ -243,6 +243,7 @@ write_launch_toml() {
 [[processes]]
 type = "web"
 command = "npm start"
+default = true
 TOML
 	fi
 

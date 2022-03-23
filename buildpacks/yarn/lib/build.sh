@@ -171,6 +171,7 @@ write_launch_toml() {
 [[processes]]
 type = "web"
 command = "yarn start"
+default = true
 TOML
 	fi
 
