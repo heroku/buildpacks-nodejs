@@ -85,7 +85,7 @@ pub struct Release {
     pub channel: String,
     pub arch: Option<String>,
     pub url: String,
-    pub etag: String,
+    pub etag: Option<String>,
 }
 
 #[cfg(test)]
@@ -105,7 +105,7 @@ mod tests {
             channel: channel.to_string(),
             arch: Some(arch.to_string()),
             url: url(&ver.to_string(), arch, channel),
-            etag: "a586044d93acb053d28dd6c0ddf95362".to_string(),
+            etag: Some("a586044d93acb053d28dd6c0ddf95362".to_string()),
         }
     }
 
