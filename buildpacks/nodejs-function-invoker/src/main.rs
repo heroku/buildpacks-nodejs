@@ -3,8 +3,8 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+use crate::function::{get_main, is_function, MainError};
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
-use crate::util::{get_main_function, is_function, MainFunctionError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -21,8 +21,8 @@ use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;
 
+mod function;
 mod layers;
-mod util;
 
 pub struct NodeJsInvokerBuildpack;
 
@@ -71,8 +71,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             },
         )?;
 
-        get_main_function(&context.app_dir)
-            .map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+        get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
         BuildResultBuilder::new()
             .launch(
@@ -126,7 +125,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
 #[derive(Error, Debug)]
 pub enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
-    MainFunctionError(#[from] MainFunctionError),
+    MainFunctionError(#[from] MainError),
     #[error("{0}")]
     RuntimeLayerError(#[from] RuntimeLayerError),
 }

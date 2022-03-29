@@ -22,32 +22,28 @@ where
     }
 }
 
-pub fn get_main_function<P>(d: P) -> Result<PathBuf, MainFunctionError>
+pub fn get_main<P>(d: P) -> Result<PathBuf, MainError>
 where
     P: Into<PathBuf>,
 {
     let dir: PathBuf = d.into();
     PackageJson::read(dir.join("package.json"))
-        .map_err(MainFunctionError::PackageJsonError)
-        .and_then(|pjson| pjson.main.ok_or(MainFunctionError::MissingMainKey))
+        .map_err(MainError::PackageJson)
+        .and_then(|pjson| pjson.main.ok_or(MainError::MissingKey))
         .map(|main| dir.join(main))
-        .and_then(|path| {
-            path.exists()
-                .then(|| path)
-                .ok_or(MainFunctionError::MissingMainFile)
-        })
+        .and_then(|path| path.exists().then(|| path).ok_or(MainError::MissingFile))
 }
 
 #[derive(Error, Debug)]
-pub enum MainFunctionError {
+pub enum MainError {
     #[error("Could not determine function file location from package.json. {0}")]
-    PackageJsonError(#[from] PackageJsonError),
+    PackageJson(#[from] PackageJsonError),
     #[error(
         "Key `main` missing from package.json. Ensure `main` references function file location."
     )]
-    MissingMainKey,
+    MissingKey,
     #[error("File referenced by `main` in package.json could not be found. Ensure `main` references function file location.")]
-    MissingMainFile,
+    MissingFile,
 }
 
 #[cfg(test)]
@@ -91,44 +87,43 @@ mod tests {
     }
 
     #[test]
-    fn get_main_function_exists() {
+    fn get_main_exists() {
         let dir = create_dir_with_file(
             "package.json",
             "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
         );
         let index_path = dir.path().join("index.js");
         File::create(&index_path).expect("Could not create temp index.js");
-        let main_path = get_main_function(dir.path()).unwrap();
+        let main_path = get_main(dir.path()).unwrap();
         assert_eq!(main_path, index_path);
     }
 
     #[test]
-    fn get_main_function_no_file() {
+    fn get_main_no_file() {
         let dir = create_dir_with_file(
             "package.json",
             "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
         );
-        let err = get_main_function(dir.path())
-            .expect_err("found main function when there wasn't a file");
+        let err = get_main(dir.path()).expect_err("found main function when there wasn't a file");
         assert!(err
             .to_string()
             .contains("File referenced by `main` in package.json could not be found."));
     }
 
     #[test]
-    fn get_main_function_no_key() {
+    fn get_main_no_key() {
         let dir = create_dir_with_file("package.json", "{\"name\": \"test-main-function\"}");
-        let err = get_main_function(dir.path())
-            .expect_err("found main function when there wasn't a main key");
+        let err =
+            get_main(dir.path()).expect_err("found main function when there wasn't a main key");
         assert!(err
             .to_string()
             .contains("Key `main` missing from package.json"));
     }
 
     #[test]
-    fn get_main_function_bad_json() {
+    fn get_main_bad_json() {
         let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
-        let err = get_main_function(dir.path())
+        let err = get_main(dir.path())
             .expect_err("found main function when the package.json was malformed");
         assert!(err
             .to_string()
