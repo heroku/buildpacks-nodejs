@@ -4,6 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
+use crate::util::is_function;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -21,6 +22,7 @@ use thiserror::Error;
 use toml::Value;
 
 mod layers;
+mod util;
 
 pub struct NodeJsInvokerBuildpack;
 
@@ -40,7 +42,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
     type Error = NodeJsInvokerBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        detect_function(&context.app_dir)
+        is_function(&context.app_dir)
             .then(|| {
                 DetectResultBuilder::pass()
                     .build_plan(
@@ -115,19 +117,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
 pub enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
     RuntimeLayerError(#[from] RuntimeLayerError),
-}
-
-fn detect_function(dir: &PathBuf) -> bool {
-    dir.join("function.toml").exists() || {
-        read_toml_file(dir.join("project.toml"))
-            .ok()
-            .and_then(|toml: Value| {
-                toml_select_value(vec!["com", "salesforce", "type"], &toml)
-                    .and_then(toml::Value::as_str)
-                    .map(|value| value == "function")
-            })
-            .unwrap_or(false)
-    }
 }
 
 buildpack_main!(NodeJsInvokerBuildpack);
