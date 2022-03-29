@@ -68,7 +68,28 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     .clone(),
             },
         )?;
-        BuildResultBuilder::new().build()
+
+        BuildResultBuilder::new()
+            .launch(
+                Launch::new().process(
+                    ProcessBuilder::new(process_type!("web"), "sf-fx-runtime-nodejs")
+                        .args(vec![
+                            "serve",
+                            &context.app_dir.to_string_lossy(),
+                            "--workers",
+                            "2",
+                            "--host",
+                            "::",
+                            "--port",
+                            "${PORT:-8080}",
+                            "--debug-port",
+                            "${DEBUG_PORT:-}",
+                        ])
+                        .default(true)
+                        .build(),
+                ),
+            )
+            .build()
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) -> i32 {
