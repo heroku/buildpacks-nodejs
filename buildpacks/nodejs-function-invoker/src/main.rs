@@ -3,7 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::layers::{InvokerLayer, InvokerLayerError};
+use crate::layers::{RuntimeLayer, RuntimeLayerError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -15,6 +15,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, read_toml_file, Buildpack};
 use libherokubuildpack::toml_select_value;
 use libherokubuildpack::{log_error, log_header, log_info};
+use serde::Deserialize;
 use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;
@@ -23,9 +24,19 @@ mod layers;
 
 pub struct NodeJsInvokerBuildpack;
 
+#[derive(Deserialize, Debug)]
+pub struct NodeJsInvokerBuildpackMetadata {
+    pub runtime: NodeJsInvokerBuildpackRuntimeMetadata,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct NodeJsInvokerBuildpackRuntimeMetadata {
+    pub package: String,
+}
+
 impl Buildpack for NodeJsInvokerBuildpack {
     type Platform = GenericPlatform;
-    type Metadata = GenericMetadata;
+    type Metadata = NodeJsInvokerBuildpackMetadata;
     type Error = NodeJsInvokerBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
@@ -46,11 +57,15 @@ impl Buildpack for NodeJsInvokerBuildpack {
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Function Invoker Buildpack");
-        log_info("Installing Node.js Function Runtime");
         context.handle_layer(
-            layer_name!("invoker"),
-            InvokerLayer {
-                package: String::from("sf-dx-something"),
+            layer_name!("runtime"),
+            RuntimeLayer {
+                package: context
+                    .buildpack_descriptor
+                    .metadata
+                    .runtime
+                    .package
+                    .clone(),
             },
         )?;
         BuildResultBuilder::new().build()
@@ -61,8 +76,8 @@ impl Buildpack for NodeJsInvokerBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
-                    NodeJsInvokerBuildpackError::InvokerLayerError(_) => {
-                        log_error("Node.js Function Invoker distribution error", err_string);
+                    NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
+                        log_error("Node.js Function Invoker Runtime error", err_string);
                         70
                     }
                 }
@@ -78,7 +93,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
 #[derive(Error, Debug)]
 pub enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
-    InvokerLayerError(#[from] InvokerLayerError),
+    RuntimeLayerError(#[from] RuntimeLayerError),
 }
 
 fn detect_function(dir: &PathBuf) -> bool {

@@ -6,34 +6,37 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 use libcnb::Buildpack;
 use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
 use serde::{Deserialize, Serialize};
+use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 use tempfile::NamedTempFile;
 use thiserror::Error;
 
 /// A layer that installs the Node.js Invoker/Runtime package
-pub struct InvokerLayer {
+pub struct RuntimeLayer {
     pub package: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct InvokerLayerMetadata {
+pub struct RuntimeLayerMetadata {
     layer_version: String,
     package: String,
     stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
-pub enum InvokerLayerError {
-    #[error("Couldn't install Invoker with npm: #{0}")]
-    NpmInstallError(std::io::Error),
+pub enum RuntimeLayerError {
+    #[error("Couldn't run `npm install` command: {0}")]
+    NpmCommandError(std::io::Error),
+    #[error("Couldn't install invoker runtime with `npm install`: #{0}")]
+    NpmInstallError(std::process::ExitStatus),
 }
 
 const LAYER_VERSION: &str = "1";
 
-impl Layer for InvokerLayer {
+impl Layer for RuntimeLayer {
     type Buildpack = NodeJsInvokerBuildpack;
-    type Metadata = InvokerLayerMetadata;
+    type Metadata = RuntimeLayerMetadata;
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
@@ -49,7 +52,7 @@ impl Layer for InvokerLayer {
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsInvokerBuildpackError> {
         log_info(format!(
-            "Installing Node.js Function Invoker {}",
+            "Installing Node.js Function Invoker Runtime {}",
             self.package
         ));
 
@@ -62,9 +65,18 @@ impl Layer for InvokerLayer {
                 &self.package,
             ])
             .output()
-            .map_err(InvokerLayerError::NpmInstallError)?;
+            .map_err(RuntimeLayerError::NpmCommandError)
+            .and_then(|output| {
+                if output.status.success() {
+                    Ok(output)
+                } else {
+                    io::stdout().write_all(&output.stdout).ok();
+                    io::stderr().write_all(&output.stderr).ok();
+                    Err(RuntimeLayerError::NpmInstallError(output.status))
+                }
+            })?;
 
-        LayerResultBuilder::new(InvokerLayerMetadata::current(self, context)).build()
+        LayerResultBuilder::new(RuntimeLayerMetadata::current(self, context)).build()
     }
 
     fn existing_layer_strategy(
@@ -72,8 +84,11 @@ impl Layer for InvokerLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        if layer_data.content_metadata.metadata == InvokerLayerMetadata::current(self, context) {
-            log_info(format!("Reusing Node.js Function Invoker {}", self.package));
+        if layer_data.content_metadata.metadata == RuntimeLayerMetadata::current(self, context) {
+            log_info(format!(
+                "Reusing Node.js Function Invoker Runtime {}",
+                self.package
+            ));
             Ok(ExistingLayerStrategy::Keep)
         } else {
             Ok(ExistingLayerStrategy::Recreate)
@@ -81,9 +96,9 @@ impl Layer for InvokerLayer {
     }
 }
 
-impl InvokerLayerMetadata {
-    fn current(layer: &InvokerLayer, context: &BuildContext<NodeJsInvokerBuildpack>) -> Self {
-        InvokerLayerMetadata {
+impl RuntimeLayerMetadata {
+    fn current(layer: &RuntimeLayer, context: &BuildContext<NodeJsInvokerBuildpack>) -> Self {
+        RuntimeLayerMetadata {
             package: layer.package.clone(),
             stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),
