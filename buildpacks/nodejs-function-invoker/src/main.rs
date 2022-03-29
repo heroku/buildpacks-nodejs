@@ -4,7 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
-use crate::util::is_function;
+use crate::util::{get_main_function, is_function, MainFunctionError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -71,6 +71,9 @@ impl Buildpack for NodeJsInvokerBuildpack {
             },
         )?;
 
+        get_main_function(&context.app_dir)
+            .map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+
         BuildResultBuilder::new()
             .launch(
                 Launch::new().process(
@@ -99,9 +102,16 @@ impl Buildpack for NodeJsInvokerBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
-                    NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
-                        log_error("Node.js Function Invoker Runtime error", err_string);
+                    NodeJsInvokerBuildpackError::MainFunctionError(_) => {
+                        log_error(
+                            "Node.js Function Invoker main function detection error",
+                            err_string,
+                        );
                         70
+                    }
+                    NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
+                        log_error("Node.js Function Invoker runtime layer error", err_string);
+                        71
                     }
                 }
             }
@@ -116,7 +126,15 @@ impl Buildpack for NodeJsInvokerBuildpack {
 #[derive(Error, Debug)]
 pub enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
+    MainFunctionError(#[from] MainFunctionError),
+    #[error("{0}")]
     RuntimeLayerError(#[from] RuntimeLayerError),
+}
+
+impl From<NodeJsInvokerBuildpackError> for libcnb::Error<NodeJsInvokerBuildpackError> {
+    fn from(e: NodeJsInvokerBuildpackError) -> Self {
+        libcnb::Error::BuildpackError(e)
+    }
 }
 
 buildpack_main!(NodeJsInvokerBuildpack);
