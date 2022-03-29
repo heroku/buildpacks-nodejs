@@ -5,21 +5,16 @@
 
 use crate::function::{get_main, is_function, MainError};
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
-use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{Launch, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
-use libcnb::{buildpack_main, read_toml_file, Buildpack};
-use libherokubuildpack::toml_select_value;
+use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::{log_error, log_header, log_info};
 use serde::Deserialize;
-use std::path::PathBuf;
 use thiserror::Error;
-use toml::Value;
 
 mod function;
 mod layers;
@@ -59,6 +54,10 @@ impl Buildpack for NodeJsInvokerBuildpack {
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Function Invoker Buildpack");
+
+        log_info("Checking for function file");
+        get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+
         context.handle_layer(
             layer_name!("runtime"),
             RuntimeLayer {
@@ -70,8 +69,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     .clone(),
             },
         )?;
-
-        get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
         BuildResultBuilder::new()
             .launch(
