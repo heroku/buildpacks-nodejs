@@ -11,10 +11,8 @@ libcnb = "0.6"
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
 libherokubuildpack = { version = "0.6", features = ["toml"] }
 serde = "1.0.136"
-tempfile = "3.3.0"
 toml = "0.5"
 thiserror = "1.0"
 
 [dev-dependencies]
-libcnb-test = "0.3"
-ureq = "2.4.0"
+tempfile = "3.3.0"

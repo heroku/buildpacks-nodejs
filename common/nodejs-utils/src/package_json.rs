@@ -1,6 +1,5 @@
 use crate::vrs::{Requirement, Version};
 use serde::Deserialize;
-use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
