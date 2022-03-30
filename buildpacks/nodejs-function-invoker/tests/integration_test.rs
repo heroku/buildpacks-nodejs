@@ -23,7 +23,7 @@ fn nodejs_function_invoker_simple_function() {
         ctx.prepare_container()
             .expose_port(port)
             .start_with_default_process(|container| {
-                std::thread::sleep(Duration::from_secs(2));
+                std::thread::sleep(Duration::from_secs(5));
                 let addr = container
                     .address_for_port(port)
                     .expect("couldn't get container address");
@@ -60,7 +60,7 @@ fn nodejs_function_invoker_simple_typescript_function() {
         ctx.prepare_container()
             .expose_port(port)
             .start_with_default_process(|container| {
-                std::thread::sleep(Duration::from_secs(2));
+                std::thread::sleep(Duration::from_secs(5));
                 let addr = container
                     .address_for_port(port)
                     .expect("couldn't get container address");
