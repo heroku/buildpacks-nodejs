@@ -63,27 +63,27 @@ mod tests {
     }
 
     #[test]
-    fn function_toml_is_function() {
+    fn is_function_with_function_toml() {
         let dir = create_dir_with_file("function.toml", "");
-        assert!(is_function(dir.path()))
+        assert!(is_function(dir.path()));
     }
 
     #[test]
-    fn project_toml_is_function() {
+    fn is_function_with_project_toml() {
         let dir = create_dir_with_file("project.toml", "[com.salesforce]\n type = \"function\"");
-        assert!(is_function(dir.path()))
+        assert!(is_function(dir.path()));
     }
 
     #[test]
-    fn project_toml_with_diff_type_is_not_function() {
+    fn is_function_with_different_type() {
         let dir = create_dir_with_file("project.toml", "[com.salesforce]\n type = \"wubalubdub\"");
-        assert!(!is_function(dir.path()))
+        assert!(!is_function(dir.path()));
     }
 
     #[test]
-    fn no_descriptor_is_not_function() {
-        let dir = create_dir_with_file("package.json", "");
-        assert!(!is_function(dir.path()))
+    fn is_function_missing_descriptor() {
+        let dir = create_dir_with_file("package.json", "{}");
+        assert!(!is_function(dir.path()));
     }
 
     #[test]
