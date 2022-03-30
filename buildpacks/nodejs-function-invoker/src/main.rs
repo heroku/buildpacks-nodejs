@@ -12,9 +12,13 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
+#[cfg(test)]
+use libcnb_test as _;
 use libherokubuildpack::{log_error, log_header, log_info};
 use serde::Deserialize;
 use thiserror::Error;
+#[cfg(test)]
+use ureq as _;
 
 mod function;
 mod layers;

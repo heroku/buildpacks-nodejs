@@ -480,11 +480,13 @@ version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
  "libcnb",
+ "libcnb-test",
  "libherokubuildpack",
  "serde",
  "tempfile",
  "thiserror",
  "toml",
+ "ureq",
 ]
 
 [[package]]
