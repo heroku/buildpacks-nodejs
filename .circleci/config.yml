@@ -171,7 +171,6 @@ workflows:
           matrix:
             parameters:
               buildpack-dir:
-                - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
               stack-version:
                 - "18"
