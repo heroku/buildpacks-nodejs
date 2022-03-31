@@ -14,7 +14,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 #[cfg(test)]
 use libcnb_test as _;
-use libherokubuildpack::{log_error, log_header, log_info};
+use libherokubuildpack::{log_error, log_header, log_info, on_error_heroku};
 use serde::Deserialize;
 use thiserror::Error;
 #[cfg(test)]
@@ -99,8 +99,8 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) -> i32 {
-        match error {
-            libcnb::Error::BuildpackError(bp_err) => {
+        on_error_heroku(
+            |bp_err| {
                 let err_string = bp_err.to_string();
                 match bp_err {
                     NodeJsInvokerBuildpackError::MainFunctionError(_) => {
@@ -115,12 +115,9 @@ impl Buildpack for NodeJsInvokerBuildpack {
                         71
                     }
                 }
-            }
-            err => {
-                log_error("Internal Buildpack Error", err.to_string());
-                100
-            }
-        }
+            },
+            error,
+        )
     }
 }
 
