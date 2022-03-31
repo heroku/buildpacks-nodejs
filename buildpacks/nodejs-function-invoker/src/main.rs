@@ -91,6 +91,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                             "${DEBUG_PORT:-}",
                         ])
                         .default(true)
+                        .direct(false)
                         .build(),
                 ),
             )
