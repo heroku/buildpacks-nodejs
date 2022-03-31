@@ -81,10 +81,10 @@ install_modules() {
 
 	if detect_yarn_lock "$build_dir"; then
 		echo "---> Installing node modules from ./yarn.lock"
-		yarn install
+		yarn install --production=false
 	else
 		echo "---> Installing node modules"
-		yarn install --no-lockfile
+		yarn install --production=false --no-lockfile
 	fi
 }
 
