@@ -66,13 +66,12 @@ impl Layer for RuntimeLayer {
             .output()
             .map_err(RuntimeLayerError::NpmCommandError)
             .and_then(|output| {
-                if output.status.success() {
-                    Ok(output)
-                } else {
+                output.status.success().then(|| ()).ok_or_else(|| {
+                    // log `npm install` stderr and stdout *only* if it fails.
                     io::stdout().write_all(&output.stdout).ok();
                     io::stderr().write_all(&output.stderr).ok();
-                    Err(RuntimeLayerError::NpmInstallError(output.status))
-                }
+                    RuntimeLayerError::NpmInstallError(output.status)
+                })
             })?;
 
         LayerResultBuilder::new(RuntimeLayerMetadata::current(self, context)).build()
