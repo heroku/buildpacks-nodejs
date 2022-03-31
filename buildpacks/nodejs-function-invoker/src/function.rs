@@ -9,7 +9,7 @@ pub fn is_function<P>(d: P) -> bool
 where
     P: Into<PathBuf>,
 {
-    let dir: PathBuf = d.into();
+    let dir = d.into();
     dir.join("function.toml").exists() || {
         read_toml_file(dir.join("project.toml"))
             .ok()
