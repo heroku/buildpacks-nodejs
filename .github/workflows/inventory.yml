@@ -5,23 +5,24 @@ on:
   workflow_dispatch:
 
 jobs:
-  name: Update
-  runs-on: ubuntu-20.04
-  steps:
-    - name: Checkout Repo
-      uses: actions/checkout@v2
-    - id: install-rust-toolchain
-      name: Install Rust Toolchain
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - name: Rebuild Node Inventory
-      run: cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v4
-      with:
-        title: "Update Inventory"
-        commit-message: "Update Inventory"
-        branch: update-inventory
-        labels: "automation,skip-changelog"
-        body: "Automated pull-request to update inventory list"
+  update:
+    name: Update Inventory
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - id: install-rust-toolchain
+        name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Rebuild Node Inventory
+        run: cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "Update Inventory"
+          commit-message: "Update Inventory"
+          branch: update-inventory
+          labels: "automation,skip-changelog"
+          body: "Automated pull-request to update inventory list"
