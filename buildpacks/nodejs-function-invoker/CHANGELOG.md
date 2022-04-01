@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] 2022/04/01
+
 - Rewrite from bash to libcnb.rs implementation
 - Drop /opt/run.sh in favor of direct process entry
 - `yj` no longer installed during `detect` and no longer required during `build`
