@@ -18,7 +18,7 @@ jobs:
         with:
           toolchain: stable
       - name: Rebuild Node Inventory
-        run: cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
+        run: "cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
