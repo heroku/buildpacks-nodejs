@@ -129,6 +129,7 @@ jobs:
   rust-integration-test:
     machine:
       image: ubuntu-2004:202201-02
+    resource_class: xlarge
     steps:
       - checkout
       - pack/install-pack:
@@ -170,7 +171,6 @@ workflows:
           matrix:
             parameters:
               buildpack-dir:
-                - "buildpacks/nodejs-function-invoker"
                 - "buildpacks/npm"
               stack-version:
                 - "18"

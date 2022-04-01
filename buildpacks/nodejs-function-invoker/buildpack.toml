@@ -2,13 +2,12 @@ api = "0.6"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
-version = "0.2.11"
-name = "Node.js Function Invoker"
-clear-env = true
+version = "0.3.0"
+name = "Heroku Node.js Function Invoker"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["nodejs", "node", "javascript", "function"]
+keywords = ["nodejs", "node", "node.js", "javascript", "js", "function"]
 
-[[licenses]]
+[[buildpack.licenses]]
 type = "MIT"
 
 [[stacks]]

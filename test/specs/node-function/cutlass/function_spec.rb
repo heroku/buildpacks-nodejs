@@ -6,7 +6,7 @@ describe "Heroku's Nodejs CNB" do
   it "generates a callable salesforce function" do
     Cutlass::App.new("simple-function").transaction do |app|
       app.pack_build do |pack_result|
-        expect(pack_result.stdout).to include("Installing Node.js function runtime")
+        expect(pack_result.stdout).to include("Installing Node.js Function Invoker")
       end
 
       app.start_container(expose_ports: 8080, memory: 1e9) do |container|
@@ -27,7 +27,7 @@ describe "Heroku's Nodejs CNB" do
   it "generates a callable salesforce function from typescript" do
     Cutlass::App.new("simple-typescript-function").transaction do |app|
       app.pack_build do |pack_result|
-        expect(pack_result.stdout).to include("Installing Node.js function runtime")
+        expect(pack_result.stdout).to include("Installing Node.js Function Invoker")
       end
 
       app.start_container(expose_ports: 8080, memory: 1e9) do |container|

@@ -1,15 +1,16 @@
 use crate::vrs::{Requirement, Version};
 use serde::Deserialize;
-use std::fmt;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use thiserror::Error;
 
 #[derive(Deserialize, Debug)]
 pub struct PackageJson {
     pub name: String,
     pub version: Option<Version>,
     pub engines: Option<Engines>,
+    pub main: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -19,9 +20,11 @@ pub struct Engines {
     pub npm: Option<Requirement>,
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum PackageJsonError {
+    #[error("Could not read package.json. {0}")]
     AccessError(std::io::Error),
+    #[error("Could not parse package.json. {0}")]
     ParseError(serde_json::Error),
 }
 
@@ -37,15 +40,6 @@ impl PackageJson {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);
         serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError)
-    }
-}
-
-impl fmt::Display for PackageJsonError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::AccessError(e) => write!(f, "Could not read package.json: {}", e),
-            Self::ParseError(e) => write!(f, "Could not parse package.json: {}", e),
-        }
     }
 }
 

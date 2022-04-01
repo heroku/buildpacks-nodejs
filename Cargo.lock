@@ -475,6 +475,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "heroku-nodejs-function-invoker-buildpack"
+version = "0.0.0"
+dependencies = [
+ "heroku-nodejs-utils",
+ "libcnb",
+ "libcnb-test",
+ "libherokubuildpack",
+ "serde",
+ "tempfile",
+ "thiserror",
+ "toml",
+ "ureq",
+]
+
+[[package]]
 name = "heroku-nodejs-utils"
 version = "0.0.0"
 dependencies = [
@@ -712,6 +727,7 @@ dependencies = [
  "tar",
  "termcolor",
  "thiserror",
+ "toml",
  "ureq",
 ]
 
