@@ -18,7 +18,6 @@ fn main() {
         eprintln!("Failed to fetch from S3: {}", e);
         std::process::exit(FAILED_EXIT_CODE);
     });
-    println!("{:?}", result);
     let inv = Inventory::try_from(result).unwrap_or_else(|e| {
         eprintln!("Failed to parse AWS S3 XML: {}", e);
         std::process::exit(FAILED_EXIT_CODE);
