@@ -1,4 +1,4 @@
-name: Inventory
+name: Update Inventory
 on:
   push:
   schedule:
@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  update:
-    name: Update Inventory
+  update-nodejs-inventory:
+    name: Update Node.js Inventory
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repo
@@ -17,13 +17,16 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - name: Rebuild Node Inventory
+      - id: set-diff-msg
+        name: Set Diff Message
+        run: echo "::set-output name=msg::$(cargo run --bin diff_versions node buildpacks/nodejs-engine/inventory.toml)"
+      - name: Rebuild Inventory
         run: "cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          title: "Update Inventory"
-          commit-message: "Update Inventory"
+          title: "Update Node.js Inventory"
+          commit-message: "Update Node.js Inventory"
           branch: update-inventory
           labels: "automation,skip-changelog"
-          body: "Automated pull-request to update inventory list"
+          body: "Automated pull-request to update inventory list.\n${{ steps.set-diff-msg.outputs.msg }}"
