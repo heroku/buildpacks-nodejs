@@ -59,7 +59,7 @@ fn main() {
                 software_name,
                 versions
                     .clone()
-                    .map(|v| v.to_owned())
+                    .map(String::from)
                     .collect::<Vec<String>>()
                     .join(", ")
             ))
