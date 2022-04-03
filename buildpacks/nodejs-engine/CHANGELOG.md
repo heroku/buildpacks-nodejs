@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added node version 16.14.2, 17.8.0. Removed node version 3.0.0.
 - Update Node.js inventory ([#225](https://github.com/heroku/buildpacks-nodejs/pull/225))
 
 ## [0.8.1] 2022/03/23
