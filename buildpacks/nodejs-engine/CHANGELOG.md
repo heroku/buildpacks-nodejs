@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.2] 2022/04/01
+
 - Update Node.js inventory ([#225](https://github.com/heroku/buildpacks-nodejs/pull/225))
 
 ## [0.8.1] 2022/03/23
