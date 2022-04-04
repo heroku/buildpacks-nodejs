@@ -11,4 +11,4 @@ uri = "../../../buildpacks/npm"
 uri = "../../../buildpacks/yarn"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/procfile-cnb:0.6.2"
+uri = "docker://docker.io/heroku/procfile-cnb:1.0.0"
