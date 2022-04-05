@@ -17,7 +17,7 @@ id = "heroku-18"
 id = "heroku-20"
 
 [[stacks]]
-id = "io.buildpacks.stacks.bionic"
+id = "heroku-22"
 
 [metadata]
 

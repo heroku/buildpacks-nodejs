@@ -10,11 +10,20 @@ keywords = ["nodejs", "node", "npm"]
 [[buildpack.licenses]]
 type = "MIT"
 
+# Wildcard stacks are not well supported prior to `pack` `0.24.1`. Explicit
+# stack identifiers can be removed after the buildpack api version is revised
+# to something greater than 0.6.
+[[stacks]]
+id = "*"
+
 [[stacks]]
 id = "heroku-18"
 
 [[stacks]]
 id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
 
 [[stacks]]
 id = "io.buildpacks.stacks.bionic"

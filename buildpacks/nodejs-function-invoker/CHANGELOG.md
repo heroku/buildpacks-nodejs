@@ -4,6 +4,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add support for the heroku-22 stack
+- Drop support for the bionic stack
+
 ## [0.3.0] 2022/04/01
 
 - Rewrite from bash to libcnb.rs implementation
