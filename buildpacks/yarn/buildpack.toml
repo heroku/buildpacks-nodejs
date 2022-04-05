@@ -10,9 +10,6 @@ keywords = ["nodejs", "node", "yarn"]
 [[buildpack.licenses]]
 type = "MIT"
 
-# Wildcard stacks are not well supported prior to `pack` `0.24.1`. Explicit
-# stack identifiers can be removed after the buildpack api version is revised
-# to something greater than 0.6.
 [[stacks]]
 id = "*"
 
