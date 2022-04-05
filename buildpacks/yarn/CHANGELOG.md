@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add support for the heroku-22 stack
+
 ## [0.2.2] 2022/04/04
 - `yarn install` now run with `--production=false` to ensure `devDependencies` are installed ([201](https://github.com/heroku/buildpacks-nodejs/pull/201))
 
