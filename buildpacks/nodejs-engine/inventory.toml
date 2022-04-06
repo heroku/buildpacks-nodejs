@@ -4201,6 +4201,13 @@ url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v12.2
 etag = "98a9f79ab4d7840b31c95968e82e9569-3"
 
 [[releases]]
+version = "12.22.12"
+channel = "release"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/release/linux-x64/node-v12.22.12-linux-x64.tar.gz"
+etag = "84488d656cf19837e8dbc27b1a9993c9-3"
+
+[[releases]]
 version = "12.22.2"
 channel = "release"
 arch = "linux-x64"
@@ -7587,6 +7594,13 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://s3.amazonaws.com/heroku-nodebin/node/staging/linux-x64/node-v12.22.11-linux-x64.tar.gz"
 etag = "98a9f79ab4d7840b31c95968e82e9569-3"
+
+[[releases]]
+version = "12.22.12"
+channel = "staging"
+arch = "linux-x64"
+url = "https://s3.amazonaws.com/heroku-nodebin/node/staging/linux-x64/node-v12.22.12-linux-x64.tar.gz"
+etag = "84488d656cf19837e8dbc27b1a9993c9-3"
 
 [[releases]]
 version = "12.22.2"
