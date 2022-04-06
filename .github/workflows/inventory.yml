@@ -22,7 +22,7 @@ jobs:
       - name: Rebuild Inventory
         run: "cargo run --bin list_versions node > buildpacks/nodejs-engine/inventory.toml"
       - name: Update Changelog
-        run: perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- ${{ steps.set-diff-msg.outputs.msg }}/' buildpacks/nodejs-engine/CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' buildpacks/nodejs-engine/CHANGELOG.md
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
