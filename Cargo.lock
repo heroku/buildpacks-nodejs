@@ -488,6 +488,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "heroku-nodejs-yarn-buildpack"
+version = "0.0.0"
+dependencies = [
+ "heroku-nodejs-utils",
+ "libcnb",
+ "libcnb-test",
+ "libherokubuildpack",
+ "thiserror",
+ "toml",
+ "ureq",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

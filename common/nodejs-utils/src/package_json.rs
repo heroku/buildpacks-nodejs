@@ -11,6 +11,7 @@ pub struct PackageJson {
     pub name: String,
     pub version: Option<Version>,
     pub engines: Option<Engines>,
+    pub scripts: Option<Scripts>,
     pub main: Option<String>,
     pub dependencies: Option<HashMap<String, String>>,
     #[serde(rename = "devDependencies")]
@@ -22,6 +23,12 @@ pub struct Engines {
     pub node: Option<Requirement>,
     pub yarn: Option<Requirement>,
     pub npm: Option<Requirement>,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct Scripts {
+    pub start: Option<String>,
+    pub build: Option<String>,
 }
 
 #[derive(Error, Debug)]

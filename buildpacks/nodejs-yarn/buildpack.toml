@@ -1,0 +1,33 @@
+api = "0.6"
+
+[buildpack]
+id = "heroku/nodejs-yarn"
+version = "0.3.0"
+name = "Heroku Node.js Yarn"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
+keywords = ["node", "node.js", "nodejs", "javascript", "js", "yarn", "yarnpkg"]
+
+[[buildpack.licenses]]
+type = "MIT"
+
+[[stacks]]
+id = "*"
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
+
+[metadata]
+
+[metadata.release]
+
+[metadata.release.docker]
+repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack"
