@@ -7,7 +7,7 @@ edition = "2021"
 rust-version = "1.58"
 
 [dependencies]
-libcnb = "0.6"
+libcnb = "0.7"
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
 libherokubuildpack = "0.6"
 serde = "1.0.136"
