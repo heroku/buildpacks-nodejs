@@ -298,9 +298,9 @@ dependencies = [
 
 [[package]]
 name = "flate2"
-version = "1.0.22"
+version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e6988e897c1c9c485f43b47a529cef42fde0547f9d8d41a7062518f1d8fc53f"
+checksum = "b39522e96686d38f4bc984b9198e3a0613264abaebaff2c5c918bfa6b6da09af"
 dependencies = [
  "cfg-if",
  "crc32fast",
@@ -431,7 +431,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.6.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -446,7 +446,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.6.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -628,6 +628,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "libcnb"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba3da68086a145b1d0805f017abc24b61a440ed286d3b958da817e56a28c376d"
+dependencies = [
+ "libcnb-data 0.6.0",
+ "libcnb-proc-macros",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "libcnb-data"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -696,12 +709,12 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0cb037fca587c5a7e8203631121c1ff0844718c42ba55f678533ae32dcee425"
+checksum = "e1c1f4d9e35f7b4b3f8f8f5da7b2057c5c9b11e8b0cf19100de193c079458d93"
 dependencies = [
  "flate2",
- "libcnb",
+ "libcnb 0.7.0",
  "pathdiff",
  "sha2",
  "tar",
@@ -762,12 +775,11 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
 name = "miniz_oxide"
-version = "0.4.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a92518e98c078586bc6c934028adcca4c92a53d6a958196de835170a01d84e4b"
+checksum = "d2b29bd4bc3f33391105ebee3589c19197c4271e3e5a9ec9bfe8127eeff8f082"
 dependencies = [
  "adler",
- "autocfg",
 ]
 
 [[package]]
