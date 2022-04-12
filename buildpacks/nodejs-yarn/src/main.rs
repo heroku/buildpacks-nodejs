@@ -3,19 +3,22 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+use crate::layers::{DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::process_type;
+use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 use libherokubuildpack::log::{log_error, log_header, log_info};
 use thiserror::Error;
+
+mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
@@ -72,13 +75,19 @@ impl Buildpack for NodeJsYarnBuildpack {
                 Requirement::any()
             });
 
-        let target_release = inv
+        let release = inv
             .resolve(&version_range)
             .ok_or(NodeJsYarnBuildpackError::UnknownVersionError(version_range))?;
 
-        log_info(format!("Resolved Yarn version: {}", target_release.version));
+        log_info(format!("Resolved Yarn version: {}", release.version));
 
         log_header("Installing yarn");
+        context.handle_layer(
+            layer_name!("dist"),
+            DistLayer {
+                release: release.clone(),
+            },
+        )?;
 
         let launch = pjson.scripts.and_then(|scripts| scripts.start).map(|_| {
             LaunchBuilder::new()
@@ -102,6 +111,9 @@ impl Buildpack for NodeJsYarnBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
+                    NodeJsYarnBuildpackError::DistLayerError(_) => {
+                        log_error("Yarn dist error", err_string);
+                    }
                     NodeJsYarnBuildpackError::InventoryParseError(_) => {
                         log_error("Yarn inventory parse error", err_string);
                     }
@@ -122,6 +134,8 @@ impl Buildpack for NodeJsYarnBuildpack {
 
 #[derive(Error, Debug)]
 pub enum NodeJsYarnBuildpackError {
+    #[error("{0}")]
+    DistLayerError(#[from] DistLayerError),
     #[error("Couldn't parse yarn inventory: {0}")]
     InventoryParseError(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
