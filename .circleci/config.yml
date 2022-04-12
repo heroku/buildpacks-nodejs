@@ -175,6 +175,7 @@ workflows:
               stack-version:
                 - "18"
                 - "20"
+                - "22"
 
       - package-buildpack:
           matrix:
