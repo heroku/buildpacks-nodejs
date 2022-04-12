@@ -4,7 +4,7 @@ version = "0.0.0"
 description = "Libs and bins for Heroku Node.js Buildpacks"
 publish = false
 edition = "2021"
-rust-version = "1.58"
+rust-version = "1.60"
 
 [dependencies]
 ureq = "2.4.0"
