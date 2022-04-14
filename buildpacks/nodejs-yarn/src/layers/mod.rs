@@ -1,5 +1,5 @@
+mod deps;
 mod dist;
-mod install;
 
+pub use deps::*;
 pub use dist::*;
-pub use install::*;

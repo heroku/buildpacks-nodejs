@@ -3,7 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::layers::{DistLayer, DistLayerError, InstallLayer, InstallLayerError};
+use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
@@ -92,8 +92,8 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         log_header("Installing dependencies");
         context.handle_layer(
-            layer_name!("install"),
-            InstallLayer {
+            layer_name!("deps"),
+            DepsLayer {
                 yarn_env: dist_layer.env.apply(Scope::Build, &Env::from_current()),
                 yarn_app_cache: false,
                 yarn_major_version: 1,
@@ -123,9 +123,9 @@ impl Buildpack for NodeJsYarnBuildpack {
                 let err_string = bp_err.to_string();
                 match bp_err {
                     NodeJsYarnBuildpackError::DistLayer(_) => {
-                        log_error("Yarn distrbution layer error", err_string);
+                        log_error("Yarn distribution layer error", err_string);
                     }
-                    NodeJsYarnBuildpackError::InstallLayer(_) => {
+                    NodeJsYarnBuildpackError::DepsLayer(_) => {
                         log_error("Yarn dependency layer error", err_string);
                     }
                     NodeJsYarnBuildpackError::InventoryParse(_) => {
@@ -140,7 +140,7 @@ impl Buildpack for NodeJsYarnBuildpack {
                 }
             }
             err => {
-                log_error("Internal Yarn Buildpack Error", err.to_string());
+                log_error("Yarn internal buildpack error", err.to_string());
             }
         }
     }
@@ -151,7 +151,7 @@ pub enum NodeJsYarnBuildpackError {
     #[error("{0}")]
     DistLayer(#[from] DistLayerError),
     #[error("{0}")]
-    InstallLayer(#[from] InstallLayerError),
+    DepsLayer(#[from] DepsLayerError),
     #[error("Couldn't parse yarn inventory: {0}")]
     InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
