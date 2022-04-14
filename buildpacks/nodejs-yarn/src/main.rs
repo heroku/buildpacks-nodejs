@@ -3,7 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::layers::{DistLayer, DistLayerError};
+use crate::layers::{DistLayer, DistLayerError, InstallLayer, InstallLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
@@ -14,7 +14,8 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
-use libcnb::{buildpack_main, Buildpack};
+use libcnb::layer_env::Scope;
+use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
 use thiserror::Error;
 
@@ -54,10 +55,10 @@ impl Buildpack for NodeJsYarnBuildpack {
         log_header("Detecting yarn version");
 
         let inv: Inventory =
-            toml::from_str(INVENTORY).map_err(NodeJsYarnBuildpackError::InventoryParseError)?;
+            toml::from_str(INVENTORY).map_err(NodeJsYarnBuildpackError::InventoryParse)?;
 
         let pjson = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsYarnBuildpackError::PackageJsonError)?;
+            .map_err(NodeJsYarnBuildpackError::PackageJson)?;
 
         let version_range = pjson
             .engines
@@ -77,15 +78,25 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         let release = inv
             .resolve(&version_range)
-            .ok_or(NodeJsYarnBuildpackError::UnknownVersionError(version_range))?;
+            .ok_or(NodeJsYarnBuildpackError::UnknownVersion(version_range))?;
 
         log_info(format!("Resolved Yarn version: {}", release.version));
 
         log_header("Installing yarn");
-        context.handle_layer(
+        let dist_layer = context.handle_layer(
             layer_name!("dist"),
             DistLayer {
                 release: release.clone(),
+            },
+        )?;
+
+        log_header("Installing dependencies");
+        context.handle_layer(
+            layer_name!("install"),
+            InstallLayer {
+                yarn_env: dist_layer.env.apply(Scope::Build, &Env::from_current()),
+                yarn_app_cache: false,
+                yarn_major_version: 1,
             },
         )?;
 
@@ -111,22 +122,25 @@ impl Buildpack for NodeJsYarnBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
-                    NodeJsYarnBuildpackError::DistLayerError(_) => {
-                        log_error("Yarn dist error", err_string);
+                    NodeJsYarnBuildpackError::DistLayer(_) => {
+                        log_error("Yarn distrbution layer error", err_string);
                     }
-                    NodeJsYarnBuildpackError::InventoryParseError(_) => {
+                    NodeJsYarnBuildpackError::InstallLayer(_) => {
+                        log_error("Yarn dependency layer error", err_string);
+                    }
+                    NodeJsYarnBuildpackError::InventoryParse(_) => {
                         log_error("Yarn inventory parse error", err_string);
                     }
-                    NodeJsYarnBuildpackError::PackageJsonError(_) => {
+                    NodeJsYarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    NodeJsYarnBuildpackError::UnknownVersionError(_) => {
+                    NodeJsYarnBuildpackError::UnknownVersion(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
             }
             err => {
-                log_error("Internal Buildpack Error", err.to_string());
+                log_error("Internal Yarn Buildpack Error", err.to_string());
             }
         }
     }
@@ -135,13 +149,15 @@ impl Buildpack for NodeJsYarnBuildpack {
 #[derive(Error, Debug)]
 pub enum NodeJsYarnBuildpackError {
     #[error("{0}")]
-    DistLayerError(#[from] DistLayerError),
+    DistLayer(#[from] DistLayerError),
+    #[error("{0}")]
+    InstallLayer(#[from] InstallLayerError),
     #[error("Couldn't parse yarn inventory: {0}")]
-    InventoryParseError(toml::de::Error),
+    InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
-    PackageJsonError(PackageJsonError),
+    PackageJson(PackageJsonError),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
-    UnknownVersionError(Requirement),
+    UnknownVersion(Requirement),
 }
 
 impl From<NodeJsYarnBuildpackError> for libcnb::Error<NodeJsYarnBuildpackError> {
