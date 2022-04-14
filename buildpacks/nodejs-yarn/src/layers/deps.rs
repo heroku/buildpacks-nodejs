@@ -75,7 +75,7 @@ impl Layer for DepsLayer {
         if !self.yarn_app_cache
             && layer_data.content_metadata.metadata == DepsLayerMetadata::current(self, context)
         {
-            log_info("Restoring yarn cache");
+            log_info("Restoring yarn build cache");
             Ok(ExistingLayerStrategy::Update)
         } else {
             Ok(ExistingLayerStrategy::Recreate)
@@ -84,8 +84,6 @@ impl Layer for DepsLayer {
 }
 impl DepsLayer {
     fn install(&self, layer_path: &Path) -> Result<(), DepsLayerError> {
-        log_info("Running yarn install");
-
         let mut args = vec!["install", "--frozen-lockfile"];
         let path = layer_path.to_string_lossy().to_owned();
         if !self.yarn_app_cache {
@@ -95,18 +93,18 @@ impl DepsLayer {
             args.append(&mut vec!["--production", "false"]);
         }
 
-        let output = Command::new("yarn")
+        let mut process = Command::new("yarn")
             .args(args)
             .envs(&self.yarn_env)
-            .output()
+            .spawn()
             .map_err(DepsLayerError::YarnCommand)?;
 
-        output.status.success().then(|| ()).ok_or_else(|| {
-            // log `yarn install` stderr and stdout *only* if it fails.
-            io::stdout().write_all(&output.stdout).ok();
-            io::stderr().write_all(&output.stderr).ok();
-            DepsLayerError::YarnInstall(output.status)
-        })
+        let status = process.wait().map_err(DepsLayerError::YarnCommand)?;
+
+        status
+            .success()
+            .then(|| ())
+            .ok_or_else(|| DepsLayerError::YarnInstall(status))
     }
 }
 
