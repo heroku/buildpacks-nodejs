@@ -103,23 +103,25 @@ impl Buildpack for NodeJsYarnBuildpack {
             },
         )?;
 
-        log_header("Running build scripts");
-        pjson
+        log_header("Running build script");
+        let build = pjson
             .scripts
             .clone()
-            .and_then(|scripts| scripts.build)
-            .or_else(|| {
-                log_info("No build scripts found");
-                None
-            })
-            .map(|build| {
-                log_info(format!("Running `{build}`"));
-                Command::new(build)
+            .and_then(|scripts| scripts.build.and(Some("build")));
+
+        match build {
+            Some(key) => {
+                let mut proc = Command::new("yarn")
+                    .args(&vec!["run", key])
                     .envs(&env)
                     .spawn()
-                    .and_then(|mut p| p.wait())
-                    .map_err(NodeJsYarnBuildpackError::BuildScript)
-            });
+                    .map_err(NodeJsYarnBuildpackError::BuildScript)?;
+                proc.wait().map_err(NodeJsYarnBuildpackError::BuildScript)?;
+            }
+            None => {
+                log_info("No build script found");
+            }
+        }
 
         let launch = pjson.scripts.and_then(|scripts| scripts.start).map(|_| {
             LaunchBuilder::new()

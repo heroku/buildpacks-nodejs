@@ -16,7 +16,8 @@ fn nodejs_yarn_1_typescript() {
     ])
     .run_test(|ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Running `tsc`");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Running build scripts");
         let port = 8080;
         ctx.prepare_container()
             .expose_port(port)
