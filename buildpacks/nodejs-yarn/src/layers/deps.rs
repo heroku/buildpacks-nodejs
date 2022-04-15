@@ -10,7 +10,7 @@ use std::path::Path;
 use std::process::Command;
 use thiserror::Error;
 
-/// DepsLayer is a layer that uses `yarn install` to cache and install
+/// `DepsLayer` is a layer that uses `yarn install` to cache and install
 /// application dependencies.
 pub struct DepsLayer {
     pub yarn_env: Env,
@@ -34,7 +34,7 @@ pub enum DepsLayerError {
     YarnInstall(std::process::ExitStatus),
 }
 
-const LAYER_VERSION: usize = 1 as usize;
+const LAYER_VERSION: usize = 1_usize;
 
 impl Layer for DepsLayer {
     type Buildpack = NodeJsYarnBuildpack;
@@ -84,7 +84,7 @@ impl Layer for DepsLayer {
 impl DepsLayer {
     fn install(&self, layer_path: &Path) -> Result<(), DepsLayerError> {
         let mut args = vec!["install", "--frozen-lockfile"];
-        let path = layer_path.to_string_lossy().to_owned();
+        let path = layer_path.to_string_lossy().clone();
         if !self.yarn_app_cache {
             args.append(&mut vec!["--cache-folder", &path]);
         }
@@ -103,7 +103,7 @@ impl DepsLayer {
         status
             .success()
             .then(|| ())
-            .ok_or_else(|| DepsLayerError::YarnInstall(status))
+            .ok_or(DepsLayerError::YarnInstall(status))
     }
 }
 

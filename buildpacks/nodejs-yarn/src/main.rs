@@ -56,7 +56,7 @@ impl Buildpack for NodeJsYarnBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Detecting yarn version");
 
-        let inv: Inventory =
+        let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsYarnBuildpackError::InventoryParse)?;
 
         let pjson = PackageJson::read(context.app_dir.join("package.json"))
@@ -65,12 +65,12 @@ impl Buildpack for NodeJsYarnBuildpack {
         let version_range = pjson
             .engines
             .and_then(|e| {
-                e.yarn.and_then(|v| {
+                e.yarn.map(|v| {
                     log_info(format!(
                         "Detected yarn version range {} from package.json",
                         v
                     ));
-                    Some(v)
+                    v
                 })
             })
             .unwrap_or_else(|| {
@@ -78,7 +78,7 @@ impl Buildpack for NodeJsYarnBuildpack {
                 Requirement::any()
             });
 
-        let release = inv
+        let release = inventory
             .resolve(&version_range)
             .ok_or(NodeJsYarnBuildpackError::UnknownVersion(version_range))?;
 
