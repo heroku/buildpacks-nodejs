@@ -3,8 +3,6 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use std::process::Command;
-
 use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -19,7 +17,13 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
+use std::process::Command;
 use thiserror::Error;
+
+#[cfg(test)]
+use libcnb_test as _;
+#[cfg(test)]
+use ureq as _;
 
 mod layers;
 
@@ -99,15 +103,15 @@ impl Buildpack for NodeJsYarnBuildpack {
             DepsLayer {
                 yarn_env: env.clone(),
                 yarn_app_cache: false,
-                yarn_major_version: 1,
+                yarn_major_version: "1".to_string(),
             },
         )?;
 
         log_header("Running scripts");
         let build = pjson
             .scripts
-            .clone()
-            .and_then(|scripts| scripts.build.and(Some("build")));
+            .as_ref()
+            .and_then(|scripts| scripts.build.as_ref().and(Some("build")));
 
         match build {
             Some(key) => {
@@ -148,7 +152,6 @@ impl Buildpack for NodeJsYarnBuildpack {
                 match bp_err {
                     NodeJsYarnBuildpackError::BuildScript(_) => {
                         log_error("Yarn build script error", err_string);
-                        60
                     }
                     NodeJsYarnBuildpackError::DistLayer(_) => {
                         log_error("Yarn distribution layer error", err_string);

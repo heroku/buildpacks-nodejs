@@ -6,6 +6,7 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 use libcnb::{Buildpack, Env};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::path::Path;
 use std::process::Command;
 use thiserror::Error;
@@ -15,26 +16,28 @@ use thiserror::Error;
 pub struct DepsLayer {
     pub yarn_env: Env,
     pub yarn_app_cache: bool,
-    pub yarn_major_version: usize,
+    pub yarn_major_version: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub struct DepsLayerMetadata {
     yarn_app_cache: bool,
-    yarn_major_version: usize,
-    layer_version: usize,
+    yarn_major_version: String,
+    layer_version: String,
     stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
 pub enum DepsLayerError {
+    #[error("Couldn't create yarn cache folder: {0}")]
+    CacheFolder(std::io::Error),
     #[error("Couldn't execute `yarn`: {0}")]
     YarnCommand(std::io::Error),
     #[error("Couldn't install packages with `yarn install`: {0}")]
     YarnInstall(std::process::ExitStatus),
 }
 
-const LAYER_VERSION: usize = 1_usize;
+const LAYER_VERSION: &str = "1";
 
 impl Layer for DepsLayer {
     type Buildpack = NodeJsYarnBuildpack;
@@ -53,6 +56,9 @@ impl Layer for DepsLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsYarnBuildpackError> {
+        if !self.yarn_app_cache {
+            fs::create_dir(layer_path.join("cache")).map_err(DepsLayerError::CacheFolder)?;
+        }
         self.install(layer_path)?;
         LayerResultBuilder::new(DepsLayerMetadata::current(self, context)).build()
     }
@@ -74,21 +80,23 @@ impl Layer for DepsLayer {
         if !self.yarn_app_cache
             && layer_data.content_metadata.metadata == DepsLayerMetadata::current(self, context)
         {
-            log_info("Restoring yarn build cache");
+            log_info("Restoring yarn dependency cache");
             Ok(ExistingLayerStrategy::Update)
         } else {
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
 }
+
 impl DepsLayer {
     fn install(&self, layer_path: &Path) -> Result<(), DepsLayerError> {
         let mut args = vec!["install", "--frozen-lockfile"];
-        let path = layer_path.to_string_lossy().clone();
+        let cache_path = layer_path.join("cache");
+        let cache_folder = cache_path.to_string_lossy().clone();
         if !self.yarn_app_cache {
-            args.append(&mut vec!["--cache-folder", &path]);
+            args.append(&mut vec!["--cache-folder", &cache_folder]);
         }
-        if self.yarn_major_version < 1 {
+        if self.yarn_major_version == "1" {
             args.append(&mut vec!["--production", "false"]);
         }
 
@@ -111,9 +119,9 @@ impl DepsLayerMetadata {
     fn current(layer: &DepsLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> Self {
         DepsLayerMetadata {
             yarn_app_cache: layer.yarn_app_cache,
-            yarn_major_version: layer.yarn_major_version,
+            yarn_major_version: layer.yarn_major_version.clone(),
             stack_id: context.stack_id.clone(),
-            layer_version: LAYER_VERSION,
+            layer_version: LAYER_VERSION.to_string(),
         }
     }
 }
