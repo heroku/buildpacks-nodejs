@@ -3,6 +3,8 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+use std::process::Command;
+
 use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -90,15 +92,34 @@ impl Buildpack for NodeJsYarnBuildpack {
             },
         )?;
 
+        let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
         log_header("Installing dependencies");
         context.handle_layer(
             layer_name!("deps"),
             DepsLayer {
-                yarn_env: dist_layer.env.apply(Scope::Build, &Env::from_current()),
+                yarn_env: env.clone(),
                 yarn_app_cache: false,
                 yarn_major_version: 1,
             },
         )?;
+
+        log_header("Running build scripts");
+        pjson
+            .scripts
+            .clone()
+            .and_then(|scripts| scripts.build)
+            .or_else(|| {
+                log_info("No build scripts found");
+                None
+            })
+            .map(|build| {
+                log_info(format!("Running `{build}`"));
+                Command::new(build)
+                    .envs(&env)
+                    .spawn()
+                    .and_then(|mut p| p.wait())
+                    .map_err(NodeJsYarnBuildpackError::BuildScript)
+            });
 
         let launch = pjson.scripts.and_then(|scripts| scripts.start).map(|_| {
             LaunchBuilder::new()
@@ -122,6 +143,10 @@ impl Buildpack for NodeJsYarnBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
+                    NodeJsYarnBuildpackError::BuildScript(_) => {
+                        log_error("Yarn build script error", err_string);
+                        60
+                    }
                     NodeJsYarnBuildpackError::DistLayer(_) => {
                         log_error("Yarn distribution layer error", err_string);
                     }
@@ -148,6 +173,8 @@ impl Buildpack for NodeJsYarnBuildpack {
 
 #[derive(Error, Debug)]
 pub enum NodeJsYarnBuildpackError {
+    #[error("Couldn't run build script: {0}")]
+    BuildScript(std::io::Error),
     #[error("{0}")]
     DistLayer(#[from] DistLayerError),
     #[error("{0}")]

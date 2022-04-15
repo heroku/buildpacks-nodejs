@@ -16,11 +16,12 @@ fn nodejs_yarn_1_typescript() {
     ])
     .run_test(|ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Running `tsc`");
         let port = 8080;
         ctx.prepare_container()
             .expose_port(port)
             .start_with_default_process(|container| {
-                std::thread::sleep(Duration::from_secs(5));
+                std::thread::sleep(Duration::from_secs(10));
                 let addr = container
                     .address_for_port(port)
                     .expect("couldn't get container address");

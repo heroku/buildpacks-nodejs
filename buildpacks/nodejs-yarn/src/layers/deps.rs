@@ -6,7 +6,6 @@ use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerR
 use libcnb::{Buildpack, Env};
 use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
-use std::io::{self, Write};
 use std::path::Path;
 use std::process::Command;
 use thiserror::Error;

@@ -6,7 +6,7 @@ use std::io::BufReader;
 use std::path::Path;
 use thiserror::Error;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct PackageJson {
     pub name: String,
     pub version: Option<Version>,
@@ -18,14 +18,14 @@ pub struct PackageJson {
     pub dev_dependencies: Option<HashMap<String, String>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Engines {
     pub node: Option<Requirement>,
     pub yarn: Option<Requirement>,
     pub npm: Option<Requirement>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Scripts {
     pub start: Option<String>,
     pub build: Option<String>,
