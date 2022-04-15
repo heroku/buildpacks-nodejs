@@ -17,12 +17,12 @@ fn nodejs_yarn_1_typescript() {
     .run_test(|ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Running build scripts");
+        assert_contains!(ctx.pack_stdout, "Running `build` script");
         let port = 8080;
         ctx.prepare_container()
             .expose_port(port)
             .start_with_default_process(|container| {
-                std::thread::sleep(Duration::from_secs(10));
+                std::thread::sleep(Duration::from_secs(5));
                 let addr = container
                     .address_for_port(port)
                     .expect("couldn't get container address");

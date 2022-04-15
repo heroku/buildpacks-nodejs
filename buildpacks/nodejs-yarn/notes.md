@@ -34,8 +34,9 @@ manage a dependency cache.
 
 Hypothesis: we don't need this. Yarn 1,2, and 3 supports a global cache. It
 is likely that the difference between restoring `node_modules` and rebuilding
-`node_modules` from a pristine cache is negligible. If the buildpack supported
-this functionality, we'd need to instead restore .pnp.js for apps that use pnp.
+`node_modules` from a pristine cache is negligible. If the buildpack did decide
+to support this functionality, we'd need to instead restore .pnp.js for apps 
+that use pnp.
 
 ## build scripts
 
@@ -43,8 +44,13 @@ this functionality, we'd need to instead restore .pnp.js for apps that use pnp.
 the `build` script. But if it's truly `post`, shouldn't it run after, rather
 than instead of?
 
-`heroku-prebuild` actually runs `prebuild`. But experience tells me not many
-folks use this.
+Wouldn't `heroku-build` make more sense as the alternative to `build`? That
+would also help `heroku-postbuild` to make more sense, as it would actually
+run after either `heroku-build` or `build`.
+
+`heroku-prebuild` actually runs before the build, so it's probably fine as-is. 
+But experience tells me not many folks use this. We could wait until someone
+asks for it.
 
 ## compile checks
 

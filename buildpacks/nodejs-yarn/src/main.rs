@@ -103,7 +103,7 @@ impl Buildpack for NodeJsYarnBuildpack {
             },
         )?;
 
-        log_header("Running build script");
+        log_header("Running scripts");
         let build = pjson
             .scripts
             .clone()
@@ -111,6 +111,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         match build {
             Some(key) => {
+                log_info(format!("Running `{key}` script"));
                 let mut proc = Command::new("yarn")
                     .args(&vec!["run", key])
                     .envs(&env)
