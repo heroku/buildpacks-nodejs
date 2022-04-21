@@ -50,7 +50,7 @@ jobs:
         name: "Request Registry Entry"
         uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:4.0.0
         with:
-          token: ${{ secrets.PUBLIC_REPO_TOKEN }}
+          token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
           id: ${{ steps.package.outputs.id }}
           version: ${{ steps.package.outputs.version }}
           address: ${{ steps.package.outputs.address }}
