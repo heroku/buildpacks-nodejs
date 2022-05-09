@@ -21,7 +21,7 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v4.6.0
       - id: login
         name: "Login to public ECR"
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: public.ecr.aws
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
