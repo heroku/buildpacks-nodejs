@@ -6,7 +6,7 @@
 use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::vrs::{Requirement, Version, VersionError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -17,7 +17,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 use thiserror::Error;
 
 #[cfg(test)]
@@ -86,7 +86,7 @@ impl Buildpack for NodeJsYarnBuildpack {
             .resolve(&version_range)
             .ok_or(NodeJsYarnBuildpackError::UnknownVersion(version_range))?;
 
-        log_info(format!("Resolved Yarn version: {}", release.version));
+        log_info(format!("Resolved yarn version: {}", release.version));
 
         log_header("Installing yarn");
         let dist_layer = context.handle_layer(
@@ -97,13 +97,34 @@ impl Buildpack for NodeJsYarnBuildpack {
         )?;
 
         let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
+
+        let yarn_version_cmd = Command::new("yarn")
+            .args(vec!["--version"])
+            .envs(&env)
+            .output()
+            .map_err(NodeJsYarnBuildpackError::YarnVersionProcess)?;
+
+        yarn_version_cmd.status.success().then(|| ()).ok_or(
+            NodeJsYarnBuildpackError::YarnVersionExit(yarn_version_cmd.status),
+        )?;
+
+        let reported_yarn_version_string = String::from_utf8_lossy(&yarn_version_cmd.stdout);
+
+        log_info(format!(
+            "Using yarn {}",
+            reported_yarn_version_string.trim()
+        ));
+
+        let reported_yarn_version = Version::parse(&reported_yarn_version_string)
+            .map_err(NodeJsYarnBuildpackError::YarnVersionParse)?;
+
         log_header("Installing dependencies");
         context.handle_layer(
             layer_name!("deps"),
             DepsLayer {
                 yarn_env: env.clone(),
                 yarn_app_cache: false,
-                yarn_major_version: "1".to_string(),
+                yarn_major_version: reported_yarn_version.major().to_string(),
             },
         )?;
 
@@ -165,7 +186,10 @@ impl Buildpack for NodeJsYarnBuildpack {
                     NodeJsYarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    NodeJsYarnBuildpackError::UnknownVersion(_) => {
+                    NodeJsYarnBuildpackError::YarnVersionExit(_)
+                    | NodeJsYarnBuildpackError::YarnVersionParse(_)
+                    | NodeJsYarnBuildpackError::YarnVersionProcess(_)
+                    | NodeJsYarnBuildpackError::UnknownVersion(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
@@ -189,6 +213,12 @@ pub enum NodeJsYarnBuildpackError {
     InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
     PackageJson(PackageJsonError),
+    #[error("Couldn't parse installed yarn version: {0}")]
+    YarnVersionParse(VersionError),
+    #[error("Couldn't execute yarn command: {0}")]
+    YarnVersionProcess(std::io::Error),
+    #[error("yarn --version failed with {0}")]
+    YarnVersionExit(ExitStatus),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
     UnknownVersion(Requirement),
 }

@@ -90,14 +90,19 @@ impl Layer for DepsLayer {
 
 impl DepsLayer {
     fn install(&self, layer_path: &Path) -> Result<(), DepsLayerError> {
-        let mut args = vec!["install", "--frozen-lockfile"];
+        let mut args = vec!["install"];
         let cache_path = layer_path.join("cache");
         let cache_folder = cache_path.to_string_lossy().clone();
-        if !self.yarn_app_cache {
-            args.append(&mut vec!["--cache-folder", &cache_folder]);
-        }
         if self.yarn_major_version == "1" {
-            args.append(&mut vec!["--production", "false"]);
+            args.append(&mut vec![
+                "--cache-folder",
+                &cache_folder,
+                "--frozen-lockfile",
+                "--production",
+                "false",
+            ]);
+        } else {
+            args.append(&mut vec!["--immutable", "--immutable-cache"])
         }
 
         let mut process = Command::new("yarn")

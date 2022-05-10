@@ -1,0 +1,31 @@
+Arguments: 
+  /Users/josh.lewis/.asdf/installs/nodejs/16.14.0/bin/node /Users/josh.lewis/.asdf/installs/nodejs/16.14.0/.npm/bin/yarn policies set-version berry --silent
+
+PATH: 
+  /Users/josh.lewis/.asdf/plugins/nodejs/shims:/Users/josh.lewis/.asdf/installs/nodejs/16.14.0/.npm/bin:/Users/josh.lewis/.asdf/installs/nodejs/16.14.0/bin:/Users/josh.lewis/.asdf/shims:/Users/josh.lewis/.asdf/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/Users/josh.lewis/go/bin:/usr/local/sbin:/Users/josh.lewis/.local/bin:/Users/josh.lewis/.fzf/bin
+
+Yarn version: 
+  1.22.18
+
+Node version: 
+  16.14.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: Client network socket disconnected before secure TLS connection was established
+      at connResetException (node:internal/errors:691:14)
+      at TLSSocket.onConnectEnd (node:_tls_wrap:1585:19)
+      at TLSSocket.emit (node:events:532:35)
+      at endReadableNT (node:internal/streams/readable:1346:12)
+      at processTicksAndRejections (node:internal/process/task_queues:83:21)
+
+npm manifest: 
+  No manifest
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  

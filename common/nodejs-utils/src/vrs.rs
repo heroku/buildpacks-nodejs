@@ -28,6 +28,11 @@ impl Version {
             Err(e) => Err(VersionError(format!("{}", e))),
         }
     }
+
+    #[must_use]
+    pub fn major(&self) -> u64 {
+        self.0.major
+    }
 }
 impl TryFrom<String> for Version {
     type Error = VersionError;

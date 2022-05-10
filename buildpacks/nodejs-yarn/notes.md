@@ -28,15 +28,18 @@ listed as an app slice in this mode.
 
 Yarn 2+ supports zero install, that is, the customer provides a dependency
 cache with the codebase. In this mode, the buildpack does not need to
-manage a dependency cache.
+manage a dependency cache. Yarn itself is bullish on this mode, so this mode
+should be well supported.
 
 ## node_modules caching
 
-Hypothesis: we don't need this. Yarn 1,2, and 3 supports a global cache. It
-is likely that the difference between restoring `node_modules` and rebuilding
-`node_modules` from a pristine cache is negligible. If the buildpack did decide
-to support this functionality, we'd need to instead restore .pnp.js for apps 
-that use pnp.
+Hypothesis: we shouldn't cache the `node_modules` directly. Yarn 1,2, and 3 
+supports a global cache of dependencies. It is likely that the difference 
+between restoring a compiled `node_modules` and rebuilding `node_modules` 
+from a pristine yarn cache is negligible. In classic yarn, this can be done 
+with  `yarn install --cache-folder /some/path/cache`, in yarn 2+, the equivalent
+is `yarn config set enableGlobalCache=true globalFolder=/some/path` 
+then `yarn install`.
 
 ## build scripts
 

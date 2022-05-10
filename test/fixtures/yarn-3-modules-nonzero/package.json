@@ -1,0 +1,11 @@
+{
+  "name": "yarn-3-modules-nonzero",
+  "version": "1.0.0",
+  "packageManager": "yarn@3.2.0",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.3"
+  }
+}
