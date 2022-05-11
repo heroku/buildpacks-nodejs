@@ -29,11 +29,25 @@ impl Version {
         }
     }
 
+    /// Returns the major version identifier.
     #[must_use]
     pub fn major(&self) -> u64 {
         self.0.major
     }
+
+    /// Returns the minor version identifier.
+    #[must_use]
+    pub fn minor(&self) -> u64 {
+        self.0.minor
+    }
+
+    /// Returns the patch version identifier.
+    #[must_use]
+    pub fn patch(&self) -> u64 {
+        self.0.patch
+    }
 }
+
 impl TryFrom<String> for Version {
     type Error = VersionError;
     fn try_from(val: String) -> Result<Self, Self::Error> {
