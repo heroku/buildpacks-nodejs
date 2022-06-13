@@ -4,9 +4,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Switch away from deprecated path-based S3 URLs
+
 ## [0.8.5] 2022/06/08
 
 - Added node version 16.15.1, 18.3.0, 17.9.1.
+
 ## [0.8.4] 2022/05/23
 
 - Added node version 14.19.3, 18.2.0.
@@ -14,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added node version 18.0.0.
 - Added node version 17.9.0.
 - Added node version 12.22.12.
+
 ## [0.8.3] 2022/04/05
 
 - Add support for the heroku-22 stack

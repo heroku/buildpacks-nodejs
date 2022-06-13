@@ -1,4 +1,4 @@
-use crate::inv::{Inventory, Release, BUCKET};
+use crate::inv::{Inventory, Release, BUCKET, REGION};
 use crate::vrs::Version;
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
@@ -80,7 +80,10 @@ impl TryFrom<BucketContent> for Inventory {
                     channel: channel.as_str().to_string(),
                     // Amazon S3 returns a quoted string for ETags
                     etag: Some(content.etag.replace('\"', "")),
-                    url: format!("https://s3.amazonaws.com/{}/{}", BUCKET, &content.key),
+                    url: format!(
+                        "https://{BUCKET}.s3.{REGION}.amazonaws.com/{}",
+                        &content.key
+                    ),
                 })
             })
             .collect();

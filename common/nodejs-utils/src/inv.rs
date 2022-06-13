@@ -94,8 +94,7 @@ mod tests {
 
     fn url(version: &str, arch: &str, channel: &str) -> String {
         format!(
-            "https://s3.amazonaws.com/heroku-nodebin/node/{}/{}/node-v{}-{}.tar.gz",
-            channel, arch, version, arch
+            "https://{BUCKET}.s3.{REGION}.amazonaws.com/node/{channel}/{arch}/node-v{version}-{arch}.tar.gz"
         )
     }
 
