@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.6] 2022/06/14
+
 - Switch away from deprecated path-based S3 URLs
 
 ## [0.8.5] 2022/06/08
