@@ -45,7 +45,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - pack/install-pack:
-          version: 0.26.0
+          version: 0.27.0
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust
       - heroku-buildpacks/install-libcnb-cargo
@@ -75,7 +75,7 @@ jobs:
     steps:
       - checkout
       - pack/install-pack:
-          version: 0.26.0
+          version: 0.27.0
       - ruby/install-deps
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust
@@ -133,7 +133,7 @@ jobs:
     steps:
       - checkout
       - pack/install-pack:
-          version: 0.26.0
+          version: 0.27.0
       - heroku-buildpacks/install-build-dependencies
       - heroku-buildpacks/install-rust
       - run:
