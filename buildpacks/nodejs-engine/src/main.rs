@@ -119,34 +119,29 @@ impl Buildpack for NodeJsEngineBuildpack {
         }
     }
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) -> i32 {
+    fn on_error(&self, error: libcnb::Error<Self::Error>) {
         match error {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
                     NodeJsEngineBuildpackError::DistLayerError(_) => {
                         log_error("Node.js engine distribution error", err_string);
-                        40
                     }
                     NodeJsEngineBuildpackError::InventoryParseError(_) => {
                         log_error("Node.js engine inventory parse error", err_string);
-                        41
                     }
                     NodeJsEngineBuildpackError::PackageJsonError(_) => {
                         log_error("Node.js engine package.json error", err_string);
-                        42
                     }
                     NodeJsEngineBuildpackError::UnknownVersionError(_) => {
                         log_error("Node.js engine version error", err_string);
-                        43
                     }
                 }
             }
             err => {
                 log_error("Internal Buildpack Error", err.to_string());
-                100
             }
-        }
+        };
     }
 }
 
