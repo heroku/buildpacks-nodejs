@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] 2022/06/29
+
 ## [0.3.1] 2022/04/05
 
 - Add support for the heroku-22 stack
