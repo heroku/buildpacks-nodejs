@@ -155,6 +155,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo_metadata"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3abb7553d5b9b8421c6de7cb02606ff15e0c6eea7d8eadd75ef013fd636bec36"
+dependencies = [
+ "camino",
+ "cargo-platform",
+ "semver",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -270,6 +283,16 @@ name = "fancy-regex"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d95b4efe5be9104a4a18a9916e86654319895138be727b229820c39257c30dda"
+dependencies = [
+ "bit-set",
+ "regex",
+]
+
+[[package]]
+name = "fancy-regex"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0678ab2d46fa5195aaf59ad034c083d351377d4af57f3e073c074d0da3e3c766"
 dependencies = [
  "bit-set",
  "regex",
@@ -431,7 +454,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.7.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -446,7 +469,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.7.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -620,7 +643,20 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba3da68086a145b1d0805f017abc24b61a440ed286d3b958da817e56a28c376d"
 dependencies = [
- "libcnb-data",
+ "libcnb-data 0.6.0",
+ "libcnb-proc-macros",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dfa169a791c7c2d2670b9bd9a04a3f2b6881acf45c0a586fff03e83b32892778"
+dependencies = [
+ "libcnb-data 0.7.0",
  "libcnb-proc-macros",
  "serde",
  "thiserror",
@@ -633,7 +669,20 @@ version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2cce2182cbcc8934b07f8f76da538aee2668a8b4c4d98a63e57320f0496b63e9"
 dependencies = [
- "fancy-regex",
+ "fancy-regex 0.8.0",
+ "libcnb-proc-macros",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2864c190f2a8416a613de90f460bd26537e92821597bd96f191c6118fa9a2a6"
+dependencies = [
+ "fancy-regex 0.10.0",
  "libcnb-proc-macros",
  "serde",
  "thiserror",
@@ -646,20 +695,20 @@ version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4614ea339efe60dd11fa6ed44f2769a2dbb3980961d157ebcc17fa43d63f520c"
 dependencies = [
- "cargo_metadata",
- "libcnb-data",
+ "cargo_metadata 0.14.2",
+ "libcnb-data 0.6.0",
  "toml",
  "which",
 ]
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f312a43d35a8ab86fceff4a233b20d857b8deb1382f3b23a468f1f61d098097"
+checksum = "35bce19f9e6b1aea8b787c4a6358b42417fe215c120dace40d173a572ac81a76"
 dependencies = [
- "cargo_metadata",
- "fancy-regex",
+ "cargo_metadata 0.15.0",
+ "fancy-regex 0.10.0",
  "quote",
  "syn",
 ]
@@ -671,7 +720,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "783258a19419f3b136f9a327e33c8c3d8d6bb733dbaa92021d3e6576bd3caa1e"
 dependencies = [
  "bollard",
- "cargo_metadata",
+ "cargo_metadata 0.14.2",
  "fastrand",
  "fs_extra",
  "libcnb-package",
@@ -683,12 +732,12 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.7.0"
+version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1c1f4d9e35f7b4b3f8f8f5da7b2057c5c9b11e8b0cf19100de193c079458d93"
+checksum = "649579479983fe5938c84bf598fa34611be16fe29fd035a08ff6a6538b39e1a2"
 dependencies = [
  "flate2",
- "libcnb",
+ "libcnb 0.8.0",
  "pathdiff",
  "sha2",
  "tar",
@@ -892,18 +941,18 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.37"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec757218438d5fda206afc041538b2f6d889286160d649a86a24d37e1235afd1"
+checksum = "dd96a1e8ed2596c337f8eae5f24924ec83f5ad5ab21ea8e455d3566c69fbcaf7"
 dependencies = [
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.18"
+version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1feb54ed693b93a84e14094943b84b7c4eae204c512b7ccb95ab0c66d278ad1"
+checksum = "3bcdf212e9776fbcb2d23ab029360416bb1706b1aea2d1a5ba002727cbcab804"
 dependencies = [
  "proc-macro2",
 ]
@@ -1120,13 +1169,13 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
-version = "1.0.91"
+version = "1.0.98"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b683b2b825c8eef438b77c36a06dc262294da3d5a5813fac20da149241dcd44d"
+checksum = "c50aef8a904de4c23c788f104b7dddc7d6f79c647c7c8ce4cc8f73eb0ca773dd"
 dependencies = [
  "proc-macro2",
  "quote",
- "unicode-xid",
+ "unicode-ident",
 ]
 
 [[package]]
@@ -1316,6 +1365,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a01404663e3db436ed2746d9fefef640d868edae3cceb81c3b8d5732fda678f"
 
 [[package]]
+name = "unicode-ident"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5bd2fe26506023ed7b5e1e315add59d6f584c621d037f9368fea9cfb988f368c"
+
+[[package]]
 name = "unicode-normalization"
 version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1323,12 +1378,6 @@ checksum = "d54590932941a9e9266f0832deed84ebe1bf2e4c9e4a3554d393d18f5e854bf9"
 dependencies = [
  "tinyvec",
 ]
-
-[[package]]
-name = "unicode-xid"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ccb82d61f80a663efe1f787a51b16b5a51e3314d6ac365b08639f52387b33f3"
 
 [[package]]
 name = "untrusted"
