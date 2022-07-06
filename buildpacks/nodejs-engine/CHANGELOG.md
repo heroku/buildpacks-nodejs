@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added node version 18.4.0.
 - Bump libcnb to 0.8.0. ([#286](https://github.com/heroku/buildpacks-nodejs/pull/286)).
 
 ## [0.8.6] 2022/06/14
