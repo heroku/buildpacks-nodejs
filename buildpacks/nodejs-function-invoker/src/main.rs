@@ -98,7 +98,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             .build()
     }
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) -> i32 {
+    fn on_error(&self, error: libcnb::Error<Self::Error>) {
         on_error_heroku(
             |bp_err| {
                 let err_string = bp_err.to_string();
@@ -108,16 +108,14 @@ impl Buildpack for NodeJsInvokerBuildpack {
                             "Node.js Function Invoker main function detection error",
                             err_string,
                         );
-                        70
                     }
                     NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
                         log_error("Node.js Function Invoker runtime layer error", err_string);
-                        71
                     }
                 }
             },
             error,
-        )
+        );
     }
 }
 
