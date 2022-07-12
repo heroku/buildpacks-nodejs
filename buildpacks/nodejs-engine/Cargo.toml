@@ -17,4 +17,4 @@ thiserror = "1.0"
 
 [dev-dependencies]
 libcnb-test = "0.4"
-ureq = "2.4.0"
+ureq = "2.5.0"
