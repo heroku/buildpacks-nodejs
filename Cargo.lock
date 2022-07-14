@@ -427,7 +427,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb 0.9.0",
+ "libcnb",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -442,7 +442,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb 0.9.0",
+ "libcnb",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -612,19 +612,6 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libcnb"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfa169a791c7c2d2670b9bd9a04a3f2b6881acf45c0a586fff03e83b32892778"
-dependencies = [
- "libcnb-data 0.7.0",
- "libcnb-proc-macros 0.2.2",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4a8206c9c5004aa37c8369e27494cdda7744611f4b39f95b5bbbbd5a9365c20"
@@ -717,12 +704,12 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "649579479983fe5938c84bf598fa34611be16fe29fd035a08ff6a6538b39e1a2"
+checksum = "896572dbc018df95e8539bfdadd8da6fc5646d41c2f8cadfe31075b0ef7bc57c"
 dependencies = [
  "flate2",
- "libcnb 0.8.0",
+ "libcnb",
  "pathdiff",
  "sha2",
  "tar",
