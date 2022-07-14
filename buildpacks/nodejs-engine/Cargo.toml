@@ -9,7 +9,7 @@ rust-version = "1.60"
 [dependencies]
 libcnb = "0.8"
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
-libherokubuildpack = "0.8"
+libherokubuildpack = "0.9"
 serde = "1.0.139"
 tempfile = "3.3.0"
 toml = "0.5"
