@@ -204,9 +204,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-common"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5999502d32b9c48d492abe66392408144895020ec4709e549e840799f3bb74c0"
+checksum = "2ccfd8c0ee4cce11e45b3fd6f9d5e69e0cc62912aa6a0cb1bf4617b0eba5a12f"
 dependencies = [
  "generic-array",
  "typenum",
@@ -409,9 +409,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.12.1"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db0d4cf898abf0081f964436dc980e96670a0f36863e4b83aaacdb65c9d7ccc3"
+checksum = "607c8a29735385251a339424dd462993c0fed8fa09d378f259377df08c126022"
 
 [[package]]
 name = "hermit-abi"
@@ -512,9 +512,9 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "hyper"
-version = "0.14.19"
+version = "0.14.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42dc3c131584288d375f2d07f822b0cb012d8c6fb899a5b9fdb3cb7eb9b6004f"
+checksum = "02c929dc5c39e335a03c405292728118860721b10190d98c2a0f0efd5baafbac"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -612,12 +612,12 @@ checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libcnb"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfa169a791c7c2d2670b9bd9a04a3f2b6881acf45c0a586fff03e83b32892778"
+checksum = "a4a8206c9c5004aa37c8369e27494cdda7744611f4b39f95b5bbbbd5a9365c20"
 dependencies = [
- "libcnb-data",
- "libcnb-proc-macros",
+ "libcnb-data 0.8.0",
+ "libcnb-proc-macros 0.3.0",
  "serde",
  "thiserror",
  "toml",
@@ -630,7 +630,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2864c190f2a8416a613de90f460bd26537e92821597bd96f191c6118fa9a2a6"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros",
+ "libcnb-proc-macros 0.2.2",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "498e6ba7cfd2520053c75d1a3f4f98f09d0e45103f043f7f8cfe422b236b8e4b"
+dependencies = [
+ "fancy-regex",
+ "libcnb-proc-macros 0.3.0",
  "serde",
  "thiserror",
  "toml",
@@ -643,7 +656,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe9901f401793ad97dde684665653ef06350a45083f2833a2dae55c6e87aea52"
 dependencies = [
  "cargo_metadata",
- "libcnb-data",
+ "libcnb-data 0.7.0",
  "toml",
  "which",
 ]
@@ -653,6 +666,18 @@ name = "libcnb-proc-macros"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35bce19f9e6b1aea8b787c4a6358b42417fe215c120dace40d173a572ac81a76"
+dependencies = [
+ "cargo_metadata",
+ "fancy-regex",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "libcnb-proc-macros"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21023e1598df3f6fea1b188a34ce06ca41181f03ed3d71169ebaa58c8cfd278b"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -679,9 +704,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.8.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "649579479983fe5938c84bf598fa34611be16fe29fd035a08ff6a6538b39e1a2"
+checksum = "896572dbc018df95e8539bfdadd8da6fc5646d41c2f8cadfe31075b0ef7bc57c"
 dependencies = [
  "flate2",
  "libcnb",
@@ -1180,10 +1205,11 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.19.2"
+version = "1.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c51a52ed6686dd62c320f9b89299e9dfb46f730c7a48e635c19f21d116cb1439"
+checksum = "57aec3cfa4c296db7255446efb4928a6be304b431a806216105542a67b6ca82e"
 dependencies = [
+ "autocfg",
  "bytes",
  "libc",
  "memchr",
@@ -1427,9 +1453,9 @@ dependencies = [
 
 [[package]]
 name = "webpki-roots"
-version = "0.22.3"
+version = "0.22.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44d8de8415c823c8abd270ad483c6feeac771fad964890779f9a8cb24fbbc1bf"
+checksum = "f1c760f0d366a6c24a02ed7816e23e691f5d92291f94d15e836006fd11b04daf"
 dependencies = [
  "webpki",
 ]
