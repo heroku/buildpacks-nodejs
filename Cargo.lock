@@ -616,21 +616,8 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4a8206c9c5004aa37c8369e27494cdda7744611f4b39f95b5bbbbd5a9365c20"
 dependencies = [
- "libcnb-data 0.8.0",
- "libcnb-proc-macros 0.3.0",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb-data"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2864c190f2a8416a613de90f460bd26537e92821597bd96f191c6118fa9a2a6"
-dependencies = [
- "fancy-regex",
- "libcnb-proc-macros 0.2.2",
+ "libcnb-data",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -643,7 +630,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "498e6ba7cfd2520053c75d1a3f4f98f09d0e45103f043f7f8cfe422b236b8e4b"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros 0.3.0",
+ "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
@@ -651,26 +638,14 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe9901f401793ad97dde684665653ef06350a45083f2833a2dae55c6e87aea52"
+checksum = "ac843541f7874babc40106a52e35972931f66ca95e5adabbc8b20ca36063e5ea"
 dependencies = [
  "cargo_metadata",
- "libcnb-data 0.7.0",
+ "libcnb-data",
  "toml",
  "which",
-]
-
-[[package]]
-name = "libcnb-proc-macros"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35bce19f9e6b1aea8b787c4a6358b42417fe215c120dace40d173a572ac81a76"
-dependencies = [
- "cargo_metadata",
- "fancy-regex",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -687,9 +662,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f19be17e6e4cc192c5118a5dd2c746ed287d83d37ac4ea573555d07dc2416e8a"
+checksum = "e98db975703e86a53466a064a39e9c22a9dd3ffaea51435d9dfd3255dd7d74c6"
 dependencies = [
  "bollard",
  "cargo_metadata",
