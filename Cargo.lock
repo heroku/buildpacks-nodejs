@@ -662,9 +662,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.5.0"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e98db975703e86a53466a064a39e9c22a9dd3ffaea51435d9dfd3255dd7d74c6"
+checksum = "4d8111541bbccb29e423bc8904f0d750793a484601fd52b177bd478af544c6f2"
 dependencies = [
  "bollard",
  "cargo_metadata",
