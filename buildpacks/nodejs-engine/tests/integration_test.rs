@@ -30,24 +30,40 @@ fn test_node(fixture: &str, builder: &str, expect_lines: &[&str]) {
 
 #[test]
 #[ignore]
-fn indexjs_20() {
-    test_node("node-with-indexjs", "heroku/buildpacks:20", &["Detected Node.js version range: *", "Installing Node.js"]);
+fn simple_indexjs_heroku20() {
+    test_node(
+        "node-with-indexjs",
+        "heroku/buildpacks:20",
+        &["Detected Node.js version range: *", "Installing Node.js"],
+    );
 }
 
 #[test]
 #[ignore]
-fn indexjs_22() {
-    test_node("node-with-indexjs", "heroku/builder:22", &["Detected Node.js version range: *", "Installing Node.js"]);
+fn simple_indexjs_heroku22() {
+    test_node(
+        "node-with-indexjs",
+        "heroku/builder:22",
+        &["Detected Node.js version range: *", "Installing Node.js"],
+    );
 }
 
 #[test]
 #[ignore]
-fn serverjs_20() {
-    test_node("node-with-serverjs", "heroku/buildpacks:20", &["Installing Node.js 16.0.0"]);
+fn simple_serverjs_heroku20() {
+    test_node(
+        "node-with-serverjs",
+        "heroku/buildpacks:20",
+        &["Installing Node.js 16.0.0"],
+    );
 }
 
 #[test]
 #[ignore]
-fn serverjs_22() {
-    test_node("node-with-serverjs", "heroku/builder:22", &["Installing Node.js 16.0.0"]);
+fn simple_serverjs_heroku22() {
+    test_node(
+        "node-with-serverjs",
+        "heroku/builder:22",
+        &["Installing Node.js 16.0.0"],
+    );
 }

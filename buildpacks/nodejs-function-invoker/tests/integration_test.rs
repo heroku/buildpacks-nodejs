@@ -5,17 +5,19 @@ use std::time::Duration;
 
 fn test_node_function(fixture: &str, builder: &str) {
     TestRunner::default().build(
-        BuildConfig::new(builder, format!("../../test/fixtures/{fixture}"))
-        .buildpacks(vec![
+        BuildConfig::new(builder, format!("../../test/fixtures/{fixture}")).buildpacks(vec![
             BuildpackReference::Other(String::from("heroku/nodejs-engine")),
             BuildpackReference::Other(String::from("heroku/nodejs-npm")),
             BuildpackReference::Crate,
         ]),
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker Runtime");
+            assert_contains!(
+                ctx.pack_stdout,
+                "Installing Node.js Function Invoker Runtime"
+            );
             let port = 8080;
             ctx.start_container(ContainerConfig::new().expose_port(port), |container| {
-                std::thread::sleep(Duration::from_secs(1));
+                std::thread::sleep(Duration::from_secs(5));
                 let addr = container
                     .address_for_port(port)
                     .expect("couldn't get container address");
@@ -31,7 +33,6 @@ fn test_node_function(fixture: &str, builder: &str) {
         },
     );
 }
-
 
 #[test]
 #[ignore]
