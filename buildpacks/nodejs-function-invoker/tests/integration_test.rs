@@ -1,7 +1,11 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, BuildConfig, BuildpackReference, ContainerConfig, TestRunner};
+use libcnb_test::{
+    assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext, TestRunner,
+};
 use std::time::Duration;
+
+const PORT: u16 = 8080;
 
 fn test_node_function(fixture: &str, builder: &str) {
     TestRunner::default().build(
@@ -15,23 +19,26 @@ fn test_node_function(fixture: &str, builder: &str) {
                 ctx.pack_stdout,
                 "Installing Node.js Function Invoker Runtime"
             );
-            let port = 8080;
-            ctx.start_container(ContainerConfig::new().expose_port(port), |container| {
-                std::thread::sleep(Duration::from_secs(5));
-                let addr = container
-                    .address_for_port(port)
-                    .expect("couldn't get container address");
-                let resp = ureq::post(&format!("http://{addr}"))
-                    .set("x-health-check", "true")
-                    .call()
-                    .expect("request to container failed")
-                    .into_string()
-                    .expect("response read error");
-
-                assert_contains!(resp, "OK");
+            ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
+                test_function_response(&container);
             });
         },
     );
+}
+
+fn test_function_response(container: &ContainerContext) {
+    std::thread::sleep(Duration::from_secs(5));
+    let addr = container
+        .address_for_port(PORT)
+        .expect("couldn't get container address");
+    let resp = ureq::post(&format!("http://{addr}"))
+        .set("x-health-check", "true")
+        .call()
+        .expect("request to container failed")
+        .into_string()
+        .expect("response read error");
+
+    assert_contains!(resp, "OK");
 }
 
 #[test]
@@ -84,22 +91,10 @@ fn upgrade_simple_nodejs_function_from_heroku20_to_heroku22() {
                         upgrade_ctx.pack_stdout,
                         "Installing Node.js Function Invoker Runtime"
                     );
-                    let port = 8080;
                     upgrade_ctx.start_container(
-                        ContainerConfig::new().expose_port(port),
+                        ContainerConfig::new().expose_port(PORT),
                         |container| {
-                            std::thread::sleep(Duration::from_secs(5));
-                            let addr = container
-                                .address_for_port(port)
-                                .expect("couldn't get container address");
-                            let resp = ureq::post(&format!("http://{addr}"))
-                                .set("x-health-check", "true")
-                                .call()
-                                .expect("request to container failed")
-                                .into_string()
-                                .expect("response read error");
-
-                            assert_contains!(resp, "OK");
+                            test_function_response(&container);
                         },
                     );
                 },

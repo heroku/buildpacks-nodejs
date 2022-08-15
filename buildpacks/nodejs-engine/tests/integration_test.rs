@@ -1,7 +1,9 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, BuildConfig, ContainerConfig, TestRunner};
+use libcnb_test::{assert_contains, BuildConfig, ContainerConfig, ContainerContext, TestRunner};
 use std::time::Duration;
+
+const PORT: u16 = 8080;
 
 fn test_node(fixture: &str, builder: &str, expect_lines: &[&str]) {
     TestRunner::default().build(
@@ -10,22 +12,25 @@ fn test_node(fixture: &str, builder: &str, expect_lines: &[&str]) {
             for expect_line in expect_lines {
                 assert_contains!(ctx.pack_stdout, expect_line);
             }
-            let port = 8080;
-            ctx.start_container(ContainerConfig::new().expose_port(port), |container| {
-                std::thread::sleep(Duration::from_secs(1));
-                let addr = container
-                    .address_for_port(port)
-                    .expect("couldn't get container address");
-                let resp = ureq::get(&format!("http://{addr}"))
-                    .call()
-                    .expect("request to container failed")
-                    .into_string()
-                    .expect("response read error");
-
-                assert_contains!(resp, fixture);
+            ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
+                test_response(&container, fixture);
             });
         },
     );
+}
+
+fn test_response(container: &ContainerContext, text: &str) {
+    std::thread::sleep(Duration::from_secs(1));
+    let addr = container
+        .address_for_port(PORT)
+        .expect("couldn't get container address");
+    let resp = ureq::get(&format!("http://{addr}"))
+        .call()
+        .expect("request to container failed")
+        .into_string()
+        .expect("response read error");
+
+    assert_contains!(resp, text);
 }
 
 #[test]
@@ -86,17 +91,7 @@ fn upgrade_simple_indexjs_from_heroku20_to_heroku22() {
                     upgrade_ctx.start_container(
                         ContainerConfig::new().expose_port(port),
                         |container| {
-                            std::thread::sleep(Duration::from_secs(1));
-                            let addr = container
-                                .address_for_port(port)
-                                .expect("couldn't get container address");
-                            let resp = ureq::get(&format!("http://{addr}"))
-                                .call()
-                                .expect("request to container failed")
-                                .into_string()
-                                .expect("response read error");
-
-                            assert_contains!(resp, "node-with-index");
+                            test_response(&container, "node-with-index");
                         },
                     );
                 },
