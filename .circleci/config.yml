@@ -82,6 +82,10 @@ jobs:
       - heroku-buildpacks/install-rust
       - heroku-buildpacks/install-libcnb-cargo
       - run:
+          name: "Trust heroku/builder:22"
+          command: |
+            pack config trusted-builders add heroku/builder:22
+      - run:
           name: "Run rspec tests against a given directory"
           command: |
             bundle exec rspec << parameters.test-dir >>
