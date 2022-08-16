@@ -40,7 +40,7 @@ jobs:
       buildpack-dir:
         type: string
     docker:
-      - image: cimg/base:2020.01
+      - image: cimg/base:2022.08
     steps:
       - checkout
       - setup_remote_docker
@@ -71,7 +71,7 @@ jobs:
       test-dir:
         type: string
     machine:
-      image: ubuntu-2004:202010-01
+      image: ubuntu-2204:2022.07.1
     resource_class: xlarge
     steps:
       - checkout
@@ -133,7 +133,7 @@ jobs:
 
   rust-integration-test:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2204:2022.07.1
     resource_class: xlarge
     steps:
       - checkout
