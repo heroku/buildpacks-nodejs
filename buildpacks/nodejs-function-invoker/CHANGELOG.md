@@ -4,8 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Updated `libcnb` and `libherokubuildpack` to 0.9.0. ([#306](https://github.com/heroku/buildpacks-nodejs/pull/306))
-- Bump libcnb to 0.8.0. ([#286](https://github.com/heroku/buildpacks-nodejs/pull/286)).
+- Upgrade `libcnb` and `libherokubuildpack` to `0.10.0`. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
+- Buildpack now implements buildpack API version `0.8` and so requires lifecycle version `0.14.x` or newer. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
 
 ## [0.3.3] 2022/07/05
 - Update `sf-fx-runtime-nodejs` to `0.11.2`
