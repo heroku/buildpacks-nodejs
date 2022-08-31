@@ -9,7 +9,7 @@ use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::data::launch::{Launch, ProcessBuilder};
+use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
@@ -104,12 +104,14 @@ impl Buildpack for NodeJsEngineBuildpack {
             .iter()
             .find(|path| path.exists())
             .map(|path| {
-                Launch::new().process(
-                    ProcessBuilder::new(process_type!("web"), "node")
-                        .args(vec![path.to_string_lossy()])
-                        .default(true)
-                        .build(),
-                )
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), "node")
+                            .args(vec![path.to_string_lossy()])
+                            .default(true)
+                            .build(),
+                    )
+                    .build()
             });
 
         let resulter = BuildResultBuilder::new();

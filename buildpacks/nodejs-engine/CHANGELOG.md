@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added node version 18.8.0.
 - Added node version 16.17.0.
 - Added node version 18.6.0, 18.7.0.
-- Updated `libcnb` and `libherokubuildpack` to 0.9.0. ([#306](https://github.com/heroku/buildpacks-nodejs/pull/306))
+- Upgrade `libcnb` and `libherokubuildpack` to `0.10.0`. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
+- Buildpack now implements buildpack API version `0.8` and so requires lifecycle version `0.14.x` or newer. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
 
 ## [0.8.7] 2022/07/12
 

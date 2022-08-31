@@ -7,7 +7,7 @@ use crate::function::{get_main, is_function, MainError};
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::data::launch::{Launch, ProcessBuilder};
+use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
@@ -76,24 +76,26 @@ impl Buildpack for NodeJsInvokerBuildpack {
 
         BuildResultBuilder::new()
             .launch(
-                Launch::new().process(
-                    ProcessBuilder::new(process_type!("web"), "sf-fx-runtime-nodejs")
-                        .args(vec![
-                            "serve",
-                            &context.app_dir.to_string_lossy(),
-                            "--workers",
-                            "2",
-                            "--host",
-                            "::",
-                            "--port",
-                            "${PORT:-8080}",
-                            "--debug-port",
-                            "${DEBUG_PORT:-}",
-                        ])
-                        .default(true)
-                        .direct(false)
-                        .build(),
-                ),
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), "sf-fx-runtime-nodejs")
+                            .args(vec![
+                                "serve",
+                                &context.app_dir.to_string_lossy(),
+                                "--workers",
+                                "2",
+                                "--host",
+                                "::",
+                                "--port",
+                                "${PORT:-8080}",
+                                "--debug-port",
+                                "${DEBUG_PORT:-}",
+                            ])
+                            .default(true)
+                            .direct(false)
+                            .build(),
+                    )
+                    .build(),
             )
             .build()
     }
