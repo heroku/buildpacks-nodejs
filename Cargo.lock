@@ -266,9 +266,9 @@ dependencies = [
 
 [[package]]
 name = "digest"
-version = "0.10.3"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2fb860ca6fafa5552fb6d0e816a69c8e49f0908bf524e30a90d97c85892d506"
+checksum = "adfbc57365a37acbd2ebf2b64d7e69bb766e2fea813521ed536f5d0520dcf86c"
 dependencies = [
  "block-buffer",
  "crypto-common",
@@ -443,7 +443,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.10.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -458,7 +458,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb",
+ "libcnb 0.10.0",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
@@ -644,8 +644,22 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d67f6f6f7dd0a13fce25a9247fd9a0e5cbe97c8431fee0008c674602e36c9e4"
 dependencies = [
- "libcnb-data",
- "libcnb-proc-macros",
+ "libcnb-data 0.10.0",
+ "libcnb-proc-macros 0.10.0",
+ "serde",
+ "stacker",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d89ccf9d74f2b2f4f0825918ff14b402cbef40f0859805367418015ad4af0f5"
+dependencies = [
+ "libcnb-data 0.11.0",
+ "libcnb-proc-macros 0.11.0",
  "serde",
  "stacker",
  "thiserror",
@@ -659,7 +673,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52cd3749d2c63a77a4d2b069904ecb526977692352186ec3094b15df50c71ee3"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros",
+ "libcnb-proc-macros 0.10.0",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89206f58a0b371a55c2d19199ab5860bc63cd7000af05e6ecf18b55f04a10f4f"
+dependencies = [
+ "fancy-regex",
+ "libcnb-proc-macros 0.11.0",
  "serde",
  "thiserror",
  "toml",
@@ -672,7 +699,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e245f2e25a5fc10593db933f25e739f9c5a6d0f944c3bebac6b282e0a9888a1"
 dependencies = [
  "cargo_metadata",
- "libcnb-data",
+ "libcnb-data 0.10.0",
  "toml",
  "which",
 ]
@@ -690,6 +717,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "libcnb-proc-macros"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9088edf78647d4273c7e0ccebd770376d52d2b5cfcabc3b979b7250955e34e94"
+dependencies = [
+ "cargo_metadata",
+ "fancy-regex",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "libcnb-test"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -699,7 +738,7 @@ dependencies = [
  "cargo_metadata",
  "fastrand",
  "fs_extra",
- "libcnb-data",
+ "libcnb-data 0.10.0",
  "libcnb-package",
  "serde",
  "tempfile",
@@ -709,12 +748,12 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea1621294a166cafb93e9df130da45d951ed26910b209d4c356684028e53b4f4"
+checksum = "4f0678567b86a5e8a7cdebf36ebc4bf57534fdd7d4ee1ee670ae3abc407d36d4"
 dependencies = [
  "flate2",
- "libcnb",
+ "libcnb 0.11.0",
  "pathdiff",
  "sha2",
  "tar",
@@ -911,9 +950,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.20"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bcdf212e9776fbcb2d23ab029360416bb1706b1aea2d1a5ba002727cbcab804"
+checksum = "bbe448f377a7d6961e30f5955f9b8d106c3f5e449d493ee1b125c1d43c2b5179"
 dependencies = [
  "proc-macro2",
 ]
@@ -1084,9 +1123,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.2"
+version = "0.10.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "55deaec60f81eefe3cce0dc50bda92d6d8e88f2a27df7c5033b42afeb1ed2676"
+checksum = "82e6b795fe2e3b1e845bafcb27aa35405c4d47cdfc92af5fc8d3002f76cebdc0"
 dependencies = [
  "cfg-if",
  "cpufeatures",
@@ -1139,9 +1178,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
-version = "1.0.98"
+version = "1.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c50aef8a904de4c23c788f104b7dddc7d6f79c647c7c8ce4cc8f73eb0ca773dd"
+checksum = "52205623b1b0f064a4e71182c3b18ae902267282930c6d5462c91b859668426e"
 dependencies = [
  "proc-macro2",
  "quote",
