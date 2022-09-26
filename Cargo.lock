@@ -292,9 +292,9 @@ dependencies = [
 
 [[package]]
 name = "fastrand"
-version = "1.7.0"
+version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3fcf0cee53519c866c09b5de1f6c56ff9d647101f81c1964fa632e148896cdf"
+checksum = "a7a407cfaa3385c4ae6b23e84623d48c2798d06e3e6a1878f7f59f17b3f86499"
 dependencies = [
  "instant",
 ]
@@ -644,8 +644,8 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4d67f6f6f7dd0a13fce25a9247fd9a0e5cbe97c8431fee0008c674602e36c9e4"
 dependencies = [
- "libcnb-data",
- "libcnb-proc-macros",
+ "libcnb-data 0.10.0",
+ "libcnb-proc-macros 0.10.0",
  "serde",
  "stacker",
  "thiserror",
@@ -659,7 +659,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52cd3749d2c63a77a4d2b069904ecb526977692352186ec3094b15df50c71ee3"
 dependencies = [
  "fancy-regex",
- "libcnb-proc-macros",
+ "libcnb-proc-macros 0.10.0",
+ "serde",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
+name = "libcnb-data"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "89206f58a0b371a55c2d19199ab5860bc63cd7000af05e6ecf18b55f04a10f4f"
+dependencies = [
+ "fancy-regex",
+ "libcnb-proc-macros 0.11.0",
  "serde",
  "thiserror",
  "toml",
@@ -667,12 +680,12 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.10.0"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e245f2e25a5fc10593db933f25e739f9c5a6d0f944c3bebac6b282e0a9888a1"
+checksum = "77ba04d6381cad1ae1a278a67af546805459a54fc3afb95493e2c4705b911f54"
 dependencies = [
  "cargo_metadata",
- "libcnb-data",
+ "libcnb-data 0.11.0",
  "toml",
  "which",
 ]
@@ -690,16 +703,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "libcnb-test"
-version = "0.10.0"
+name = "libcnb-proc-macros"
+version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a8987577ad4be4171cbb730e7a23be913a5a83da624a6ea9eb5457ab9a55c405"
+checksum = "9088edf78647d4273c7e0ccebd770376d52d2b5cfcabc3b979b7250955e34e94"
+dependencies = [
+ "cargo_metadata",
+ "fancy-regex",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "libcnb-test"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "97477c20b86759c4d82772888f4a536290ffcb3252509690aecff700a0e9d448"
 dependencies = [
  "bollard",
  "cargo_metadata",
  "fastrand",
  "fs_extra",
- "libcnb-data",
+ "libcnb-data 0.11.0",
  "libcnb-package",
  "serde",
  "tempfile",
@@ -911,9 +936,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.20"
+version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3bcdf212e9776fbcb2d23ab029360416bb1706b1aea2d1a5ba002727cbcab804"
+checksum = "bbe448f377a7d6961e30f5955f9b8d106c3f5e449d493ee1b125c1d43c2b5179"
 dependencies = [
  "proc-macro2",
 ]
@@ -1139,9 +1164,9 @@ checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
 name = "syn"
-version = "1.0.98"
+version = "1.0.100"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c50aef8a904de4c23c788f104b7dddc7d6f79c647c7c8ce4cc8f73eb0ca773dd"
+checksum = "52205623b1b0f064a4e71182c3b18ae902267282930c6d5462c91b859668426e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1230,9 +1255,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.20.0"
+version = "1.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57aec3cfa4c296db7255446efb4928a6be304b431a806216105542a67b6ca82e"
+checksum = "0020c875007ad96677dcc890298f4b942882c5d4eb7cc8f439fc3bf813dc9c95"
 dependencies = [
  "autocfg",
  "bytes",
@@ -1248,9 +1273,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-stream"
-version = "0.1.9"
+version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df54d54117d6fdc4e4fea40fe1e4e566b3505700e148a6827e59b34b0d2600d9"
+checksum = "f6edf2d6bc038a43d31353570e27270603f4648d18f5ed10c0e179abe43255af"
 dependencies = [
  "futures-core",
  "pin-project-lite",
@@ -1492,13 +1517,13 @@ dependencies = [
 
 [[package]]
 name = "which"
-version = "4.2.5"
+version = "4.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c4fb54e6113b6a8772ee41c3404fb0301ac79604489467e0a9ce1f3e97c24ae"
+checksum = "1c831fbbee9e129a8cf93e7747a82da9d95ba8e16621cae60ec2cdc849bacb7b"
 dependencies = [
  "either",
- "lazy_static",
  "libc",
+ "once_cell",
 ]
 
 [[package]]
