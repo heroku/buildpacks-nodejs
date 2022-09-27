@@ -1,6 +1,6 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::read_toml_file;
-use libherokubuildpack::toml_select_value;
+use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;

@@ -14,7 +14,8 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 #[cfg(test)]
 use libcnb_test as _;
-use libherokubuildpack::{log_error, log_header, log_info, on_error_heroku};
+use libherokubuildpack::error::on_error;
+use libherokubuildpack::log::{log_error, log_header, log_info};
 use serde::Deserialize;
 use thiserror::Error;
 #[cfg(test)]
@@ -101,7 +102,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        on_error_heroku(
+        on_error(
             |bp_err| {
                 let err_string = bp_err.to_string();
                 match bp_err {

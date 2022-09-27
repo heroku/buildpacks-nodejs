@@ -5,7 +5,10 @@ use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
-use libherokubuildpack::{decompress_tarball, download_file, log_info, move_directory_contents};
+use libherokubuildpack::download::download_file;
+use libherokubuildpack::fs::move_directory_contents;
+use libherokubuildpack::log::log_info;
+use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tempfile::NamedTempFile;
@@ -28,7 +31,7 @@ pub enum DistLayerError {
     #[error("Couldn't create tempfile for Node.js distribution: {0}")]
     TempFile(std::io::Error),
     #[error("Couldn't download Node.js distribution: {0}")]
-    Download(libherokubuildpack::DownloadError),
+    Download(libherokubuildpack::download::DownloadError),
     #[error("Couldn't decompress Node.js distribution: {0}")]
     Untar(std::io::Error),
     #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]

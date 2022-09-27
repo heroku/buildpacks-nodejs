@@ -15,7 +15,7 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
-use libherokubuildpack::{log_error, log_header, log_info};
+use libherokubuildpack::log::{log_error, log_header, log_info};
 use thiserror::Error;
 
 mod layers;
