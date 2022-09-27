@@ -146,7 +146,7 @@ jobs:
 
   rust-unit-test:
     docker:
-      - image: cimg/rust:1.60
+      - image: cimg/rust:1.64
     steps:
       - checkout
       - run:
@@ -154,7 +154,7 @@ jobs:
 
   rust-linting:
     docker:
-      - image: cimg/rust:1.60
+      - image: cimg/rust:1.64
     steps:
       - checkout
       - run:

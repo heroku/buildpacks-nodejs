@@ -1,6 +1,6 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::read_toml_file;
-use libherokubuildpack::toml_select_value;
+use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;
@@ -31,7 +31,7 @@ where
         .map_err(MainError::PackageJson)
         .and_then(|pjson| pjson.main.ok_or(MainError::MissingKey))
         .map(|main| dir.join(main))
-        .and_then(|path| path.exists().then(|| path).ok_or(MainError::MissingFile))
+        .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
 #[derive(Error, Debug)]

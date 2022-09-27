@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Upgrade `libcnb` and `libherokubuildpack` to `0.11.0`. ([#360](https://github.com/heroku/buildpacks-nodejs/pull/360))
+
 ## [0.3.4] 2022/09/12
 
 - Upgrade `libcnb` and `libherokubuildpack` to `0.10.0`. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))

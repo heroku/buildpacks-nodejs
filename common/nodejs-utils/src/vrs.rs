@@ -67,7 +67,7 @@ impl Requirement {
                 return Ok(Requirement(range));
             }
         }
-        match Range::parse(&trimmed) {
+        match Range::parse(trimmed) {
             Ok(range) => Ok(Requirement(range)),
             Err(error) => Err(VersionError(format!("{}", error))),
         }

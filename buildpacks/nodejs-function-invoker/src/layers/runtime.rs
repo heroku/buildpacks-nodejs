@@ -4,7 +4,7 @@ use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
-use libherokubuildpack::log_info;
+use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::io::{self, Write};
 use std::path::Path;
@@ -66,7 +66,7 @@ impl Layer for RuntimeLayer {
             .output()
             .map_err(RuntimeLayerError::NpmCommandError)
             .and_then(|output| {
-                output.status.success().then(|| ()).ok_or_else(|| {
+                output.status.success().then_some(()).ok_or_else(|| {
                     // log `npm install` stderr and stdout *only* if it fails.
                     io::stdout().write_all(&output.stdout).ok();
                     io::stderr().write_all(&output.stderr).ok();
