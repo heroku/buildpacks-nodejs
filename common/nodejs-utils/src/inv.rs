@@ -15,7 +15,6 @@ pub const OS: &str = "darwin";
 pub const OS: &str = "linux";
 
 /// Default/assumed architecture for node release lookups
-#[cfg(target_arch = "x86_64")]
 pub const ARCH: &str = "x64";
 
 /// Represents a software inventory with releases.
