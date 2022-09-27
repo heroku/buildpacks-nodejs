@@ -115,7 +115,7 @@ pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
         prefix: prefix.to_string(),
         contents: vec![],
     };
-    let mut continuation_token = "".to_string();
+    let mut continuation_token = String::new();
     loop {
         let mut params = vec![("prefix", prefix), ("list-type", "2")];
         if !continuation_token.is_empty() {
@@ -126,7 +126,7 @@ pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
             &format!("https://{}.s3.{}.amazonaws.com/", bucket, region),
             params,
         )?;
-        let res = ureq::get(&url.to_string()).call()?.into_string()?;
+        let res = ureq::get(url.as_ref()).call()?.into_string()?;
         let mut page: ListBucketResult = serde_xml_rs::from_str(&res)?;
         bucket_content.contents.append(&mut page.contents);
 

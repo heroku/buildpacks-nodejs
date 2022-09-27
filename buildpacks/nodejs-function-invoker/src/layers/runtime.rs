@@ -66,7 +66,7 @@ impl Layer for RuntimeLayer {
             .output()
             .map_err(RuntimeLayerError::NpmCommandError)
             .and_then(|output| {
-                output.status.success().then(|| ()).ok_or_else(|| {
+                output.status.success().then_some(()).ok_or_else(|| {
                     // log `npm install` stderr and stdout *only* if it fails.
                     io::stdout().write_all(&output.stdout).ok();
                     io::stderr().write_all(&output.stderr).ok();

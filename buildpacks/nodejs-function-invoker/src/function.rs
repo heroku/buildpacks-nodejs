@@ -31,7 +31,7 @@ where
         .map_err(MainError::PackageJson)
         .and_then(|pjson| pjson.main.ok_or(MainError::MissingKey))
         .map(|main| dir.join(main))
-        .and_then(|path| path.exists().then(|| path).ok_or(MainError::MissingFile))
+        .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
 #[derive(Error, Debug)]

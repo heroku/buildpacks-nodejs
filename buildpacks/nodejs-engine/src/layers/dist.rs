@@ -63,8 +63,7 @@ impl Layer for DistLayer {
         download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
         log_info(format!("Extracting Node.js {}", self.release.version));
-        decompress_tarball(&mut node_tgz.into_file(), &layer_path)
-            .map_err(DistLayerError::Untar)?;
+        decompress_tarball(&mut node_tgz.into_file(), layer_path).map_err(DistLayerError::Untar)?;
 
         log_info(format!("Installing Node.js {}", self.release.version));
         let dist_name = format!("node-v{}-{}", self.release.version, "linux-x64");
