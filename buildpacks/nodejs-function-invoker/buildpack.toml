@@ -22,7 +22,7 @@ id = "heroku-22"
 [metadata]
 
 [metadata.runtime]
-package = "@heroku/sf-fx-runtime-nodejs@0.11.2"
+package = "@heroku/sf-fx-runtime-nodejs@0.12.0"
 
 [metadata.release]
 
