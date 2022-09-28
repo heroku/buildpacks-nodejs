@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.5] 2022/09/28
+
 - Update `sf-fx-runtime-nodejs` to `0.12.0`. ([#362](https://github.com/heroku/buildpacks-nodejs/pull/362))
 - Upgrade `libcnb` and `libherokubuildpack` to `0.11.0`. ([#360](https://github.com/heroku/buildpacks-nodejs/pull/360))
 
