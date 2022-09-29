@@ -1,0 +1,136 @@
+name: heroku/buildpacks-nodejs/ci
+on:
+  push:
+jobs:
+  shell-linting:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: koalaman/shellcheck-alpine:v0.7.2
+    steps:
+    - run: apk add git
+    - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
+    - uses: actions/checkout@v2
+    - name: shellcheck
+      run: shfmt -f . | grep -v ^test/ | xargs shellcheck
+    - name: shfmt
+      run: |-
+        scripts=$(shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$');  \
+        if ! echo $scripts | xargs shfmt -d > /dev/null; then           \
+          echo $scripts | xargs shfmt -w && git diff --exit-code;       \
+        fi
+  rust-linting:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: rust:1.64
+    steps:
+    - uses: actions/checkout@v2
+    - name: rustfmt
+      run: cargo fmt -- --check --verbose
+    - name: clippy
+      run: cargo clippy --all-targets --all-features --locked -- --deny warnings
+  rust-unit-test:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: rust:1.64
+    steps:
+    - uses: actions/checkout@v2
+    - run: cargo test --locked
+  rust-integration-test:
+    runs-on: sfdc-hk-ubuntu-20.04-large
+    steps:
+    - uses: actions/checkout@v2
+#     # This item has no matching transformer
+#     - buildpacks_pack_install_pack:
+#     # This item has no matching transformer
+#     - '':
+#     # This item has no matching transformer
+#     - '':
+    - run: cargo test --locked -- --ignored
+  shpec:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: heroku/heroku:${{ matrix.stack-version }}-build
+    strategy:
+      matrix:
+        stack-version:
+        - '18'
+        - '20'
+        - '22'
+        buildpack-dir:
+        - buildpacks/npm
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+#     # This item has no matching transformer
+#     - '':
+    - name: Install shpec
+      run: sh -c "`curl -L https://raw.githubusercontent.com/rylnd/shpec/master/install.sh`"
+    - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
+      run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
+  package-buildpack:
+    runs-on: sfdc-hk-ubuntu-latest
+    container:
+      image: ubuntu
+    strategy:
+      matrix:
+        buildpack-dir:
+        - buildpacks/nodejs-engine
+        - buildpacks/nodejs-function-invoker
+        - buildpacks/npm
+        - meta-buildpacks/nodejs
+        - meta-buildpacks/nodejs-function
+        - test/meta-buildpacks/nodejs
+        - test/meta-buildpacks/nodejs-function
+    steps:
+    - uses: actions/checkout@v2
+#     # 'setup_remote_docker' was not transformed because there is no suitable equivalent in GitHub Actions
+#     # This item has no matching transformer
+#     - buildpacks_pack_install_pack:
+#     # This item has no matching transformer
+#     - '':
+#     # This item has no matching transformer
+#     - '':
+#     # This item has no matching transformer
+#     - '':
+    - name: Build and package buildpack with retries
+      run: |-
+        n=1
+        until [ "$n" -ge 5 ]
+        do
+          package_toml="${{ matrix.buildpack-dir }}/package.toml"
+          if [[ -f "${{ matrix.buildpack-dir }}/build.sh" ]]; then
+            "./${{ matrix.buildpack-dir }}/build.sh"
+            package_toml="${{ matrix.buildpack-dir }}/target/package.toml"
+          fi
+          pack buildpack package test --config "${package_toml}" && break
+          ((n++))
+        done
+  cutlass-integration-test:
+    runs-on: sfdc-hk-ubuntu-20.04-large
+    strategy:
+      matrix:
+        test-dir:
+        - test/specs/node-function
+        - test/specs/node
+    steps:
+    - name: Set up bundler cache
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.0.2
+        bundler-cache: true
+    - uses: actions/checkout@v2
+#     # This item has no matching transformer
+#     - buildpacks_pack_install_pack:
+    - run: bundle check || bundle install
+      env:
+        BUNDLE_DEPLOYMENT: true
+#     # This item has no matching transformer
+#     - '':
+#     # This item has no matching transformer
+#     - '':
+#     # This item has no matching transformer
+#     - '':
+    - name: Trust heroku/builder:22
+      run: pack config trusted-builders add heroku/builder:22
+    - name: Run rspec tests against a given directory
+      run: bundle exec rspec ${{ matrix.test-dir }}
