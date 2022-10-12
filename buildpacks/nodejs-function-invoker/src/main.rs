@@ -64,7 +64,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             log_info(format!(
                 "Runtime declared in package.json: {0}@{1}",
                 package_name.clone(),
-                package_version.clone()
+                package_version
             ));
         } else {
             let package_name = context
