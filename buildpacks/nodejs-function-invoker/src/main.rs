@@ -34,7 +34,7 @@ pub struct NodeJsInvokerBuildpackMetadata {
 #[derive(Deserialize, Debug)]
 pub struct NodeJsInvokerBuildpackRuntimeMetadata {
     pub package_name: String,
-    pub package_version: String
+    pub package_version: String,
 }
 
 impl Buildpack for NodeJsInvokerBuildpack {
@@ -65,9 +65,10 @@ impl Buildpack for NodeJsInvokerBuildpack {
         get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
         match get_declared_runtime_package(&context) {
-            Some((ref package_name, ref package_version)) => {
-                log_info(format!("Runtime declared in package.json: {0}@{1}", package_name, package_version))
-            },
+            Some((ref package_name, ref package_version)) => log_info(format!(
+                "Runtime declared in package.json: {0}@{1}",
+                package_name, package_version
+            )),
             None => {
                 log_warning(
                     "Deprecation",
@@ -80,8 +81,12 @@ impl Buildpack for NodeJsInvokerBuildpack {
                         package: format!(
                             "{0}@{1}",
                             context.buildpack_descriptor.metadata.runtime.package_name,
-                            context.buildpack_descriptor.metadata.runtime.package_version
-                        )
+                            context
+                                .buildpack_descriptor
+                                .metadata
+                                .runtime
+                                .package_version
+                        ),
                     },
                 )?;
             }
