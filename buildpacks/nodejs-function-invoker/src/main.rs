@@ -12,14 +12,10 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
-#[cfg(test)]
-use libcnb_test as _;
 use libherokubuildpack::error::on_error;
 use libherokubuildpack::log::{log_error, log_header, log_info, log_warning};
 use serde::Deserialize;
 use thiserror::Error;
-#[cfg(test)]
-use ureq as _;
 
 mod function;
 mod layers;
@@ -64,32 +60,36 @@ impl Buildpack for NodeJsInvokerBuildpack {
         log_info("Checking for function file");
         get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
-        match get_declared_runtime_package(&context) {
-            Some((ref package_name, ref package_version)) => log_info(format!(
+        if let Some((package_name, package_version)) = get_declared_runtime_package(&context) {
+            log_info(format!(
                 "Runtime declared in package.json: {0}@{1}",
-                package_name, package_version
-            )),
-            None => {
-                log_warning(
-                    "Deprecation",
-                    format!("Future versions of the Functions Runtime for Node.js ({0}) will not be auto-detected \
-                    and must be added as a dependency in package.json.", context.buildpack_descriptor.metadata.runtime.package_name)
-                );
-                context.handle_layer(
-                    layer_name!("implicit_runtime"),
-                    RuntimeLayer {
-                        package: format!(
-                            "{0}@{1}",
-                            context.buildpack_descriptor.metadata.runtime.package_name,
-                            context
-                                .buildpack_descriptor
-                                .metadata
-                                .runtime
-                                .package_version
-                        ),
-                    },
-                )?;
-            }
+                package_name.clone(),
+                package_version.clone()
+            ));
+        } else {
+            let package_name = context
+                .buildpack_descriptor
+                .metadata
+                .runtime
+                .package_name
+                .clone();
+            let package_version = context
+                .buildpack_descriptor
+                .metadata
+                .runtime
+                .package_version
+                .clone();
+            log_warning(
+                "Deprecation",
+                format!("Future versions of the Functions Runtime for Node.js ({0}) will not be auto-detected \
+                and must be added as a dependency in package.json.", package_name)
+            );
+            context.handle_layer(
+                layer_name!("implicit_runtime"),
+                RuntimeLayer {
+                    package: format!("{0}@{1}", package_name, package_version),
+                },
+            )?;
         }
 
         BuildResultBuilder::new()
