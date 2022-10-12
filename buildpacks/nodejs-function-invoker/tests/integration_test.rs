@@ -166,7 +166,7 @@ fn test_function_with_implicit_runtime_dependency_ts_heroku_22() {
         Heroku22,
         |ctx| {
             assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
-            assert_contains!(ctx.pack_stderr, "Future versions of the Functions runtime for Node.js will not be auto-detected and must be added as a dependency in package.json.");
+            assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
             assert_health_check_responds(&ctx);
         },
     );
