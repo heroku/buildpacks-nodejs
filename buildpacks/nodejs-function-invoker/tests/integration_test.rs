@@ -10,7 +10,7 @@ use test_support::{
 #[ignore]
 fn simple_javascript_function_heroku_20() {
     test_node_function("simple-function", Heroku20, |ctx| {
-        assert_health_check_responds(&ctx)
+        assert_health_check_responds(&ctx);
     });
 }
 
@@ -18,7 +18,7 @@ fn simple_javascript_function_heroku_20() {
 #[ignore]
 fn simple_javascript_function_heroku_22() {
     test_node_function("simple-function", Heroku22, |ctx| {
-        assert_health_check_responds(&ctx)
+        assert_health_check_responds(&ctx);
     });
 }
 
@@ -26,7 +26,7 @@ fn simple_javascript_function_heroku_22() {
 #[ignore]
 fn simple_typescript_function_heroku_20() {
     test_node_function("simple-typescript-function", Heroku20, |ctx| {
-        assert_health_check_responds(&ctx)
+        assert_health_check_responds(&ctx);
     });
 }
 
@@ -34,7 +34,7 @@ fn simple_typescript_function_heroku_20() {
 #[ignore]
 fn simple_typescript_function_heroku_22() {
     test_node_function("simple-typescript-function", Heroku22, |ctx| {
-        assert_health_check_responds(&ctx)
+        assert_health_check_responds(&ctx);
     });
 }
 
