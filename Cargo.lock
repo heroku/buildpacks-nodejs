@@ -463,6 +463,7 @@ dependencies = [
  "libherokubuildpack",
  "serde",
  "tempfile",
+ "test_support",
  "thiserror",
  "toml",
  "ureq",
@@ -1174,6 +1175,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bab24d30b911b2376f3a13cc2cd443142f0c81dda04c118693e35b3835757755"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "test_support"
+version = "0.0.0"
+dependencies = [
+ "libcnb-test",
+ "tempfile",
+ "ureq",
 ]
 
 [[package]]

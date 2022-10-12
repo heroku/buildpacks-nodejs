@@ -3,7 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::function::{get_main, is_function, MainError};
+use crate::function::{get_declared_runtime_package, get_main, is_function, MainError};
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -15,7 +15,7 @@ use libcnb::{buildpack_main, Buildpack};
 #[cfg(test)]
 use libcnb_test as _;
 use libherokubuildpack::error::on_error;
-use libherokubuildpack::log::{log_error, log_header, log_info};
+use libherokubuildpack::log::{log_error, log_header, log_info, log_warning};
 use serde::Deserialize;
 use thiserror::Error;
 #[cfg(test)]
@@ -33,7 +33,8 @@ pub struct NodeJsInvokerBuildpackMetadata {
 
 #[derive(Deserialize, Debug)]
 pub struct NodeJsInvokerBuildpackRuntimeMetadata {
-    pub package: String,
+    pub package_name: String,
+    pub package_version: String
 }
 
 impl Buildpack for NodeJsInvokerBuildpack {
@@ -63,24 +64,36 @@ impl Buildpack for NodeJsInvokerBuildpack {
         log_info("Checking for function file");
         get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
-        context.handle_layer(
-            layer_name!("runtime"),
-            RuntimeLayer {
-                package: context
-                    .buildpack_descriptor
-                    .metadata
-                    .runtime
-                    .package
-                    .clone(),
+        match get_declared_runtime_package(&context) {
+            Some((ref package_name, ref package_version)) => {
+                log_info(format!("Runtime declared in package.json: {0}@{1}", package_name, package_version))
             },
-        )?;
+            None => {
+                log_warning(
+                    "Deprecation",
+                    format!("Future versions of the Functions Runtime for Node.js ({0}) will not be auto-detected \
+                    and must be added as a dependency in package.json.", context.buildpack_descriptor.metadata.runtime.package_name)
+                );
+                context.handle_layer(
+                    layer_name!("implicit_runtime"),
+                    RuntimeLayer {
+                        package: format!(
+                            "{0}@{1}",
+                            context.buildpack_descriptor.metadata.runtime.package_name,
+                            context.buildpack_descriptor.metadata.runtime.package_version
+                        )
+                    },
+                )?;
+            }
+        }
 
         BuildResultBuilder::new()
             .launch(
                 LaunchBuilder::new()
                     .process(
-                        ProcessBuilder::new(process_type!("web"), "sf-fx-runtime-nodejs")
+                        ProcessBuilder::new(process_type!("web"), "npx")
                             .args(vec![
+                                "sf-fx-runtime-nodejs",
                                 "serve",
                                 &context.app_dir.to_string_lossy(),
                                 "--workers",

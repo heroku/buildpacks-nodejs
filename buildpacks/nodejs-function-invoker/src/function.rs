@@ -2,8 +2,10 @@ use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
+use libcnb::build::BuildContext;
 use thiserror::Error;
 use toml::Value;
+use crate::NodeJsInvokerBuildpack;
 
 pub fn is_function<P>(d: P) -> bool
 where
@@ -32,6 +34,15 @@ where
         .and_then(|pjson| pjson.main.ok_or(MainError::MissingKey))
         .map(|main| dir.join(main))
         .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
+}
+
+pub fn get_declared_runtime_package(context: &BuildContext<NodeJsInvokerBuildpack>) -> Option<(&String, String)> {
+    let package_name = &context.buildpack_descriptor.metadata.runtime.package_name;
+    PackageJson::read(context.app_dir.join("package.json"))
+        .ok()
+        .and_then(|pjson| pjson.dependencies)
+        .and_then(|dependencies| dependencies.get(package_name).cloned())
+        .map(|version| (package_name, version))
 }
 
 #[derive(Error, Debug)]
@@ -94,7 +105,7 @@ mod tests {
         );
         let index_path = dir.path().join("index.js");
         File::create(&index_path).expect("Could not create temp index.js");
-        let main_path = get_main(dir.path()).unwrap();
+        let main_path = get_main(dir.path(), ).unwrap();
         assert_eq!(main_path, index_path);
     }
 
@@ -104,7 +115,7 @@ mod tests {
             "package.json",
             "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
         );
-        let err = get_main(dir.path()).expect_err("found main function when there wasn't a file");
+        let err = get_main(dir.path(), ).expect_err("found main function when there wasn't a file");
         assert!(err
             .to_string()
             .contains("File referenced by `main` in package.json could not be found."));
@@ -114,7 +125,7 @@ mod tests {
     fn get_main_no_key() {
         let dir = create_dir_with_file("package.json", "{\"name\": \"test-main-function\"}");
         let err =
-            get_main(dir.path()).expect_err("found main function when there wasn't a main key");
+            get_main(dir.path(), ).expect_err("found main function when there wasn't a main key");
         assert!(err
             .to_string()
             .contains("Key `main` missing from package.json"));
@@ -123,7 +134,7 @@ mod tests {
     #[test]
     fn get_main_bad_json() {
         let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
-        let err = get_main(dir.path())
+        let err = get_main(dir.path(), )
             .expect_err("found main function when the package.json was malformed");
         assert!(err
             .to_string()
