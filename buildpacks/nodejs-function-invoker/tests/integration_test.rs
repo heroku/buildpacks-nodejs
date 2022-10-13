@@ -64,7 +64,7 @@ fn upgrade_simple_nodejs_function_from_heroku20_to_heroku22() {
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_js_heroku_20() {
     test_node_function(
-        "function-with-explicit-runtime-dependency-js",
+        "functions/with-explicit-runtime-dependency-js",
         Heroku20,
         |ctx| {
             assert_contains!(ctx.pack_stdout, "Runtime declared in package.json");
@@ -78,7 +78,7 @@ fn test_function_with_explicit_runtime_dependency_js_heroku_20() {
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_js_heroku_22() {
     test_node_function(
-        "function-with-explicit-runtime-dependency-js",
+        "functions/with-explicit-runtime-dependency-js",
         Heroku22,
         |ctx| {
             assert_contains!(ctx.pack_stdout, "Runtime declared in package.json");
@@ -92,7 +92,7 @@ fn test_function_with_explicit_runtime_dependency_js_heroku_22() {
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_ts_heroku_20() {
     test_node_function(
-        "function-with-explicit-runtime-dependency-ts",
+        "functions/with-explicit-runtime-dependency-ts",
         Heroku20,
         |ctx| {
             assert_contains!(ctx.pack_stdout, "Runtime declared in package.json");
@@ -106,7 +106,7 @@ fn test_function_with_explicit_runtime_dependency_ts_heroku_20() {
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_ts_heroku_22() {
     test_node_function(
-        "function-with-explicit-runtime-dependency-ts",
+        "functions/with-explicit-runtime-dependency-ts",
         Heroku22,
         |ctx| {
             assert_contains!(ctx.pack_stdout, "Runtime declared in package.json");
@@ -120,11 +120,11 @@ fn test_function_with_explicit_runtime_dependency_ts_heroku_22() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_js_heroku_20() {
     test_node_function(
-        "function-with-implicit-runtime-dependency-js",
+        "functions/with-implicit-runtime-dependency-js",
         Heroku20,
         |ctx| {
-            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_health_check_responds(&ctx);
         },
     );
@@ -134,11 +134,11 @@ fn test_function_with_implicit_runtime_dependency_js_heroku_20() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_js_heroku_22() {
     test_node_function(
-        "function-with-implicit-runtime-dependency-js",
+        "functions/with-implicit-runtime-dependency-js",
         Heroku22,
         |ctx| {
-            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_health_check_responds(&ctx);
         },
     );
@@ -148,11 +148,11 @@ fn test_function_with_implicit_runtime_dependency_js_heroku_22() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_ts_heroku_20() {
     test_node_function(
-        "function-with-implicit-runtime-dependency-ts",
+        "functions/with-implicit-runtime-dependency-ts",
         Heroku20,
         |ctx| {
-            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_health_check_responds(&ctx);
         },
     );
@@ -162,11 +162,11 @@ fn test_function_with_implicit_runtime_dependency_ts_heroku_20() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_ts_heroku_22() {
     test_node_function(
-        "function-with-implicit-runtime-dependency-ts",
+        "functions/with-implicit-runtime-dependency-ts",
         Heroku22,
         |ctx| {
-            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+            assert_not_contains!(ctx.pack_stdout, "Runtime declared in package.json");
             assert_health_check_responds(&ctx);
         },
     );

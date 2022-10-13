@@ -462,6 +462,7 @@ dependencies = [
  "libcnb-test",
  "libherokubuildpack",
  "serde",
+ "serde_json",
  "tempfile",
  "test_support",
  "thiserror",

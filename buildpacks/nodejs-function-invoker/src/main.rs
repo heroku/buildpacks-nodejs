@@ -3,7 +3,9 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::function::{get_declared_runtime_package, get_main, is_function, MainError};
+use crate::function::{
+    get_declared_runtime_package, get_main, is_function, ExplicitRuntimeDependencyError, MainError,
+};
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -63,28 +65,24 @@ impl Buildpack for NodeJsInvokerBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Function Invoker Buildpack");
 
-        log_info("Checking for function file");
-        get_main(&context.app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+        let app_dir = &context.app_dir;
+        let metadata_runtime = &context.buildpack_descriptor.metadata.runtime;
+        let package_name = &metadata_runtime.package_name;
+        let package_version = &metadata_runtime.package_version;
 
-        if let Some((package_name, package_version)) = get_declared_runtime_package(&context) {
+        log_info("Checking for function file");
+        get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+
+        let declared_runtime_package = get_declared_runtime_package(app_dir, package_name)
+            .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError)?;
+
+        if let Some((package_name, package_version)) = declared_runtime_package {
             log_info(format!(
                 "Runtime declared in package.json: {0}@{1}",
                 package_name.clone(),
                 package_version
             ));
         } else {
-            let package_name = context
-                .buildpack_descriptor
-                .metadata
-                .runtime
-                .package_name
-                .clone();
-            let package_version = context
-                .buildpack_descriptor
-                .metadata
-                .runtime
-                .package_version
-                .clone();
             log_warning(
                 "Deprecation",
                 format!("Future versions of the Functions Runtime for Node.js ({0}) will not be auto-detected \
@@ -139,6 +137,12 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
                         log_error("Node.js Function Invoker runtime layer error", err_string);
                     }
+                    NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError(_) => {
+                        log_error(
+                            "Node.js Function Invoker explicit runtime dependency error",
+                            err_string,
+                        );
+                    }
                 }
             },
             error,
@@ -152,6 +156,8 @@ pub enum NodeJsInvokerBuildpackError {
     MainFunctionError(#[from] MainError),
     #[error("{0}")]
     RuntimeLayerError(#[from] RuntimeLayerError),
+    #[error("{0}")]
+    ExplicitRuntimeDependencyFunctionError(#[from] ExplicitRuntimeDependencyError),
 }
 
 impl From<NodeJsInvokerBuildpackError> for libcnb::Error<NodeJsInvokerBuildpackError> {

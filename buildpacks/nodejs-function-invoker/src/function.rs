@@ -1,8 +1,9 @@
-use crate::NodeJsInvokerBuildpack;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use libcnb::build::BuildContext;
 use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
+#[cfg(test)]
+use serde_json::json;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;
@@ -36,15 +37,46 @@ where
         .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
-pub fn get_declared_runtime_package(
-    context: &BuildContext<NodeJsInvokerBuildpack>,
-) -> Option<(&String, String)> {
-    let package_name = &context.buildpack_descriptor.metadata.runtime.package_name;
-    PackageJson::read(context.app_dir.join("package.json"))
-        .ok()
-        .and_then(|pjson| pjson.dependencies)
+pub fn get_declared_runtime_package<P>(
+    app_dir: P,
+    package_name: &String,
+) -> Result<Option<(&String, String)>, ExplicitRuntimeDependencyError>
+where
+    P: Into<PathBuf>,
+{
+    let package_json = PackageJson::read(app_dir.into().join("package.json"));
+    match package_json {
+        Ok(pjson) => {
+            let package_in_dependencies =
+                find_declared_runtime_package(package_name, Some(&pjson), |pjson| {
+                    &pjson.dependencies
+                });
+
+            let package_in_dev_dependencies =
+                find_declared_runtime_package(package_name, Some(&pjson), |pjson| {
+                    &pjson.dev_dependencies
+                });
+
+            if package_in_dependencies.is_none() && package_in_dev_dependencies.is_some() {
+                return Err(ExplicitRuntimeDependencyError::DeclaredAsDevDependency {
+                    package_name: package_name.clone(),
+                });
+            }
+
+            Ok(package_in_dependencies.map(|package_version| (package_name, package_version)))
+        }
+        Err(_) => Ok(None),
+    }
+}
+
+fn find_declared_runtime_package(
+    package_name: &String,
+    package_json: Option<&PackageJson>,
+    use_reader: fn(&PackageJson) -> &Option<HashMap<String, String>>,
+) -> Option<String> {
+    package_json
+        .and_then(|pjson| use_reader(pjson).as_ref())
         .and_then(|dependencies| dependencies.get(package_name).cloned())
-        .map(|version| (package_name, version))
 }
 
 #[derive(Error, Debug)]
@@ -57,6 +89,12 @@ pub enum MainError {
     MissingKey,
     #[error("File referenced by `main` in package.json could not be found. Ensure `main` references function file location.")]
     MissingFile,
+}
+
+#[derive(Error, Debug, PartialEq, Eq)]
+pub enum ExplicitRuntimeDependencyError {
+    #[error("The '{package_name}' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'.")]
+    DeclaredAsDevDependency { package_name: String },
 }
 
 #[cfg(test)]
@@ -101,10 +139,11 @@ mod tests {
 
     #[test]
     fn get_main_exists() {
-        let dir = create_dir_with_file(
-            "package.json",
-            "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
-        );
+        let package_json = json!({
+            "name": "test-main-function",
+            "main": "index.js"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let index_path = dir.path().join("index.js");
         File::create(&index_path).expect("Could not create temp index.js");
         let main_path = get_main(dir.path()).unwrap();
@@ -113,10 +152,11 @@ mod tests {
 
     #[test]
     fn get_main_no_file() {
-        let dir = create_dir_with_file(
-            "package.json",
-            "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
-        );
+        let package_json = json!({
+            "name": "test-main-function",
+            "main": "index.js"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let err = get_main(dir.path()).expect_err("found main function when there wasn't a file");
         assert!(err
             .to_string()
@@ -125,7 +165,10 @@ mod tests {
 
     #[test]
     fn get_main_no_key() {
-        let dir = create_dir_with_file("package.json", "{\"name\": \"test-main-function\"}");
+        let package_json = json!({
+            "name": "test-main-function"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let err =
             get_main(dir.path()).expect_err("found main function when there wasn't a main key");
         assert!(err
@@ -141,5 +184,29 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Could not determine function file location from package.json. Could not parse package.json"));
+    }
+
+    #[test]
+    fn get_explicit_dependency_when_declared_as_dev_dependency() {
+        let package_json = json!({
+            "devDependencies": {
+                "@heroku/sf-fx-runtime-nodejs": "0.0.0",
+            }
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
+        let err =
+            get_declared_runtime_package(dir.path(), &String::from("@heroku/sf-fx-runtime-nodejs"))
+                .expect_err("this should throw an error");
+        assert!(err
+            .to_string()
+            .contains("The '@heroku/sf-fx-runtime-nodejs' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'."));
+    }
+
+    #[test]
+    fn get_explicit_dependency_when_package_json_in_invalid() {
+        let package_name = String::from("@heroku/sf-fx-runtime-nodejs");
+        let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
+        let result = get_declared_runtime_package(dir.path(), &package_name);
+        assert_eq!(result, Ok(None));
     }
 }
