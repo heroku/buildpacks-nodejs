@@ -3,6 +3,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Made `name` optional in `PackageJson` as it is an [optional field](https://docs.npmjs.com/cli/v8/configuring-npm/package-json#name) if you don't plan to publish your package.
 
 ## [0.8.9] 2022/09/28
 

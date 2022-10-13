@@ -22,8 +22,6 @@ use serde::Deserialize;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
-#[cfg(test)]
-use ureq as _;
 
 mod function;
 mod layers;
@@ -89,7 +87,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                 and must be added as a dependency in package.json.", package_name)
             );
             context.handle_layer(
-                layer_name!("implicit_runtime"),
+                layer_name!("runtime"),
                 RuntimeLayer {
                     package: format!("{0}@{1}", package_name, package_version),
                 },

@@ -1,8 +1,6 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
-#[cfg(test)]
-use serde_json::json;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use thiserror::Error;
@@ -48,12 +46,10 @@ where
     match package_json {
         Ok(pjson) => {
             let package_in_dependencies =
-                find_declared_runtime_package(package_name, Some(&pjson), |pjson| {
-                    &pjson.dependencies
-                });
+                find_declared_runtime_package(package_name, &pjson, |pjson| &pjson.dependencies);
 
             let package_in_dev_dependencies =
-                find_declared_runtime_package(package_name, Some(&pjson), |pjson| {
+                find_declared_runtime_package(package_name, &pjson, |pjson| {
                     &pjson.dev_dependencies
                 });
 
@@ -71,10 +67,10 @@ where
 
 fn find_declared_runtime_package(
     package_name: &String,
-    package_json: Option<&PackageJson>,
+    package_json: &PackageJson,
     use_reader: fn(&PackageJson) -> &Option<HashMap<String, String>>,
 ) -> Option<String> {
-    package_json
+    Some(package_json)
         .and_then(|pjson| use_reader(pjson).as_ref())
         .and_then(|dependencies| dependencies.get(package_name).cloned())
 }
@@ -100,6 +96,7 @@ pub enum ExplicitRuntimeDependencyError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use std::fs::File;
     use std::io::Write;
     use tempfile::{tempdir, TempDir};

@@ -1,6 +1,8 @@
 use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, TestContext, TestRunner,
 };
+use std::fmt;
+use std::fmt::Formatter;
 use std::time::Duration;
 
 const PORT: u16 = 8080;
@@ -8,6 +10,15 @@ const PORT: u16 = 8080;
 pub enum Builder {
     Heroku20,
     Heroku22,
+}
+
+impl fmt::Display for Builder {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        match *self {
+            Builder::Heroku20 => write!(f, "heroku/buildpacks:20"),
+            Builder::Heroku22 => write!(f, "heroku/builder:22"),
+        }
+    }
 }
 
 pub fn get_function_invoker_buildpacks() -> Vec<BuildpackReference> {
@@ -18,16 +29,9 @@ pub fn get_function_invoker_buildpacks() -> Vec<BuildpackReference> {
     ]
 }
 
-pub fn get_builder_name(builder: Builder) -> &'static str {
-    match builder {
-        Builder::Heroku20 => "heroku/buildpacks:20",
-        Builder::Heroku22 => "heroku/builder:22",
-    }
-}
-
 pub fn get_function_invoker_build_config(fixture: &str, builder: Builder) -> BuildConfig {
     BuildConfig::new(
-        get_builder_name(builder),
+        builder.to_string(),
         format!("../../test/fixtures/{fixture}"),
     )
     .buildpacks(get_function_invoker_buildpacks())

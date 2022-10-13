@@ -467,7 +467,6 @@ dependencies = [
  "test_support",
  "thiserror",
  "toml",
- "ureq",
 ]
 
 [[package]]
