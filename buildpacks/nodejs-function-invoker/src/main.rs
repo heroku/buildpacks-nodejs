@@ -100,7 +100,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     .process(
                         ProcessBuilder::new(process_type!("web"), "npx")
                             .args(vec![
-                                "sf-fx-runtime-nodejs",
+                                package_name.as_str(),
                                 "serve",
                                 &context.app_dir.to_string_lossy(),
                                 "--workers",

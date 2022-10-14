@@ -1,7 +1,6 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use thiserror::Error;
 use toml::Value;
@@ -42,37 +41,21 @@ pub fn get_declared_runtime_package<P>(
 where
     P: Into<PathBuf>,
 {
-    let package_json = PackageJson::read(app_dir.into().join("package.json"));
-    match package_json {
-        Ok(pjson) => {
-            let package_in_dependencies =
-                find_declared_runtime_package(package_name, &pjson, |pjson| &pjson.dependencies);
+    let package_json = PackageJson::read(app_dir.into().join("package.json"))
+        .map_err(ExplicitRuntimeDependencyError::PackageJson)?;
 
-            let package_in_dev_dependencies =
-                find_declared_runtime_package(package_name, &pjson, |pjson| {
-                    &pjson.dev_dependencies
-                });
-
-            if package_in_dependencies.is_none() && package_in_dev_dependencies.is_some() {
-                return Err(ExplicitRuntimeDependencyError::DeclaredAsDevDependency {
-                    package_name: package_name.clone(),
-                });
-            }
-
-            Ok(package_in_dependencies.map(|package_version| (package_name, package_version)))
+    if let Some(dev_dependencies) = package_json.dev_dependencies {
+        if dev_dependencies.contains_key(package_name) {
+            return Err(ExplicitRuntimeDependencyError::DeclaredAsDevDependency {
+                package_name: package_name.clone(),
+            });
         }
-        Err(_) => Ok(None),
     }
-}
 
-fn find_declared_runtime_package(
-    package_name: &String,
-    package_json: &PackageJson,
-    use_reader: fn(&PackageJson) -> &Option<HashMap<String, String>>,
-) -> Option<String> {
-    Some(package_json)
-        .and_then(|pjson| use_reader(pjson).as_ref())
+    Ok(package_json
+        .dependencies
         .and_then(|dependencies| dependencies.get(package_name).cloned())
+        .map(|version| (package_name, version)))
 }
 
 #[derive(Error, Debug)]
@@ -87,8 +70,10 @@ pub enum MainError {
     MissingFile,
 }
 
-#[derive(Error, Debug, PartialEq, Eq)]
+#[derive(Error, Debug)]
 pub enum ExplicitRuntimeDependencyError {
+    #[error("Failure while attempting to read from package.json. {0}")]
+    PackageJson(#[from] PackageJsonError),
     #[error("The '{package_name}' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'.")]
     DeclaredAsDevDependency { package_name: String },
 }
@@ -186,6 +171,7 @@ mod tests {
     #[test]
     fn get_explicit_dependency_when_declared_as_dev_dependency() {
         let package_json = json!({
+            "name": "test",
             "devDependencies": {
                 "@heroku/sf-fx-runtime-nodejs": "0.0.0",
             }
@@ -193,7 +179,7 @@ mod tests {
         let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let err =
             get_declared_runtime_package(dir.path(), &String::from("@heroku/sf-fx-runtime-nodejs"))
-                .expect_err("this should throw an error");
+                .expect_err("this should have throw an error");
         assert!(err
             .to_string()
             .contains("The '@heroku/sf-fx-runtime-nodejs' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'."));
@@ -203,7 +189,10 @@ mod tests {
     fn get_explicit_dependency_when_package_json_in_invalid() {
         let package_name = String::from("@heroku/sf-fx-runtime-nodejs");
         let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
-        let result = get_declared_runtime_package(dir.path(), &package_name);
-        assert_eq!(result, Ok(None));
+        let err = get_declared_runtime_package(dir.path(), &package_name)
+            .expect_err("this should have thrown an error");
+        assert!(err
+            .to_string()
+            .contains("Failure while attempting to read from package.json."));
     }
 }

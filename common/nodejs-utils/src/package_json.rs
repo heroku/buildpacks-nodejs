@@ -8,7 +8,7 @@ use thiserror::Error;
 
 #[derive(Deserialize, Debug)]
 pub struct PackageJson {
-    pub name: Option<String>,
+    pub name: String,
     pub version: Option<Version>,
     pub engines: Option<Engines>,
     pub main: Option<String>,
@@ -58,7 +58,7 @@ mod tests {
         let mut f = Builder::new().tempfile().unwrap();
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
         let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(pkg.name, Some(String::from("foo")));
+        assert_eq!(pkg.name, "foo");
         assert_eq!(pkg.version.unwrap().to_string(), "0.0.0");
     }
 
