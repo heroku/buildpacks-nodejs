@@ -93,8 +93,6 @@ jobs:
 
   package-buildpack:
     runs-on: ubuntu-22.04
-    container:
-      image: ubuntu
     strategy:
       matrix:
         buildpack-dir:
