@@ -634,9 +634,9 @@ checksum = "c0f80d65747a3e43d1596c7c5492d95d5edddaabd45a7fcdb02b95f644164966"
 
 [[package]]
 name = "libcnb"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d89ccf9d74f2b2f4f0825918ff14b402cbef40f0859805367418015ad4af0f5"
+checksum = "88e7663908798e4c9a6ce419220e9493ad19dd12a70fa605dd4e927e3fdc1fc9"
 dependencies = [
  "libcnb-data",
  "libcnb-proc-macros",
