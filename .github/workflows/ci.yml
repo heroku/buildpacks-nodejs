@@ -111,8 +111,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Install musl-tools
         run: sudo apt-get install musl-tools --no-install-recommends
-      - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.8.1
       - name: Update Rust toolchain
         run: rustup update
       - name: Install Rust linux-musl target
@@ -121,6 +119,8 @@ jobs:
         uses: Swatinem/rust-cache@v2.0.0
       - name: Install libcnb
         run: cargo install libcnb-cargo
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v4.8.1
       - name: Build and package buildpack with retries
         run: |-
           n=1
@@ -145,15 +145,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Set up bundler cache
+      - name: Set up Ruby, bundler, and cache
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.0.2
           bundler-cache: true
-      - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.8.1
-      - name: Trust heroku/builder:22
-        run: pack config trusted-builders add heroku/builder:22
       - name: Install musl-tools
         run: sudo apt-get install musl-tools --no-install-recommends
       - name: Update Rust toolchain
@@ -164,5 +160,7 @@ jobs:
         uses: Swatinem/rust-cache@v2.0.0
       - name: Install libcnb
         run: cargo install libcnb-cargo
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v4.8.1
       - name: Run rspec tests against a given directory
         run: bundle exec rspec ${{ matrix.test-dir }}
