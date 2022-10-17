@@ -1,5 +1,5 @@
 # Heroku Cloud Native Node.js Buildpacks
-[![CircleCI](https://circleci.com/gh/heroku/buildpacks-nodejs/tree/main.svg?style=shield)](https://circleci.com/gh/heroku/buildpacks-nodejs/tree/main)
+[![CI](https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml/badge.svg)](https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml)
 
 Heroku's official [Cloud Native Buildpacks](https://buildpacks.io) for the Node.js ecosystem.
 
