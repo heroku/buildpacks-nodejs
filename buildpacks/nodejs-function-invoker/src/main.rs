@@ -4,7 +4,8 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::function::{
-    get_declared_runtime_package, get_main, is_function, ExplicitRuntimeDependencyError, MainError,
+    get_declared_runtime_package_version, get_main, is_function, ExplicitRuntimeDependencyError,
+    MainError,
 };
 use crate::layers::{RuntimeLayer, RuntimeLayerError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -71,12 +72,13 @@ impl Buildpack for NodeJsInvokerBuildpack {
         log_info("Checking for function file");
         get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
 
-        let declared_runtime_package = get_declared_runtime_package(app_dir, package_name)
-            .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError)?;
+        let declared_runtime_package_version =
+            get_declared_runtime_package_version(app_dir, package_name)
+                .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError)?;
 
-        if let Some((package_name, package_version)) = declared_runtime_package {
+        if let Some(package_version) = declared_runtime_package_version {
             log_info(format!(
-                "Runtime declared in package.json: {0}@{1}",
+                "Node.js function runtime declared in package.json: {0}@{1}",
                 package_name.clone(),
                 package_version
             ));
@@ -137,7 +139,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     }
                     NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError(_) => {
                         log_error(
-                            "Node.js Function Invoker explicit runtime dependency error",
+                            "Node.js Function Invoker explicit Node.js function runtime dependency error",
                             err_string,
                         );
                     }

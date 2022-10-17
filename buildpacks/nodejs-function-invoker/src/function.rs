@@ -34,10 +34,10 @@ where
         .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
-pub fn get_declared_runtime_package<P>(
+pub fn get_declared_runtime_package_version<P>(
     app_dir: P,
     package_name: &String,
-) -> Result<Option<(&String, String)>, ExplicitRuntimeDependencyError>
+) -> Result<Option<String>, ExplicitRuntimeDependencyError>
 where
     P: Into<PathBuf>,
 {
@@ -54,8 +54,7 @@ where
 
     Ok(package_json
         .dependencies
-        .and_then(|dependencies| dependencies.get(package_name).cloned())
-        .map(|version| (package_name, version)))
+        .and_then(|dependencies| dependencies.get(package_name).cloned()))
 }
 
 #[derive(Error, Debug)]
@@ -177,9 +176,11 @@ mod tests {
             }
         });
         let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
-        let err =
-            get_declared_runtime_package(dir.path(), &String::from("@heroku/sf-fx-runtime-nodejs"))
-                .expect_err("this should have throw an error");
+        let err = get_declared_runtime_package_version(
+            dir.path(),
+            &String::from("@heroku/sf-fx-runtime-nodejs"),
+        )
+        .expect_err("this should have throw an error");
         assert!(err
             .to_string()
             .contains("The '@heroku/sf-fx-runtime-nodejs' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'."));
@@ -189,7 +190,7 @@ mod tests {
     fn get_explicit_dependency_when_package_json_in_invalid() {
         let package_name = String::from("@heroku/sf-fx-runtime-nodejs");
         let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
-        let err = get_declared_runtime_package(dir.path(), &package_name)
+        let err = get_declared_runtime_package_version(dir.path(), &package_name)
             .expect_err("this should have thrown an error");
         assert!(err
             .to_string()
