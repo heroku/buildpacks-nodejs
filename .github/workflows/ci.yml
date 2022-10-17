@@ -120,7 +120,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.0.0
       - name: Install libcnb
-        run: cargo install libcnb
+        run: cargo install libcnb-cargo
       - name: Build and package buildpack with retries
         run: |-
           n=1
