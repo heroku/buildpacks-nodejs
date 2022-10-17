@@ -1,0 +1,166 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+
+  shell-lint:
+    runs-on: ubuntu-22.04
+    container:
+      image: koalaman/shellcheck-alpine:v0.8.0
+    steps:
+      - run: apk add git
+      - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
+      - uses: actions/checkout@v3
+      - name: shellcheck
+        run: shfmt -f . | grep -v ^test/ | xargs shellcheck
+      - name: shfmt
+        run: |-
+          scripts=$(shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$');  \
+          if ! echo $scripts | xargs shfmt -d > /dev/null; then           \
+            echo $scripts | xargs shfmt -w && git diff --exit-code;       \
+          fi
+
+  rust-lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.0.0
+      - name: Clippy
+        run: cargo clippy --all-targets --locked -- --deny warnings
+      - name: rustfmt
+        run: cargo fmt -- --check
+
+  rust-unit-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.0.0
+      - name: Run unit tests
+        run: cargo test --locked
+
+  rust-integration-test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools --no-install-recommends
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.0.0
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v4.8.1
+      - name: Run integration tests
+        run: cargo test --locked -- --ignored
+
+  shpec:
+    runs-on: ubuntu-22.04
+    container:
+      image: heroku/heroku:${{ matrix.stack-version }}-build
+    strategy:
+      matrix:
+        stack-version:
+        - '18'
+        - '20'
+        - '22'
+        buildpack-dir:
+        - buildpacks/npm
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install shpec
+        run: sh -c "`curl -L https://raw.githubusercontent.com/rylnd/shpec/master/install.sh`"
+      - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
+        run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
+
+  package-buildpack:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        buildpack-dir:
+        - buildpacks/nodejs-engine
+        - buildpacks/nodejs-function-invoker
+        - buildpacks/npm
+        - meta-buildpacks/nodejs
+        - meta-buildpacks/nodejs-function
+        - test/meta-buildpacks/nodejs
+        - test/meta-buildpacks/nodejs-function
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools --no-install-recommends
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.0.0
+      - name: Install libcnb
+        run: cargo install libcnb-cargo
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v4.8.1
+      - name: Build and package buildpack with retries
+        run: |-
+          n=1
+          until [ "$n" -ge 5 ]
+          do
+            package_toml="${{ matrix.buildpack-dir }}/package.toml"
+            if [[ -f "${{ matrix.buildpack-dir }}/build.sh" ]]; then
+              "./${{ matrix.buildpack-dir }}/build.sh"
+              package_toml="${{ matrix.buildpack-dir }}/target/package.toml"
+            fi
+            pack buildpack package test --config "${package_toml}" && break
+            ((n++))
+          done
+
+  cutlass-integration-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        test-dir:
+        - test/specs/node-function
+        - test/specs/node
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Ruby, bundler, and cache
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.0.2
+          bundler-cache: true
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools --no-install-recommends
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.0.0
+      - name: Install libcnb
+        run: cargo install libcnb-cargo
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@v4.8.1
+      - name: Run rspec tests against a given directory
+        run: bundle exec rspec ${{ matrix.test-dir }}
