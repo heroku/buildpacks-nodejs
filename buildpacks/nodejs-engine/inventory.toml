@@ -4992,6 +4992,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "f341015b15c91fe90ae9a8d6a3cc9fc8-5"
 
 [[releases]]
+version = "16.18.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v16.18.0-linux-x64.tar.gz"
+etag = "288b5e721e34d3983f55b0f77d5eb006-5"
+
+[[releases]]
 version = "16.2.0"
 channel = "release"
 arch = "linux-x64"
@@ -5200,6 +5207,20 @@ channel = "release"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v18.1.0-linux-x64.tar.gz"
 etag = "37faa7d1b87accc2b5f8c5c8af3d4a85-6"
+
+[[releases]]
+version = "18.10.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v18.10.0-linux-x64.tar.gz"
+etag = "d31a7a94f60ae2ee3d2c5d208dd9fa06-6"
+
+[[releases]]
+version = "18.11.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v18.11.0-linux-x64.tar.gz"
+etag = "163783aaa395b4bafe69067e81e71ab8-6"
 
 [[releases]]
 version = "18.2.0"
@@ -8555,6 +8576,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/
 etag = "f341015b15c91fe90ae9a8d6a3cc9fc8-5"
 
 [[releases]]
+version = "16.18.0"
+channel = "staging"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v16.18.0-linux-x64.tar.gz"
+etag = "288b5e721e34d3983f55b0f77d5eb006-5"
+
+[[releases]]
 version = "16.2.0"
 channel = "staging"
 arch = "linux-x64"
@@ -8763,6 +8791,20 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v18.1.0-linux-x64.tar.gz"
 etag = "37faa7d1b87accc2b5f8c5c8af3d4a85-6"
+
+[[releases]]
+version = "18.10.0"
+channel = "staging"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v18.10.0-linux-x64.tar.gz"
+etag = "d31a7a94f60ae2ee3d2c5d208dd9fa06-6"
+
+[[releases]]
+version = "18.11.0"
+channel = "staging"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v18.11.0-linux-x64.tar.gz"
+etag = "163783aaa395b4bafe69067e81e71ab8-6"
 
 [[releases]]
 version = "18.2.0"
