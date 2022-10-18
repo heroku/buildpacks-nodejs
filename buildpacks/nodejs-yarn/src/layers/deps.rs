@@ -102,7 +102,7 @@ impl DepsLayer {
                 "false",
             ]);
         } else {
-            args.append(&mut vec!["--immutable", "--immutable-cache"])
+            args.append(&mut vec!["--immutable", "--immutable-cache"]);
         }
 
         let mut process = Command::new("yarn")
@@ -115,7 +115,7 @@ impl DepsLayer {
 
         status
             .success()
-            .then(|| ())
+            .then_some(())
             .ok_or(DepsLayerError::YarnInstall(status))
     }
 }

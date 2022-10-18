@@ -104,7 +104,7 @@ impl Buildpack for NodeJsYarnBuildpack {
             .output()
             .map_err(NodeJsYarnBuildpackError::YarnVersionProcess)?;
 
-        yarn_version_cmd.status.success().then(|| ()).ok_or(
+        yarn_version_cmd.status.success().then_some(()).ok_or(
             NodeJsYarnBuildpackError::YarnVersionExit(yarn_version_cmd.status),
         )?;
 
