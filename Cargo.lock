@@ -704,9 +704,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f0678567b86a5e8a7cdebf36ebc4bf57534fdd7d4ee1ee670ae3abc407d36d4"
+checksum = "8bffa56c2d7cf1c9265126f368343d6d5bf34c33da7ddf0d5ac245da9e999265"
 dependencies = [
  "flate2",
  "libcnb",
