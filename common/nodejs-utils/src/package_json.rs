@@ -1,5 +1,6 @@
 use crate::vrs::{Requirement, Version};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -11,6 +12,9 @@ pub struct PackageJson {
     pub version: Option<Version>,
     pub engines: Option<Engines>,
     pub main: Option<String>,
+    pub dependencies: Option<HashMap<String, String>>,
+    #[serde(rename = "devDependencies")]
+    pub dev_dependencies: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Debug)]

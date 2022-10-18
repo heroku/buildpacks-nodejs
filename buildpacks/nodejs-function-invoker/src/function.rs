@@ -34,6 +34,29 @@ where
         .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
+pub fn get_declared_runtime_package_version<P>(
+    app_dir: P,
+    package_name: &String,
+) -> Result<Option<String>, ExplicitRuntimeDependencyError>
+where
+    P: Into<PathBuf>,
+{
+    let package_json = PackageJson::read(app_dir.into().join("package.json"))
+        .map_err(ExplicitRuntimeDependencyError::PackageJson)?;
+
+    if let Some(dev_dependencies) = package_json.dev_dependencies {
+        if dev_dependencies.contains_key(package_name) {
+            return Err(ExplicitRuntimeDependencyError::DeclaredAsDevDependency {
+                package_name: package_name.clone(),
+            });
+        }
+    }
+
+    Ok(package_json
+        .dependencies
+        .and_then(|dependencies| dependencies.get(package_name).cloned()))
+}
+
 #[derive(Error, Debug)]
 pub enum MainError {
     #[error("Could not determine function file location from package.json. {0}")]
@@ -46,9 +69,18 @@ pub enum MainError {
     MissingFile,
 }
 
+#[derive(Error, Debug)]
+pub enum ExplicitRuntimeDependencyError {
+    #[error("Failure while attempting to read from package.json. {0}")]
+    PackageJson(#[from] PackageJsonError),
+    #[error("The '{package_name}' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'.")]
+    DeclaredAsDevDependency { package_name: String },
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use std::fs::File;
     use std::io::Write;
     use tempfile::{tempdir, TempDir};
@@ -88,10 +120,11 @@ mod tests {
 
     #[test]
     fn get_main_exists() {
-        let dir = create_dir_with_file(
-            "package.json",
-            "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
-        );
+        let package_json = json!({
+            "name": "test-main-function",
+            "main": "index.js"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let index_path = dir.path().join("index.js");
         File::create(&index_path).expect("Could not create temp index.js");
         let main_path = get_main(dir.path()).unwrap();
@@ -100,10 +133,11 @@ mod tests {
 
     #[test]
     fn get_main_no_file() {
-        let dir = create_dir_with_file(
-            "package.json",
-            "{\"name\": \"test-main-function\", \"main\": \"index.js\"}",
-        );
+        let package_json = json!({
+            "name": "test-main-function",
+            "main": "index.js"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let err = get_main(dir.path()).expect_err("found main function when there wasn't a file");
         assert!(err
             .to_string()
@@ -112,7 +146,10 @@ mod tests {
 
     #[test]
     fn get_main_no_key() {
-        let dir = create_dir_with_file("package.json", "{\"name\": \"test-main-function\"}");
+        let package_json = json!({
+            "name": "test-main-function"
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
         let err =
             get_main(dir.path()).expect_err("found main function when there wasn't a main key");
         assert!(err
@@ -128,5 +165,35 @@ mod tests {
         assert!(err
             .to_string()
             .contains("Could not determine function file location from package.json. Could not parse package.json"));
+    }
+
+    #[test]
+    fn get_explicit_dependency_when_declared_as_dev_dependency() {
+        let package_json = json!({
+            "name": "test",
+            "devDependencies": {
+                "@heroku/sf-fx-runtime-nodejs": "0.0.0",
+            }
+        });
+        let dir = create_dir_with_file("package.json", package_json.to_string().as_str());
+        let err = get_declared_runtime_package_version(
+            dir.path(),
+            &String::from("@heroku/sf-fx-runtime-nodejs"),
+        )
+        .expect_err("this should have throw an error");
+        assert!(err
+            .to_string()
+            .contains("The '@heroku/sf-fx-runtime-nodejs' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'."));
+    }
+
+    #[test]
+    fn get_explicit_dependency_when_package_json_in_invalid() {
+        let package_name = String::from("@heroku/sf-fx-runtime-nodejs");
+        let dir = create_dir_with_file("package.json", "{\"name\": \"test....}");
+        let err = get_declared_runtime_package_version(dir.path(), &package_name)
+            .expect_err("this should have thrown an error");
+        assert!(err
+            .to_string()
+            .contains("Failure while attempting to read from package.json."));
     }
 }
