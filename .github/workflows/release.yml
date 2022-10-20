@@ -10,6 +10,9 @@ jobs:
   release:
     name: Release ${{ github.event.inputs.requested_buildpack_id }}
     runs-on: ubuntu-20.04 # ubuntu-latest currently resolves to 18.04 which does not have aws-cli 2.x yet
+    permissions:
+      contents: write
+      pull-requests: write
     env:
       REQUESTED_BUILDPACK_ID: ${{ github.event.inputs.requested_buildpack_id }}
     steps:
