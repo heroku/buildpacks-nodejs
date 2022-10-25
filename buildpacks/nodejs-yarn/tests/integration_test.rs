@@ -1,64 +1,55 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, BuildpackReference, IntegrationTest};
-use std::time::Duration;
+use libcnb_test::assert_contains;
+use test_support::Builder::{Heroku20, Heroku22};
+use test_support::{assert_web_response, test_yarn_app};
 
-fn test_yarn(fixture: &str, expected_output: Vec<&str>) {
-    for stack in ["heroku/buildpacks:20", "heroku/buildpacks:22"] {
-        IntegrationTest::new(stack, format!("../../test/fixtures/{fixture}"))
-            .buildpacks(vec![
-                BuildpackReference::Other(String::from("heroku/nodejs-engine")),
-                BuildpackReference::Crate,
-            ])
-            .run_test(|ctx| {
-                for phrase in expected_output.clone() {
-                    assert_contains!(ctx.pack_stdout, phrase);
-                }
-                let port = 8080;
-                ctx.prepare_container()
-                    .expose_port(port)
-                    .start_with_default_process(|container| {
-                        std::thread::sleep(Duration::from_secs(5));
-                        let addr = container
-                            .address_for_port(port)
-                            .expect("couldn't get container address");
-                        let resp = ureq::get(&format!("http://{addr}"))
-                            .call()
-                            .expect("request to container failed")
-                            .into_string()
-                            .expect("response read error");
-
-                        assert_contains!(resp, fixture);
-                    });
-            });
-    }
+#[test]
+#[ignore]
+fn yarn_1_typescript_heroku_20() {
+    test_yarn_app("yarn-1-typescript", Heroku20, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Running `build` script");
+        assert_web_response(&ctx, "yarn_1_typescript");
+    });
 }
 
 #[test]
 #[ignore]
-fn nodejs_yarn_1_typescript() {
-    test_yarn(
-        "yarn-1-typescript",
-        vec![
-            "Installing yarn",
-            "Installing dependencies",
-            "Running `build` script",
-        ],
-    );
+fn yarn_1_typescript_heroku_22() {
+    test_yarn_app("yarn-1-typescript", Heroku22, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Running `build` script");
+        assert_web_response(&ctx, "yarn-1-typescript");
+    });
 }
 
 #[test]
 #[ignore]
-fn nodejs_yarn_3_modules_nonzero() {
-    test_yarn(
-        "yarn-3-modules-nonzero",
-        vec![
-            "Installing yarn",
-            "Installing dependencies",
-            "Resolution step",
-            "Fetch step",
-            "Link step",
-            "Completed",
-        ],
-    );
+fn yarn_3_modules_nonzero_heroku_20() {
+    test_yarn_app("yarn-3-modules-nonzero", Heroku20, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Resolution step");
+        assert_contains!(ctx.pack_stdout, "Fetch step");
+        assert_contains!(ctx.pack_stdout, "Link step");
+        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_web_response(&ctx, "yarn-3-modules-nonzero");
+    });
+}
+
+#[test]
+#[ignore]
+fn yarn_3_modules_nonzero_heroku_22() {
+    test_yarn_app("yarn-3-modules-nonzero", Heroku22, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Resolution step");
+        assert_contains!(ctx.pack_stdout, "Fetch step");
+        assert_contains!(ctx.pack_stdout, "Link step");
+        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_web_response(&ctx, "yarn-3-modules-nonzero");
+    });
 }
