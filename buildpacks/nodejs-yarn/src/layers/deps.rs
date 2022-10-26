@@ -98,8 +98,6 @@ impl DepsLayer {
                 "--cache-folder",
                 &cache_folder,
                 "--frozen-lockfile",
-                "--production",
-                "false",
             ]);
         } else {
             args.append(&mut vec!["--immutable", "--immutable-cache"]);

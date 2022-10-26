@@ -16,7 +16,7 @@ now, we'll punt on #1 and #2.
 There are a bunch of changes in yarn 2 (and to a lesser extent, yarn 3). There
 are different install flags, a different configuration file (and format), and
 different installation modes. Yarn 2+ doesn't have high adoption yet, but this
-buildpack aims to support it alongside Yarn 1.
+buildpack aims to support 2, 3, and 4 alongside Yarn 1.
 
 ## pnp (Plug'n'Play)
 
@@ -33,7 +33,7 @@ should be well supported.
 
 ## node_modules caching
 
-Hypothesis: we shouldn't cache the `node_modules` directly. Yarn 1,2, and 3 
+Hypothesis: we shouldn't cache the `node_modules` directly. Yarn 1, 2, 3, and 4
 supports a global cache of dependencies. It is likely that the difference 
 between restoring a compiled `node_modules` and rebuilding `node_modules` 
 from a pristine yarn cache is negligible. In classic yarn, this can be done 
