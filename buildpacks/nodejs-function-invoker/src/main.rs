@@ -76,7 +76,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             get_declared_runtime_package_version(app_dir, package_name)
                 .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError)?;
 
-        if let Some(package_version) = declared_runtime_package_version {
+        if let Some(package_version) = declared_runtime_package_version.clone() {
             log_info(format!(
                 "Node.js function runtime declared in package.json: {0}@{1}",
                 package_name.clone(),
@@ -96,13 +96,17 @@ impl Buildpack for NodeJsInvokerBuildpack {
             )?;
         }
 
+        let command = match declared_runtime_package_version {
+            Some(_) => "node_modules/.bin/sf-fx-runtime-nodejs", // local  (explicit)
+            None => "sf-fx-runtime-nodejs",                      // global (implicit)
+        };
+
         BuildResultBuilder::new()
             .launch(
                 LaunchBuilder::new()
                     .process(
-                        ProcessBuilder::new(process_type!("web"), "npx")
+                        ProcessBuilder::new(process_type!("web"), command)
                             .args(vec![
-                                package_name.as_str(),
                                 "serve",
                                 &context.app_dir.to_string_lossy(),
                                 "--workers",
