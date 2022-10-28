@@ -2,7 +2,7 @@ api = "0.8"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
-version = "0.3.7"
+version = "0.3.8"
 name = "Heroku Node.js Function Invoker"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["nodejs", "node", "node.js", "javascript", "js", "function"]
