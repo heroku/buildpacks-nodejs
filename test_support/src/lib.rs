@@ -6,6 +6,7 @@ use std::fmt::Formatter;
 use std::time::Duration;
 
 const PORT: u16 = 8080;
+const TIMEOUT: u64 = 10;
 
 pub enum Builder {
     Heroku20,
@@ -46,7 +47,7 @@ pub fn test_node_function(fixture: &str, builder: Builder, test_body: fn(TestCon
 
 pub fn assert_health_check_responds(ctx: &TestContext) {
     ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        std::thread::sleep(Duration::from_secs(5));
+        std::thread::sleep(Duration::from_secs(TIMEOUT));
 
         let addr = container
             .address_for_port(PORT)
