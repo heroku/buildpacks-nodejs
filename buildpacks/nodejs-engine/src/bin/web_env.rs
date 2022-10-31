@@ -66,6 +66,8 @@ mod tests {
 
     #[test]
     fn test_web_env_default() {
+        env::remove_var("WEB_CONCURRENCY");
+        env::remove_var("WEB_MEMORY");
         let web_env = web_env();
         let web_concurrency: usize = web_env
             .get("WEB_CONCURRENCY")
@@ -78,6 +80,7 @@ mod tests {
             .parse()
             .expect("WEB_MEMORY should be a number");
 
+        println!("WEB_CONCURRENCY: {web_concurrency}");
         assert!((1..=32).contains(&web_concurrency));
         assert!((256..=2048).contains(&web_memory));
     }
