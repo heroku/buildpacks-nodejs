@@ -27,6 +27,7 @@ use test_support as _;
 #[cfg(test)]
 use ureq as _;
 
+mod cmd;
 mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
@@ -111,16 +112,17 @@ impl Buildpack for NodeJsYarnBuildpack {
         )?;
 
         let reported_yarn_version_string = String::from_utf8_lossy(&yarn_version_cmd.stdout);
+        let reported_yarn_version = Version::parse(&reported_yarn_version_string)
+            .map_err(NodeJsYarnBuildpackError::YarnVersionParse)?;
+        let yarn_version = cmd::YarnLine::new(reported_yarn_version.major())
+            .map_err(NodeJsYarnBuildpackError::YarnUnsupported)?;
 
         log_info(format!(
             "Using yarn {}",
             reported_yarn_version_string.trim()
         ));
 
-        let reported_yarn_version = Version::parse(&reported_yarn_version_string)
-            .map_err(NodeJsYarnBuildpackError::YarnVersionParse)?;
-
-        log_header("Installing dependencies");
+        log_header("Setting up yarn cache");
         context.handle_layer(
             layer_name!("deps"),
             DepsLayer {
@@ -129,6 +131,10 @@ impl Buildpack for NodeJsYarnBuildpack {
                 yarn_major_version: reported_yarn_version.major().to_string(),
             },
         )?;
+
+        log_header("Installing dependencies");
+        cmd::yarn_install(yarn_version, true, &env)
+            .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
         let build = pjson
@@ -188,10 +194,14 @@ impl Buildpack for NodeJsYarnBuildpack {
                     NodeJsYarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
+                    NodeJsYarnBuildpackError::YarnInstall(_) => {
+                        log_error("Yarn install error", err_string):
+                    }
                     NodeJsYarnBuildpackError::YarnVersionExit(_)
                     | NodeJsYarnBuildpackError::YarnVersionParse(_)
                     | NodeJsYarnBuildpackError::YarnVersionProcess(_)
-                    | NodeJsYarnBuildpackError::UnknownVersion(_) => {
+                    | NodeJsYarnBuildpackError::UnknownVersion(_)
+                    | NodeJsYarnBuildpackError::YarnUnsupported(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
@@ -215,10 +225,14 @@ pub enum NodeJsYarnBuildpackError {
     InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
     PackageJson(PackageJsonError),
+    #[error("Yarn install error: {0}")]
+    YarnInstall(cmd::Error),
     #[error("Couldn't parse installed yarn version: {0}")]
     YarnVersionParse(VersionError),
     #[error("Couldn't execute yarn command: {0}")]
     YarnVersionProcess(std::io::Error),
+    #[error("Unsupported yarn version: {0}")]
+    YarnUnsupported(std::io::Error),
     #[error("yarn --version failed with {0}")]
     YarnVersionExit(ExitStatus),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
