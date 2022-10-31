@@ -17,8 +17,8 @@ pub fn main() {
 }
 
 fn web_env() -> HashMap<ExecDProgramOutputKey, String> {
-    let available_mem = detect_available_memory();
     let web_mem = detect_web_memory();
+    let available_mem = detect_available_memory();
     let web_concurrency = calculate_web_concurrency(web_mem, available_mem);
 
     HashMap::from([
@@ -34,7 +34,10 @@ fn web_env() -> HashMap<ExecDProgramOutputKey, String> {
 }
 
 fn calculate_web_concurrency(web_mem: usize, available_mem: usize) -> usize {
-    cmp::max(1, available_mem / web_mem)
+    env::var("WEB_CONCURRENCY")
+        .ok()
+        .and_then(|m| m.parse().ok())
+        .unwrap_or_else(|| cmp::max(1, available_mem / web_mem))
 }
 
 fn detect_available_memory() -> usize {
@@ -62,20 +65,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_web_env() {
+    fn test_web_env_default() {
         let web_env = web_env();
-        let web_memory: usize = web_env
-            .get("WEB_MEMORY")
-            .expect("WEB_MEMORY should exist")
-            .parse()
-            .expect("WEB_MEMORY should be a number");
         let web_concurrency: usize = web_env
             .get("WEB_CONCURRENCY")
             .expect("WEB_CONCURRENCY should exist")
             .parse()
             .expect("WEB_CONCURRENCY should be a number");
+        let web_memory: usize = web_env
+            .get("WEB_MEMORY")
+            .expect("WEB_MEMORY should exist")
+            .parse()
+            .expect("WEB_MEMORY should be a number");
 
         assert!((1..=32).contains(&web_concurrency));
         assert!((256..=2048).contains(&web_memory));
+    }
+
+    #[test]
+    fn test_web_env_does_not_rewrite() {
+        env::set_var("WEB_CONCURRENCY", "42");
+        env::set_var("WEB_MEMORY", "4242");
+        let web_env = web_env();
+        let web_concurrency: usize = web_env
+            .get("WEB_CONCURRENCY")
+            .expect("WEB_CONCURRENCY should exist")
+            .parse()
+            .expect("WEB_CONCURRENCY should be a number");
+        let web_memory: usize = web_env
+            .get("WEB_MEMORY")
+            .expect("WEB_MEMORY should exist")
+            .parse()
+            .expect("WEB_MEMORY should be a number");
+
+        assert_eq!(web_concurrency, 42);
+        assert_eq!(web_memory, 4242);
     }
 }
