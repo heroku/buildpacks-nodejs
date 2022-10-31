@@ -13,13 +13,16 @@ const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
 const DEFAULT_WEB_MEMORY_MB: usize = 512;
 
 pub fn main() {
-    write_exec_d_program_output(web_env());
+    write_exec_d_program_output(web_env(read_env("WEB_CONCURRENCY"), read_env("WEB_MEMORY")));
 }
 
-fn web_env() -> HashMap<ExecDProgramOutputKey, String> {
-    let web_mem = detect_web_memory();
-    let available_mem = detect_available_memory();
-    let web_concurrency = calculate_web_concurrency(web_mem, available_mem);
+fn web_env(
+    concurrency: Option<usize>,
+    memory: Option<usize>,
+) -> HashMap<ExecDProgramOutputKey, String> {
+    let available_memory = detect_available_memory();
+    let web_memory = memory.unwrap_or(DEFAULT_WEB_MEMORY_MB);
+    let web_concurrency = concurrency.unwrap_or_else(|| cmp::max(1, available_memory / web_memory));
 
     HashMap::from([
         (
@@ -28,16 +31,13 @@ fn web_env() -> HashMap<ExecDProgramOutputKey, String> {
         ),
         (
             exec_d_program_output_key!("WEB_MEMORY"),
-            web_mem.to_string(),
+            web_memory.to_string(),
         ),
     ])
 }
 
-fn calculate_web_concurrency(web_mem: usize, available_mem: usize) -> usize {
-    env::var("WEB_CONCURRENCY")
-        .ok()
-        .and_then(|m| m.parse().ok())
-        .unwrap_or_else(|| cmp::max(1, available_mem / web_mem))
+fn read_env(key: &str) -> Option<usize> {
+    env::var(key).ok().and_then(|var| var.parse().ok())
 }
 
 fn detect_available_memory() -> usize {
@@ -53,22 +53,13 @@ fn detect_available_memory() -> usize {
     })
 }
 
-fn detect_web_memory() -> usize {
-    env::var("WEB_MEMORY")
-        .ok()
-        .and_then(|m| m.parse().ok())
-        .unwrap_or(DEFAULT_WEB_MEMORY_MB)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_web_env_default() {
-        env::remove_var("WEB_CONCURRENCY");
-        env::remove_var("WEB_MEMORY");
-        let web_env = web_env();
+        let web_env = web_env(None, None);
         let web_concurrency: usize = web_env
             .get("WEB_CONCURRENCY")
             .expect("WEB_CONCURRENCY should exist")
@@ -87,9 +78,7 @@ mod tests {
 
     #[test]
     fn test_web_env_does_not_rewrite() {
-        env::set_var("WEB_CONCURRENCY", "42");
-        env::set_var("WEB_MEMORY", "4242");
-        let web_env = web_env();
+        let web_env = web_env(Some(42), Some(4242));
         let web_concurrency: usize = web_env
             .get("WEB_CONCURRENCY")
             .expect("WEB_CONCURRENCY should exist")
