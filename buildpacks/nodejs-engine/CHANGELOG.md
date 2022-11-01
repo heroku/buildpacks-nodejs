@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Don't overwrite WEB_CONCURRENCY if already set. ([#386](https://github.com/heroku/buildpacks-nodejs/pull/386))
+
 ## [0.8.10] 2022/10/28
 
 - Added node version 18.12.0.
