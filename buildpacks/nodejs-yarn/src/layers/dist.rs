@@ -15,19 +15,19 @@ use tempfile::NamedTempFile;
 use thiserror::Error;
 
 /// A layer that downloads and installs the yarn cli
-pub struct DistLayer {
+pub(crate) struct DistLayer {
     pub release: Release,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct DistLayerMetadata {
+pub(crate) struct DistLayerMetadata {
     layer_version: String,
     yarn_version: String,
     stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
-pub enum DistLayerError {
+pub(crate) enum DistLayerError {
     #[error("Couldn't create tempfile for Node.js distribution: {0}")]
     TempFile(std::io::Error),
     #[error("Couldn't download Node.js distribution: {0}")]

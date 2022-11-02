@@ -6,7 +6,7 @@
 use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::{Requirement, Version, VersionError};
+use heroku_nodejs_utils::vrs::Requirement;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -17,7 +17,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
-use std::process::{Command, ExitStatus};
+use std::process::Command;
 use thiserror::Error;
 
 #[cfg(test)]
@@ -32,7 +32,7 @@ mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
-pub struct NodeJsYarnBuildpack;
+pub(crate) struct NodeJsYarnBuildpack;
 
 impl Buildpack for NodeJsYarnBuildpack {
     type Platform = GenericPlatform;
@@ -87,7 +87,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         let release = inventory
             .resolve(&version_range)
-            .ok_or(NodeJsYarnBuildpackError::UnknownVersion(version_range))?;
+            .ok_or(NodeJsYarnBuildpackError::YarnVersionResolve(version_range))?;
 
         log_info(format!("Resolved yarn version: {}", release.version));
 
@@ -101,39 +101,29 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
 
-        let yarn_version_cmd = Command::new("yarn")
-            .args(vec!["--version"])
-            .envs(&env)
-            .output()
-            .map_err(NodeJsYarnBuildpackError::YarnVersionProcess)?;
+        let yarn_version =
+            cmd::yarn_version(&env).map_err(NodeJsYarnBuildpackError::YarnVersionDetect)?;
+        let yarn_line = cmd::YarnLine::new(yarn_version.major())
+            .map_err(NodeJsYarnBuildpackError::YarnVersionUnsupported)?;
 
-        yarn_version_cmd.status.success().then_some(()).ok_or(
-            NodeJsYarnBuildpackError::YarnVersionExit(yarn_version_cmd.status),
-        )?;
+        log_info(format!("Using yarn {yarn_version}"));
 
-        let reported_yarn_version_string = String::from_utf8_lossy(&yarn_version_cmd.stdout);
-        let reported_yarn_version = Version::parse(&reported_yarn_version_string)
-            .map_err(NodeJsYarnBuildpackError::YarnVersionParse)?;
-        let yarn_version = cmd::YarnLine::new(reported_yarn_version.major())
-            .map_err(NodeJsYarnBuildpackError::YarnUnsupported)?;
-
-        log_info(format!(
-            "Using yarn {}",
-            reported_yarn_version_string.trim()
-        ));
-
-        log_header("Setting up yarn cache");
-        context.handle_layer(
-            layer_name!("deps"),
-            DepsLayer {
-                yarn_env: env.clone(),
-                yarn_app_cache: false,
-                yarn_major_version: reported_yarn_version.major().to_string(),
-            },
-        )?;
+        let zero_install = false;
+        if zero_install {
+            log_info("Skipping yarn dependency cache. Yarn zero-install cache detected");
+        } else {
+            log_header("Setting up yarn dependency cache");
+            let deps_layer = context.handle_layer(
+                layer_name!("deps"),
+                DepsLayer {
+                    yarn_line: yarn_line.clone(),
+                },
+            )?;
+            cmd::yarn_set_cache(&yarn_line, &deps_layer.path.join("cache"), &env)?;
+        }
 
         log_header("Installing dependencies");
-        cmd::yarn_install(yarn_version, true, &env)
+        cmd::yarn_install(&yarn_line, zero_install, &env)
             .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
@@ -195,13 +185,11 @@ impl Buildpack for NodeJsYarnBuildpack {
                         log_error("Yarn package.json error", err_string);
                     }
                     NodeJsYarnBuildpackError::YarnInstall(_) => {
-                        log_error("Yarn install error", err_string):
+                        log_error("Yarn install error", err_string);
                     }
-                    NodeJsYarnBuildpackError::YarnVersionExit(_)
-                    | NodeJsYarnBuildpackError::YarnVersionParse(_)
-                    | NodeJsYarnBuildpackError::YarnVersionProcess(_)
-                    | NodeJsYarnBuildpackError::UnknownVersion(_)
-                    | NodeJsYarnBuildpackError::YarnUnsupported(_) => {
+                    NodeJsYarnBuildpackError::YarnVersionDetect(_)
+                    | NodeJsYarnBuildpackError::YarnVersionResolve(_)
+                    | NodeJsYarnBuildpackError::YarnVersionUnsupported(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
@@ -214,7 +202,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 }
 
 #[derive(Error, Debug)]
-pub enum NodeJsYarnBuildpackError {
+pub(crate) enum NodeJsYarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
     BuildScript(std::io::Error),
     #[error("{0}")]
@@ -227,16 +215,12 @@ pub enum NodeJsYarnBuildpackError {
     PackageJson(PackageJsonError),
     #[error("Yarn install error: {0}")]
     YarnInstall(cmd::Error),
-    #[error("Couldn't parse installed yarn version: {0}")]
-    YarnVersionParse(VersionError),
-    #[error("Couldn't execute yarn command: {0}")]
-    YarnVersionProcess(std::io::Error),
+    #[error("Couldn't determine installed yarn version: {0}")]
+    YarnVersionDetect(cmd::Error),
     #[error("Unsupported yarn version: {0}")]
-    YarnUnsupported(std::io::Error),
-    #[error("yarn --version failed with {0}")]
-    YarnVersionExit(ExitStatus),
+    YarnVersionUnsupported(std::io::Error),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
-    UnknownVersion(Requirement),
+    YarnVersionResolve(Requirement),
 }
 
 impl From<NodeJsYarnBuildpackError> for libcnb::Error<NodeJsYarnBuildpackError> {

@@ -1,5 +1,5 @@
 mod deps;
 mod dist;
 
-pub use deps::*;
-pub use dist::*;
+pub(crate) use deps::*;
+pub(crate) use dist::*;

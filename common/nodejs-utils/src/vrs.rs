@@ -1,6 +1,6 @@
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fmt};
+use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug)]
 pub struct VersionError(String);
@@ -54,6 +54,14 @@ impl TryFrom<String> for Version {
         Version::parse(&val)
     }
 }
+
+impl FromStr for Version {
+    type Err = VersionError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Version::parse(s)
+    }
+}
+
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
