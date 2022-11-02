@@ -1,45 +1,10 @@
+use crate::yarn::Yarn;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
 use std::{
-    fmt,
     path::Path,
     process::{Command, Stdio},
 };
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub(crate) enum YarnLine {
-    Yarn1,
-    Yarn2,
-    Yarn3,
-    Yarn4,
-}
-
-impl YarnLine {
-    pub(crate) fn new(major_version: u64) -> Result<Self, std::io::Error> {
-        match major_version {
-            1 => Ok(YarnLine::Yarn1),
-            2 => Ok(YarnLine::Yarn2),
-            3 => Ok(YarnLine::Yarn3),
-            4 => Ok(YarnLine::Yarn4),
-            x => Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Unknown Yarn major version: {x}"),
-            )),
-        }
-    }
-}
-
-impl fmt::Display for YarnLine {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let v = match self {
-            YarnLine::Yarn1 => "1",
-            YarnLine::Yarn2 => "2",
-            YarnLine::Yarn3 => "3",
-            YarnLine::Yarn4 => "4",
-        };
-        write!(f, "yarn {v}.x.x")
-    }
-}
 
 #[derive(thiserror::Error, Debug)]
 pub(crate) enum Error {
@@ -74,14 +39,10 @@ pub(crate) fn yarn_version(env: &Env) -> Result<Version, Error> {
         .map_err(|_| Error::Parse(stdout.into_owned()))
 }
 
-pub(crate) fn yarn_set_cache(
-    yarn_line: &YarnLine,
-    cache_path: &Path,
-    env: &Env,
-) -> Result<(), Error> {
+pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> Result<(), Error> {
     let cache_path_string = cache_path.to_string_lossy();
     let mut args = vec!["config", "set"];
-    if yarn_line == &YarnLine::Yarn1 {
+    if yarn_line == &Yarn::Yarn1 {
         args.append(&mut vec!["cache-folder", &cache_path_string]);
     } else {
         args.append(&mut vec!["cacheFolder", &cache_path_string]);
@@ -97,12 +58,12 @@ pub(crate) fn yarn_set_cache(
 }
 
 pub(crate) fn yarn_install(
-    yarn_line: &YarnLine,
+    yarn_line: &Yarn,
     zero_install: bool,
     yarn_env: &Env,
 ) -> Result<(), Error> {
     let mut args = vec!["install"];
-    if yarn_line == &YarnLine::Yarn1 {
+    if yarn_line == &Yarn::Yarn1 {
         args.append(&mut vec!["--frozen-lockfile"]);
     } else {
         args.append(&mut vec!["--immutable"]);

@@ -4,6 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
+use crate::yarn::Yarn;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
@@ -29,6 +30,7 @@ use ureq as _;
 
 mod cmd;
 mod layers;
+mod yarn;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
@@ -103,7 +105,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         let yarn_version =
             cmd::yarn_version(&env).map_err(NodeJsYarnBuildpackError::YarnVersionDetect)?;
-        let yarn_line = cmd::YarnLine::new(yarn_version.major())
+        let yarn = Yarn::new(yarn_version.major())
             .map_err(NodeJsYarnBuildpackError::YarnVersionUnsupported)?;
 
         log_info(format!("Using yarn {yarn_version}"));
@@ -113,17 +115,13 @@ impl Buildpack for NodeJsYarnBuildpack {
             log_info("Skipping yarn dependency cache. Yarn zero-install cache detected");
         } else {
             log_header("Setting up yarn dependency cache");
-            let deps_layer = context.handle_layer(
-                layer_name!("deps"),
-                DepsLayer {
-                    yarn_line: yarn_line.clone(),
-                },
-            )?;
-            cmd::yarn_set_cache(&yarn_line, &deps_layer.path.join("cache"), &env)?;
+            let deps_layer =
+                context.handle_layer(layer_name!("deps"), DepsLayer { yarn: yarn.clone() })?;
+            cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)?;
         }
 
         log_header("Installing dependencies");
-        cmd::yarn_install(&yarn_line, zero_install, &env)
+        cmd::yarn_install(&yarn, zero_install, &env)
             .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");

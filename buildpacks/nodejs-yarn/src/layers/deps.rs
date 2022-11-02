@@ -1,4 +1,4 @@
-use crate::cmd::YarnLine;
+use crate::yarn::Yarn;
 use crate::{NodeJsYarnBuildpack, NodeJsYarnBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::buildpack::StackId;
@@ -15,12 +15,12 @@ use thiserror::Error;
 /// This layer is irrelevant in zero-install mode, as cached dependencies are
 /// included in the source code.
 pub(crate) struct DepsLayer {
-    pub(crate) yarn_line: YarnLine,
+    pub(crate) yarn: Yarn,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub(crate) struct DepsLayerMetadata {
-    yarn_line: String,
+    yarn: String,
     layer_version: String,
     stack_id: StackId,
 }
@@ -73,14 +73,14 @@ impl Layer for DepsLayer {
 
 impl DepsLayerMetadata {
     fn is_cacheable(&self, layer: &DepsLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> bool {
-        self.yarn_line == layer.yarn_line.to_string()
+        self.yarn == layer.yarn.to_string()
             && self.stack_id == context.stack_id
             && self.layer_version == LAYER_VERSION.to_string()
     }
 
     fn new(layer: &DepsLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> Self {
         DepsLayerMetadata {
-            yarn_line: layer.yarn_line.to_string(),
+            yarn: layer.yarn.to_string(),
             stack_id: context.stack_id.clone(),
             layer_version: LAYER_VERSION.to_string(),
         }
