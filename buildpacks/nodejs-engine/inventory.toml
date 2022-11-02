@@ -4698,6 +4698,13 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/
 etag = "6bd6a27bebf33e019e154c29429dbbb8-5"
 
 [[releases]]
+version = "14.21.0"
+channel = "release"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/release/linux-x64/node-v14.21.0-linux-x64.tar.gz"
+etag = "f9e6f039213ecb86ce8babadc3649dc9-5"
+
+[[releases]]
 version = "14.3.0"
 channel = "release"
 arch = "linux-x64"
@@ -8294,6 +8301,13 @@ channel = "staging"
 arch = "linux-x64"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v14.20.1-linux-x64.tar.gz"
 etag = "6bd6a27bebf33e019e154c29429dbbb8-5"
+
+[[releases]]
+version = "14.21.0"
+channel = "staging"
+arch = "linux-x64"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/node/staging/linux-x64/node-v14.21.0-linux-x64.tar.gz"
+etag = "f9e6f039213ecb86ce8babadc3649dc9-5"
 
 [[releases]]
 version = "14.3.0"
