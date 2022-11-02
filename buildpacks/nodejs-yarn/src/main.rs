@@ -117,7 +117,8 @@ impl Buildpack for NodeJsYarnBuildpack {
             log_header("Setting up yarn dependency cache");
             let deps_layer =
                 context.handle_layer(layer_name!("deps"), DepsLayer { yarn: yarn.clone() })?;
-            cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)?;
+            cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)
+                .map_err(NodeJsYarnBuildpackError::YarnCacheSet)?;
         }
 
         log_header("Installing dependencies");
@@ -182,6 +183,9 @@ impl Buildpack for NodeJsYarnBuildpack {
                     NodeJsYarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
+                    NodeJsYarnBuildpackError::YarnCacheSet(_) => {
+                        log_error("Yarn cache error", err_string);
+                    }
                     NodeJsYarnBuildpackError::YarnInstall(_) => {
                         log_error("Yarn install error", err_string);
                     }
@@ -211,6 +215,8 @@ pub(crate) enum NodeJsYarnBuildpackError {
     InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
     PackageJson(PackageJsonError),
+    #[error("Couldn't set yarn cache: {0}")]
+    YarnCacheSet(cmd::Error),
     #[error("Yarn install error: {0}")]
     YarnInstall(cmd::Error),
     #[error("Couldn't determine installed yarn version: {0}")]
