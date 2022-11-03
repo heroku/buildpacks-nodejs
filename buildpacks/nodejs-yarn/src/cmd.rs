@@ -2,7 +2,7 @@ use crate::yarn::Yarn;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
 use std::{
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
@@ -20,7 +20,7 @@ pub(crate) enum Error {
 
 pub(crate) fn yarn_version(env: &Env) -> Result<Version, Error> {
     let output = Command::new("yarn")
-        .arg("version")
+        .arg("--version")
         .envs(env)
         .stdout(Stdio::piped())
         .spawn()
@@ -37,6 +37,26 @@ pub(crate) fn yarn_version(env: &Env) -> Result<Version, Error> {
     stdout
         .parse()
         .map_err(|_| Error::Parse(stdout.into_owned()))
+}
+
+pub(crate) fn yarn_get_cache(yarn_line: &Yarn, env: &Env) -> Result<PathBuf, Error> {
+    let mut args = vec!["config", "get"];
+    if yarn_line == &Yarn::Yarn1 {
+        args.push("cache-folder");
+    } else {
+        args.push("cacheFolder");
+    }
+    let output = Command::new("yarn")
+        .args(args)
+        .envs(env)
+        .stdout(Stdio::piped())
+        .spawn()
+        .map_err(Error::Spawn)?
+        .wait_with_output()
+        .map_err(Error::Wait)?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    Ok(stdout.into())
 }
 
 pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> Result<(), Error> {

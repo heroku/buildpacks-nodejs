@@ -75,7 +75,7 @@ impl DepsLayerMetadata {
     fn is_cacheable(&self, layer: &DepsLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> bool {
         self.yarn == layer.yarn.to_string()
             && self.stack_id == context.stack_id
-            && self.layer_version == LAYER_VERSION.to_string()
+            && self.layer_version == *LAYER_VERSION
     }
 
     fn new(layer: &DepsLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> Self {

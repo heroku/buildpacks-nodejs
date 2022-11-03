@@ -110,9 +110,21 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         log_info(format!("Using yarn {yarn_version}"));
 
-        let zero_install = false;
+        // zero_install mode is active if the cache directory exists and is not empty
+        let zero_install = cmd::yarn_get_cache(&yarn, &env)
+            .map_err(NodeJsYarnBuildpackError::YarnCacheGet)?
+            .read_dir()
+            .map(|mut contents| {
+                contents.any(|entry| {
+                    entry
+                        .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
+                        .unwrap_or(false)
+                })
+            })
+            .unwrap_or(false);
+
         if zero_install {
-            log_info("Skipping yarn dependency cache. Yarn zero-install cache detected");
+            log_info("Yarn zero-install cache detected. Skipping dependency cache.");
         } else {
             log_header("Setting up yarn dependency cache");
             let deps_layer =
@@ -183,7 +195,8 @@ impl Buildpack for NodeJsYarnBuildpack {
                     NodeJsYarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    NodeJsYarnBuildpackError::YarnCacheSet(_) => {
+                    NodeJsYarnBuildpackError::YarnCacheSet(_)
+                    | NodeJsYarnBuildpackError::YarnCacheGet(_) => {
                         log_error("Yarn cache error", err_string);
                     }
                     NodeJsYarnBuildpackError::YarnInstall(_) => {
@@ -215,7 +228,9 @@ pub(crate) enum NodeJsYarnBuildpackError {
     InventoryParse(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
     PackageJson(PackageJsonError),
-    #[error("Couldn't set yarn cache: {0}")]
+    #[error("Couldn't read yarn cache folder: {0}")]
+    YarnCacheGet(cmd::Error),
+    #[error("Couldn't set yarn cache folder: {0}")]
     YarnCacheSet(cmd::Error),
     #[error("Yarn install error: {0}")]
     YarnInstall(cmd::Error),

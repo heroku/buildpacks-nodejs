@@ -11,7 +11,7 @@ fn yarn_1_typescript_heroku_20() {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Running `build` script");
-        assert_web_response(&ctx, "yarn_1_typescript");
+        assert_web_response(&ctx, "yarn-1-typescript");
     });
 }
 
