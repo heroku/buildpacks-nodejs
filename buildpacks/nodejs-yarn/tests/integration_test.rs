@@ -31,6 +31,7 @@ fn yarn_1_typescript_heroku_22() {
 fn yarn_2_pnp_zero_heroku_20() {
     test_yarn_app("yarn-2-pnp-zero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
@@ -45,6 +46,7 @@ fn yarn_2_pnp_zero_heroku_20() {
 fn yarn_2_pnp_zero_heroku_22() {
     test_yarn_app("yarn-2-pnp-zero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
         assert_contains!(ctx.pack_stdout, "Link step");
@@ -78,5 +80,35 @@ fn yarn_3_pnp_nonzero_heroku_22() {
         assert_contains!(ctx.pack_stdout, "Link step");
         assert_contains!(ctx.pack_stdout, "Completed");
         assert_web_response(&ctx, "yarn-3-pnp-nonzero");
+    });
+}
+
+#[test]
+#[ignore]
+fn yarn_3_modules_zero_heroku_20() {
+    test_yarn_app("yarn-3-modules-zero", Heroku20, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Resolution step");
+        assert_contains!(ctx.pack_stdout, "Fetch step");
+        assert_contains!(ctx.pack_stdout, "Link step");
+        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_web_response(&ctx, "yarn-3-modules-zero");
+    });
+}
+
+#[test]
+#[ignore]
+fn yarn_3_modules_zero_heroku_22() {
+    test_yarn_app("yarn-3-modules-zero", Heroku22, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stdout, "Resolution step");
+        assert_contains!(ctx.pack_stdout, "Fetch step");
+        assert_contains!(ctx.pack_stdout, "Link step");
+        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_web_response(&ctx, "yarn-3-modules-zero");
     });
 }

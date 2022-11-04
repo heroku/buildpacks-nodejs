@@ -124,7 +124,7 @@ impl Buildpack for NodeJsYarnBuildpack {
             .unwrap_or(false);
 
         if zero_install {
-            log_info("Yarn zero-install cache detected. Skipping dependency cache.");
+            log_info("Yarn zero-install detected. Skipping dependency cache.");
         } else {
             log_header("Setting up yarn dependency cache");
             let deps_layer =

@@ -1,0 +1,13 @@
+{
+  "name": "yarn-3-modules-zero",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "packageManager": "yarn@3.2.4",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
