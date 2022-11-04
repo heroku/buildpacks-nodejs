@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added node version 19.0.1, 14.21.1, 18.12.1, 16.18.1.
 - Added node version 14.21.0.
 ## [0.8.11] 2022/11/01
 
