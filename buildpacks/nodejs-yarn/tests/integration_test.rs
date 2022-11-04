@@ -55,28 +55,28 @@ fn yarn_2_pnp_zero_heroku_22() {
 
 #[test]
 #[ignore]
-fn yarn_3_modules_nonzero_heroku_20() {
-    test_yarn_app("yarn-3-modules-nonzero", Heroku20, |ctx| {
+fn yarn_3_pnp_nonzero_heroku_20() {
+    test_yarn_app("yarn-3-pnp-nonzero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
         assert_contains!(ctx.pack_stdout, "Link step");
         assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-3-modules-nonzero");
+        assert_web_response(&ctx, "yarn-3-pnp-nonzero");
     });
 }
 
 #[test]
 #[ignore]
-fn yarn_3_modules_nonzero_heroku_22() {
-    test_yarn_app("yarn-3-modules-nonzero", Heroku22, |ctx| {
+fn yarn_3_pnp_nonzero_heroku_22() {
+    test_yarn_app("yarn-3-pnp-nonzero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
         assert_contains!(ctx.pack_stdout, "Link step");
         assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-3-modules-nonzero");
+        assert_web_response(&ctx, "yarn-3-pnp-nonzero");
     });
 }
