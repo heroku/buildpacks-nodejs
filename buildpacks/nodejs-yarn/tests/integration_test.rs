@@ -60,6 +60,7 @@ fn yarn_2_pnp_zero_heroku_22() {
 fn yarn_3_pnp_nonzero_heroku_20() {
     test_yarn_app("yarn-3-pnp-nonzero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Setting up yarn dependency cache");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
@@ -74,6 +75,7 @@ fn yarn_3_pnp_nonzero_heroku_20() {
 fn yarn_3_pnp_nonzero_heroku_22() {
     test_yarn_app("yarn-3-pnp-nonzero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Setting up yarn dependency cache");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
