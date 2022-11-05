@@ -51,7 +51,7 @@ pub fn get_yarn_build_config(fixture: &str, builder: Builder) -> BuildConfig {
         builder.to_string(),
         format!("../../test/fixtures/{fixture}"),
     )
-    .buildpacks(get_function_invoker_buildpacks())
+    .buildpacks(get_yarn_buildpacks())
     .to_owned()
 }
 
