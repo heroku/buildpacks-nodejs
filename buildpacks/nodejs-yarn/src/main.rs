@@ -135,20 +135,21 @@ impl Buildpack for NodeJsYarnBuildpack {
             }
         }
 
-        let launch = pjson.scripts.and_then(|scripts| scripts.start).map(|_| {
-            LaunchBuilder::new()
-                .process(
-                    ProcessBuilder::new(process_type!("web"), "yarn")
-                        .args(vec!["start"])
-                        .default(true)
+        if cfg::has_start_script(&pjson) {
+            BuildResultBuilder::new()
+                .launch(
+                    LaunchBuilder::new()
+                        .process(
+                            ProcessBuilder::new(process_type!("web"), "yarn")
+                                .args(vec!["start"])
+                                .default(true)
+                                .build(),
+                        )
                         .build(),
                 )
                 .build()
-        });
-
-        match launch {
-            Some(l) => BuildResultBuilder::new().launch(l).build(),
-            None => BuildResultBuilder::new().build(),
+        } else {
+            BuildResultBuilder::new().build()
         }
     }
 

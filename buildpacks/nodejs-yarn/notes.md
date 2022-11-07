@@ -58,6 +58,14 @@ asks for it.
 `heroku-cleanup` usually runs after module pruning, but this buildpack isn't
 pruning yet, so we don't need this one yet.
 
+## corepack
+
+Node.js 16.9+ ships with corepack. Corepack provides shims for `yarn` with
+`corepack enable`. Instead of downloading the Yarn CLI, we could use `corepack`
+instead. We can check if the `package.json` has a `{ "packageManager":
+"yarn@3.1" }` to decide whether to use corepack or download yarn according based
+on the `engines.yarn` syntax.
+
 ## compile checks
 
 There are a few compile-time checks we should probably fail or warn about:
@@ -68,5 +76,6 @@ There are a few compile-time checks we should probably fail or warn about:
   npm.
 - WARN: There is a .yarnrc file but yarn > 2 is detected.
 - WARN: There is a .yarnrc.yml file but yarn@1 is detected.
-- WARN: There is a `packageManager` key. This might mean the app uses corepack
-  but there is no buildpack support for corepack managed dependency managers.
+- WARN: There is a `packageManager` key in package.json that does not have
+  `yarn` in it. App is using corepack, but not using corepack for yarn. It's 
+  not clear in this scenario which package manager to use.

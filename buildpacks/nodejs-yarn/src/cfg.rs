@@ -54,3 +54,10 @@ pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Option<Vec<String>> {
     }
     scripts.is_empty().then_some(scripts)
 }
+
+pub(crate) fn has_start_script(pkg_json: &PackageJson) -> bool {
+    pkg_json
+        .scripts
+        .as_ref()
+        .map_or(false, |scripts| scripts.start.is_some())
+}
