@@ -18,7 +18,6 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
-use std::process::Command;
 use thiserror::Error;
 
 #[cfg(test)]
@@ -117,22 +116,13 @@ impl Buildpack for NodeJsYarnBuildpack {
             .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
-
-        match cfg::get_build_scripts(&pjson) {
-            Some(scripts) => {
-                for script in scripts {
-                    log_info(format!("Running `{script}` script"));
-                    let mut proc = Command::new("yarn")
-                        .args(&vec!["run", &script])
-                        .envs(&env)
-                        .spawn()
-                        .map_err(NodeJsYarnBuildpackError::BuildScript)?;
-                    proc.wait().map_err(NodeJsYarnBuildpackError::BuildScript)?;
-                }
+        if let Some(scripts) = cfg::get_build_scripts(&pjson) {
+            for script in scripts {
+                log_info(format!("Running `{script}` script"));
+                cmd::yarn_run(&env, &script).map_err(NodeJsYarnBuildpackError::BuildScript)?;
             }
-            None => {
-                log_info("No build scripts found");
-            }
+        } else {
+            log_info("No build scripts found");
         }
 
         if cfg::has_start_script(&pjson) {
@@ -197,7 +187,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 #[derive(Error, Debug)]
 pub(crate) enum NodeJsYarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
-    BuildScript(std::io::Error),
+    BuildScript(cmd::Error),
     #[error("{0}")]
     DistLayer(#[from] DistLayerError),
     #[error("{0}")]

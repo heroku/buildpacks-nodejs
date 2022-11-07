@@ -102,3 +102,16 @@ pub(crate) fn yarn_install(
 
     status.success().then_some(()).ok_or(Error::Exit(status))
 }
+
+pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), Error> {
+    let status = Command::new("yarn")
+        .arg("run")
+        .arg(script)
+        .envs(yarn_env)
+        .spawn()
+        .map_err(Error::Spawn)?
+        .wait()
+        .map_err(Error::Wait)?;
+
+    status.success().then_some(()).ok_or(Error::Exit(status))
+}
