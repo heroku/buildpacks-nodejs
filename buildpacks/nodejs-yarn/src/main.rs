@@ -28,6 +28,7 @@ use test_support as _;
 #[cfg(test)]
 use ureq as _;
 
+mod cfg;
 mod cmd;
 mod layers;
 mod yarn;
@@ -71,25 +72,10 @@ impl Buildpack for NodeJsYarnBuildpack {
         let pjson = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(NodeJsYarnBuildpackError::PackageJson)?;
 
-        let version_range = pjson
-            .engines
-            .and_then(|e| {
-                e.yarn.map(|v| {
-                    log_info(format!(
-                        "Detected yarn version range {} from package.json",
-                        v
-                    ));
-                    v
-                })
-            })
-            .unwrap_or_else(|| {
-                log_info("Detected no yarn version range requirement");
-                Requirement::any()
-            });
-
+        let requested_yarn = cfg::requested_yarn_range(&pjson);
         let release = inventory
-            .resolve(&version_range)
-            .ok_or(NodeJsYarnBuildpackError::YarnVersionResolve(version_range))?;
+            .resolve(&requested_yarn)
+            .ok_or(NodeJsYarnBuildpackError::YarnVersionResolve(requested_yarn))?;
 
         log_info(format!("Resolved yarn version: {}", release.version));
 
@@ -110,18 +96,11 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         log_info(format!("Using yarn {yarn_version}"));
 
-        // zero_install mode is active if the cache directory exists and is not empty
-        let zero_install = cmd::yarn_get_cache(&yarn, &env)
-            .map_err(NodeJsYarnBuildpackError::YarnCacheGet)?
-            .read_dir()
-            .map(|mut contents| {
-                contents.any(|entry| {
-                    entry
-                        .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
-                        .unwrap_or(false)
-                })
-            })
-            .unwrap_or(false);
+        // zero_install mode is active if the cache directory and contents were
+        // provided along with the source code.
+        let zero_install = cfg::cache_populated(
+            &cmd::yarn_get_cache(&yarn, &env).map_err(NodeJsYarnBuildpackError::YarnCacheGet)?,
+        );
 
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
@@ -138,23 +117,21 @@ impl Buildpack for NodeJsYarnBuildpack {
             .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
-        let build = pjson
-            .scripts
-            .as_ref()
-            .and_then(|scripts| scripts.build.as_ref().and(Some("build")));
 
-        match build {
-            Some(key) => {
-                log_info(format!("Running `{key}` script"));
-                let mut proc = Command::new("yarn")
-                    .args(&vec!["run", key])
-                    .envs(&env)
-                    .spawn()
-                    .map_err(NodeJsYarnBuildpackError::BuildScript)?;
-                proc.wait().map_err(NodeJsYarnBuildpackError::BuildScript)?;
+        match cfg::get_build_scripts(&pjson) {
+            Some(scripts) => {
+                for script in scripts {
+                    log_info(format!("Running `{script}` script"));
+                    let mut proc = Command::new("yarn")
+                        .args(&vec!["run", &script])
+                        .envs(&env)
+                        .spawn()
+                        .map_err(NodeJsYarnBuildpackError::BuildScript)?;
+                    proc.wait().map_err(NodeJsYarnBuildpackError::BuildScript)?;
+                }
             }
             None => {
-                log_info("No build script found");
+                log_info("No build scripts found");
             }
         }
 

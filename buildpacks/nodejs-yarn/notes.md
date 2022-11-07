@@ -55,6 +55,9 @@ run after either `heroku-build` or `build`.
 But experience tells me not many folks use this. We could wait until someone
 asks for it.
 
+`heroku-cleanup` usually runs after module pruning, but this buildpack isn't
+pruning yet, so we don't need this one yet.
+
 ## compile checks
 
 There are a few compile-time checks we should probably fail or warn about:

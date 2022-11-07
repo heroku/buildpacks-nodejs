@@ -26,9 +26,13 @@ pub struct Engines {
 }
 
 #[derive(Deserialize, Debug, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub struct Scripts {
     pub start: Option<String>,
     pub build: Option<String>,
+    pub heroku_prebuild: Option<String>,
+    pub heroku_build: Option<String>,
+    pub heroku_postbuild: Option<String>,
 }
 
 #[derive(Error, Debug)]
