@@ -37,8 +37,8 @@ impl Layer for DepsLayer {
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
-            build: false,
-            launch: false,
+            build: true,
+            launch: true,
             cache: true,
         }
     }
