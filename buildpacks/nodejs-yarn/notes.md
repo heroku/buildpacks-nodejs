@@ -61,16 +61,18 @@ pruning yet, so we don't need this one yet.
 ## corepack
 
 Node.js 16.9+ ships with corepack. Corepack provides shims for `yarn` with
-`corepack enable`. Instead of downloading the Yarn CLI, we could use `corepack`
+`corepack enable`. Instead of downloading the Yarn CLI directly, we could `corepack`
 instead. We can check if the `package.json` has a `{ "packageManager":
-"yarn@3.1" }` to decide whether to use corepack or download yarn according based
-on the `engines.yarn` syntax.
+"yarn@3.1.2" }` to decide whether to use corepack or fallback to downloading the
+Yarn CLI manually. There isn't really much of an advantage to 
+consumers -- it doesn't change yarn, it's just another install method. It's
+probably not needed at the moment.
 
 ## compile checks
 
 There are a few compile-time checks we should probably fail or warn about:
 
-- FAIL: There is a package-lock.json or npm-shrinkwrap.json. The buildpack can't  
+- WARN: There is a package-lock.json or npm-shrinkwrap.json. The buildpack can't  
   tell whether the app prefers npm or yarn.
 - WARN: There is a .npmrc file. This is a hint that the app is configured to use
   npm.
