@@ -63,26 +63,29 @@ impl Buildpack for NodeJsYarnBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        log_header("Detecting yarn version");
+        log_header("Detecting yarn CLI version");
 
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsYarnBuildpackError::InventoryParse)?;
 
-        let pjson = PackageJson::read(context.app_dir.join("package.json"))
+        let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(NodeJsYarnBuildpackError::PackageJson)?;
 
-        let requested_yarn = cfg::requested_yarn_range(&pjson);
-        let release = inventory
-            .resolve(&requested_yarn)
-            .ok_or(NodeJsYarnBuildpackError::YarnVersionResolve(requested_yarn))?;
+        let requested_yarn_cli_range = cfg::requested_yarn_range(&pkg_json);
+        let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
+            NodeJsYarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
+        )?;
 
-        log_info(format!("Resolved yarn version: {}", release.version));
+        log_info(format!(
+            "Resolved yarn CLI version: {}",
+            yarn_cli_release.version
+        ));
 
-        log_header("Installing yarn");
+        log_header("Installing yarn CLI");
         let dist_layer = context.handle_layer(
             layer_name!("dist"),
             DistLayer {
-                release: release.clone(),
+                release: yarn_cli_release.clone(),
             },
         )?;
 
@@ -93,7 +96,7 @@ impl Buildpack for NodeJsYarnBuildpack {
         let yarn = Yarn::new(yarn_version.major())
             .map_err(NodeJsYarnBuildpackError::YarnVersionUnsupported)?;
 
-        log_info(format!("Using yarn {yarn_version}"));
+        log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
         // zero_install mode is active if the cache directory and contents were
         // provided along with the source code.
@@ -116,7 +119,7 @@ impl Buildpack for NodeJsYarnBuildpack {
             .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
-        if let Some(scripts) = cfg::get_build_scripts(&pjson) {
+        if let Some(scripts) = cfg::get_build_scripts(&pkg_json) {
             for script in scripts {
                 log_info(format!("Running `{script}` script"));
                 cmd::yarn_run(&env, &script).map_err(NodeJsYarnBuildpackError::BuildScript)?;
@@ -125,13 +128,13 @@ impl Buildpack for NodeJsYarnBuildpack {
             log_info("No build scripts found");
         }
 
-        if cfg::has_start_script(&pjson) {
+        if cfg::has_start_script(&pkg_json) {
             BuildResultBuilder::new()
                 .launch(
                     LaunchBuilder::new()
                         .process(
                             ProcessBuilder::new(process_type!("web"), "yarn")
-                                .args(vec!["start"])
+                                .arg("start")
                                 .default(true)
                                 .build(),
                         )
