@@ -52,7 +52,11 @@ pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Option<Vec<String>> {
             scripts.push("heroku-postbuild".to_owned());
         }
     }
-    scripts.is_empty().then_some(scripts)
+    if scripts.is_empty() {
+        None
+    } else {
+        Some(scripts)
+    }
 }
 
 pub(crate) fn has_start_script(pkg_json: &PackageJson) -> bool {
@@ -60,4 +64,43 @@ pub(crate) fn has_start_script(pkg_json: &PackageJson) -> bool {
         .scripts
         .as_ref()
         .map_or(false, |scripts| scripts.start.is_some())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use heroku_nodejs_utils::package_json::Scripts;
+
+    #[test]
+    fn test_get_build_scripts_all() {
+        let pkg_json = PackageJson {
+            scripts: Some(Scripts {
+                build: Some("echo 'build'".to_owned()),
+                heroku_prebuild: Some("echo 'heroku-prebuild'".to_owned()),
+                heroku_build: Some("echo 'build'".to_owned()),
+                heroku_postbuild: Some("echo 'heroku-postbuild'".to_owned()),
+                ..Scripts::default()
+            }),
+            ..PackageJson::default()
+        };
+        let build_scripts = get_build_scripts(&pkg_json).expect("Expected build scripts");
+
+        assert_eq!("heroku-prebuild", build_scripts[0]);
+        assert_eq!("heroku-build", build_scripts[1]);
+        assert_eq!("heroku-postbuild", build_scripts[2]);
+    }
+
+    #[test]
+    fn test_get_build_scripts_build_only() {
+        let pkg_json = PackageJson {
+            scripts: Some(Scripts {
+                build: Some("echo 'build'".to_owned()),
+                ..Scripts::default()
+            }),
+            ..PackageJson::default()
+        };
+        let build_scripts = get_build_scripts(&pkg_json).expect("Expected build scripts");
+
+        assert_eq!("build", build_scripts[0]);
+    }
 }
