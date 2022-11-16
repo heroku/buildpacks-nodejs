@@ -6,6 +6,8 @@ The classic buildpack supports three strategies for `devDependencies`:
 1) install devDependencies, then prune them after the build,
 2) never install devDependencies,
 3) install devDependencies but don't prune them.
+4) Prune all dependencies (dependencies and devDependencies) because they aren't
+needed at runtime
 
 #3 fits almost all apps, but comes at the cost of larger images. We don't have
 slug size limits with CNB's, so we don't need the other modes immediately. For

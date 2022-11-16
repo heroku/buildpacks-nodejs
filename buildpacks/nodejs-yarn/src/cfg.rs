@@ -24,10 +24,13 @@ pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Requirement {
 
 // A yarn cache is populated if it exists, and has non-hidden files.
 pub(crate) fn cache_populated(cache_path: &Path) -> bool {
+    println!("Checking {cache_path:?}");
     cache_path
         .read_dir()
         .map(|mut contents| {
+            println!("Found contents");
             contents.any(|entry| {
+                println!("Entry: {entry:?}");
                 entry
                     .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
                     .unwrap_or(false)
@@ -102,5 +105,25 @@ mod tests {
         let build_scripts = get_build_scripts(&pkg_json).expect("Expected build scripts");
 
         assert_eq!("build", build_scripts[0]);
+    }
+
+    #[test]
+    fn test_cache_populated() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test/fixtures/yarn-3-modules-zero/.yarn/cache");
+        assert!(
+            cache_populated(&path),
+            "Expected zero-install app to have a populated cache"
+        );
+    }
+
+    #[test]
+    fn test_cache_unpopulated() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test/fixtures/yarn-3-pnp-nonzero/.yarn/cache");
+        assert!(
+            !cache_populated(&path),
+            "Expected non-zero-install app to have an unpopulated cache"
+        );
     }
 }
