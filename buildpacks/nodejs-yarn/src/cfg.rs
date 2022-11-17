@@ -24,13 +24,10 @@ pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Requirement {
 
 // A yarn cache is populated if it exists, and has non-hidden files.
 pub(crate) fn cache_populated(cache_path: &Path) -> bool {
-    println!("Checking {cache_path:?}");
     cache_path
         .read_dir()
         .map(|mut contents| {
-            println!("Found contents");
             contents.any(|entry| {
-                println!("Entry: {entry:?}");
                 entry
                     .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
                     .unwrap_or(false)
