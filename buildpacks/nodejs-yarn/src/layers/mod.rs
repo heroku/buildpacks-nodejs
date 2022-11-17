@@ -1,5 +1,5 @@
+mod cli;
 mod deps;
-mod dist;
 
+pub(crate) use cli::*;
 pub(crate) use deps::*;
-pub(crate) use dist::*;

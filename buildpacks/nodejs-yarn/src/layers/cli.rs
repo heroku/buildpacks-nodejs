@@ -15,19 +15,19 @@ use tempfile::NamedTempFile;
 use thiserror::Error;
 
 /// A layer that downloads and installs the yarn cli
-pub(crate) struct DistLayer {
+pub(crate) struct CLILayer {
     pub release: Release,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub(crate) struct DistLayerMetadata {
+pub(crate) struct CLILayerMetadata {
     layer_version: String,
     yarn_version: String,
     stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
-pub(crate) enum DistLayerError {
+pub(crate) enum CLILayerError {
     #[error("Couldn't create tempfile for yarn CLI: {0}")]
     TempFile(std::io::Error),
     #[error("Couldn't download yarn CLI: {0}")]
@@ -40,9 +40,9 @@ pub(crate) enum DistLayerError {
 
 const LAYER_VERSION: &str = "1";
 
-impl Layer for DistLayer {
+impl Layer for CLILayer {
     type Buildpack = YarnBuildpack;
-    type Metadata = DistLayerMetadata;
+    type Metadata = CLILayerMetadata;
 
     fn types(&self) -> LayerTypes {
         LayerTypes {
@@ -57,21 +57,20 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, YarnBuildpackError> {
-        let yarn_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
+        let yarn_tgz = NamedTempFile::new().map_err(CLILayerError::TempFile)?;
 
         log_info(format!("Downloading yarn {}", self.release.version));
-        download_file(&self.release.url, yarn_tgz.path()).map_err(DistLayerError::Download)?;
+        download_file(&self.release.url, yarn_tgz.path()).map_err(CLILayerError::Download)?;
 
         log_info(format!("Extracting yarn {}", self.release.version));
-        decompress_tarball(&mut yarn_tgz.into_file(), &layer_path)
-            .map_err(DistLayerError::Untar)?;
+        decompress_tarball(&mut yarn_tgz.into_file(), layer_path).map_err(CLILayerError::Untar)?;
 
         log_info(format!("Installing yarn {}", self.release.version));
         let dist_name = format!("yarn-v{}", self.release.version);
         let dist_path = Path::new(layer_path).join(dist_name);
-        move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
+        move_directory_contents(dist_path, layer_path).map_err(CLILayerError::Installation)?;
 
-        LayerResultBuilder::new(DistLayerMetadata::current(self, context)).build()
+        LayerResultBuilder::new(CLILayerMetadata::current(self, context)).build()
     }
 
     fn existing_layer_strategy(
@@ -79,7 +78,7 @@ impl Layer for DistLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        if layer_data.content_metadata.metadata == DistLayerMetadata::current(self, context) {
+        if layer_data.content_metadata.metadata == CLILayerMetadata::current(self, context) {
             log_info(format!("Reusing yarn {}", self.release.version));
             Ok(ExistingLayerStrategy::Keep)
         } else {
@@ -88,9 +87,9 @@ impl Layer for DistLayer {
     }
 }
 
-impl DistLayerMetadata {
-    fn current(layer: &DistLayer, context: &BuildContext<YarnBuildpack>) -> Self {
-        DistLayerMetadata {
+impl CLILayerMetadata {
+    fn current(layer: &CLILayer, context: &BuildContext<YarnBuildpack>) -> Self {
+        CLILayerMetadata {
             yarn_version: layer.release.version.to_string(),
             stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),

@@ -3,7 +3,7 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
-use crate::layers::{DepsLayer, DepsLayerError, DistLayer, DistLayerError};
+use crate::layers::{CLILayer, CLILayerError, DepsLayer, DepsLayerError};
 use crate::yarn::Yarn;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -84,7 +84,7 @@ impl Buildpack for YarnBuildpack {
         log_header("Installing yarn CLI");
         let dist_layer = context.handle_layer(
             layer_name!("dist"),
-            DistLayer {
+            CLILayer {
                 release: yarn_cli_release.clone(),
             },
         )?;
@@ -150,7 +150,7 @@ impl Buildpack for YarnBuildpack {
                     YarnBuildpackError::BuildScript(_) => {
                         log_error("Yarn build script error", err_string);
                     }
-                    YarnBuildpackError::DistLayer(_) => {
+                    YarnBuildpackError::CLILayer(_) => {
                         log_error("Yarn distribution layer error", err_string);
                     }
                     YarnBuildpackError::DepsLayer(_) => {
@@ -187,7 +187,7 @@ pub(crate) enum YarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
     BuildScript(cmd::Error),
     #[error("{0}")]
-    DistLayer(#[from] DistLayerError),
+    CLILayer(#[from] CLILayerError),
     #[error("{0}")]
     DepsLayer(#[from] DepsLayerError),
     #[error("Couldn't parse yarn inventory: {0}")]
