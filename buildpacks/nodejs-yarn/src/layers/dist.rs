@@ -1,4 +1,4 @@
-use crate::{NodeJsYarnBuildpack, NodeJsYarnBuildpackError};
+use crate::{YarnBuildpack, YarnBuildpackError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
 use libcnb::data::buildpack::StackId;
@@ -41,7 +41,7 @@ pub(crate) enum DistLayerError {
 const LAYER_VERSION: &str = "1";
 
 impl Layer for DistLayer {
-    type Buildpack = NodeJsYarnBuildpack;
+    type Buildpack = YarnBuildpack;
     type Metadata = DistLayerMetadata;
 
     fn types(&self) -> LayerTypes {
@@ -56,7 +56,7 @@ impl Layer for DistLayer {
         &self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, NodeJsYarnBuildpackError> {
+    ) -> Result<LayerResult<Self::Metadata>, YarnBuildpackError> {
         let yarn_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
         log_info(format!("Downloading yarn {}", self.release.version));
@@ -89,7 +89,7 @@ impl Layer for DistLayer {
 }
 
 impl DistLayerMetadata {
-    fn current(layer: &DistLayer, context: &BuildContext<NodeJsYarnBuildpack>) -> Self {
+    fn current(layer: &DistLayer, context: &BuildContext<YarnBuildpack>) -> Self {
         DistLayerMetadata {
             yarn_version: layer.release.version.to_string(),
             stack_id: context.stack_id.clone(),

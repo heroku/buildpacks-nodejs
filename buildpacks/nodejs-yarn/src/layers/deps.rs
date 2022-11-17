@@ -1,5 +1,5 @@
 use crate::yarn::Yarn;
-use crate::{NodeJsYarnBuildpack, NodeJsYarnBuildpackError};
+use crate::{YarnBuildpack, YarnBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
@@ -36,7 +36,7 @@ const MAX_CACHE_USAGE_COUNT: f32 = 150.0;
 const CACHE_DIR: &str = "cache";
 
 impl Layer for DepsLayer {
-    type Buildpack = NodeJsYarnBuildpack;
+    type Buildpack = YarnBuildpack;
     type Metadata = DepsLayerMetadata;
 
     fn types(&self) -> LayerTypes {
@@ -51,7 +51,7 @@ impl Layer for DepsLayer {
         &self,
         _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
-    ) -> Result<LayerResult<Self::Metadata>, NodeJsYarnBuildpackError> {
+    ) -> Result<LayerResult<Self::Metadata>, YarnBuildpackError> {
         fs::create_dir(layer_path.join(CACHE_DIR)).map_err(DepsLayerError)?;
         LayerResultBuilder::new(DepsLayerMetadata::new(self)).build()
     }
@@ -60,7 +60,7 @@ impl Layer for DepsLayer {
         &self,
         _context: &BuildContext<Self::Buildpack>,
         layer: &LayerData<Self::Metadata>,
-    ) -> Result<LayerResult<Self::Metadata>, NodeJsYarnBuildpackError> {
+    ) -> Result<LayerResult<Self::Metadata>, YarnBuildpackError> {
         LayerResultBuilder::new(DepsLayerMetadata {
             cache_usage_count: layer.content_metadata.metadata.cache_usage_count + 1.0,
             ..DepsLayerMetadata::new(self)

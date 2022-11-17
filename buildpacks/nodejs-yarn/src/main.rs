@@ -34,12 +34,12 @@ mod yarn;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
-pub(crate) struct NodeJsYarnBuildpack;
+pub(crate) struct YarnBuildpack;
 
-impl Buildpack for NodeJsYarnBuildpack {
+impl Buildpack for YarnBuildpack {
     type Platform = GenericPlatform;
     type Metadata = GenericMetadata;
-    type Error = NodeJsYarnBuildpackError;
+    type Error = YarnBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         context
@@ -66,14 +66,14 @@ impl Buildpack for NodeJsYarnBuildpack {
         log_header("Detecting yarn CLI version");
 
         let inventory: Inventory =
-            toml::from_str(INVENTORY).map_err(NodeJsYarnBuildpackError::InventoryParse)?;
+            toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
 
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsYarnBuildpackError::PackageJson)?;
+            .map_err(YarnBuildpackError::PackageJson)?;
 
         let requested_yarn_cli_range = cfg::requested_yarn_range(&pkg_json);
         let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
-            NodeJsYarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
+            YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
         )?;
 
         log_info(format!(
@@ -92,15 +92,15 @@ impl Buildpack for NodeJsYarnBuildpack {
         let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
 
         let yarn_version =
-            cmd::yarn_version(&env).map_err(NodeJsYarnBuildpackError::YarnVersionDetect)?;
-        let yarn = Yarn::new(yarn_version.major())
-            .map_err(NodeJsYarnBuildpackError::YarnVersionUnsupported)?;
+            cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
+        let yarn =
+            Yarn::new(yarn_version.major()).map_err(YarnBuildpackError::YarnVersionUnsupported)?;
 
         log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
         log_header("Setting up yarn dependency cache");
         let zero_install = cfg::cache_populated(
-            &cmd::yarn_get_cache(&yarn, &env).map_err(NodeJsYarnBuildpackError::YarnCacheGet)?,
+            &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
@@ -108,18 +108,17 @@ impl Buildpack for NodeJsYarnBuildpack {
             let deps_layer =
                 context.handle_layer(layer_name!("deps"), DepsLayer { yarn: yarn.clone() })?;
             cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)
-                .map_err(NodeJsYarnBuildpackError::YarnCacheSet)?;
+                .map_err(YarnBuildpackError::YarnCacheSet)?;
         }
 
         log_header("Installing dependencies");
-        cmd::yarn_install(&yarn, zero_install, &env)
-            .map_err(NodeJsYarnBuildpackError::YarnInstall)?;
+        cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
         if let Some(scripts) = cfg::get_build_scripts(&pkg_json) {
             for script in scripts {
                 log_info(format!("Running `{script}` script"));
-                cmd::yarn_run(&env, &script).map_err(NodeJsYarnBuildpackError::BuildScript)?;
+                cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
             }
         } else {
             log_info("No build scripts found");
@@ -148,31 +147,30 @@ impl Buildpack for NodeJsYarnBuildpack {
             libcnb::Error::BuildpackError(bp_err) => {
                 let err_string = bp_err.to_string();
                 match bp_err {
-                    NodeJsYarnBuildpackError::BuildScript(_) => {
+                    YarnBuildpackError::BuildScript(_) => {
                         log_error("Yarn build script error", err_string);
                     }
-                    NodeJsYarnBuildpackError::DistLayer(_) => {
+                    YarnBuildpackError::DistLayer(_) => {
                         log_error("Yarn distribution layer error", err_string);
                     }
-                    NodeJsYarnBuildpackError::DepsLayer(_) => {
+                    YarnBuildpackError::DepsLayer(_) => {
                         log_error("Yarn dependency layer error", err_string);
                     }
-                    NodeJsYarnBuildpackError::InventoryParse(_) => {
+                    YarnBuildpackError::InventoryParse(_) => {
                         log_error("Yarn inventory parse error", err_string);
                     }
-                    NodeJsYarnBuildpackError::PackageJson(_) => {
+                    YarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    NodeJsYarnBuildpackError::YarnCacheSet(_)
-                    | NodeJsYarnBuildpackError::YarnCacheGet(_) => {
+                    YarnBuildpackError::YarnCacheSet(_) | YarnBuildpackError::YarnCacheGet(_) => {
                         log_error("Yarn cache error", err_string);
                     }
-                    NodeJsYarnBuildpackError::YarnInstall(_) => {
+                    YarnBuildpackError::YarnInstall(_) => {
                         log_error("Yarn install error", err_string);
                     }
-                    NodeJsYarnBuildpackError::YarnVersionDetect(_)
-                    | NodeJsYarnBuildpackError::YarnVersionResolve(_)
-                    | NodeJsYarnBuildpackError::YarnVersionUnsupported(_) => {
+                    YarnBuildpackError::YarnVersionDetect(_)
+                    | YarnBuildpackError::YarnVersionResolve(_)
+                    | YarnBuildpackError::YarnVersionUnsupported(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
@@ -185,7 +183,7 @@ impl Buildpack for NodeJsYarnBuildpack {
 }
 
 #[derive(Error, Debug)]
-pub(crate) enum NodeJsYarnBuildpackError {
+pub(crate) enum YarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
     BuildScript(cmd::Error),
     #[error("{0}")]
@@ -210,10 +208,10 @@ pub(crate) enum NodeJsYarnBuildpackError {
     YarnVersionResolve(Requirement),
 }
 
-impl From<NodeJsYarnBuildpackError> for libcnb::Error<NodeJsYarnBuildpackError> {
-    fn from(e: NodeJsYarnBuildpackError) -> Self {
+impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
+    fn from(e: YarnBuildpackError) -> Self {
         libcnb::Error::BuildpackError(e)
     }
 }
 
-buildpack_main!(NodeJsYarnBuildpack);
+buildpack_main!(YarnBuildpack);
