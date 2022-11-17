@@ -59,6 +59,7 @@ pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Option<Vec<String>> {
     }
 }
 
+// Determines if a given `PackageJson` has a start script defined
 pub(crate) fn has_start_script(pkg_json: &PackageJson) -> bool {
     pkg_json
         .scripts
