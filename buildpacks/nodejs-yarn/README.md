@@ -9,28 +9,29 @@ Heroku's official Cloud Native Buildpack for [Yarn](https://yarnpkg.com).
 
 This buildpack relies on and builds on top of the [Node.js Engine Cloud Native Buildpack](https://github.com/heroku/nodejs-engine-buildpack) to add `yarn` functionality to a Node.js app.
 
-
 ## What it does
 
-- Installs `yarn`. This buildpack will install the `yarn` CLI into a layer, put `yarn` on `$PATH`
-  and cache the `yarn` CLI between builds.
-- Installs package.json dependencies (including devDependencies) with `yarn install`. Dependencies are
-  cached between builds to provide fast rebuilds.
-- Runs `build` scripts from package.json. This includes `heroku-prebuild`, `heroku-build` (or
-  `build`, and `heroku-postbuild`.
-- Sets the default process type as `yarn run start`.
+- Installs the `yarn` CLI and caches it for reuse between builds.
+- Installs package.json dependencies (including devDependencies) with 
+  `yarn install`. Dependencies are cached between builds to provide fast rebuilds.
+- Runs `build` scripts from package.json, including `heroku-prebuild`, 
+  `heroku-build` (or `build`), and `heroku-postbuild`.
+- Sets the default process type as `yarn run start` if it exists.
 
 ## Features
 
 ### Supported:
+
 - Yarn major versions 1, 2, and 3.
-- Yarn pnp mode for yarn 2+.
-- Yarn zero-installs.
+- Yarn pnp (Plug 'n Play) mode for yarn 2+.
+- Yarn zero-installs for yarn 2+.
 
 ## Unsupported:
-- Yarn installs via corepack
-- Optional `devDependencies`
-- Pruning `devDependencies`
+
+- Installing `yarn` CLI via corepack. The `yarn` CLI is installed from a mirror,
+  manually.
+- Optional `devDependencies`. `devDependencies` are always installed.
+- Pruning `devDependencies`. `devDependencies` are always installed.
 
 ## Reference
 
@@ -67,10 +68,9 @@ the project's `.yarnrc.yml` to use this feature.
 
 ### Scripts
 
-The following scripts from package.json will be executed in this order after
-dependencies are installed: `heroku-prebuild`, `heroku-build` (falling back to
-`build` if `heroku-build` does not exist), `heroku-postbuild`. These scripts
-may be useful for compiling or generating artifacts that are needed at runtime.
+After dependencies are installed, build scripts will be run in this order: 
+`heroku-prebuild`, `heroku-build` (falling back to `build` if `heroku-build`
+does not exist), `heroku-postbuild`.
 
 ### Process types
 
