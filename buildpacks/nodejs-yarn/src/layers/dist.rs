@@ -28,13 +28,13 @@ pub(crate) struct DistLayerMetadata {
 
 #[derive(Error, Debug)]
 pub(crate) enum DistLayerError {
-    #[error("Couldn't create tempfile for Node.js distribution: {0}")]
+    #[error("Couldn't create tempfile for yarn CLI: {0}")]
     TempFile(std::io::Error),
-    #[error("Couldn't download Node.js distribution: {0}")]
+    #[error("Couldn't download yarn CLI: {0}")]
     Download(DownloadError),
-    #[error("Couldn't decompress Node.js distribution: {0}")]
+    #[error("Couldn't decompress yarn CLI: {0}")]
     Untar(std::io::Error),
-    #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
+    #[error("Couldn't move yarn CLI to the target location: {0}")]
     Installation(std::io::Error),
 }
 
