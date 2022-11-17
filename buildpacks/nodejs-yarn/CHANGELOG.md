@@ -4,8 +4,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] 2022/11/07
-
 - Rewrite in rust leveraging libcnb.rs ([#250](https://github.com/heroku/buildpacks-nodejs/pull/250/files))
 - Added explicit support for yarn 2 and 3 ([#250](https://github.com/heroku/buildpacks-nodejs/pull/250/files))
 - Added support for yarn zero-installs and pnp ([#250](https://github.com/heroku/buildpacks-nodejs/pull/250/files))
