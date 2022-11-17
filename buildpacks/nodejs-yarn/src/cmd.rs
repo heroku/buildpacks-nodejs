@@ -84,11 +84,13 @@ pub(crate) fn yarn_install(
 ) -> Result<(), Error> {
     let mut args = vec!["install"];
     if yarn_line == &Yarn::Yarn1 {
-        args.append(&mut vec!["--frozen-lockfile"]);
+        args.push("--frozen-lockfile");
     } else {
-        args.append(&mut vec!["--immutable"]);
+        args.push("--immutable");
+        args.push("--inline-builds");
         if zero_install {
-            args.append(&mut vec!["--check-cache", "--immutable-cache"]);
+            args.push("--check-cache");
+            args.push("--immutable-cache");
         }
     }
 

@@ -98,16 +98,13 @@ impl Buildpack for NodeJsYarnBuildpack {
 
         log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
-        // zero_install mode is active if the cache directory and contents were
-        // provided along with the source code.
+        log_header("Setting up yarn dependency cache");
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(NodeJsYarnBuildpackError::YarnCacheGet)?,
         );
-
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
         } else {
-            log_header("Setting up yarn dependency cache");
             let deps_layer =
                 context.handle_layer(layer_name!("deps"), DepsLayer { yarn: yarn.clone() })?;
             cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)
