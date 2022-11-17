@@ -84,6 +84,7 @@ pub(crate) fn yarn_install(
 ) -> Result<(), Error> {
     let mut args = vec!["install"];
     if yarn_line == &Yarn::Yarn1 {
+        args.push("--production=false");
         args.push("--frozen-lockfile");
     } else {
         args.push("--immutable");
