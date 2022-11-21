@@ -12,4 +12,3 @@ cp -R ../../target/buildpack/release/heroku_nodejs-yarn target
 cp package.toml target/
 
 popd
-
