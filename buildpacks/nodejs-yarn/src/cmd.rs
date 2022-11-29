@@ -90,7 +90,6 @@ pub(crate) fn yarn_install(
         args.push("--immutable");
         args.push("--inline-builds");
         if zero_install {
-            args.push("--check-cache");
             args.push("--immutable-cache");
         }
     }
