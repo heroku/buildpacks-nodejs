@@ -5,7 +5,7 @@ use test_support::Builder::{Heroku20, Heroku22};
 use test_support::{assert_web_response, test_yarn_app};
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_1_typescript_heroku_20() {
     test_yarn_app("yarn-1-typescript", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -16,7 +16,7 @@ fn yarn_1_typescript_heroku_20() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_1_typescript_heroku_22() {
     test_yarn_app("yarn-1-typescript", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -27,7 +27,7 @@ fn yarn_1_typescript_heroku_22() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_2_pnp_zero_heroku_20() {
     test_yarn_app("yarn-2-pnp-zero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -46,7 +46,7 @@ fn yarn_2_pnp_zero_heroku_20() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_2_pnp_zero_heroku_22() {
     test_yarn_app("yarn-2-pnp-zero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -65,7 +65,7 @@ fn yarn_2_pnp_zero_heroku_22() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_2_modules_nonzero_heroku_20() {
     test_yarn_app("yarn-2-modules-nonzero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -84,7 +84,7 @@ fn yarn_2_modules_nonzero_heroku_20() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_2_modules_nonzero_heroku_22() {
     test_yarn_app("yarn-2-modules-nonzero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -103,7 +103,7 @@ fn yarn_2_modules_nonzero_heroku_22() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_3_pnp_nonzero_heroku_20() {
     test_yarn_app("yarn-3-pnp-nonzero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -122,7 +122,7 @@ fn yarn_3_pnp_nonzero_heroku_20() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_3_pnp_nonzero_heroku_22() {
     test_yarn_app("yarn-3-pnp-nonzero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -141,7 +141,7 @@ fn yarn_3_pnp_nonzero_heroku_22() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_3_modules_zero_heroku_20() {
     test_yarn_app("yarn-3-modules-zero", Heroku20, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
@@ -160,7 +160,7 @@ fn yarn_3_modules_zero_heroku_20() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn yarn_3_modules_zero_heroku_22() {
     test_yarn_app("yarn-3-modules-zero", Heroku22, |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
