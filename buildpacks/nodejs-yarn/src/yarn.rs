@@ -9,16 +9,13 @@ pub(crate) enum Yarn {
 }
 
 impl Yarn {
-    pub(crate) fn new(major_version: u64) -> Result<Self, std::io::Error> {
+    pub(crate) fn from_major(major_version: u64) -> Option<Self> {
         match major_version {
-            1 => Ok(Yarn::Yarn1),
-            2 => Ok(Yarn::Yarn2),
-            3 => Ok(Yarn::Yarn3),
-            4 => Ok(Yarn::Yarn4),
-            x => Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Unknown Yarn major version: {x}"),
-            )),
+            1 => Some(Yarn::Yarn1),
+            2 => Some(Yarn::Yarn2),
+            3 => Some(Yarn::Yarn3),
+            4 => Some(Yarn::Yarn4),
+            _ => None,
         }
     }
 }

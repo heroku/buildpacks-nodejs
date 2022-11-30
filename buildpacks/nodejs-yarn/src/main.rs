@@ -107,8 +107,9 @@ impl Buildpack for YarnBuildpack {
 
         let yarn_version =
             cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
-        let yarn =
-            Yarn::new(yarn_version.major()).map_err(YarnBuildpackError::YarnVersionUnsupported)?;
+        let yarn = Yarn::from_major(yarn_version.major()).ok_or(
+            YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()),
+        )?;
 
         log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
@@ -217,7 +218,7 @@ pub(crate) enum YarnBuildpackError {
     #[error("Couldn't determine installed yarn version: {0}")]
     YarnVersionDetect(cmd::Error),
     #[error("Unsupported yarn version: {0}")]
-    YarnVersionUnsupported(std::io::Error),
+    YarnVersionUnsupported(u64),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
     YarnVersionResolve(Requirement),
 }
