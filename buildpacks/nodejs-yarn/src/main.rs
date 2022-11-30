@@ -107,9 +107,8 @@ impl Buildpack for YarnBuildpack {
 
         let yarn_version =
             cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
-        let yarn = Yarn::from_major(yarn_version.major()).ok_or(
-            YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()),
-        )?;
+        let yarn = Yarn::from_major(yarn_version.major())
+            .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
         log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
