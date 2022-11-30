@@ -24,7 +24,7 @@ pub(crate) fn cache_populated(cache_path: &Path) -> bool {
 }
 
 // Fetches the build scripts from a `PackageJson` and returns them in priority order
-pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Option<Vec<String>> {
+pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Vec<String> {
     let mut scripts = vec![];
     if let Some(s) = &pkg_json.scripts {
         if s.heroku_prebuild.is_some() {
@@ -39,11 +39,7 @@ pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Option<Vec<String>> {
             scripts.push("heroku-postbuild".to_owned());
         }
     }
-    if scripts.is_empty() {
-        None
-    } else {
-        Some(scripts)
-    }
+    scripts
 }
 
 // Determines if a given `PackageJson` has a start script defined
@@ -71,7 +67,7 @@ mod tests {
             }),
             ..PackageJson::default()
         };
-        let build_scripts = get_build_scripts(&pkg_json).expect("Expected build scripts");
+        let build_scripts = get_build_scripts(&pkg_json);
 
         assert_eq!("heroku-prebuild", build_scripts[0]);
         assert_eq!("heroku-build", build_scripts[1]);
@@ -87,7 +83,7 @@ mod tests {
             }),
             ..PackageJson::default()
         };
-        let build_scripts = get_build_scripts(&pkg_json).expect("Expected build scripts");
+        let build_scripts = get_build_scripts(&pkg_json);
 
         assert_eq!("build", build_scripts[0]);
     }

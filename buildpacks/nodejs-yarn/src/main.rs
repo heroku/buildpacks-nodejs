@@ -129,13 +129,14 @@ impl Buildpack for YarnBuildpack {
         cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
-        if let Some(scripts) = cfg::get_build_scripts(&pkg_json) {
+        let scripts = cfg::get_build_scripts(&pkg_json);
+        if scripts.is_empty() {
+            log_info("No build scripts found");
+        } else {
             for script in scripts {
                 log_info(format!("Running `{script}` script"));
                 cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
             }
-        } else {
-            log_info("No build scripts found");
         }
 
         if cfg::has_start_script(&pkg_json) {
