@@ -24,7 +24,7 @@ pub(crate) struct DepsLayerMetadata {
     // Using float here due to [an issue with lifecycle's handling of integers](https://github.com/buildpacks/lifecycle/issues/884)
     cache_usage_count: f32,
     layer_version: String,
-    yarn: String,
+    yarn: Yarn,
 }
 
 #[derive(Error, Debug)]
@@ -85,14 +85,14 @@ impl Layer for DepsLayer {
 
 impl DepsLayerMetadata {
     fn is_reusable(&self, new_layer: &DepsLayer) -> bool {
-        self.yarn == new_layer.yarn.to_string()
+        self.yarn == new_layer.yarn
             && self.layer_version == *LAYER_VERSION
             && self.cache_usage_count < MAX_CACHE_USAGE_COUNT
     }
 
     fn new(layer: &DepsLayer) -> Self {
         DepsLayerMetadata {
-            yarn: layer.yarn.to_string(),
+            yarn: layer.yarn.clone(),
             layer_version: LAYER_VERSION.to_string(),
             cache_usage_count: 1.0,
         }
