@@ -1,25 +1,12 @@
 use heroku_nodejs_utils::{package_json::PackageJson, vrs::Requirement};
-use libherokubuildpack::log::log_info;
 use std::path::Path;
 
 // Reads parsed `engines.yarn` requirement from a `PackageJson`.
-pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Requirement {
+pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Option<Requirement> {
     pkg_json
         .engines
         .as_ref()
-        .and_then(|e| {
-            e.yarn.as_ref().map(|v| {
-                log_info(format!(
-                    "Detected yarn version range {} from package.json",
-                    v
-                ));
-                v.clone()
-            })
-        })
-        .unwrap_or_else(|| {
-            log_info("Detected no yarn version range requirement");
-            Requirement::any()
-        })
+        .and_then(|engines| engines.yarn.clone())
 }
 
 // A yarn cache is populated if it exists, and has non-hidden files.

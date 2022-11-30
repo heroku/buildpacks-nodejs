@@ -71,7 +71,21 @@ impl Buildpack for YarnBuildpack {
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(YarnBuildpackError::PackageJson)?;
 
-        let requested_yarn_cli_range = cfg::requested_yarn_range(&pkg_json);
+        let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
+            None => {
+                log_info("Detected no yarn version range requirement");
+                Requirement::any()
+            }
+            Some(requirement) => {
+                log_info(format!(
+                    "Detected yarn version range {} from package.json",
+                    requirement
+                ));
+
+                requirement
+            }
+        };
+
         let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
             YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
         )?;
