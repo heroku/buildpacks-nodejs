@@ -67,7 +67,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.0.1
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.8.1
+        uses: buildpacks/github-actions/setup-pack@v4.9.0
       - name: Run integration tests
         run: cargo test --locked -- --ignored
 
@@ -120,7 +120,7 @@ jobs:
       - name: Install libcnb
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.8.1
+        uses: buildpacks/github-actions/setup-pack@v4.9.0
       - name: Build and package buildpack with retries
         run: |-
           n=1
@@ -161,6 +161,6 @@ jobs:
       - name: Install libcnb
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v4.8.1
+        uses: buildpacks/github-actions/setup-pack@v4.9.0
       - name: Run rspec tests against a given directory
         run: bundle exec rspec ${{ matrix.test-dir }}
