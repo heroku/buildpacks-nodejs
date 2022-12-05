@@ -101,6 +101,7 @@ jobs:
         buildpack-dir:
         - buildpacks/nodejs-engine
         - buildpacks/nodejs-function-invoker
+        - buildpacks/nodejs-yarn
         - buildpacks/npm
         - meta-buildpacks/nodejs
         - meta-buildpacks/nodejs-function

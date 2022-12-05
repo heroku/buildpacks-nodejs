@@ -14,7 +14,7 @@ version = "0.8.13"
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
-version = "0.2.4"
+version = "0.3.0"
 
 [[order.group]]
 id = "heroku/procfile"

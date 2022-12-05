@@ -2,6 +2,7 @@
 members = [
   "buildpacks/nodejs-engine",
   "buildpacks/nodejs-function-invoker",
+  "buildpacks/nodejs-yarn",
   "common/nodejs-utils",
   "test_support"
 ]

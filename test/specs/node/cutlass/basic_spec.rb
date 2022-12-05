@@ -47,12 +47,13 @@ describe "Heroku's Nodejs CNB" do
       end
 
       it "installs dependencies using Yarn if yarn.lock exists" do
-        Cutlass::App.new("yarn-project", builder: builder).transaction do |app|
+        Cutlass::App.new("yarn-1-typescript", builder: builder).transaction do |app|
           app.pack_build do |pack_result|
             expect(pack_result.stdout).to include("Installing Node")
             expect(pack_result.stdout).to include("Installing yarn")
-            expect(pack_result.stdout).to include("Installing node modules from ./yarn.lock")
+            expect(pack_result.stdout).to include("Installing dependencies");
             expect(pack_result.stdout).to_not include("Installing node modules from ./package-lock.json")
+            expect(pack_result.stdout).to include("Running `build` script");
           end
         end
       end

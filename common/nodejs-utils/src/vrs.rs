@@ -1,6 +1,6 @@
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
-use std::{error::Error, fmt};
+use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug)]
 pub struct VersionError(String);
@@ -28,13 +28,40 @@ impl Version {
             Err(e) => Err(VersionError(format!("{}", e))),
         }
     }
+
+    /// Returns the major version identifier.
+    #[must_use]
+    pub fn major(&self) -> u64 {
+        self.0.major
+    }
+
+    /// Returns the minor version identifier.
+    #[must_use]
+    pub fn minor(&self) -> u64 {
+        self.0.minor
+    }
+
+    /// Returns the patch version identifier.
+    #[must_use]
+    pub fn patch(&self) -> u64 {
+        self.0.patch
+    }
 }
+
 impl TryFrom<String> for Version {
     type Error = VersionError;
     fn try_from(val: String) -> Result<Self, Self::Error> {
         Version::parse(&val)
     }
 }
+
+impl FromStr for Version {
+    type Err = VersionError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Version::parse(s)
+    }
+}
+
 impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
