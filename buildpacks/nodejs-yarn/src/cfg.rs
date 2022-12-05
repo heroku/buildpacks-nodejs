@@ -1,7 +1,7 @@
 use heroku_nodejs_utils::{package_json::PackageJson, vrs::Requirement};
 use std::path::Path;
 
-// Reads parsed `engines.yarn` requirement from a `PackageJson`.
+/// Reads parsed `engines.yarn` requirement from a `PackageJson`.
 pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Option<Requirement> {
     pkg_json
         .engines
@@ -9,7 +9,7 @@ pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Option<Requirement
         .and_then(|engines| engines.yarn.clone())
 }
 
-// A yarn cache is populated if it exists, and has non-hidden files.
+/// A yarn cache is populated if it exists, and has non-hidden files.
 pub(crate) fn cache_populated(cache_path: &Path) -> bool {
     cache_path
         .read_dir()
@@ -23,7 +23,7 @@ pub(crate) fn cache_populated(cache_path: &Path) -> bool {
         .unwrap_or(false)
 }
 
-// Fetches the build scripts from a `PackageJson` and returns them in priority order
+/// Fetches the build scripts from a `PackageJson` and returns them in priority order
 pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Vec<String> {
     let mut scripts = vec![];
     if let Some(s) = &pkg_json.scripts {
@@ -42,7 +42,7 @@ pub(crate) fn get_build_scripts(pkg_json: &PackageJson) -> Vec<String> {
     scripts
 }
 
-// Determines if a given `PackageJson` has a start script defined
+/// Determines if a given `PackageJson` has a start script defined
 pub(crate) fn has_start_script(pkg_json: &PackageJson) -> bool {
     pkg_json
         .scripts
