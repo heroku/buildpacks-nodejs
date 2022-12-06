@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
 id = "heroku/nodejs-function"
-version = "0.9.16"
+version = "0.9.17"
 name = "Node.js Function"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 
