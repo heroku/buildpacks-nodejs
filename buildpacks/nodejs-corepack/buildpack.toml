@@ -1,0 +1,30 @@
+api = "0.8"
+
+[buildpack]
+id = "heroku/nodejs-corepack"
+version = "0.8.14"
+name = "Heroku Node.js Corepack"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
+keywords = ["corepack", "node", "node.js", "nodejs", "javascript", "js"]
+
+[[buildpack.licenses]]
+type = "MIT"
+
+[[stacks]]
+id = "heroku-18"
+
+[[stacks]]
+id = "heroku-20"
+
+[[stacks]]
+id = "heroku-22"
+
+[[stacks]]
+id = "io.buildpacks.stacks.bionic"
+
+[metadata]
+
+[metadata.release]
+
+[metadata.release.docker]
+repository = "docker.io/heroku/buildpack-nodejs-corepack"
