@@ -505,9 +505,8 @@ dependencies = [
  "libcnb-test",
  "libherokubuildpack",
  "serde",
- "tempfile",
+ "test_support",
  "thiserror",
- "toml",
  "ureq",
 ]
 

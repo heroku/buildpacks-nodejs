@@ -11,10 +11,9 @@ heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
 libcnb = "0.11"
 libherokubuildpack = "0.11"
 serde = "1.0.149"
-tempfile = "3.3.0"
-toml = "0.5"
 thiserror = "1.0"
 
 [dev-dependencies]
 libcnb-test = "0.11"
+test_support = { path = "../../test_support" }
 ureq = "2.5.0"
