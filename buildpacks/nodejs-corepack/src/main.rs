@@ -23,6 +23,7 @@ use test_support as _;
 #[cfg(test)]
 use ureq as _;
 
+mod cfg;
 mod cmd;
 mod layers;
 
@@ -36,20 +37,22 @@ impl Buildpack for CorepackBuildpack {
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         // Corepack requires the `packageManager` key from `package.json`.
         // This buildpack won't be detected without it.
-        PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(CorepackBuildpackError::PackageJson)?
-            .package_manager
-            .map_or(DetectResultBuilder::fail().build(), |pkg_mgr| {
+        let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
+            .map_err(CorepackBuildpackError::PackageJson)?;
+        cfg::get_supported_package_manager(&pkg_json).map_or(
+            DetectResultBuilder::fail().build(),
+            |pkg_mgr_name| {
                 DetectResultBuilder::pass()
                     .build_plan(
                         BuildPlanBuilder::new()
                             .requires("node")
-                            .requires(&pkg_mgr.name)
-                            .provides(pkg_mgr.name)
+                            .requires(&pkg_mgr_name)
+                            .provides(pkg_mgr_name)
                             .build(),
                     )
                     .build()
-            })
+            },
+        )
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
@@ -60,11 +63,13 @@ impl Buildpack for CorepackBuildpack {
 
         let env = &Env::from_current();
 
-        log_header("Checking corepack version");
         let corepack_version = cmd::corepack_version(env).map_err(CorepackBuildpackError::Cmd)?;
-        log_info(format!("Detected corepack version {corepack_version}"));
 
-        log_header(format!("Installing {} via corepack", pkg_mgr.name));
+        log_header(format!(
+            "Installing {} {} via corepack {}",
+            pkg_mgr.name, pkg_mgr.version, corepack_version
+        ));
+
         let shims_layer =
             context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
         cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
