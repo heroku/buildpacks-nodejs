@@ -651,23 +651,22 @@ checksum = "c0f80d65747a3e43d1596c7c5492d95d5edddaabd45a7fcdb02b95f644164966"
 
 [[package]]
 name = "libcnb"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88e7663908798e4c9a6ce419220e9493ad19dd12a70fa605dd4e927e3fdc1fc9"
+checksum = "525c69469fb63994037d42e13fe0218b95efeaa4f7c7da50ec20b8a0f4133d6e"
 dependencies = [
  "libcnb-data",
  "libcnb-proc-macros",
  "serde",
- "stacker",
  "thiserror",
  "toml",
 ]
 
 [[package]]
 name = "libcnb-data"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "066632abe99f4ca2de170a3c3f5946253e63c715e9b7b1a31341de883cb03246"
+checksum = "ad960f5527b27ca85ec621876d7b4d03f17cc5c752727ad9db76727c8962afb0"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -690,9 +689,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.11.1"
+version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "092a9091dc629e2fafb9a24e7b9050ca3e84565f82c5a67aecaf8afa24234d32"
+checksum = "0818a0b0a3ff34b0d585ab2180aec1ad701593d16ceb0be7f87aa6b57a37b6fa"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -912,15 +911,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "psm"
-version = "0.1.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5787f7cda34e3033a72192c018bc5883100330f362ef279a8cbccfce8bb4e874"
-dependencies = [
- "cc",
-]
-
-[[package]]
 name = "quote"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1128,19 +1118,6 @@ name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
-
-[[package]]
-name = "stacker"
-version = "0.1.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c886bd4480155fd3ef527d45e9ac8dd7118a898a46530b7b94c3e21866259fce"
-dependencies = [
- "cc",
- "cfg-if",
- "libc",
- "psm",
- "winapi",
-]
 
 [[package]]
 name = "strsim"
