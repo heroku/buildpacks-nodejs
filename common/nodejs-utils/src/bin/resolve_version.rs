@@ -13,7 +13,7 @@ fn main() {
 
     if &args[1] == "-v" || &args[1] == "--version" {
         const VERSION: &str = env!("CARGO_PKG_VERSION");
-        println!("v{}", VERSION);
+        println!("v{VERSION}");
         std::process::exit(SUCCESS_EXIT_CODE);
     }
 
@@ -25,12 +25,12 @@ fn main() {
     let filename = &args[1];
 
     let version_requirements = Requirement::parse(&args[2]).unwrap_or_else(|e| {
-        eprintln!("Could not parse Version Requirements '{}': {}", &args[2], e);
+        eprintln!("Could not parse Version Requirements '{}': {e}", &args[2]);
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
 
     let inv = Inventory::read(filename).unwrap_or_else(|e| {
-        eprintln!("Error reading '{}': {}", filename, e);
+        eprintln!("Error reading '{filename}': {e}");
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 

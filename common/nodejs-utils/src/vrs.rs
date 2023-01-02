@@ -25,7 +25,7 @@ impl Version {
         let trimmed = version.trim();
         match NSVersion::parse(trimmed) {
             Ok(v) => Ok(Version(v)),
-            Err(e) => Err(VersionError(format!("{}", e))),
+            Err(e) => Err(VersionError(format!("{e}"))),
         }
     }
 
@@ -96,7 +96,7 @@ impl Requirement {
         }
         match Range::parse(trimmed) {
             Ok(range) => Ok(Requirement(range)),
-            Err(error) => Err(VersionError(format!("{}", error))),
+            Err(error) => Err(VersionError(format!("{error}"))),
         }
     }
 
@@ -134,7 +134,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("*", format!("{}", reqs));
+            assert_eq!("*", format!("{reqs}"));
         }
     }
 
@@ -144,7 +144,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("14.0.0", format!("{}", reqs));
+            assert_eq!("14.0.0", format!("{reqs}"));
         }
     }
 
@@ -154,7 +154,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("14.0.0", format!("{}", reqs));
+            assert_eq!("14.0.0", format!("{reqs}"));
         }
     }
 
@@ -164,7 +164,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=12.0.0", format!("{}", reqs));
+            assert_eq!(">=12.0.0", format!("{reqs}"));
         }
     }
 
@@ -176,7 +176,7 @@ mod tests {
         if let Ok(reqs) = result {
             assert_eq!(
                 ">=12.0.0 <13.0.0-0||>=13.0.0 <14.0.0-0||>=14.0.0 <15.0.0-0",
-                format!("{}", reqs)
+                format!("{reqs}")
             );
         }
     }
@@ -187,7 +187,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.0 <14.5.0-0", format!("{}", reqs));
+            assert_eq!(">=14.4.0 <14.5.0-0", format!("{reqs}"));
         }
     }
 
@@ -197,7 +197,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.3 <14.5.0-0", format!("{}", reqs));
+            assert_eq!(">=14.4.3 <14.5.0-0", format!("{reqs}"));
         }
     }
 
@@ -207,7 +207,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">15.5.0", format!("{}", reqs));
+            assert_eq!(">15.5.0", format!("{reqs}"));
         }
     }
 
@@ -217,7 +217,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=10.0.0", format!("{}", reqs));
+            assert_eq!(">=10.0.0", format!("{reqs}"));
         }
     }
 
@@ -227,14 +227,14 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("10.22.0", format!("{}", reqs));
+            assert_eq!("10.22.0", format!("{reqs}"));
         }
     }
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
         let result = Requirement::parse("12.%");
-        println!("{:?}", result);
+        println!("{result:?}");
 
         assert!(result.is_err());
     }

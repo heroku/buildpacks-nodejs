@@ -55,8 +55,7 @@ impl TryFrom<BucketContent> for Inventory {
     fn try_from(result: BucketContent) -> Result<Self, Self::Error> {
         let inv = &result.prefix;
         let version_regex = Regex::new(&format!(
-            r"{}/(?P<channel>\w+)/(?P<arch>[\w-]+)?/?{}-v(?P<version>\d+\.\d+\.\d+)([\w-]+)?\.tar\.gz",
-            inv, inv
+            r"{inv}/(?P<channel>\w+)/(?P<arch>[\w-]+)?/?{inv}-v(?P<version>\d+\.\d+\.\d+)([\w-]+)?\.tar\.gz"
         ))?;
 
         let releases: Result<Vec<Release>, Error> = result
@@ -123,7 +122,7 @@ pub fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
         }
 
         let url = Url::parse_with_params(
-            &format!("https://{}.s3.{}.amazonaws.com/", bucket, region),
+            &format!("https://{bucket}.s3.{region}.amazonaws.com/"),
             params,
         )?;
         let res = ureq::get(url.as_ref()).call()?.into_string()?;
@@ -149,7 +148,7 @@ mod tests {
         let content = Content {
             key: "node/release/darwin-x64/node-v0.10.0-darwin-x64.tar.gz".to_string(),
             last_modified: Utc::now(),
-            etag: format!("\"{}\"", etag),
+            etag: format!("\"{etag}\""),
             size: 4_065_868,
             storage_class: "STANDARD".to_string(),
         };

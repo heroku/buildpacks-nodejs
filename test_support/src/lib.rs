@@ -75,7 +75,7 @@ pub fn assert_health_check_responds(ctx: &TestContext) {
             .address_for_port(PORT)
             .expect("couldn't get container address");
 
-        let resp = ureq::post(&format!("http://{0}", addr))
+        let resp = ureq::post(&format!("http://{addr}"))
             .set("x-health-check", "true")
             .call()
             .expect("request to container failed")
@@ -94,7 +94,7 @@ pub fn assert_web_response(ctx: &TestContext, text: &'static str) {
             .address_for_port(PORT)
             .expect("couldn't get container address");
 
-        let resp = ureq::get(&format!("http://{}/", addr))
+        let resp = ureq::get(&format!("http://{addr}/"))
             .call()
             .expect("request to container failed")
             .into_string()

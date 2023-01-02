@@ -46,7 +46,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
     type Error = NodeJsInvokerBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        is_function(&context.app_dir)
+        is_function(context.app_dir)
             .then(|| {
                 DetectResultBuilder::pass()
                     .build_plan(
@@ -85,13 +85,13 @@ impl Buildpack for NodeJsInvokerBuildpack {
         } else {
             log_warning(
                 "Deprecation",
-                format!("Future versions of the Functions Runtime for Node.js ({0}) will not be auto-detected \
-                and must be added as a dependency in package.json.", package_name)
+                format!("Future versions of the Functions Runtime for Node.js ({package_name}) will not be auto-detected \
+                and must be added as a dependency in package.json.")
             );
             context.handle_layer(
                 layer_name!("runtime"),
                 RuntimeLayer {
-                    package: format!("{0}@{1}", package_name, package_version),
+                    package: format!("{package_name}@{package_version}"),
                 },
             )?;
         }
