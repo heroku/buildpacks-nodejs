@@ -22,13 +22,13 @@ fn main() {
 
     let remote_objects =
         nodebin_s3::list_objects(BUCKET, REGION, software_name).unwrap_or_else(|e| {
-            eprintln!("Failed to fetch from S3: {}", e);
+            eprintln!("Failed to fetch from S3: {e}");
             std::process::exit(1);
         });
 
     let remote_versions: HashSet<String> = Inventory::try_from(remote_objects)
         .unwrap_or_else(|e| {
-            eprintln!("Failed to parse AWS S3 XML: {}", e);
+            eprintln!("Failed to parse AWS S3 XML: {e}");
             std::process::exit(2);
         })
         .releases
@@ -38,7 +38,7 @@ fn main() {
 
     let local_versions: HashSet<String> = Inventory::read(inventory_loc)
         .unwrap_or_else(|e| {
-            eprintln!("Error reading '{}': {}", inventory_loc, e);
+            eprintln!("Error reading '{inventory_loc}': {e}");
             std::process::exit(3);
         })
         .releases
@@ -70,5 +70,5 @@ fn main() {
     .collect::<Vec<String>>()
     .join(" ");
 
-    println!("{}", msg);
+    println!("{msg}");
 }

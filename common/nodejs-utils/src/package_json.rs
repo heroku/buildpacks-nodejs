@@ -98,7 +98,7 @@ mod tests {
         let res = PackageJson::read(Path::new("/over/there/package.json"));
         assert!(res.is_err());
         let err = res.unwrap_err().to_string();
-        println!("{}", err);
+        println!("{err}");
         assert!(err.contains("Could not read package.json"));
     }
 
@@ -109,7 +109,7 @@ mod tests {
         let res = PackageJson::read(f.path());
         assert!(res.is_err());
         let err = res.unwrap_err().to_string();
-        println!("{}", err);
+        println!("{err}");
         assert!(err.contains("Could not parse package.json"));
     }
 }

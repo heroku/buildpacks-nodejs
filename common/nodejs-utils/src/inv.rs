@@ -41,7 +41,7 @@ impl Inventory {
     /// If no Release can be found, then `None` is returned.
     #[must_use]
     pub fn resolve(&self, req: &Requirement) -> Option<&Release> {
-        let platform = format!("{}-{}", OS, ARCH);
+        let platform = format!("{OS}-{ARCH}");
         self.resolve_other(req, &platform, "release")
     }
 
@@ -209,7 +209,7 @@ mod tests {
             let version_req = Requirement::parse(input).unwrap();
             let option = inv.resolve(&version_req);
 
-            println!("vr: {}", version_req);
+            println!("vr: {version_req}");
             assert!(option.is_some());
 
             println!("rv: {:?}", option.unwrap());

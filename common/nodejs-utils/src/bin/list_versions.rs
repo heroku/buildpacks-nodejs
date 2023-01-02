@@ -15,17 +15,17 @@ fn main() {
 
     let name = &args[1];
     let result = nodebin_s3::list_objects(BUCKET, REGION, name).unwrap_or_else(|e| {
-        eprintln!("Failed to fetch from S3: {}", e);
+        eprintln!("Failed to fetch from S3: {e}");
         std::process::exit(FAILED_EXIT_CODE);
     });
     let inv = Inventory::try_from(result).unwrap_or_else(|e| {
-        eprintln!("Failed to parse AWS S3 XML: {}", e);
+        eprintln!("Failed to parse AWS S3 XML: {e}");
         std::process::exit(FAILED_EXIT_CODE);
     });
 
     let toml_string = toml::to_string(&inv).unwrap_or_else(|e| {
-        eprintln!("Failed to convert to toml: {}", e);
+        eprintln!("Failed to convert to toml: {e}");
         std::process::exit(FAILED_EXIT_CODE);
     });
-    println!("{}", toml_string);
+    println!("{toml_string}");
 }

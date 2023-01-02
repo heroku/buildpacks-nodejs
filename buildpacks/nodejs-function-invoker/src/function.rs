@@ -89,8 +89,8 @@ mod tests {
         let dir = tempdir().expect("Couldn't create temp dir");
         let path: PathBuf = dir.path().into();
         let file_path = path.join(file_name);
-        let mut file = File::create(&file_path).expect("Couldn't create temp project descriptor");
-        write!(file, "{}", file_contents).expect("Couldn't write to temp project descriptor");
+        let mut file = File::create(file_path).expect("Couldn't create temp project descriptor");
+        write!(file, "{file_contents}").expect("Couldn't write to temp project descriptor");
         dir
     }
 

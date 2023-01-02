@@ -78,8 +78,7 @@ impl Buildpack for YarnBuildpack {
             }
             Some(requirement) => {
                 log_info(format!(
-                    "Detected yarn version range {} from package.json",
-                    requirement
+                    "Detected yarn version range {requirement} from package.json"
                 ));
 
                 requirement
