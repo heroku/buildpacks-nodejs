@@ -14,7 +14,7 @@ which is the default and recommended Cloud Native Buildpack for Node.js apps.
 
 ## What it does
 
-This buildpack installs the Node.js distribution based on the `engine.node` 
+This buildpack installs the Node.js distribution based on the `engines.node` 
 property of an app's `package.json`. The distribution of Node.js includes `node`,
 `npm`, `npx`, and `corepack`. All of these commands will be available on
 `$PATH`. The versions of `npm`, `npx`, and `corepack` installed by this
