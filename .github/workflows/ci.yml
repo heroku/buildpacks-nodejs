@@ -122,6 +122,8 @@ jobs:
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.0.0
+      - name: Install yj
+        uses: buildpacks/github-actions/setup-tools@v5.0.0
       - name: Build and package buildpack with retries
         run: |-
           n=1
@@ -163,5 +165,7 @@ jobs:
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.0.0
+      - name: Install yj
+        uses: buildpacks/github-actions/setup-tools@v5.0.0
       - name: Run rspec tests against a given directory
         run: bundle exec rspec ${{ matrix.test-dir }}

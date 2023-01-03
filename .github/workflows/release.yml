@@ -22,6 +22,8 @@ jobs:
       - id: setup-pack
         name: "Setup pack"
         uses: buildpacks/github-actions/setup-pack@v5.0.0
+      - name: Install yj
+        uses: buildpacks/github-actions/setup-tools@v5.0.0
       - id: login
         name: "Login to public ECR"
         uses: docker/login-action@v2
