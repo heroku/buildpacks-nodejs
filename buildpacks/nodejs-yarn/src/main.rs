@@ -63,49 +63,57 @@ impl Buildpack for YarnBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        log_header("Detecting yarn CLI version");
-
-        let inventory: Inventory =
-            toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
-
+        let mut env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(YarnBuildpackError::PackageJson)?;
 
-        let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
-            None => {
-                log_info("Detected no yarn version range requirement");
-                Requirement::any()
-            }
-            Some(requirement) => {
+        let yarn_version = match cmd::yarn_version(&env) {
+            // Install yarn if it's not present.
+            Err(cmd::Error::Spawn(_)) => {
+                log_header("Detecting yarn CLI version to install");
+
+                let inventory: Inventory =
+                    toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
+
+                let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
+                    None => {
+                        log_info("Detected no yarn version range requirement");
+                        Requirement::any()
+                    }
+                    Some(requirement) => {
+                        log_info(format!(
+                            "Detected yarn version range {} from package.json",
+                            requirement
+                        ));
+                        requirement
+                    }
+                };
+
+                let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
+                    YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
+                )?;
+
                 log_info(format!(
-                    "Detected yarn version range {requirement} from package.json"
+                    "Resolved yarn CLI version: {}",
+                    yarn_cli_release.version
                 ));
 
-                requirement
+                log_header("Installing yarn CLI");
+                let dist_layer = context.handle_layer(
+                    layer_name!("dist"),
+                    CliLayer {
+                        release: yarn_cli_release.clone(),
+                    },
+                )?;
+                env = dist_layer.env.apply(Scope::Build, &env);
+
+                cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
             }
+            // Use the existing yarn installation if it is present.
+            Ok(version) => version,
+            err => err.map_err(YarnBuildpackError::YarnVersionDetect)?,
         };
 
-        let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
-            YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
-        )?;
-
-        log_info(format!(
-            "Resolved yarn CLI version: {}",
-            yarn_cli_release.version
-        ));
-
-        log_header("Installing yarn CLI");
-        let dist_layer = context.handle_layer(
-            layer_name!("dist"),
-            CliLayer {
-                release: yarn_cli_release.clone(),
-            },
-        )?;
-
-        let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
-
-        let yarn_version =
-            cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
         let yarn = Yarn::from_major(yarn_version.major())
             .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
@@ -214,7 +222,7 @@ pub(crate) enum YarnBuildpackError {
     YarnCacheSet(cmd::Error),
     #[error("Yarn install error: {0}")]
     YarnInstall(cmd::Error),
-    #[error("Couldn't determine installed yarn version: {0}")]
+    #[error("Couldn't determine yarn version: {0}")]
     YarnVersionDetect(cmd::Error),
     #[error("Unsupported yarn version: {0}")]
     YarnVersionUnsupported(u64),
