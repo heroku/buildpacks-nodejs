@@ -7,7 +7,6 @@ use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use thiserror::Error;
 
 use crate::{CorepackBuildpack, CorepackBuildpackError};
 
@@ -22,10 +21,6 @@ pub(crate) struct ShimLayerMetadata {
     corepack_version: Version,
     layer_version: String,
 }
-
-#[derive(Error, Debug)]
-#[error("Couldn't create corepack shim cache: {0}")]
-pub(crate) struct ShimLayerError(std::io::Error);
 
 const LAYER_VERSION: &str = "1";
 const BIN_DIR: &str = "bin";
@@ -47,7 +42,7 @@ impl Layer for ShimLayer {
         _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, CorepackBuildpackError> {
-        fs::create_dir(layer_path.join(BIN_DIR)).map_err(ShimLayerError)?;
+        fs::create_dir(layer_path.join(BIN_DIR)).map_err(CorepackBuildpackError::ShimLayer)?;
         LayerResultBuilder::new(ShimLayerMetadata::new(self)).build()
     }
 

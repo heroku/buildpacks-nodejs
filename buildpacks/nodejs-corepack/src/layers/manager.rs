@@ -9,7 +9,6 @@ use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use thiserror::Error;
 
 use crate::{CorepackBuildpack, CorepackBuildpackError};
 
@@ -25,10 +24,6 @@ pub(crate) struct ManagerLayerMetadata {
     manager_version: Version,
     layer_version: String,
 }
-
-#[derive(Error, Debug)]
-#[error("Couldn't create corepack package manager cache: {0}")]
-pub(crate) struct ManagerLayerError(std::io::Error);
 
 const LAYER_VERSION: &str = "1";
 const CACHE_DIR: &str = "cache";
@@ -51,7 +46,7 @@ impl Layer for ManagerLayer {
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, CorepackBuildpackError> {
         let cache_path = layer_path.join(CACHE_DIR);
-        fs::create_dir(&cache_path).map_err(ManagerLayerError)?;
+        fs::create_dir(&cache_path).map_err(CorepackBuildpackError::ManagerLayer)?;
         LayerResultBuilder::new(ManagerLayerMetadata::new(self))
             .env(LayerEnv::new().chainable_insert(
                 Scope::All,

@@ -4,7 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use layers::{ManagerLayer, ManagerLayerError, ShimLayer, ShimLayerError};
+use layers::{ManagerLayer, ShimLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::layer_name;
@@ -13,7 +13,7 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::{log_error, log_header, log_info};
+use libherokubuildpack::log::log_header;
 use thiserror::Error;
 
 #[cfg(test)]
@@ -25,6 +25,7 @@ use ureq as _;
 
 mod cfg;
 mod cmd;
+mod errors;
 mod layers;
 
 pub(crate) struct CorepackBuildpack;
@@ -63,7 +64,8 @@ impl Buildpack for CorepackBuildpack {
 
         let env = &Env::from_current();
 
-        let corepack_version = cmd::corepack_version(env).map_err(CorepackBuildpackError::Cmd)?;
+        let corepack_version =
+            cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
 
         log_header(format!(
             "Installing {} {} via corepack {}",
@@ -73,7 +75,7 @@ impl Buildpack for CorepackBuildpack {
         let shims_layer =
             context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
         cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
-            .map_err(CorepackBuildpackError::Cmd)?;
+            .map_err(CorepackBuildpackError::CorepackEnable)?;
 
         let mgr_layer = context.handle_layer(
             layer_name!("mgr"),
@@ -82,13 +84,13 @@ impl Buildpack for CorepackBuildpack {
             },
         )?;
         let mgr_env = mgr_layer.env.apply(Scope::Build, env);
-        cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::Cmd)?;
+        cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
 
         BuildResultBuilder::new().build()
     }
 
-    fn on_error(&self, _error: libcnb::Error<Self::Error>) {
-        log_error("Buildpack Error!", "TODO");
+    fn on_error(&self, err: libcnb::Error<Self::Error>) {
+        errors::on_error(err);
     }
 }
 
@@ -99,11 +101,15 @@ pub(crate) enum CorepackBuildpackError {
     #[error("Couldn't parse package.json: {0}")]
     PackageJson(#[from] PackageJsonError),
     #[error("Couldn't create corepack shims: {0}")]
-    ShimLayer(#[from] ShimLayerError),
+    ShimLayer(std::io::Error),
     #[error("Couldn't create corepack package manager cache: {0}")]
-    ManagerLayer(#[from] ManagerLayerError),
+    ManagerLayer(std::io::Error),
+    #[error("Couldn't execute corepack --version command: {0}")]
+    CorepackVersion(cmd::Error),
+    #[error("Couldn't execute corepack enable: {0}")]
+    CorepackEnable(cmd::Error),
     #[error("Couldn't execute corepack command: {0}")]
-    Cmd(#[from] cmd::Error),
+    CorepackPrepare(cmd::Error),
 }
 
 impl From<CorepackBuildpackError> for libcnb::Error<CorepackBuildpackError> {
