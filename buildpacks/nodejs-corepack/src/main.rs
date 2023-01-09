@@ -72,8 +72,8 @@ impl Buildpack for CorepackBuildpack {
             cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
 
         log_header(format!(
-            "Installing {} {} via corepack {}",
-            pkg_mgr.name, pkg_mgr.version, corepack_version
+            "Installing {} {} via corepack {corepack_version}",
+            pkg_mgr.name, pkg_mgr.version
         ));
 
         let shims_layer =
