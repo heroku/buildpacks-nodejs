@@ -79,14 +79,28 @@ where
     D: Deserializer<'de>,
 {
     let value: String = Deserialize::deserialize(deserializer)?;
+    if value.is_empty() {
+        return Ok(None);
+    }
     let mut parts = value.split('@');
+    let err_msg = format!("Couldn't parse `packageManager` value: \"{value}\".");
     let name = parts
         .next()
-        .ok_or_else(|| de::Error::custom("Couldn't parse `packageManager`."))?
+        .ok_or_else(|| de::Error::custom(&err_msg))?
         .to_string();
-    let vrs_str = parts
-        .next()
-        .ok_or_else(|| de::Error::custom("Couldn't parse `packageManager`."))?;
+
+    if name.is_empty() {
+        return Err(de::Error::custom(format!(
+            "{err_msg} Hint: Does the value have a package manager name before the \"@\"?"
+        )));
+    }
+
+    let vrs_str = parts.next().ok_or_else(|| {
+        de::Error::custom(format!(
+            "{err_msg} Hint: Does the value contain an \"@\" followed by a semantic version number?"
+        ))
+    })?;
+
     let version = Version::from_str(vrs_str).map_err(de::Error::custom)?;
     Ok(Some(PackageManager { name, version }))
 }
@@ -141,6 +155,24 @@ mod tests {
             .expect("Expected packageManager to exist");
         assert_eq!(pkg_mgr.name, "yarn");
         assert_eq!(pkg_mgr.version.to_string(), "3.2.0");
+    }
+
+    #[test]
+    fn read_invalid_package_package_manager_no_at_version() {
+        let mut f = Builder::new().tempfile().unwrap();
+        write!(
+            f,
+            "{{
+            \"name\": \"foo\",
+            \"packageManager\": \"some-package-manager\"
+            }}"
+        )
+        .unwrap();
+        let err = PackageJson::read(f.path())
+            .expect_err("expected some-package-manager to cause an error")
+            .to_string();
+        println!("{err}");
+        assert!(err.contains("some-package-manager"));
     }
 
     #[test]
