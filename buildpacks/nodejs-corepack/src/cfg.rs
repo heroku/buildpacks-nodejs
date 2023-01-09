@@ -9,3 +9,35 @@ pub(crate) fn get_supported_package_manager(pkg_json: &PackageJson) -> Option<St
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use heroku_nodejs_utils::{package_json::PackageManager, vrs::Version};
+
+    #[test]
+    fn test_get_supported_package_manager_yarn() {
+        let pkg_json = PackageJson {
+            package_manager: Some(PackageManager {
+                name: "yarn".to_owned(),
+                version: Version::parse("3.1.2").unwrap(),
+            }),
+            ..PackageJson::default()
+        };
+        let pkg_mgr =
+            get_supported_package_manager(&pkg_json).expect("Expected to get a package manager");
+        assert_eq!("yarn", pkg_mgr);
+    }
+
+    #[test]
+    fn test_get_supported_package_manager_other() {
+        let pkg_json = PackageJson {
+            package_manager: Some(PackageManager {
+                name: "other-package-manager".to_owned(),
+                version: Version::parse("1.0.0").unwrap(),
+            }),
+            ..PackageJson::default()
+        };
+        assert!(get_supported_package_manager(&pkg_json).is_none());
+    }
+}
