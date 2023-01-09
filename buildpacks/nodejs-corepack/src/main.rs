@@ -14,7 +14,6 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
-use thiserror::Error;
 
 #[cfg(test)]
 use libcnb_test as _;
@@ -94,21 +93,14 @@ impl Buildpack for CorepackBuildpack {
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum CorepackBuildpackError {
-    #[error("Couldn't detect corepack packageManager")]
     PackageManager,
-    #[error("Couldn't parse package.json: {0}")]
-    PackageJson(#[from] PackageJsonError),
-    #[error("Couldn't create corepack shims: {0}")]
+    PackageJson(PackageJsonError),
     ShimLayer(std::io::Error),
-    #[error("Couldn't create corepack package manager cache: {0}")]
     ManagerLayer(std::io::Error),
-    #[error("Couldn't execute corepack --version command: {0}")]
     CorepackVersion(cmd::Error),
-    #[error("Couldn't execute corepack enable: {0}")]
     CorepackEnable(cmd::Error),
-    #[error("Couldn't execute corepack command: {0}")]
     CorepackPrepare(cmd::Error),
 }
 
