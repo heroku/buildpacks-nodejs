@@ -65,35 +65,35 @@ fn on_corepack_cmd_error(err_context: &str, cmd_err: crate::cmd::Error) {
         crate::cmd::Error::Exit(exit_err) => log_error(
             header,
             formatdoc! {"
-            {err_context}. The command did not exit successfully.
+                {err_context}. The command did not exit successfully.
 
-            Details: {exit_err}
-        "},
+                Details: {exit_err}
+            "},
         ),
         crate::cmd::Error::Parse(output) => log_error(
             header,
             formatdoc! {"
-            {err_context}. Error parsing the command output.
+                {err_context}. Error parsing the command output.
 
-            Output: {output}
-        "},
+                Output: {output}
+            "},
         ),
         crate::cmd::Error::Spawn(spawn_err) => log_error(
             header,
             formatdoc! {"
-            {err_context}. Error spawning the command. Please ensure corepack
-            was installed by another buildpack, such as heroku/nodejs-engine.
+                {err_context}. Error spawning the command. Please ensure corepack
+                was installed by another buildpack, such as heroku/nodejs-engine.
 
-            Details: {spawn_err}
-        "},
+                Details: {spawn_err}
+            "},
         ),
         crate::cmd::Error::Wait(wait_err) => log_error(
             header,
             formatdoc! {"
-            {err_context}. Error waiting for the command to exit.
+                {err_context}. Error waiting for the command to exit.
 
-            Details: {wait_err}
-        "},
+                Details: {wait_err}
+            "},
         ),
     }
 }
