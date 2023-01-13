@@ -64,7 +64,7 @@ impl Buildpack for CorepackBuildpack {
         let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(CorepackBuildpackError::PackageJson)?
             .package_manager
-            .ok_or(CorepackBuildpackError::PackageManager)?;
+            .ok_or(CorepackBuildpackError::PackageManagerMissing)?;
 
         let env = &Env::from_current();
 
@@ -100,7 +100,7 @@ impl Buildpack for CorepackBuildpack {
 
 #[derive(Debug)]
 pub(crate) enum CorepackBuildpackError {
-    PackageManager,
+    PackageManagerMissing,
     PackageJson(PackageJsonError),
     ShimLayer(std::io::Error),
     ManagerLayer(std::io::Error),

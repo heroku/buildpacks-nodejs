@@ -48,12 +48,12 @@ fn on_buildpack_error(bp_err: CorepackBuildpackError) {
                 Details: {err}
             "},
         ),
-        CorepackBuildpackError::PackageManager => log_error(
+        CorepackBuildpackError::PackageManagerMissing => log_error(
             "heroku/nodejs-corepack packageManager error",
             formatdoc! {"
                 There was an error decoding the `packageManager` key from
-                this project's package.json. Please make sure it is properly
-                formatted (for example: \"yarn@3.1.2\").
+                this project's package.json. Please make sure it is present
+                and properly formatted (for example: \"yarn@3.1.2\").
             "},
         ),
     };
