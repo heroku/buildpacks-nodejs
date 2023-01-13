@@ -11,7 +11,7 @@ This buildpack relies on and builds on top of the [Node.js Engine Cloud Native B
 
 ## What it does
 
-- Installs the `yarn` CLI and caches it for reuse between builds.
+- Installs the `yarn` CLI (if it's not already installed) and caches it for reuse between builds
 - Installs package.json dependencies (including devDependencies) with 
   `yarn install`. Dependencies are cached between builds to provide fast rebuilds.
 - Runs `build` scripts from package.json, including `heroku-prebuild`, 
@@ -28,8 +28,6 @@ This buildpack relies on and builds on top of the [Node.js Engine Cloud Native B
 
 ## Unsupported:
 
-- Installing `yarn` CLI via corepack. The `yarn` CLI is installed from a mirror,
-  manually.
 - Optional `devDependencies`. `devDependencies` are always installed.
 - Pruning `devDependencies`. `devDependencies` are always installed.
 
@@ -76,6 +74,37 @@ does not exist), `heroku-postbuild`.
 
 If a `start` script is detected in `package.json`, the default process type
 for the build will be set to `yarn start`.
+
+
+### Yarn version selection
+
+By default, this buildpack will install the latest yarn version from the `1.x`
+line. There are two ways to select a different yarn version:
+
+#### `packageManager`
+
+Use the `heroku/nodejs-corepack` buildpack to install yarn. It will install
+yarn according to the `packageManager` key in `package.json`. For example:
+
+```js
+// package.json
+{
+  "packageManager": "yarn@3.1.2"
+}
+```
+
+#### `engines.yarn`
+
+Alternatively, define `engines.yarn` in `package.json`. For example:
+
+```js
+// package.json
+{
+  "engines": {
+    "yarn": "1.22.19"
+  }
+}
+```
 
 ## Usage
 
