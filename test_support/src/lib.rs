@@ -37,6 +37,13 @@ pub fn get_yarn_buildpacks() -> Vec<BuildpackReference> {
     ]
 }
 
+pub fn get_corepack_buildpacks() -> Vec<BuildpackReference> {
+    vec![
+        BuildpackReference::Other(String::from("heroku/nodejs-engine")),
+        BuildpackReference::Crate,
+    ]
+}
+
 pub fn get_function_invoker_build_config(fixture: &str, builder: Builder) -> BuildConfig {
     BuildConfig::new(
         builder.to_string(),
@@ -55,6 +62,15 @@ pub fn get_yarn_build_config(fixture: &str, builder: Builder) -> BuildConfig {
     .to_owned()
 }
 
+pub fn get_corepack_build_config(fixture: &str, builder: Builder) -> BuildConfig {
+    BuildConfig::new(
+        builder.to_string(),
+        format!("../../test/fixtures/{fixture}"),
+    )
+    .buildpacks(get_corepack_buildpacks())
+    .to_owned()
+}
+
 pub fn test_node_function(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
     TestRunner::default().build(get_function_invoker_build_config(fixture, builder), |ctx| {
         test_body(ctx)
@@ -63,6 +79,12 @@ pub fn test_node_function(fixture: &str, builder: Builder, test_body: fn(TestCon
 
 pub fn test_yarn_app(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
     TestRunner::default().build(get_yarn_build_config(fixture, builder), |ctx| {
+        test_body(ctx)
+    });
+}
+
+pub fn test_corepack_app(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
+    TestRunner::default().build(get_corepack_build_config(fixture, builder), |ctx| {
         test_body(ctx)
     });
 }

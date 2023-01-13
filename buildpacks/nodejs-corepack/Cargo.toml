@@ -1,0 +1,20 @@
+[package]
+name = "heroku-nodejs-corepack-buildpack"
+version = "0.0.0"
+description = "Heroku Node.js Corepack Cloud Native Buildpack"
+publish = false
+edition = "2021"
+rust-version = "1.64"
+
+[dependencies]
+heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
+libcnb = "0.11"
+libherokubuildpack = "0.11"
+serde = "1.0.149"
+thiserror = "1.0"
+indoc = "1.0"
+
+[dev-dependencies]
+libcnb-test = "0.11"
+test_support = { path = "../../test_support" }
+ureq = "2.5.0"
