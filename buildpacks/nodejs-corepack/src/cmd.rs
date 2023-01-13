@@ -9,7 +9,7 @@ use std::{
 pub(crate) enum Error {
     #[error("Couldn't start corepack command: {0}")]
     Spawn(std::io::Error),
-    #[error("Couldn't finish corepack  command: {0}")]
+    #[error("Couldn't finish corepack command: {0}")]
     Wait(std::io::Error),
     #[error("Corepack command finished with a non-zero exit code: {0}")]
     Exit(std::process::ExitStatus),
