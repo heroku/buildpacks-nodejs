@@ -1,6 +1,6 @@
-# Node.js Yarn Cloud Native Buildpack
+# Node.js Corepack Cloud Native Buildpack
 
-Heroku's official Cloud Native Buildpack for [Yarn](https://yarnpkg.com).
+Heroku's official Cloud Native Buildpack for Corepack.
 
 [![CI](https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml/badge.svg)](https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml)
 
