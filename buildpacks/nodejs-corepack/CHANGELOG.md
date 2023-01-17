@@ -4,4 +4,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] 2023/01/17
+
 - Initial implementation with libcnb.rs ([#418](https://github.com/heroku/buildpacks-nodejs/pull/418))
