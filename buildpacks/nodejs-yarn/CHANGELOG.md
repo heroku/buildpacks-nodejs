@@ -4,6 +4,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- No longer installs `yarn` if it's already been installed by another buildpack,
+  like heroku/nodejs-corepack ([#418](https://github.com/heroku/buildpacks-nodejs/pull/418))
+
 ## [0.3.0] 2022/12/05
 
 - Rewrite in rust leveraging libcnb.rs ([#250](https://github.com/heroku/buildpacks-nodejs/pull/250/files))
