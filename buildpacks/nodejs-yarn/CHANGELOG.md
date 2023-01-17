@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] 2023/01/17
+
 - No longer installs `yarn` if it's already been installed by another buildpack,
   like heroku/nodejs-corepack ([#418](https://github.com/heroku/buildpacks-nodejs/pull/418))
 
