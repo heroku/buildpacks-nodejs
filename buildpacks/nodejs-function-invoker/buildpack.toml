@@ -20,12 +20,9 @@ id = "heroku-20"
 id = "heroku-22"
 
 [metadata]
-
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"
 package_version = "0.14.1"
-
 [metadata.release]
-
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-invoker-buildpack"

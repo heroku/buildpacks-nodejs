@@ -26,8 +26,6 @@ id = "heroku-22"
 id = "io.buildpacks.stacks.bionic"
 
 [metadata]
-
 [metadata.release]
-
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack"

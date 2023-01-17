@@ -2,7 +2,7 @@ api = "0.8"
 
 [buildpack]
 id = "heroku/nodejs-engine"
-version = "0.8.14"
+version = "0.8.15"
 name = "Heroku Node.js Engine"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["node", "node.js", "nodejs", "javascript", "js"]
@@ -23,8 +23,6 @@ id = "heroku-22"
 id = "io.buildpacks.stacks.bionic"
 
 [metadata]
-
 [metadata.release]
-
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack"

@@ -13,7 +13,7 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.8.13"
+version = "0.8.14"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
@@ -24,8 +24,6 @@ id = "heroku/nodejs-function-invoker"
 version = "0.3.9"
 
 [metadata]
-
 [metadata.release]
-
 [metadata.release.docker]
 repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-buildpack"
