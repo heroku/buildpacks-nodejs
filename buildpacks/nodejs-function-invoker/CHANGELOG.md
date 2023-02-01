@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- `name` is no longer a required field in package.json. ([#447](https://github.com/heroku/buildpacks-nodejs/pull/447))
+
 ## [0.3.9] 2022/12/06
 - Update `sf-fx-runtime-nodejs` from `0.14.0` to `0.14.1`
 

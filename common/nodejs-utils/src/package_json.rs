@@ -9,7 +9,7 @@ use thiserror::Error;
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct PackageJson {
-    pub name: String,
+    pub name: Option<String>,
     pub version: Option<Version>,
     pub engines: Option<Engines>,
     pub scripts: Option<Scripts>,
@@ -112,11 +112,20 @@ mod tests {
     use tempfile::Builder;
 
     #[test]
+    fn read_empty_package() {
+        let mut f = Builder::new().tempfile().unwrap();
+        write!(f, "{{ }}").unwrap();
+        let pkg = PackageJson::read(f.path()).unwrap();
+        assert_eq!(pkg.name, None);
+        assert_eq!(pkg.version, None);
+    }
+
+    #[test]
     fn read_valid_package() {
         let mut f = Builder::new().tempfile().unwrap();
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
         let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(pkg.name, "foo");
+        assert_eq!(pkg.name.unwrap(), "foo");
         assert_eq!(pkg.version.unwrap().to_string(), "0.0.0");
     }
 
