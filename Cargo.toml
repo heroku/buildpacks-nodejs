@@ -7,3 +7,9 @@ members = [
   "common/nodejs-utils",
   "test_support"
 ]
+
+[workspace.package]
+version = "0.0.0"
+rust-version = "1.67"
+edition = "2021"
+publish = false

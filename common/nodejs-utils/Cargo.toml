@@ -1,10 +1,6 @@
 [package]
 name = "heroku-nodejs-utils"
-version = "0.0.0"
 description = "Libs and bins for Heroku Node.js Buildpacks"
-publish = false
-edition = "2021"
-rust-version = "1.66"
 
 [dependencies]
 anyhow = "1"
