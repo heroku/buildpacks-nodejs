@@ -1,10 +1,10 @@
 [package]
 name = "test_support"
-version = "0.0.0"
 description = "Test support functions for integration tests"
-publish = false
-edition = "2021"
-rust-version = "1.66"
+version.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+publish.workspace = true
 
 [dependencies]
 libcnb-test = "0.11"

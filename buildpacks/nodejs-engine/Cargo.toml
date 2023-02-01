@@ -1,10 +1,10 @@
 [package]
 name = "heroku-nodejs-engine-buildpack"
-version = "0.0.0"
 description = "Heroku Node.js Engine Cloud Native Buildpack"
-publish = false
-edition = "2021"
-rust-version = "1.64"
+version.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+publish.workspace = true
 
 [dependencies]
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
