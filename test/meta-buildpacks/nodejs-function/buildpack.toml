@@ -13,7 +13,7 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.8.15"
+version = "0.8.16"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
@@ -21,7 +21,7 @@ version = "0.5.3"
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
-version = "0.3.10"
+version = "0.3.11"
 
 [metadata]
 [metadata.release]
