@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 * Upgraded `heroku/nodejs-engine` to `0.8.15`
+* Upgraded `heroku/nodejs-function-invoker` to `0.3.10`
 
 ## [0.9.17] 2023/01/17
 * Upgraded `heroku/nodejs-engine` to `0.8.14`
