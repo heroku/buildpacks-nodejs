@@ -1,6 +1,5 @@
 use crate::{YarnBuildpack, YarnBuildpackError};
 use heroku_nodejs_utils::inv::Release;
-use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use libcnb::build::BuildContext;
 use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
@@ -41,8 +40,6 @@ pub(crate) enum CliLayerError {
     Installation(std::io::Error),
     #[error("Couldn't set CLI permissions: {0}")]
     Permissions(std::io::Error),
-    #[error("Couldn't parse CLI version requirement: {0}")]
-    Requirement(VersionError),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -74,10 +71,7 @@ impl Layer for CliLayer {
 
         log_info(format!("Installing yarn {}", self.release.version));
 
-        let dist_name = if Requirement::parse(">= 2.0.0")
-            .map_err(CliLayerError::Requirement)?
-            .satisfies(&self.release.version)
-        {
+        let dist_name = if layer_path.join("package").exists() {
             "package".to_string()
         } else {
             format!("yarn-v{}", self.release.version)
