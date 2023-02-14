@@ -61,8 +61,8 @@ impl TryFrom<BucketContent> for Inventory {
             "node" => Regex::new(
                 r"node/(?P<channel>\w+)/(?P<arch>[\w-]+)/node-v(?P<version>\d+\.\d+\.\d+)[\w-]+\.tar\.gz",
             ),
-            _ => Err(regex::Error::Syntax(format!(
-                "Unknown inventory prefix: {inv}"
+            i => Err(regex::Error::Syntax(format!(
+                "Unknown S3 inventory prefix: {i}"
             ))),
         }?;
 
@@ -96,7 +96,7 @@ impl TryFrom<BucketContent> for Inventory {
             .collect();
 
         Ok(Self {
-            name: result.prefix.to_string(),
+            name: inv.to_string(),
             releases: releases?,
         })
     }
