@@ -78,13 +78,13 @@ impl Buildpack for YarnBuildpack {
 
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
-                        log_info("No yarn version range requirement detected, using default ({DEFAULT_YARN_REQUIREMENT})");
+                        log_info("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})");
                         Requirement::parse(DEFAULT_YARN_REQUIREMENT)
                             .map_err(YarnBuildpackError::YarnDefaultParse)?
                     }
                     Some(requirement) => {
                         log_info(format!(
-                            "Detected yarn version range {requirement} from package.json"
+                            "Detected yarn engine version range {requirement} in package.json"
                         ));
                         requirement
                     }
