@@ -101,7 +101,7 @@ Alternatively, define `engines.yarn` in `package.json`. For example:
 // package.json
 {
   "engines": {
-    "yarn": "1.22.19"
+    "yarn": "3.1.x"
   }
 }
 ```
