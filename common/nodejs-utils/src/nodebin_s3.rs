@@ -54,9 +54,17 @@ impl TryFrom<BucketContent> for Inventory {
     /// * `Version::parse` fails to parse the version found in the `Content#key`
     fn try_from(result: BucketContent) -> Result<Self, Self::Error> {
         let inv = &result.prefix;
-        let version_regex = Regex::new(&format!(
-            r"{inv}/(?P<channel>\w+)/(?P<arch>[\w-]+)?/?{inv}-v(?P<version>\d+\.\d+\.\d+)([\w-]+)?\.tar\.gz"
-        ))?;
+        let version_regex = match inv.as_str() {
+            "yarn" => Regex::new(
+                r"yarn/(?P<channel>\w+)/yarn-v(?P<version>\d+\.\d+\.\d+(-[\w\.]+)?)\.tar\.gz",
+            ),
+            "node" => Regex::new(
+                r"node/(?P<channel>\w+)/(?P<arch>[\w-]+)/node-v(?P<version>\d+\.\d+\.\d+)[\w-]+\.tar\.gz",
+            ),
+            i => Err(regex::Error::Syntax(format!(
+                "Unknown S3 inventory prefix: {i}"
+            ))),
+        }?;
 
         let releases: Result<Vec<Release>, Error> = result
             .contents

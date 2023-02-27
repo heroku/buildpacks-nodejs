@@ -78,7 +78,7 @@ for the build will be set to `yarn start`.
 
 ### Yarn version selection
 
-By default, this buildpack will install the latest yarn version from the `1.x`
+By default, this buildpack will install the latest yarn version from the `1.22.x`
 line. There are two ways to select a different yarn version:
 
 #### `packageManager`
@@ -95,13 +95,14 @@ yarn according to the `packageManager` key in `package.json`. For example:
 
 #### `engines.yarn`
 
-Alternatively, define `engines.yarn` in `package.json`. For example:
+Alternatively, define `engines.yarn` using a semver range in `package.json`. 
+For example:
 
 ```js
 // package.json
 {
   "engines": {
-    "yarn": "1.22.19"
+    "yarn": "3.1.x"
   }
 }
 ```

@@ -10,6 +10,8 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use tempfile::NamedTempFile;
 use thiserror::Error;
@@ -36,6 +38,8 @@ pub(crate) enum CliLayerError {
     Untar(std::io::Error),
     #[error("Couldn't move yarn CLI to the target location: {0}")]
     Installation(std::io::Error),
+    #[error("Couldn't set CLI permissions: {0}")]
+    Permissions(std::io::Error),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -66,9 +70,21 @@ impl Layer for CliLayer {
         decompress_tarball(&mut yarn_tgz.into_file(), layer_path).map_err(CliLayerError::Untar)?;
 
         log_info(format!("Installing yarn {}", self.release.version));
-        let dist_name = format!("yarn-v{}", self.release.version);
-        let dist_path = Path::new(layer_path).join(dist_name);
-        move_directory_contents(dist_path, layer_path).map_err(CliLayerError::Installation)?;
+
+        let dist_name = if layer_path.join("package").exists() {
+            "package".to_string()
+        } else {
+            format!("yarn-v{}", self.release.version)
+        };
+
+        move_directory_contents(layer_path.join(dist_name), layer_path)
+            .map_err(CliLayerError::Installation)?;
+
+        fs::set_permissions(
+            layer_path.join("bin").join("yarn"),
+            fs::Permissions::from_mode(0o755),
+        )
+        .map_err(CliLayerError::Permissions)?;
 
         LayerResultBuilder::new(CliLayerMetadata::current(self, context)).build()
     }

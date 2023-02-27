@@ -31,3 +31,29 @@ jobs:
           branch: update-nodejs-inventory
           labels: "automation"
           body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+  update-yarn-inventory:
+    name: Update Node.js Yarn Inventory
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - id: install-rust-toolchain
+        name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - id: set-diff-msg
+        name: Set Diff Message
+        run: echo "::set-output name=msg::$(cargo run --bin diff_versions yarn buildpacks/nodejs-yarn/inventory.toml)"
+      - name: Rebuild Inventory
+        run: "cargo run --bin list_versions yarn > buildpacks/nodejs-yarn/inventory.toml"
+      - name: Update Changelog
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' buildpacks/nodejs-yarn/CHANGELOG.md
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "Update Node.js Yarn Inventory"
+          commit-message: "Update Inventory for heroku/nodejs-yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          branch: update-yarn-inventory
+          labels: "automation"
+          body: "Automated pull-request to update heroku/nodejs-yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
