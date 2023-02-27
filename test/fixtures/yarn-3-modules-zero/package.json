@@ -1,7 +1,8 @@
 {
   "name": "yarn-3-modules-zero",
   "engines": {
-    "node": "18.x"
+    "node": "18.x",
+    "yarn": "3.x"
   },
   "scripts": {
     "start": "node server.js"

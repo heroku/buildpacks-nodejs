@@ -7,7 +7,7 @@ use crate::layers::{CliLayer, CliLayerError, DepsLayer, DepsLayerError};
 use crate::yarn::Yarn;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -33,6 +33,7 @@ mod layers;
 mod yarn;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
+const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 
 pub(crate) struct YarnBuildpack;
 
@@ -77,12 +78,13 @@ impl Buildpack for YarnBuildpack {
 
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
-                        log_info("Detected no yarn version range requirement");
-                        Requirement::any()
+                        log_info("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})");
+                        Requirement::parse(DEFAULT_YARN_REQUIREMENT)
+                            .map_err(YarnBuildpackError::YarnDefaultParse)?
                     }
                     Some(requirement) => {
                         log_info(format!(
-                            "Detected yarn version range {requirement} from package.json"
+                            "Detected yarn engine version range {requirement} in package.json"
                         ));
                         requirement
                     }
@@ -191,7 +193,8 @@ impl Buildpack for YarnBuildpack {
                     }
                     YarnBuildpackError::YarnVersionDetect(_)
                     | YarnBuildpackError::YarnVersionResolve(_)
-                    | YarnBuildpackError::YarnVersionUnsupported(_) => {
+                    | YarnBuildpackError::YarnVersionUnsupported(_)
+                    | YarnBuildpackError::YarnDefaultParse(_) => {
                         log_error("Yarn version error", err_string);
                     }
                 }
@@ -227,6 +230,8 @@ pub(crate) enum YarnBuildpackError {
     YarnVersionUnsupported(u64),
     #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
     YarnVersionResolve(Requirement),
+    #[error("Couldn't parse yarn default version range: {0}")]
+    YarnDefaultParse(VersionError),
 }
 
 impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {

@@ -1,6 +1,8 @@
 {
   "name": "yarn-2-modules-nonzero",
-  "packageManager": "yarn@2.4.1",
+  "engines": {
+    "yarn": "2.4.x"
+  },
   "scripts": {
     "start": "node ./server.js"
   },
