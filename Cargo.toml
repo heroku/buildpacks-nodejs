@@ -13,3 +13,6 @@ version = "0.0.0"
 rust-version = "1.67"
 edition = "2021"
 publish = false
+
+[profile.release]
+strip = true
