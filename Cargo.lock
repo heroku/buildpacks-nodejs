@@ -522,7 +522,7 @@ dependencies = [
  "serde",
  "tempfile",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.7.2",
  "ureq",
 ]
 
@@ -539,7 +539,7 @@ dependencies = [
  "tempfile",
  "test_support",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.7.2",
 ]
 
 [[package]]
@@ -555,7 +555,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.7.2",
  "ureq",
  "url",
 ]
@@ -572,7 +572,7 @@ dependencies = [
  "tempfile",
  "test_support",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.7.2",
  "ureq",
 ]
 
@@ -773,7 +773,7 @@ checksum = "d9ed34a92d997ad9b0666ddbcc3995191e7642ee50ffa760497d2fb3bff7c5b5"
 dependencies = [
  "cargo_metadata",
  "libcnb-data",
- "toml 0.5.10",
+ "toml 0.5.11",
  "which",
 ]
 
@@ -821,7 +821,7 @@ dependencies = [
  "tar",
  "termcolor",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.5.11",
  "ureq",
 ]
 
@@ -1384,9 +1384,9 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.5.10"
+version = "0.5.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1333c76748e868a4d9d1017b5ab53171dfd095f70c712fdb4653a406547f598f"
+checksum = "f4f7f0dd8d50a853a531c426359045b1998f04219d88799810762cd4ad314234"
 dependencies = [
  "serde",
 ]
