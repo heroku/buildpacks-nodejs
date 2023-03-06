@@ -809,9 +809,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.11.4"
+version = "0.11.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8085f21847f46079ce900bf2169e3e51ffa3685dc298aa71056a29d96d4413cb"
+checksum = "878674906e0140191f89047ef1e8c142cb31becce91b4e64b1b6419fe03da7c1"
 dependencies = [
  "crossbeam-utils",
  "flate2",
@@ -821,7 +821,7 @@ dependencies = [
  "tar",
  "termcolor",
  "thiserror",
- "toml 0.5.10",
+ "toml 0.7.2",
  "ureq",
 ]
 
