@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added yarn version 4.0.0-rc.40.
 ## [0.4.0] 2023/02/27
 
 - Add several yarn 2, 3, and 4 releases to inventory ([#457](https://github.com/heroku/buildpacks-nodejs/pull/457))
