@@ -1,0 +1,19 @@
+[package]
+name = "heroku-nodejs-pnpm-install-buildpack"
+description = "Heroku Node.js pnpm install Cloud Native Buildpack"
+version.workspace = true
+rust-version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
+libcnb = "0.11"
+libherokubuildpack = "0.11"
+serde = "1"
+indoc = "2.0"
+
+[dev-dependencies]
+libcnb-test = "0.11"
+test_support = { path = "../../test_support" }
+ureq = "2"

@@ -71,6 +71,34 @@ impl PackageJson {
         let rdr = BufReader::new(file);
         serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError)
     }
+
+    #[must_use]
+    /// Fetches the build scripts from a `PackageJson` and returns them in priority order
+    pub fn build_scripts(&self) -> Vec<String> {
+        let mut scripts = vec![];
+        if let Some(s) = &self.scripts {
+            if s.heroku_prebuild.is_some() {
+                scripts.push("heroku-prebuild".to_owned());
+            }
+            if s.heroku_build.is_some() {
+                scripts.push("heroku-build".to_owned());
+            } else if s.build.is_some() {
+                scripts.push("build".to_owned());
+            }
+            if s.heroku_postbuild.is_some() {
+                scripts.push("heroku-postbuild".to_owned());
+            }
+        }
+        scripts
+    }
+
+    #[must_use]
+    /// Determines if a given `PackageJson` has a start script defined
+    pub fn has_start_script(&self) -> bool {
+        self.scripts
+            .as_ref()
+            .map_or(false, |scripts| scripts.start.is_some())
+    }
 }
 
 /// Deserializes a `packageManager` field value (like "yarn@1.22.19" into a `Option<PackageManager>`)
@@ -202,5 +230,38 @@ mod tests {
         let err = res.unwrap_err().to_string();
         println!("{err}");
         assert!(err.contains("Could not parse package.json"));
+    }
+
+    #[test]
+    fn test_build_scripts_all() {
+        let pkg_json = PackageJson {
+            scripts: Some(Scripts {
+                build: Some("echo 'build'".to_owned()),
+                heroku_prebuild: Some("echo 'heroku-prebuild'".to_owned()),
+                heroku_build: Some("echo 'build'".to_owned()),
+                heroku_postbuild: Some("echo 'heroku-postbuild'".to_owned()),
+                ..Scripts::default()
+            }),
+            ..PackageJson::default()
+        };
+        let build_scripts = pkg_json.build_scripts();
+
+        assert_eq!("heroku-prebuild", build_scripts[0]);
+        assert_eq!("heroku-build", build_scripts[1]);
+        assert_eq!("heroku-postbuild", build_scripts[2]);
+    }
+
+    #[test]
+    fn test_build_scripts_build_only() {
+        let pkg_json = PackageJson {
+            scripts: Some(Scripts {
+                build: Some("echo 'build'".to_owned()),
+                ..Scripts::default()
+            }),
+            ..PackageJson::default()
+        };
+        let build_scripts = pkg_json.build_scripts();
+
+        assert_eq!("build", build_scripts[0]);
     }
 }

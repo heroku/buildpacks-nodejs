@@ -44,6 +44,19 @@ pub fn get_corepack_buildpacks() -> Vec<BuildpackReference> {
     ]
 }
 
+pub fn get_pnpm_buildpacks() -> Vec<BuildpackReference> {
+    // TODO: Use heroku/nodejs-corepack instead of local directory
+    let corepack_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../target/buildpack/debug/heroku_nodejs-corepack")
+        .to_string_lossy()
+        .to_string();
+    vec![
+        BuildpackReference::Other(String::from("heroku/nodejs-engine")),
+        BuildpackReference::Other(corepack_dir),
+        BuildpackReference::Crate,
+    ]
+}
+
 pub fn get_function_invoker_build_config(fixture: &str, builder: Builder) -> BuildConfig {
     BuildConfig::new(
         builder.to_string(),
@@ -71,6 +84,15 @@ pub fn get_corepack_build_config(fixture: &str, builder: Builder) -> BuildConfig
     .to_owned()
 }
 
+pub fn get_pnpm_build_config(fixture: &str, builder: Builder) -> BuildConfig {
+    BuildConfig::new(
+        builder.to_string(),
+        format!("../../test/fixtures/{fixture}"),
+    )
+    .buildpacks(get_pnpm_buildpacks())
+    .to_owned()
+}
+
 pub fn test_node_function(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
     TestRunner::default().build(get_function_invoker_build_config(fixture, builder), |ctx| {
         test_body(ctx)
@@ -85,6 +107,12 @@ pub fn test_yarn_app(fixture: &str, builder: Builder, test_body: fn(TestContext)
 
 pub fn test_corepack_app(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
     TestRunner::default().build(get_corepack_build_config(fixture, builder), |ctx| {
+        test_body(ctx)
+    });
+}
+
+pub fn test_pnpm_app(fixture: &str, builder: Builder, test_body: fn(TestContext)) {
+    TestRunner::default().build(get_pnpm_build_config(fixture, builder), |ctx| {
         test_body(ctx)
     });
 }
