@@ -3,7 +3,6 @@ use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
 use thiserror::Error;
-use toml::Value;
 
 pub fn is_function<P>(d: P) -> bool
 where
@@ -13,7 +12,7 @@ where
     dir.join("function.toml").exists() || {
         read_toml_file(dir.join("project.toml"))
             .ok()
-            .and_then(|toml: Value| {
+            .and_then(|toml: toml::Value| {
                 toml_select_value(vec!["com", "salesforce", "type"], &toml)
                     .and_then(toml::Value::as_str)
                     .map(|value| value == "function")
