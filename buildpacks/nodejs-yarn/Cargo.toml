@@ -13,7 +13,7 @@ libherokubuildpack = "0.11"
 serde = "1"
 tempfile = "3"
 thiserror = "1.0"
-toml = "0.5"
+toml = "0.7"
 
 [dev-dependencies]
 libcnb-test = "0.11"
