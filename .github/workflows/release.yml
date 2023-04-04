@@ -9,7 +9,7 @@ on:
 jobs:
   release:
     name: Release ${{ github.event.inputs.requested_buildpack_id }}
-    runs-on: ubuntu-20.04 # ubuntu-latest currently resolves to 18.04 which does not have aws-cli 2.x yet
+    runs-on: pub-hk-ubuntu-22.04-small
     permissions:
       contents: write
       pull-requests: write
