@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Will now install `pnpm`. ([#488](https://github.com/heroku/buildpacks-nodejs/pull/488))
+
 ## [0.1.1] 2023/02/02
 
 - `name` is no longer a required field in package.json. ([#447](https://github.com/heroku/buildpacks-nodejs/pull/447))
