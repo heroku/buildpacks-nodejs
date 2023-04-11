@@ -45,14 +45,9 @@ pub fn get_corepack_buildpacks() -> Vec<BuildpackReference> {
 }
 
 pub fn get_pnpm_buildpacks() -> Vec<BuildpackReference> {
-    // TODO: Use heroku/nodejs-corepack instead of local directory
-    let corepack_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../target/buildpack/debug/heroku_nodejs-corepack")
-        .to_string_lossy()
-        .to_string();
     vec![
         BuildpackReference::Other(String::from("heroku/nodejs-engine")),
-        BuildpackReference::Other(corepack_dir),
+        BuildpackReference::Other(String::from("heroku/nodejs-corepack")),
         BuildpackReference::Crate,
     ]
 }
