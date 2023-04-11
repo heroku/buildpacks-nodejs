@@ -20,6 +20,7 @@ fn corepack_yarn_2_heroku_20() {
         );
     });
 }
+
 #[test]
 #[ignore = "integration test"]
 fn corepack_yarn_3_heroku_22() {
@@ -32,6 +33,40 @@ fn corepack_yarn_3_heroku_22() {
             |ctr| {
                 let logs = ctr.logs_wait();
                 assert_contains!(logs.stdout, "3.2.0");
+            },
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn corepack_pnpm_7() {
+    test_corepack_app("pnpm-7-pnp", Heroku20, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Preparing pnpm@7.31.0");
+        ctx.start_container(
+            ContainerConfig::new()
+                .entrypoint(["launcher"])
+                .command(["pnpm", "--version"]),
+            |ctr| {
+                let logs = ctr.logs_wait();
+                assert_contains!(logs.stdout, "7.31.0");
+            },
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn corepack_pnpm_8() {
+    test_corepack_app("pnpm-8-hoist", Heroku22, |ctx| {
+        assert_contains!(ctx.pack_stdout, "Preparing pnpm@8.1.1");
+        ctx.start_container(
+            ContainerConfig::new()
+                .entrypoint(["launcher"])
+                .command(["pnpm", "--version"]),
+            |ctr| {
+                let logs = ctr.logs_wait();
+                assert_contains!(logs.stdout, "8.1.1");
             },
         );
     });

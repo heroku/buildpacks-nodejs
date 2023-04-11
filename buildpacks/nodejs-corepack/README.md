@@ -23,10 +23,10 @@ This buildpack relies on and builds on top of the [Node.js Engine Cloud Native B
 ### Supported:
 
 - Yarn major versions 1, 2, and 3.
+- pnpm 7+
 
 ## Unsupported:
 
-- Installing `pnpm` (for now).
 - Installing `npm` (for now).
 
 ## Reference
