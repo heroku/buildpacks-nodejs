@@ -5,13 +5,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Added node version 19.9.0.
+
+## [0.8.17] 2023/04/03
+
 - Added node version 16.20.0.
 - Added node version 19.8.1, 19.8.0.
 - Added node version 18.15.0.
+
 ## [0.8.16] 2023/02/27
 
 - Added node version 19.7.0, 19.6.1, 14.21.3, 16.19.1, 18.14.1, 18.14.2.
 - Added node version 18.14.0, 19.6.0.
+
 ## [0.8.15] 2023/02/02
 
 - `name` is no longer a required field in package.json. ([#447](https://github.com/heroku/buildpacks-nodejs/pull/447))
@@ -21,14 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added node version 18.13.0, 19.4.0.
 - Added node version 19.3.0, 16.19.0, 14.21.2.
+
 ## [0.8.13] 2022/12/05
 
 - Added node version 19.2.0.
 - Added node version 19.1.0.
+
 ## [0.8.12] 2022/11/04
 
 - Added node version 19.0.1, 14.21.1, 18.12.1, 16.18.1.
 - Added node version 14.21.0.
+
 ## [0.8.11] 2022/11/01
 
 - Don't overwrite WEB_CONCURRENCY if already set. ([#386](https://github.com/heroku/buildpacks-nodejs/pull/386))
@@ -38,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added node version 18.12.0.
 - Added node version 19.0.0.
 - Added node version 16.18.0, 18.11.0, 18.10.0.
+
 ## [0.8.9] 2022/09/28
 
 - Added node version 14.20.1, 18.9.1, 16.17.1.

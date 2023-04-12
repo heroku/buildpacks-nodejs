@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.10.0] 2023/02/27
 * Update to CNB Buildpack API version 0.9
 * Upgraded `heroku/nodejs-engine` to `0.8.16`
+* Upgraded `heroku/nodejs-engine` to `0.8.17`
 
 ## [0.9.18] 2023/02/02
 * Upgraded `heroku/nodejs-engine` to `0.8.15`

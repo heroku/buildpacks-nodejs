@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 * Upgraded `heroku/nodejs-corepack` to `0.1.2`
+* Upgraded `heroku/nodejs-engine` to `0.8.17`
+* Upgraded `heroku/nodejs-yarn` to `0.4.1`
 
 ## [0.6.0] 2023/02/27
 * Upgraded `heroku/nodejs-yarn` to `0.4.0`
