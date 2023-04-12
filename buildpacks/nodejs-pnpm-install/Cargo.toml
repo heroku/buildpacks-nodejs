@@ -12,6 +12,7 @@ libcnb = "0.11"
 libherokubuildpack = "0.11"
 serde = "1"
 indoc = "2.0"
+toml = "0.7"
 
 [dev-dependencies]
 libcnb-test = "0.11"

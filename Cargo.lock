@@ -546,6 +546,7 @@ dependencies = [
  "libherokubuildpack",
  "serde",
  "test_support",
+ "toml",
  "ureq",
 ]
 

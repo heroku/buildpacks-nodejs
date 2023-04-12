@@ -9,10 +9,10 @@ use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::GenericMetadata;
-use libcnb::generic::GenericPlatform;
+use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_header, log_info};
+use serde::Deserialize;
 
 #[cfg(test)]
 use libcnb_test as _;
@@ -24,6 +24,8 @@ use ureq as _;
 mod cmd;
 mod errors;
 mod layers;
+
+const CACHE_PRUNE_INTERVAL: i64 = 20;
 
 pub(crate) struct PnpmInstallBuildpack;
 
@@ -76,8 +78,20 @@ impl Buildpack for PnpmInstallBuildpack {
         // there are advantages to allowing recently orphaned dependencies to
         // live there. Pruning every once in a while would be preferred to
         // pruning each build.
-        log_info("Pruning unused dependencies from pnpm content-addressable store");
-        cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
+        let mut md = context.store.unwrap_or_default().metadata;
+        let cache_use_count = md
+            .get("cache_use_count")
+            .map_or(0, |v| v.as_integer().unwrap_or(CACHE_PRUNE_INTERVAL));
+
+        if cache_use_count.rem_euclid(CACHE_PRUNE_INTERVAL) == 0 {
+            log_info("Pruning unused dependencies from pnpm content-addressable store");
+            cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
+        }
+
+        md.insert(
+            "cache_use_count".to_owned(),
+            toml::Value::from(cache_use_count + 1),
+        );
 
         log_header("Running scripts");
         let scripts = pkg_json.build_scripts();
