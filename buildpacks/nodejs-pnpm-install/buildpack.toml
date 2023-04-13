@@ -28,4 +28,4 @@ id = "io.buildpacks.stacks.bionic"
 [metadata]
 [metadata.release]
 [metadata.release.docker]
-repository = "docker.io/heroku/buildpack-nodejs-pnpm"
+repository = "docker.io/heroku/buildpack-nodejs-pnpm-install"

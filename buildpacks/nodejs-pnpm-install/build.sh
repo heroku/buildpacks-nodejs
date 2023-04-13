@@ -8,7 +8,7 @@ pushd "${buildpack_dir}"
 cargo libcnb package --release
 
 rm -rf target
-cp -R ../../target/buildpack/release/heroku_nodejs-pnpm target
+cp -R ../../target/buildpack/release/heroku_nodejs-pnpm-install target
 cp package.toml target/
 
 popd
