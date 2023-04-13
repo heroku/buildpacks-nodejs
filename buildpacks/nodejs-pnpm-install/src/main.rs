@@ -43,7 +43,6 @@ impl Buildpack for PnpmInstallBuildpack {
                 DetectResultBuilder::pass()
                     .build_plan(
                         BuildPlanBuilder::new()
-                            .provides("pnpm")
                             .requires("pnpm")
                             .provides("node_modules")
                             .requires("node_modules")
