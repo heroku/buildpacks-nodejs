@@ -20,12 +20,10 @@ use test_support as _;
 #[cfg(test)]
 use ureq as _;
 
+mod cfg;
 mod cmd;
 mod errors;
 mod layers;
-
-const CACHE_PRUNE_INTERVAL: i64 = 40;
-const CACHE_USE_KEY: &str = "cache_use_count";
 
 pub(crate) struct PnpmInstallBuildpack;
 
@@ -73,12 +71,12 @@ impl Buildpack for PnpmInstallBuildpack {
         cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
 
         let mut metadata = context.store.unwrap_or_default().metadata;
-        let cache_use_count = read_cache_use_count(&metadata);
-        if cache_use_count.rem_euclid(CACHE_PRUNE_INTERVAL) == 0 {
+        let cache_use_count = cfg::read_cache_use_count(&metadata);
+        if cfg::should_prune_cache(cache_use_count) {
             log_info("Pruning unused dependencies from pnpm content-addressable store");
             cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
         }
-        set_cache_use_count(&mut metadata, cache_use_count + 1);
+        cfg::set_cache_use_count(&mut metadata, cache_use_count + 1);
 
         log_header("Running scripts");
         let scripts = pkg_json.build_scripts();
@@ -128,25 +126,6 @@ impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError
     fn from(e: PnpmInstallBuildpackError) -> Self {
         libcnb::Error::BuildpackError(e)
     }
-}
-
-/// Reads and returns the cache use count as i64. This expects the value to
-/// stored as a float, since CNB erroneously converts toml integers to toml floats.
-fn read_cache_use_count(metadata: &toml::Table) -> i64 {
-    #[allow(clippy::cast_possible_truncation)]
-    metadata.get(CACHE_USE_KEY).map_or(0, |v| {
-        v.as_float().map_or(CACHE_PRUNE_INTERVAL, |f| f as i64)
-    })
-}
-
-/// Sets the cache use count in toml metadata as a float. It's stored as a
-/// float since CNB erroneously converts toml integers to toml floats anyway.
-fn set_cache_use_count(metadata: &mut toml::Table, cache_use_count: i64) {
-    #[allow(clippy::cast_precision_loss)]
-    metadata.insert(
-        CACHE_USE_KEY.to_owned(),
-        toml::Value::from((cache_use_count + 1) as f64),
-    );
 }
 
 buildpack_main!(PnpmInstallBuildpack);
