@@ -23,7 +23,6 @@ fn pnpm_7_pnp_heroku_20() {
             ctx.pack_stdout,
             &formatdoc! {"
                 [Installing dependencies]
-                Recreating /workspace/node_modules
                 Lockfile is up to date, resolution step is skipped
                 Progress: resolved 1, reused 0, downloaded 0, added 0
                 Packages: +60
@@ -35,8 +34,8 @@ fn pnpm_7_pnp_heroku_20() {
             ctx.pack_stdout,
             &formatdoc! {"
                 Packages are hard linked from the content-addressable store to the virtual store.
-                  Content-addressable store is at: /layers/heroku_nodejs-pnpm/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm/virtual
+                  Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
+                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual
             "}
         );
 
@@ -80,8 +79,8 @@ fn pnpm_8_hoist_heroku_22() {
             ctx.pack_stdout,
             &formatdoc! {"
                 Packages are hard linked from the content-addressable store to the virtual store.
-                  Content-addressable store is at: /layers/heroku_nodejs-pnpm/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm/virtual
+                  Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
+                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual
             "}
         );
 
