@@ -11,6 +11,9 @@ uri = "../../../buildpacks/nodejs-corepack"
 uri = "../../../buildpacks/npm"
 
 [[dependencies]]
+uri = "../../../buildpacks/nodejs-pnpm-install"
+
+[[dependencies]]
 uri = "../../../buildpacks/nodejs-yarn"
 
 [[dependencies]]
