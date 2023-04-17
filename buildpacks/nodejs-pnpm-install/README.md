@@ -58,8 +58,6 @@ This buildpack `requires` `node` (from the [heroku/nodejs-engine](../nodejs-engi
 and `pnpm` (from the [heroku/nodejs-corepack](../nodejs-corepack) buildpack).
 It also `provides` and `requires` and `node_modules`.
 
-### Environment Variables
-
 ### Hoist Modes
 
 The `hoist = true`, `hoist = false`, `shamefully-hoist = false`,
