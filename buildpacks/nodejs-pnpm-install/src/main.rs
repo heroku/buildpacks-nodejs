@@ -20,10 +20,10 @@ use test_support as _;
 #[cfg(test)]
 use ureq as _;
 
-mod cfg;
 mod cmd;
 mod errors;
 mod layers;
+mod store;
 
 pub(crate) struct PnpmInstallBuildpack;
 
@@ -71,12 +71,12 @@ impl Buildpack for PnpmInstallBuildpack {
         cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
 
         let mut metadata = context.store.unwrap_or_default().metadata;
-        let cache_use_count = cfg::read_cache_use_count(&metadata);
-        if cfg::should_prune_cache(cache_use_count) {
+        let cache_use_count = store::read_cache_use_count(&metadata);
+        if store::should_prune_cache(cache_use_count) {
             log_info("Pruning unused dependencies from pnpm content-addressable store");
             cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
         }
-        cfg::set_cache_use_count(&mut metadata, cache_use_count + 1);
+        store::set_cache_use_count(&mut metadata, cache_use_count + 1);
 
         log_header("Running scripts");
         let scripts = pkg_json.build_scripts();
