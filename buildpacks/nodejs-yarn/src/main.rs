@@ -137,7 +137,7 @@ impl Buildpack for YarnBuildpack {
         cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
 
         log_header("Running scripts");
-        let scripts = cfg::get_build_scripts(&pkg_json);
+        let scripts = pkg_json.build_scripts();
         if scripts.is_empty() {
             log_info("No build scripts found");
         } else {
@@ -147,7 +147,7 @@ impl Buildpack for YarnBuildpack {
             }
         }
 
-        if cfg::has_start_script(&pkg_json) {
+        if pkg_json.has_start_script() {
             BuildResultBuilder::new()
                 .launch(
                     LaunchBuilder::new()

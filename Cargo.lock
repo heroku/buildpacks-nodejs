@@ -536,6 +536,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "heroku-nodejs-pnpm-install-buildpack"
+version = "0.0.0"
+dependencies = [
+ "heroku-nodejs-utils",
+ "indoc",
+ "libcnb",
+ "libcnb-test",
+ "libherokubuildpack",
+ "serde",
+ "test_support",
+ "toml",
+ "ureq",
+]
+
+[[package]]
 name = "heroku-nodejs-utils"
 version = "0.0.0"
 dependencies = [
