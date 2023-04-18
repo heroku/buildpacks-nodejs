@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Add `pnpm` grouping for autodetection of `pnpm` apps ([#502](https://github.com/heroku/buildpacks-node/pull/502))
+
 ## [0.6.2] 2023/04/17
 * Upgraded `heroku/nodejs-engine` to `0.8.19`
 
