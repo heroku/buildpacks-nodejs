@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.20] 2023/04/20
+
 - Added node version 20.0.0.
 ## [0.8.19] 2023/04/17
 
