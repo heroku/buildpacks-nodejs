@@ -1,5 +1,5 @@
 use crate::vrs::{Requirement, Version};
-use serde::{de, Deserialize, Deserializer};
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
@@ -17,11 +17,7 @@ pub struct PackageJson {
     pub dependencies: Option<HashMap<String, String>>,
     #[serde(rename = "devDependencies")]
     pub dev_dependencies: Option<HashMap<String, String>>,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_package_manager",
-        rename = "packageManager"
-    )]
+    #[serde(default, rename = "packageManager")]
     pub package_manager: Option<PackageManager>,
 }
 
@@ -44,10 +40,37 @@ pub struct Scripts {
     pub heroku_postbuild: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(try_from = "String")]
 pub struct PackageManager {
     pub name: String,
     pub version: Version,
+}
+
+impl TryFrom<String> for PackageManager {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        let err_msg = format!("Couldn't parse `packageManager` value: \"{value}\".");
+
+        value
+            .split_once('@')
+            .ok_or(err_msg.clone())
+            .and_then(|(name_str, version_str)| {
+                if name_str.is_empty() {
+                    Err(format!(
+                    "{err_msg} Hint: Does the value have a package manager name before the \"@\"?"
+                ))
+                } else {
+                    Version::from_str(version_str)
+                        .map_err(|error| error.to_string())
+                        .map(|version| PackageManager {
+                            name: name_str.to_string(),
+                            version,
+                        })
+                }
+            })
+    }
 }
 
 #[derive(Error, Debug)]
@@ -99,38 +122,6 @@ impl PackageJson {
             .as_ref()
             .map_or(false, |scripts| scripts.start.is_some())
     }
-}
-
-/// Deserializes a `packageManager` field value (like "yarn@1.22.19" into a `Option<PackageManager>`)
-fn deserialize_package_manager<'de, D>(deserializer: D) -> Result<Option<PackageManager>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value: String = Deserialize::deserialize(deserializer)?;
-    if value.is_empty() {
-        return Ok(None);
-    }
-    let mut parts = value.split('@');
-    let err_msg = format!("Couldn't parse `packageManager` value: \"{value}\".");
-    let name = parts
-        .next()
-        .ok_or_else(|| de::Error::custom(&err_msg))?
-        .to_string();
-
-    if name.is_empty() {
-        return Err(de::Error::custom(format!(
-            "{err_msg} Hint: Does the value have a package manager name before the \"@\"?"
-        )));
-    }
-
-    let vrs_str = parts.next().ok_or_else(|| {
-        de::Error::custom(format!(
-            "{err_msg} Hint: Does the value contain an \"@\" followed by a semantic version number?"
-        ))
-    })?;
-
-    let version = Version::from_str(vrs_str).map_err(de::Error::custom)?;
-    Ok(Some(PackageManager { name, version }))
 }
 
 #[cfg(test)]
