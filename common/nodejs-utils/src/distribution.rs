@@ -1,19 +1,14 @@
 use crate::{
     inv::{Inventory, Release, BUCKET, REGION},
     nodejs_org, s3,
-    vrs::{Version,Requirement},
+    vrs::{Requirement, Version},
 };
 use anyhow::anyhow;
 use regex::Regex;
-use std::{collections::HashSet, str::FromStr, fmt};
 use std::convert::TryFrom;
+use std::{collections::HashSet, fmt, str::FromStr};
 
-const NODE_MIRRORED_DISTRIBUTION_REGEX: &str =
-    r"node/(?P<channel>\w+)/(?P<arch>[\w-]+)/node-v(?P<version>\d+\.\d+\.\d+)[\w-]+\.tar\.gz";
-const YARN_MIRRORED_DISTRIBUTION_REGEX: &str =
-    r"yarn/(?P<channel>\w+)/yarn-v(?P<version>\d+\.\d+\.\d+(-[\w\.]+)?)\.tar\.gz";
-
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Distribution {
     Yarn,
     Node,
@@ -74,7 +69,10 @@ impl Distribution {
     ///
     /// # Errors
     /// - Active semver range for the distribution is a valid version.
-    pub fn filter_inactive_versions<'i, I>(&self, iter: I) -> anyhow::Result<VersionSet> where I: Iterator<Item=&'i Version> {
+    pub fn filter_inactive_versions<'i, I>(&self, iter: I) -> anyhow::Result<VersionSet>
+    where
+        I: Iterator<Item = &'i Version>,
+    {
         let req = self.active_requirement()?;
         Ok(iter.filter(|v| req.satisfies(v)).cloned().collect())
     }
@@ -86,12 +84,17 @@ impl Distribution {
         }
     }
     fn active_requirement(self) -> anyhow::Result<Requirement> {
-        Requirement::parse(
-            match self {
-                Self::Node => ">= 16",
-                Self::Yarn => ">= 1.22",
-            }
-        ).map_err(|e| anyhow!("{e}"))
+        Requirement::parse(match self {
+            Self::Node => ">= 16",
+            Self::Yarn => ">= 1.22",
+        })
+        .map_err(|e| anyhow!("{e}"))
+    }
+    fn mirrored_path_regex(self) -> anyhow::Result<Regex> {
+        Regex::new(match self {
+            Self::Node => r"node/(?P<channel>\w+)/(?P<arch>[\w-]+)/node-v(?P<version>\d+\.\d+\.\d+)[\w-]+\.tar\.gz",
+            Self::Yarn => r"yarn/(?P<channel>\w+)/yarn-v(?P<version>\d+\.\d+\.\d+(-[\w\.]+)?)\.tar\.gz",
+        }).map_err(|e| anyhow!("Mirrored release regex error: {e}"))
     }
 }
 
@@ -109,9 +112,10 @@ fn list_upstream_node_versions() -> anyhow::Result<VersionSet> {
 }
 
 fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
-    Version::parse("1.22.14").map(|v| VersionSet::from([v])).map_err(|_|anyhow!("Couldn't parse"))
+    Version::parse("1.22.14")
+        .map(|v| VersionSet::from([v]))
+        .map_err(|_| anyhow!("Couldn't parse"))
 }
-
 
 impl TryFrom<s3::BucketContent> for VersionSet {
     type Error = anyhow::Error;
@@ -122,21 +126,16 @@ impl TryFrom<s3::BucketContent> for VersionSet {
     /// * Regex missing matching captures against `Content#key`
     /// * `Version::parse` fails to parse the version found in the `Content#key`
     fn try_from(result: s3::BucketContent) -> Result<Self, Self::Error> {
-        let inv = &result.prefix;
-        let vrs_rex = match inv.as_str() {
-            "yarn" => Regex::new(YARN_MIRRORED_DISTRIBUTION_REGEX),
-            "node" => Regex::new(NODE_MIRRORED_DISTRIBUTION_REGEX),
-            i => Err(regex::Error::Syntax(format!(
-                "Unknown S3 inventory prefix: {i}"
-            ))),
-        }?;
+        let rex = result
+            .prefix
+            .parse::<Distribution>()?
+            .mirrored_path_regex()?;
 
         result
             .contents
             .iter()
             .map(|content| {
-                vrs_rex
-                    .captures(&content.key)
+                rex.captures(&content.key)
                     .ok_or(anyhow!(
                         "Couldn't match the bucket content key to a known format: {}",
                         content.key
@@ -166,20 +165,14 @@ impl TryFrom<s3::BucketContent> for Inventory {
     /// * Regex missing matching captures against `Content#key`
     /// * `Version::parse` fails to parse the version found in the `Content#key`
     fn try_from(result: s3::BucketContent) -> Result<Self, Self::Error> {
-        let inv = &result.prefix;
-        let version_regex = match inv.as_str() {
-            "yarn" => Regex::new(YARN_MIRRORED_DISTRIBUTION_REGEX),
-            "node" => Regex::new(NODE_MIRRORED_DISTRIBUTION_REGEX),
-            i => Err(regex::Error::Syntax(format!(
-                "Unknown S3 inventory prefix: {i}"
-            ))),
-        }?;
+        let dist: Distribution = result.prefix.parse()?;
+        let rex = dist.mirrored_path_regex()?;
 
         let releases: anyhow::Result<Vec<Release>> = result
             .contents
             .iter()
             .map(|content| {
-                let capture = version_regex.captures(&content.key).ok_or_else(|| {
+                let capture = rex.captures(&content.key).ok_or_else(|| {
                     anyhow!("No valid version found in content: {}", &content.key)
                 })?;
                 let channel = capture.name("channel").ok_or_else(|| {
@@ -205,7 +198,7 @@ impl TryFrom<s3::BucketContent> for Inventory {
             .collect();
 
         Ok(Self {
-            name: inv.to_string(),
+            name: dist.to_string(),
             releases: releases?,
         })
     }
