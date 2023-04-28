@@ -11,7 +11,7 @@ impl fmt::Display for VersionError {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(try_from = "String")]
 pub struct Version(NSVersion);
 

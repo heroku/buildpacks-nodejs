@@ -1,9 +1,8 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::inv::{Inventory, BUCKET, REGION};
-use heroku_nodejs_utils::nodebin_s3;
-use std::collections::HashSet;
-use std::convert::TryFrom;
+use heroku_nodejs_utils::distribution::{Distribution, VersionSet};
+use heroku_nodejs_utils::inv::Inventory;
+use std::str::FromStr;
 
 const FAILED_EXIT_CODE: i32 = 1;
 
@@ -12,63 +11,45 @@ const FAILED_EXIT_CODE: i32 = 1;
 /// updates.
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() < 3 {
-        eprintln!("$ list_versions <node|yarn> path/to/inventory.toml");
+    if args.len() != 3 {
+        eprintln!("$ diff_versions <node|yarn> path/to/inventory.toml");
         std::process::exit(FAILED_EXIT_CODE);
     }
 
-    let software_name = &args[1];
+    let distribution = Distribution::from_str(&args[1]).unwrap_or_else(|e| {
+        eprintln!("Error reading distribution: {e}");
+        std::process::exit(1);
+    });
     let inventory_loc = &args[2];
 
-    let remote_objects =
-        nodebin_s3::list_objects(BUCKET, REGION, software_name).unwrap_or_else(|e| {
-            eprintln!("Failed to fetch from S3: {e}");
-            std::process::exit(1);
-        });
+    let mirrored_versions = distribution.mirrored_versions().unwrap_or_else(|e| {
+        eprintln!("Error reading mirrored versions: {e}");
+        std::process::exit(1);
+    });
 
-    let remote_versions: HashSet<String> = Inventory::try_from(remote_objects)
-        .unwrap_or_else(|e| {
-            eprintln!("Failed to parse AWS S3 XML: {e}");
-            std::process::exit(2);
-        })
-        .releases
-        .iter()
-        .map(|r| r.version.to_string())
-        .collect();
-
-    let local_versions: HashSet<String> = Inventory::read(inventory_loc)
+    let local_versions: VersionSet = Inventory::read(inventory_loc)
         .unwrap_or_else(|e| {
             eprintln!("Error reading '{inventory_loc}': {e}");
-            std::process::exit(3);
+            std::process::exit(1);
         })
         .releases
         .iter()
-        .map(|r| r.version.to_string())
+        .map(|r| r.version.clone())
         .collect();
 
     let msg = [
-        ("Added", remote_versions.difference(&local_versions)),
-        ("Removed", local_versions.difference(&remote_versions)),
+        ("Added", mirrored_versions.difference(&local_versions)),
+        ("Removed", local_versions.difference(&mirrored_versions)),
     ]
     .iter()
-    .filter_map(|(change, versions)| {
-        if versions.clone().count() > 0 {
-            Some(format!(
-                "{} {} version {}.",
-                change,
-                software_name,
-                versions
-                    .clone()
-                    .map(String::from)
-                    .collect::<Vec<String>>()
-                    .join(", ")
-            ))
-        } else {
-            None
-        }
+    .filter(|(_, versions)| versions.clone().count() > 0)
+    .flat_map(|(change, versions)| {
+        versions
+            .clone()
+            .map(|version| format!("- {} {} version {}.", *change, distribution, version))
     })
     .collect::<Vec<String>>()
-    .join(" ");
+    .join("\n");
 
     println!("{msg}");
 }
