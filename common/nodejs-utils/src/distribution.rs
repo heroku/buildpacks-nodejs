@@ -1,6 +1,6 @@
 use crate::{
     inv::{Inventory, Release, BUCKET, REGION},
-    nodejs_org, s3,
+    nodejs_org, npmjs_org, s3,
     vrs::{Requirement, Version},
 };
 use anyhow::anyhow;
@@ -112,9 +112,13 @@ fn list_upstream_node_versions() -> anyhow::Result<VersionSet> {
 }
 
 fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
-    Version::parse("1.22.14")
-        .map(|v| VersionSet::from([v]))
-        .map_err(|_| anyhow!("Couldn't parse"))
+    let mut vset = VersionSet::new();
+    for pkg in ["yarn", "@yarnpkg/cli-dist"] {
+        for release in npmjs_org::list_releases(pkg)? {
+            vset.insert(release.version);
+        }
+    }
+    Ok(vset)
 }
 
 impl TryFrom<s3::BucketContent> for VersionSet {

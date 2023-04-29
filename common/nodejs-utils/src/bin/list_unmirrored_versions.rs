@@ -32,7 +32,6 @@ fn main() {
         .filter_inactive_versions(unmirrored_versions)
         .unwrap_or_else(|e| {
             eprintln!("Error filtering inactive versions: {e}");
-            print_usage();
             std::process::exit(1);
         })
     {
