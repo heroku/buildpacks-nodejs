@@ -1,7 +1,10 @@
 {
   "name": "pnpm-7-pnp",
   "version": "1.0.0",
-  "packageManager": "pnpm@7.31.0",
+  "packageManager": "pnpm@7.32.3",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "start": "node ./server.js"
   },
