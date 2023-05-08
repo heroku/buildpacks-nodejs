@@ -25,6 +25,12 @@ fn pnpm_7_pnp_heroku_20() {
                 [Installing dependencies]
                 Lockfile is up to date, resolution step is skipped
                 Progress: resolved 1, reused 0, downloaded 0, added 0
+            "}
+        );
+
+        assert_contains!(
+            ctx.pack_stdout,
+            &formatdoc! {"
                 Packages: +60
                 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             "}
@@ -70,6 +76,12 @@ fn pnpm_8_hoist_heroku_22() {
                 [Installing dependencies]
                 Lockfile is up to date, resolution step is skipped
                 Progress: resolved 1, reused 0, downloaded 0, added 0
+            "}
+        );
+
+        assert_contains!(
+            ctx.pack_stdout,
+            &formatdoc! {"
                 Packages: +57
                 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
             "}
