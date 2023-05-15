@@ -1,0 +1,34 @@
+name: Mirror Binaries
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '00 1 * * 1-5'
+
+jobs:
+  get-unmirrored-node-versions:
+    name: Get Unmirrored Node.js Versions
+    runs-on: pub-hk-ubuntu-22.04-small
+    outputs:
+      versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - id: install-rust-toolchain
+        name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - id: get-unmirrored-versions
+        name: Get Unmirrored Versions
+        run: echo "versions=$(cargo run --bin list_unmirrored node)" >> $GITHUB_OUTPUT
+    mirror-nodejs-version:
+      name: Mirror Node.js Version
+      runs-on: pub-hk-ubuntu-22.04-small
+      needs: get-unmirrored-node-versions
+      strategy:
+        matrix:
+          version: ${{ jobs.get-unmirrored-node-versions.outputs.versions }}
+      steps:
+        - name: Checkout Repo
+          uses: actions/checkout@v3
