@@ -6,12 +6,9 @@ on:
     - cron: '00 1 * * 1-5'
 
 jobs:
-  get-unmirrored-versions:
-    name: get-unmirrored-${{matrix.distribution}}-versions
+  get-unmirrored-node-versions:
+    name: Get unmirrored Node.js versions
     runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        distribution: ["node", "yarn"]
     outputs:
       versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
     steps:
@@ -23,25 +20,18 @@ jobs:
         with:
           toolchain: stable
       - id: get-unmirrored-versions
-        name: Get Unmirrored Versions (${{ matrix.distribution }})
-        run: echo "versions=$(AWS_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions ${{ matrix.distribution }})" >> $GITHUB_OUTPUT
-  mirror-node-version:
-    name: Mirror Node.js Version
+        name: Get unmirrored Node.js versions
+        run: echo "versions=$(AWS_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+
+  mirror-node-distribution:
+    name: Mirror Node.js Distribution
     runs-on: ubuntu-22.04
     needs: get-unmirrored-node-versions
     strategy:
       matrix:
+        platform: "linux-x64"
         version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-  mirror-yarn-version:
-    name: Mirror Yarn Version
-    runs-on: ubuntu-22.04
-    needs: get-unmirrored-yarn-versions
-    strategy:
-      matrix:
-        version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
+    uses: ./.github/workflows/mirror-node.yml
+    with:
+      version: ${{ matrix.version }}
+      platform: ${{ matrix.platform }}
