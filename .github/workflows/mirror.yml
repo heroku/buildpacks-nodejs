@@ -29,7 +29,7 @@ jobs:
     needs: get-unmirrored-node-versions
     strategy:
       matrix:
-        platform: "linux-x64"
+        platform: ["linux-x64"]
         version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
     uses: ./.github/workflows/mirror-node.yml
     with:
