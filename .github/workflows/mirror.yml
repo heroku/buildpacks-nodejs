@@ -36,10 +36,10 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download Node.js distribution and verification files
-        run: common/bin/download-node "${{ inputs.version }}" "${{ inputs.platform }}"
+        run: common/bin/download-node "${{ matrix.version }}" "${{ matrix.platform }}"
 
       - name: Verify Node.js distribution
-        run: common/bin/verify-node "${{ inputs.version }}" "${{ inputs.platform}}"
+        run: common/bin/verify-node "${{ matrix.version }}" "${{ matrix.platform}}"
 
       - name: Upload Node.js distribution to Nodebin S3 bucket
         env:
@@ -48,5 +48,5 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: >
           aws s3 cp
-          "node-v${{ inputs.version }}-${{ inputs.platform }}.tar.gz"
-          "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ inputs.platform}}/node-v${{ inputs.version }}-${{ inputs.platform }}.tar.gz"
+          "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
+          "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
