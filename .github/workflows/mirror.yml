@@ -21,10 +21,32 @@ jobs:
           toolchain: stable
       - id: get-unmirrored-versions
         name: Get unmirrored Node.js versions
-        run: echo "versions=$(AWS_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+        run: echo "versions=$(AWS_S3_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
 
   mirror-node-distribution:
-    uses: ./.github/workflows/mirror-node.yml
-    with:
-      version: ${{ matrix.version }}
-      platform: ${{ matrix.platform }}
+    name: Mirror Node.js Distribution ${{ matrix.version }} ${{ matrix.platform }}
+    runs-on: ubuntu-22.04
+    needs: get-unmirrored-node-versions
+    strategy:
+      matrix:
+        platform: ["linux-x64"]
+        version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download Node.js distribution and verification files
+        run: common/bin/download-node "${{ inputs.version }}" "${{ inputs.platform }}"
+
+      - name: Verify Node.js distribution
+        run: common/bin/verify-node "${{ inputs.version }}" "${{ inputs.platform}}"
+
+      - name: Upload Node.js distribution to Nodebin S3 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: >
+          aws s3 cp
+          "node-v${{ inputs.version }}-${{ inputs.platform }}.tar.gz"
+          "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ inputs.platform}}/node-v${{ inputs.version }}-${{ inputs.platform }}.tar.gz"
