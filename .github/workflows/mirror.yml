@@ -32,7 +32,7 @@ jobs:
         platform: ["linux-x64"]
         version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
     steps:
-      uses: ./.github/workflows/mirror-node.yml
-      with:
-        version: ${{ matrix.version }}
-        platform: ${{ matrix.platform }}
+      - uses: ./.github/workflows/mirror-node.yml
+        with:
+          version: ${{ matrix.version }}
+          platform: ${{ matrix.platform }}
