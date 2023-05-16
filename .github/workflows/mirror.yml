@@ -7,8 +7,7 @@ on:
 
 jobs:
   get-unmirrored-versions:
-    name: Get Unmirrored Versions (${{ matrix.distribution }})
-    id: get-unmirrored-${{ matrix.distribution }}-versions
+    name: get-unmirrored-${{matrix.distribution}}-versions
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -24,8 +23,8 @@ jobs:
         with:
           toolchain: stable
       - id: get-unmirrored-versions
-        name: Get Unmirrored Versions
-        run: echo "versions=$(AWS_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+        name: Get Unmirrored Versions (${{ matrix.distribution }})
+        run: echo "versions=$(AWS_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions ${{ matrix.distribution }})" >> $GITHUB_OUTPUT
   mirror-node-version:
     name: Mirror Node.js Version
     runs-on: ubuntu-22.04
