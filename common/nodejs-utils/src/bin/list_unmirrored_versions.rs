@@ -20,6 +20,13 @@ fn main() {
         });
 
     let bucket = std::env::var("AWS_BUCKET").unwrap_or(BUCKET.to_string());
+    let version_limit: usize = std::env::var("VERSION_LIMIT")
+        .unwrap_or("8".to_string())
+        .parse()
+        .unwrap_or_else(|e| {
+            eprintln!("Couldn't parse version limit: {e}");
+            std::process::exit(1);
+        });
 
     let upstream_versions = dist.upstream_versions().unwrap_or_else(|e| {
         eprintln!("Couldn't fetch upstream version list: {e}");
@@ -38,6 +45,7 @@ fn main() {
             std::process::exit(1);
         })
         .iter()
+        .take(version_limit)
         .map(Version::to_string)
         .collect();
 

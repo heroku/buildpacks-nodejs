@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# This script verifies that a downloaded yarn version is what was originally
+# published to the npm registry.
+# Docs: https://docs.npmjs.com/about-registry-signatures
+
+set -o pipefail
+set -e
+
+package_name=$1
+if [ -z "$package_name" ]; then
+  echo "Yarn package name not provided. Should be 'yarn' or '@yarnpkg/cli-dist'."
+  exit 1
+fi
+
+package_version=$2
+if [ -z "$package_version" ]; then
+  echo "Yarn package version not provided. Should be something like '1.22.19'"
+  exit 1
+fi
+
+# Check the file's sha against npm's published sha. This section assumes all
+# packages are published with sha512. That was true at the time of writing,
+# but if npmjs.org starts using additional checksum algorithms, this section
+# will need to be changed.
+shasum=$(shasum -b -a 512 yarn-v${package_version}.tar.gz | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
+actual_integrity="sha512-${shasum}"
+published_integrity=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.integrity')
+if [ "$actual_integrity" != "$published_integrity" ]; then
+  echo "Couldn't verify package integrity. Expected '$published_integrity', Got '$actual_integrity'."
+  exit 1
+fi
+
+# Build the npm signing key from published npm key data. This section assumes there
+# is only one published public key. That was true at the time of
+# writing, but if npmjs.com starts using multiple keys for signatures, this
+# section will need to change. The public key(s) may be obtained from
+# https://registry.npmjs.com/-/npm/v1/keys.
+npm_pubkey="MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg=="
+printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" > npm-pubkey.pem
+
+# Fetch the signature from the published package data
+curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.signatures[0].sig' | base64 -d > npm-signature.bin
+
+# Build the signing message
+echo -n "${package_name}@${package_version}:${published_integrity}" > message.txt
+
+# Verify the signature
+openssl dgst -sha256 -verify npm-pubkey.pem -signature npm-signature.bin message.txt
