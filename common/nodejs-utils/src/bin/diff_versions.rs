@@ -2,6 +2,7 @@
 
 use heroku_nodejs_utils::distribution::{Distribution, VersionSet};
 use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::inv::BUCKET;
 use std::str::FromStr;
 
 const FAILED_EXIT_CODE: i32 = 1;
@@ -12,17 +13,20 @@ const FAILED_EXIT_CODE: i32 = 1;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     if args.len() != 3 {
-        eprintln!("$ diff_versions <node|yarn> path/to/inventory.toml");
+        print_usage();
         std::process::exit(FAILED_EXIT_CODE);
     }
 
     let distribution = Distribution::from_str(&args[1]).unwrap_or_else(|e| {
         eprintln!("Error reading distribution: {e}");
+        print_usage();
         std::process::exit(1);
     });
     let inventory_loc = &args[2];
 
-    let mirrored_versions = distribution.mirrored_versions().unwrap_or_else(|e| {
+    let bucket = std::env::var("AWS_BUCKET").unwrap_or(BUCKET.to_string());
+
+    let mirrored_versions = distribution.mirrored_versions(&bucket).unwrap_or_else(|e| {
         eprintln!("Error reading mirrored versions: {e}");
         std::process::exit(1);
     });
@@ -52,4 +56,8 @@ fn main() {
     .join("\n");
 
     println!("{msg}");
+}
+
+fn print_usage() {
+    eprintln!("$ AWS_BUCKET=heroku-nodebin diff_versions <node|yarn> path/to/inventory.toml");
 }

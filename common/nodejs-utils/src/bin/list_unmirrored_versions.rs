@@ -1,6 +1,7 @@
 #![warn(clippy::pedantic)]
 
 use heroku_nodejs_utils::distribution::Distribution;
+use heroku_nodejs_utils::inv::BUCKET;
 use heroku_nodejs_utils::vrs::Version;
 
 fn main() {
@@ -18,12 +19,14 @@ fn main() {
             std::process::exit(1);
         });
 
+    let bucket = std::env::var("AWS_BUCKET").unwrap_or(BUCKET.to_string());
+
     let upstream_versions = dist.upstream_versions().unwrap_or_else(|e| {
         eprintln!("Couldn't fetch upstream version list: {e}");
         std::process::exit(1);
     });
 
-    let mirrored_versions = dist.mirrored_versions().unwrap_or_else(|e| {
+    let mirrored_versions = dist.mirrored_versions(&bucket).unwrap_or_else(|e| {
         eprintln!("Couldn't fetch mirrored version list: {e}");
         std::process::exit(1);
     });
@@ -45,5 +48,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("Usage: $ list_unmirrored_versions <node|yarn>");
+    eprintln!("Usage: $ AWS_BUCKET=heroku-nodebin list_unmirrored_versions <node|yarn>");
 }

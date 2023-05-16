@@ -29,7 +29,7 @@ pub(crate) struct ListBucketResult {
     is_truncated: bool,
     continuation_token: Option<String>,
     next_continuation_token: Option<String>,
-    contents: Vec<Content>,
+    contents: Option<Vec<Content>>,
 }
 
 /// Represents contents of a bucket's prefix
@@ -71,8 +71,10 @@ pub(crate) fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
             params,
         )?;
         let res = ureq::get(url.as_ref()).call()?.into_string()?;
-        let mut page: ListBucketResult = serde_xml_rs::from_str(&res)?;
-        bucket_content.contents.append(&mut page.contents);
+        let page: ListBucketResult = serde_xml_rs::from_str(&res)?;
+        if let Some(mut contents) = page.contents {
+            bucket_content.contents.append(&mut contents);
+        }
 
         match page.next_continuation_token {
             None => break,

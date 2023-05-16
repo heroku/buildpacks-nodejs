@@ -52,8 +52,8 @@ impl Distribution {
     /// # Errors
     /// - http call failures
     /// - http response parsing errors
-    pub fn mirrored_versions(&self) -> anyhow::Result<VersionSet> {
-        s3::list_objects(BUCKET, REGION, self.bucket_prefix())?.try_into()
+    pub fn mirrored_versions(&self, bucket: &str) -> anyhow::Result<VersionSet> {
+        s3::list_objects(bucket, REGION, self.bucket_prefix())?.try_into()
     }
 
     /// Build an inventory from the releases listed in the mirrored location.
