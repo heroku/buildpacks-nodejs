@@ -28,7 +28,7 @@ jobs:
     needs: get-unmirrored-node-versions
     strategy:
       matrix:
-        version: ${{ needs.get-unmirrored-node-versions.outputs.versions }}
+        version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3

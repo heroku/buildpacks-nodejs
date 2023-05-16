@@ -1,6 +1,7 @@
 #![warn(clippy::pedantic)]
 
 use heroku_nodejs_utils::distribution::Distribution;
+use heroku_nodejs_utils::vrs::Version;
 
 fn main() {
     let dist = std::env::args()
@@ -27,16 +28,20 @@ fn main() {
         std::process::exit(1);
     });
 
-    let unmirrored_versions = upstream_versions.difference(&mirrored_versions);
-    for version in dist
-        .filter_inactive_versions(unmirrored_versions)
+    let unmirrored_versions: Vec<String> = dist
+        .filter_inactive_versions(upstream_versions.difference(&mirrored_versions))
         .unwrap_or_else(|e| {
             eprintln!("Error filtering inactive versions: {e}");
             std::process::exit(1);
         })
-    {
-        println!("{version}");
-    }
+        .iter()
+        .map(Version::to_string)
+        .collect();
+
+    serde_json::to_writer(std::io::stdout(), &unmirrored_versions).unwrap_or_else(|e| {
+        eprintln!("Couldn't write versions to stdout: {e}");
+        std::process::exit(1);
+    });
 }
 
 fn print_usage() {
