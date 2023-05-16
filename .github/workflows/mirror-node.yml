@@ -14,9 +14,9 @@ on:
 
 jobs:
   mirror_node:
-    runs-on: sfdc-hk-ubuntu-22.04-medium
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout nodebin
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Download Node.js distribution and verification files
