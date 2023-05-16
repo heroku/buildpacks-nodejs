@@ -19,7 +19,7 @@ fn main() {
             std::process::exit(1);
         });
 
-    let bucket = std::env::var("AWS_BUCKET").unwrap_or(BUCKET.to_string());
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
     let version_limit: usize = std::env::var("VERSION_LIMIT")
         .unwrap_or("8".to_string())
         .parse()
@@ -56,5 +56,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("Usage: $ AWS_BUCKET=heroku-nodebin list_unmirrored_versions <node|yarn>");
+    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin list_unmirrored_versions <node|yarn>");
 }
