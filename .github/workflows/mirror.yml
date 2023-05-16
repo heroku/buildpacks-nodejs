@@ -21,7 +21,7 @@ jobs:
           toolchain: stable
       - id: get-unmirrored-versions
         name: Get Unmirrored Versions
-        run: echo "versions=$(cargo run --bin list_unmirrored node)" >> $GITHUB_OUTPUT
+        run: echo "versions=$(cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
   mirror-nodejs-version:
     name: Mirror Node.js Version
     runs-on: pub-hk-ubuntu-22.04-small
