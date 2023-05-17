@@ -1,4 +1,4 @@
-name: Mirror Unmirrored Distributions
+name: Mirror Distributions
 on:
   push:
   workflow_dispatch:
@@ -22,6 +22,23 @@ jobs:
       - id: get-unmirrored-versions
         name: Get unmirrored Node.js versions
         run: echo "versions=$(AWS_S3_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+
+  get-unmirrored-yarn-versions:
+    name: Get unmirrored Yarn versions
+    runs-on: ubuntu-22.04
+    outputs:
+      versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - id: install-rust-toolchain
+        name: Install Rust Toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - id: get-unmirrored-versions
+        name: Get unmirrored Yarn versions
+        run: echo "versions=$(AWS_S3_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
 
   mirror-node-distribution:
     name: Mirror Node.js Distribution ${{ matrix.version }} ${{ matrix.platform }}
@@ -50,3 +67,30 @@ jobs:
           aws s3 cp
           "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
           "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
+
+  mirror-yarn-distribution:
+    name: Mirror Yarn Distribution ${{ matrix.version }}
+    runs-on: ubuntu-22.04
+    needs: get-unmirrored-yarn-versions
+    strategy:
+      matrix:
+        version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
+    steps:
+      - name: Checkout nodebin
+        uses: actions/checkout@v3
+
+      - name: Download yarn distribution
+        run: bin/ci-download-yarn yarn "${{ matrix.version }}"
+
+      - name: Verify yarn distribution
+        run: bin/ci-verify-yarn yarn "${{ matrix.version }}"
+
+      - name: Upload Yarn distribution to S3 bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: >
+          aws s3 cp
+          "yarn-v${{ matrix.version }}.tar.gz"
+          "s3://${{ secrets.AWS_S3_BUCKET }}/yarn/release/yarn-v${{ matrix.version }}.tar.gz"
