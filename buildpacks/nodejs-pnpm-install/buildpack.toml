@@ -14,9 +14,6 @@ type = "MIT"
 id = "*"
 
 [[stacks]]
-id = "heroku-18"
-
-[[stacks]]
 id = "heroku-20"
 
 [[stacks]]
