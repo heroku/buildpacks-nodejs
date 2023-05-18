@@ -4,6 +4,10 @@ use heroku_nodejs_utils::distribution::Distribution;
 use heroku_nodejs_utils::inv::BUCKET;
 use heroku_nodejs_utils::vrs::Version;
 
+/// This command prints a list of Yarn or Node.js versions that have not
+/// yet been published to Nodebin (S3 bucket). It checks the list of upstream
+/// releases to what is listed in the AWS_S3_BUCKET. Output is a JSON array,
+/// so that it may be parsed by GitHub actions.
 fn main() {
     let dist = std::env::args()
         .nth(1)
@@ -20,8 +24,11 @@ fn main() {
         });
 
     let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
+
+    // Limit the number of versions returned. This is useful to prevent
+    // spawning 100+ GitHub actions when querying against an empty S3 bucket.
     let version_limit: usize = std::env::var("VERSION_LIMIT")
-        .unwrap_or("8".to_string())
+        .unwrap_or("12".to_string())
         .parse()
         .unwrap_or_else(|e| {
             eprintln!("Couldn't parse version limit: {e}");
