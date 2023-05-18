@@ -11,9 +11,6 @@ keywords = ["corepack", "node", "node.js", "nodejs", "javascript", "js"]
 type = "MIT"
 
 [[stacks]]
-id = "heroku-18"
-
-[[stacks]]
 id = "heroku-20"
 
 [[stacks]]
