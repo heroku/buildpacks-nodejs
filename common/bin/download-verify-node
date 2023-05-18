@@ -6,8 +6,33 @@ set -o pipefail
 set -e
 
 version_number=$1
-platform=$2
+if [ -z "$version_number" ]; then
+  echo "Node.js version not provided as first argument. Should be something like '20.1.0'" >&2
+  exit 1
+fi
 
+platform=$2
+if [ -z "$platform" ]; then
+  echo "Node.js platform not provided as second argument. Should be something like 'linux-x64'" >&2
+  exit 1
+fi
+
+
+echo "Downloading Node.js release artifacts..." >&2
+
+curl -o "node-v${version_number}-${platform}.tar.gz" \
+  "https://nodejs.org/download/release/v${version_number}/node-v${version_number}-${platform}.tar.gz"
+
+curl -o "SHASUMS256.txt" \
+  -O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt"
+
+curl -o "SHASUMS256.txt.sig" \
+  -O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt.sig"
+
+echo "Checking Node.js integrity..." >&2
+grep "node-v${version_number}-${platform}.tar.gz" SHASUMS256.txt | sha256sum -c -
+
+echo "Importing gpg keys..." >&2
 gpg_keys=(
   "4ED778F539E3634C779C87C6D7062848A1AB005C"
   "94AE36675C464D64BAFA68DD7434390BDBE9B9C5"
@@ -34,12 +59,11 @@ gpg_keys=(
   "141F07595B7B3FFE74309A937405533BE57C7D57"
   "DD792F5973C6DE52C432CBDAC77ABFA00DDBF2B7"
 )
-
 for key in "${gpg_keys[@]}"
 do
-  echo "Importing GPG key: ${key}"
   gpg --keyserver hkps://keys.openpgp.org --recv-keys "$key"
 done
 
+echo "Verifying Node.js gpg signature..." >&2
 gpg --verify SHASUMS256.txt.sig SHASUMS256.txt
-grep "node-v${version_number}-${platform}.tar.gz" SHASUMS256.txt | sha256sum -c -
+

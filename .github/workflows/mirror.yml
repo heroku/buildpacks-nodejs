@@ -52,11 +52,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Download Node.js distribution and verification files
-        run: common/bin/download-node "${{ matrix.version }}" "${{ matrix.platform }}"
-
-      - name: Verify Node.js distribution
-        run: common/bin/verify-node "${{ matrix.version }}" "${{ matrix.platform}}"
+      - name: Download and Verify Node.js distribution
+        run: common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
 
       - name: Upload Node.js distribution to Nodebin S3 bucket
         env:
