@@ -85,7 +85,7 @@ For local development, you'll want the file to look like this:
   ]
 
 [stack]
-  id = "heroku-18"
+  id = "heroku-22"
   build-image = "heroku/buildpacks:22"
   run-image = "heroku/buildpacks:22"
 ```
