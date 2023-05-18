@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Change release target from ECR to docker.io/heroku/buildpack-nodejs-npm.
+
 ## [0.5.2] 2022/04/05
 
 - Add support for all stacks
