@@ -28,4 +28,4 @@ id = "io.buildpacks.stacks.bionic"
 [metadata]
 [metadata.release]
 [metadata.release.docker]
-repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack"
+repository = "docker.io/heroku/buildpack-nodejs-npm"

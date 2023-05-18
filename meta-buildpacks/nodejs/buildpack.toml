@@ -66,4 +66,4 @@ optional = true
 [metadata]
 [metadata.release]
 [metadata.release.docker]
-repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-buildpack"
+repository = "docker.io/heroku/buildpack-nodejs"

@@ -25,4 +25,4 @@ package_name = "@heroku/sf-fx-runtime-nodejs"
 package_version = "0.14.1"
 [metadata.release]
 [metadata.release.docker]
-repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-invoker-buildpack"
+repository = "docker.io/heroku/buildpack-nodejs-function-invoker"
