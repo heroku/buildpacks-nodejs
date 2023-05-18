@@ -7,27 +7,31 @@
 set -o pipefail
 set -e
 
-package_name=$1
-if [ -z "$package_name" ]; then
-  echo "Yarn package name not provided. Should be 'yarn' or '@yarnpkg/cli-dist'."
-  exit 1
-fi
-
-package_version=$2
+package_version=$1
 if [ -z "$package_version" ]; then
   echo "Yarn package version not provided. Should be something like '1.22.19'"
   exit 1
 fi
 
+# Yarn 2+ (aka: "berry") is hosted under a different npm package.
+major_version=$(echo $package_version | cut -d "." -f 1)
+package_name=$([ "$major_version" -ge "2" ] && echo "@yarnpkg/cli-dist" || echo "yarn")
+
+
+echo "Downloading yarn tarball..." >&2
+url=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.tarball')
+curl -sSf -o "./yarn-v${package_version}.tar.gz" "${url}"
+
 # Check the file's sha against npm's published sha. This section assumes all
 # packages are published with sha512. That was true at the time of writing,
 # but if npmjs.org starts using additional checksum algorithms, this section
 # will need to be changed.
+echo "Checking yarn tarball integrity..." >&2
 shasum=$(shasum -b -a 512 yarn-v${package_version}.tar.gz | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
 actual_integrity="sha512-${shasum}"
 published_integrity=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.integrity')
 if [ "$actual_integrity" != "$published_integrity" ]; then
-  echo "Couldn't verify package integrity. Expected '$published_integrity', Got '$actual_integrity'."
+  echo "Couldn't verify package integrity. Expected '$published_integrity', got '$actual_integrity'." >&2
   exit 1
 fi
 
@@ -36,6 +40,7 @@ fi
 # writing, but if npmjs.com starts using multiple keys for signatures, this
 # section will need to change. The public key(s) may be obtained from
 # https://registry.npmjs.com/-/npm/v1/keys.
+echo "Verifying npmjs.com signature..." >&2
 npm_pubkey="MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg=="
 printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" > npm-pubkey.pem
 
