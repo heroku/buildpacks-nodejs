@@ -24,7 +24,7 @@ fn main() {
     });
     let inventory_loc = &args[2];
 
-    let bucket = std::env::var("AWS_BUCKET").unwrap_or(BUCKET.to_string());
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
 
     let mirrored_versions = distribution.mirrored_versions(&bucket).unwrap_or_else(|e| {
         eprintln!("Error reading mirrored versions: {e}");
@@ -59,5 +59,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("$ AWS_BUCKET=heroku-nodebin diff_versions <node|yarn> path/to/inventory.toml");
+    eprintln!("$ AWS_S3_BUCKET=heroku-nodebin diff_versions <node|yarn> path/to/inventory.toml");
 }

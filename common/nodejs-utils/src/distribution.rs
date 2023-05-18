@@ -61,8 +61,8 @@ impl Distribution {
     /// # Errors
     /// - http call failures
     /// - http response parsing errors
-    pub fn mirrored_inventory(&self) -> anyhow::Result<Inventory> {
-        s3::list_objects(BUCKET, REGION, self.bucket_prefix())?.try_into()
+    pub fn mirrored_inventory(&self, bucket: &str) -> anyhow::Result<Inventory> {
+        s3::list_objects(bucket, REGION, self.bucket_prefix())?.try_into()
     }
 
     /// Filter inactive distribution versions and return as a `VersionSet`.

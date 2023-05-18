@@ -1,8 +1,9 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::distribution::Distribution;
+use heroku_nodejs_utils::{distribution::Distribution, inv::BUCKET};
 
 fn main() {
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
     let inventory = std::env::args()
         .nth(1)
         .unwrap_or_else(|| {
@@ -16,7 +17,7 @@ fn main() {
             print_usage();
             std::process::exit(1);
         })
-        .mirrored_inventory()
+        .mirrored_inventory(&bucket)
         .unwrap_or_else(|e| {
             eprintln!("Failed to read mirrored releases: {e}");
             print_usage();
@@ -33,5 +34,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("Usage: $ generate_inventory <node|yarn>");
+    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin generate_inventory <node|yarn>");
 }
