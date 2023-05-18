@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Drop explicit support for the End-of-Life stack `heroku-18`.
+
 ## [0.1.2] 2023/04/11
 
 - Will now install `pnpm`. ([#489](https://github.com/heroku/buildpacks-nodejs/pull/489))

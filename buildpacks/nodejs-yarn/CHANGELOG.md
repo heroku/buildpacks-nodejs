@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Drop explicit support for the End-of-Life stack `heroku-18`.
+
 ## [0.4.2] 2023/05/08
 
 - Added yarn version 3.5.1, 4.0.0-rc.43.
