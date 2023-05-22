@@ -26,4 +26,4 @@ version = "0.3.10"
 [metadata]
 [metadata.release]
 [metadata.release.docker]
-repository = "public.ecr.aws/heroku-buildpacks/heroku-nodejs-function-buildpack"
+repository = "docker.io/heroku/buildpack-nodejs-function"
