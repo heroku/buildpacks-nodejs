@@ -85,9 +85,9 @@ For local development, you'll want the file to look like this:
   ]
 
 [stack]
-  id = "heroku-18"
-  build-image = "heroku/pack:18"
-  run-image = "heroku/pack:18"
+  id = "heroku-22"
+  build-image = "heroku/heroku:22-cnb-build"
+  run-image = "heroku/heroku:22-cnb"
 ```
 
 Create the builder with `pack`:
