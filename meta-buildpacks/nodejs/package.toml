@@ -2,16 +2,16 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-engine-buildpack@sha256:19a18c8829e7db59e9d2d7532758bd58fa17b86d6886608d14bc18d1baaf5717"
+uri = "docker://docker.io/heroku/buildpack-nodejs-engine@sha256:5578de3a6c79180abeefb024df8fe862da97b929e78b027428a9c2fd9fc02339"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-npm-buildpack@sha256:51c478e7398c4c17ae4e60486f8aa115992ae29d888ab7328a0b73d2c4bdbf45"
+uri = "docker://docker.io/heroku/buildpack-nodejs-npm@sha256:99d7bac02c7593dff5d79870ecd66fdaacea7118416aff2292e1fa13ccc8bc58"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/buildpack-nodejs-pnpm-install@sha256:12754c9155038ca92c12ed9e765158b8a6f873078c8f61215d133ff3038387f8"
 
 [[dependencies]]
-uri = "docker://public.ecr.aws/heroku-buildpacks/heroku-nodejs-yarn-buildpack@sha256:674d12371b7cd95e4d7e94eb70186cb27262875958ad55266b3605dd945e1d0c"
+uri = "docker://docker.io/heroku/buildpack-nodejs-yarn@sha256:34e87425fcd015f3ffe4f14af18a903825e6b9a825d0143d82687ad31d8a00a7"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/buildpack-nodejs-corepack@sha256:0ad3bd41ac2ce27ee7aeaa74051a2561ad885a6b8cb529d65ae3d0494e30a8a2"
