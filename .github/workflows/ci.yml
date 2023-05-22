@@ -54,7 +54,7 @@ jobs:
         run: cargo test --locked
 
   find-libcnb-buildpacks:
-    name: "Find libcnb buildpacks"
+    name: Find libcnb buildpacks
     runs-on: ubuntu-22.04
     outputs:
       buildpack_dirs: ${{ steps.find-buildpack-dirs.outputs.buildpack_dirs }}
@@ -67,8 +67,8 @@ jobs:
         name: Find libcnb buildpack directories
         run: echo "buildpack_dirs=$(find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print | sort | uniq | jq -nRc '[inputs]')" >> $GITHUB_OUTPUT
 
-  integration-test:
-    name: Integration Tests (${{ matrix.buildpack-directory }})
+  rust-integration-test:
+    name: libcnb.rs integration tests (${{ matrix.buildpack-directory }})
     runs-on: pub-hk-ubuntu-22.04-large
     needs: find-libcnb-buildpacks
     strategy:
