@@ -53,7 +53,7 @@ version = "0.8.23"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
-version = "0.5.3"
+version = "0.5.4"
 
 [[order.group]]
 id = "heroku/procfile"

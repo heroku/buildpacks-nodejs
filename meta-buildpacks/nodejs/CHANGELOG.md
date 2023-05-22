@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+* Upgraded `heroku/nodejs-npm` to `0.5.4`
 * Upgraded `heroku/nodejs-yarn` to `0.4.4`
 * Upgraded `heroku/nodejs-engine` to `0.8.23`
 * Change release target from ECR to docker.io/heroku/buildpack-nodejs.
