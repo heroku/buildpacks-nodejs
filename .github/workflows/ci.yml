@@ -53,8 +53,28 @@ jobs:
       - name: Run unit tests
         run: cargo test --locked
 
-  rust-integration-test:
+  find-libcnb-buildpacks:
+    name: "Find libcnb buildpacks"
     runs-on: ubuntu-22.04
+    outputs:
+      buildpack_dirs: ${{ steps.find-buildpack-dirs.outputs.buildpack_dirs }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+      - id: find-buildpack-dirs
+        name: Find libcnb buildpack directories
+        run: echo "buildpack_dirs=$(find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print | sort | uniq | jq -nRc '[inputs]')" >> $GITHUB_OUTPUT
+
+  integration-test:
+    name: Integration Tests (${{ matrix.buildpack-directory }})
+    runs-on: pub-hk-ubuntu-22.04-large
+    needs: find-libcnb-buildpacks
+    strategy:
+      fail-fast: false
+      matrix:
+        buildpack-directory: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.buildpack_dirs) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -69,7 +89,8 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.1.0
       - name: Run integration tests
-        run: cargo test --locked -- --ignored
+        working-directory: ${{ matrix.buildpack-directory }}
+        run: cargo test --locked -- --ignored --test-threads 16
 
   shpec:
     runs-on: ubuntu-22.04
