@@ -14,8 +14,8 @@ if [ -z "$package_version" ]; then
 fi
 
 # Yarn 2+ (aka: "berry") is hosted under a different npm package.
-major_version=$(echo $package_version | cut -d "." -f 1)
-package_name=$([ "$major_version" -ge "2" ] && echo "@yarnpkg/cli-dist" || echo "yarn")
+major_version=$(echo "$package_version" | cut -d "." -f 1)
+package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
 
 
 echo "Downloading yarn tarball..." >&2
@@ -27,7 +27,7 @@ curl -sSf -o "./yarn-v${package_version}.tar.gz" "${url}"
 # but if npmjs.org starts using additional checksum algorithms, this section
 # will need to be changed.
 echo "Checking yarn tarball integrity..." >&2
-shasum=$(shasum -b -a 512 yarn-v${package_version}.tar.gz | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
+shasum=$(shasum -b -a 512 yarn-v"${package_version}".tar.gz | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
 actual_integrity="sha512-${shasum}"
 published_integrity=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.integrity')
 if [ "$actual_integrity" != "$published_integrity" ]; then
