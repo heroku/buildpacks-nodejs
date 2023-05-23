@@ -129,9 +129,51 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_list_upstream_node_versions() {
+    fn upstream_versions_node() {
+        let dist = Distribution::Node {};
         let expected_version = Version::parse("20.0.0").expect("Expected to parse a valid version");
-        let versions = list_upstream_node_versions()
+        let versions = dist
+            .upstream_versions()
+            .expect("Expected to list upstream remote versions, but got an error");
+        let actual_version = versions
+            .get(&expected_version)
+            .expect("Expected to find a matching version");
+        assert_eq!(&expected_version, actual_version);
+    }
+
+    #[test]
+    fn upstream_versions_yarn() {
+        let dist = Distribution::Yarn {};
+        let expected_version =
+            Version::parse("1.22.17").expect("Expected to parse a valid version");
+        let versions = dist
+            .upstream_versions()
+            .expect("Expected to list upstream remote versions, but got an error");
+        let actual_version = versions
+            .get(&expected_version)
+            .expect("Expected to find a matching version");
+        assert_eq!(&expected_version, actual_version);
+    }
+
+    #[test]
+    fn mirrored_versions_node() {
+        let dist = Distribution::Node {};
+        let expected_version = Version::parse("18.0.0").expect("Expected to parse a valid version");
+        let versions = dist
+            .mirrored_versions(DEFAULT_BUCKET)
+            .expect("Expected to list upstream remote versions, but got an error");
+        let actual_version = versions
+            .get(&expected_version)
+            .expect("Expected to find a matching version");
+        assert_eq!(&expected_version, actual_version);
+    }
+
+    #[test]
+    fn mirrored_versions_yarn() {
+        let dist = Distribution::Yarn {};
+        let expected_version = Version::parse("3.0.0").expect("Expected to parse a valid version");
+        let versions = dist
+            .mirrored_versions(DEFAULT_BUCKET)
             .expect("Expected to list upstream remote versions, but got an error");
         let actual_version = versions
             .get(&expected_version)
