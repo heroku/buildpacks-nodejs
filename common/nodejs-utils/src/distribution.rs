@@ -218,6 +218,7 @@ mod tests {
         let etag = "739c200ca266266ff150ad4d89b83205";
         let content = s3::Content {
             key: "node/release/darwin-x64/node-v0.10.0-darwin-x64.tar.gz".to_string(),
+            etag: etag.to_string(),
             ..Default::default()
         };
         let bucket_content = s3::BucketContent {
