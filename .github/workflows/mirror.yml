@@ -22,7 +22,7 @@ jobs:
         name: Get unmirrored Node.js versions
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: echo "versions=$(VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+        run: echo "versions=$(cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
 
   get-unmirrored-yarn-versions:
     name: Get unmirrored Yarn versions
@@ -41,7 +41,7 @@ jobs:
         name: Get unmirrored Yarn versions
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: echo "versions=$(VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
+        run: echo "versions=$(cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
 
   mirror-node-distribution:
     name: Mirror Node.js Distribution ${{ matrix.version }} ${{ matrix.platform }}
