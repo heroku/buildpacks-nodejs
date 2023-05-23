@@ -6,7 +6,7 @@ use heroku_nodejs_utils::vrs::Version;
 
 /// This command prints a list of Yarn or Node.js versions that have not
 /// yet been published to Nodebin (S3 bucket). It checks the list of upstream
-/// releases to what is listed in the AWS_S3_BUCKET. Output is a JSON array,
+/// releases to what is listed in the `AWS_S3_BUCKET`. Output is a JSON array,
 /// so that it may be parsed by GitHub actions.
 fn main() {
     let dist = std::env::args()
