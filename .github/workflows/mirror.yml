@@ -1,6 +1,5 @@
 name: Mirror Distributions
 on:
-  push:
   workflow_dispatch:
   schedule:
     - cron: '00 1 * * 1-5'
