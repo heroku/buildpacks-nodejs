@@ -1,7 +1,7 @@
 #![warn(clippy::pedantic)]
 
 use heroku_nodejs_utils::distribution::Distribution;
-use heroku_nodejs_utils::inv::BUCKET;
+use heroku_nodejs_utils::distribution::DEFAULT_BUCKET;
 use heroku_nodejs_utils::vrs::Version;
 
 /// This command prints a list of Yarn or Node.js versions that have not
@@ -23,7 +23,7 @@ fn main() {
             std::process::exit(1);
         });
 
-    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(DEFAULT_BUCKET.to_string());
 
     // Limit the number of versions returned. This is useful to prevent
     // spawning 100+ GitHub actions when querying against an empty S3 bucket.

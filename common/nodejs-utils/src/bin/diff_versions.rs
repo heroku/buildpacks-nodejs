@@ -1,8 +1,8 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::distribution::{Distribution, VersionSet};
+use heroku_nodejs_utils::distribution::Distribution;
+use heroku_nodejs_utils::distribution::DEFAULT_BUCKET;
 use heroku_nodejs_utils::inv::Inventory;
-use heroku_nodejs_utils::inv::BUCKET;
 use std::str::FromStr;
 
 const FAILED_EXIT_CODE: i32 = 1;
@@ -24,14 +24,14 @@ fn main() {
     });
     let inventory_loc = &args[2];
 
-    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(BUCKET.to_string());
+    let bucket = std::env::var("AWS_S3_BUCKET").unwrap_or(DEFAULT_BUCKET.to_string());
 
     let mirrored_versions = distribution.mirrored_versions(&bucket).unwrap_or_else(|e| {
         eprintln!("Error reading mirrored versions: {e}");
         std::process::exit(1);
     });
 
-    let local_versions: VersionSet = Inventory::read(inventory_loc)
+    let local_versions = Inventory::read(inventory_loc)
         .unwrap_or_else(|e| {
             eprintln!("Error reading '{inventory_loc}': {e}");
             std::process::exit(1);

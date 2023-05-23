@@ -1,12 +1,12 @@
-use crate::vrs::{Requirement, Version};
+use crate::{
+    distribution::Distribution,
+    s3,
+    vrs::{Requirement, Version},
+};
+use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use thiserror::Error;
-
-/// Heroku nodebin AWS S3 Bucket name
-pub const BUCKET: &str = "heroku-nodebin";
-/// Heroku nodebin AWS S3 Region
-pub const REGION: &str = "us-east-1";
 
 /// Default/assumed operating system for node release lookups
 #[cfg(target_os = "macos")]
@@ -87,13 +87,63 @@ pub struct Release {
     pub etag: Option<String>,
 }
 
+impl TryFrom<s3::BucketContent> for Inventory {
+    type Error = anyhow::Error;
+
+    /// # Failures
+    /// These are the possible errors that can occur when calling this function:
+    ///
+    /// * Regex missing matching captures against `Content#key`
+    /// * `Version::parse` fails to parse the version found in the `Content#key`
+    fn try_from(bucket_content: s3::BucketContent) -> Result<Self, Self::Error> {
+        let dist: Distribution = bucket_content.prefix.parse()?;
+        let rex = dist.mirrored_path_regex()?;
+
+        let releases: anyhow::Result<Vec<Release>> = bucket_content
+            .contents
+            .iter()
+            .map(|content| {
+                let capture = rex.captures(&content.key).ok_or_else(|| {
+                    anyhow!("No valid version found in content: {}", &content.key)
+                })?;
+                let channel = capture.name("channel").ok_or_else(|| {
+                    anyhow!("Could not find channel in content: {}", &content.key)
+                })?;
+                let version_number = capture.name("version").ok_or_else(|| {
+                    anyhow!("Could not find version in content: {}", &content.key)
+                })?;
+                let arch = capture.name("arch");
+
+                Ok(Release {
+                    arch: arch.map(|a| a.as_str().to_string()),
+                    version: Version::parse(version_number.as_str())?,
+                    channel: channel.as_str().to_string(),
+                    // Amazon S3 returns a quoted string for ETags
+                    etag: Some(content.etag.replace('\"', "")),
+                    url: format!(
+                        "https://{}.s3.{}.amazonaws.com/{}",
+                        &bucket_content.name, &bucket_content.region, &content.key
+                    ),
+                })
+            })
+            .collect();
+
+        Ok(Self {
+            name: dist.to_string(),
+            releases: releases?,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::distribution::{DEFAULT_BUCKET, DEFAULT_REGION};
+    use chrono::Utc;
 
     fn url(version: &str, arch: &str, channel: &str) -> String {
         format!(
-            "https://{BUCKET}.s3.{REGION}.amazonaws.com/node/{channel}/{arch}/node-v{version}-{arch}.tar.gz"
+            "https://{DEFAULT_BUCKET}.s3.{DEFAULT_REGION}.amazonaws.com/node/{channel}/{arch}/node-v{version}-{arch}.tar.gz"
         )
     }
 
@@ -218,5 +268,61 @@ mod tests {
                 assert_eq!("release", release.channel);
             }
         }
+    }
+
+    #[test]
+    fn converts_s3_result_to_inv() {
+        let etag = "739c200ca266266ff150ad4d89b83205";
+        let content = s3::Content {
+            key: "node/release/darwin-x64/node-v0.10.0-darwin-x64.tar.gz".to_string(),
+            etag: etag.to_string(),
+            ..Default::default()
+        };
+        let bucket_content = s3::BucketContent {
+            prefix: "node".to_string(),
+            contents: vec![content],
+            ..Default::default()
+        };
+
+        let result = Inventory::try_from(bucket_content);
+        assert!(result.is_ok());
+        if let Ok(inv) = result {
+            assert_eq!(Some(String::from(etag)), inv.releases[0].etag);
+        }
+    }
+
+    #[test]
+    fn converts_s3_result_to_inv_arch_optional() {
+        let content = s3::Content {
+            key: "yarn/release/yarn-v0.16.0.tar.gz".to_string(),
+            ..Default::default()
+        };
+        let bucket_content = s3::BucketContent {
+            prefix: "yarn".to_string(),
+            contents: vec![content],
+            ..Default::default()
+        };
+
+        let result = Inventory::try_from(bucket_content);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn it_fails_to_convert_s3_result_to_inv() {
+        let content = s3::Content {
+            key: "garbage".to_string(),
+            last_modified: Utc::now(),
+            etag: "\"e4cc76bea92fabb664edadc4db14a8f2\"".to_string(),
+            size: 7_234_362,
+            storage_class: "STANDARD".to_string(),
+        };
+        let bucket_content = s3::BucketContent {
+            prefix: "yarn".to_string(),
+            contents: vec![content],
+            ..Default::default()
+        };
+
+        let result = Inventory::try_from(bucket_content);
+        assert!(result.is_err());
     }
 }

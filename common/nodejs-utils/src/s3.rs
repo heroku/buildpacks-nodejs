@@ -35,8 +35,21 @@ pub(crate) struct ListBucketResult {
 /// Represents contents of a bucket's prefix
 #[derive(Debug)]
 pub(crate) struct BucketContent {
+    pub(crate) name: String,
+    pub(crate) region: String,
     pub(crate) prefix: String,
     pub(crate) contents: Vec<Content>,
+}
+
+impl Default for BucketContent {
+    fn default() -> Self {
+        Self {
+            name: "heroku-nodebin".to_string(),
+            region: "us-east-1".to_string(),
+            prefix: String::new(),
+            contents: vec![],
+        }
+    }
 }
 
 /// Fetch all s3 objects for a given folder.
@@ -56,6 +69,8 @@ pub(crate) fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
     let prefix = p.as_ref();
 
     let mut bucket_content = BucketContent {
+        name: bucket.to_string(),
+        region: region.to_string(),
         prefix: prefix.to_string(),
         contents: vec![],
     };
