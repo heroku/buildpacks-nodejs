@@ -2,9 +2,7 @@
 
 use libcnb_test::{assert_contains, assert_not_contains};
 use test_support::Builder::Heroku22;
-use test_support::{
-    assert_health_check_responds, get_function_invoker_build_config, test_node_function,
-};
+use test_support::{assert_health_check_responds, test_node_function};
 
 #[test]
 #[ignore]
