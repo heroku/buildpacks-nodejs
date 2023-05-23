@@ -15,11 +15,10 @@ jobs:
     container:
       image: koalaman/shellcheck-alpine:v0.8.0
     steps:
-      - run: apk add git
+      - name: Upgrade git
+        run: apk add --update && apk add git
       - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 2
       - name: shellcheck
         run: shfmt -f . | grep -v ^test/ | xargs shellcheck
       - name: shfmt
