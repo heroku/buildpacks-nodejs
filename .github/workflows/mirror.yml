@@ -81,7 +81,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Download and verify yarn distribution
-        run: common/bin/download-verify-yarn yarn "${{ matrix.version }}"
+        run: common/bin/download-verify-yarn "${{ matrix.version }}"
 
       - name: Upload Yarn distribution to S3 bucket
         env:
