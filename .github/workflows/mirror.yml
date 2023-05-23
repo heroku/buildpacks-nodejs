@@ -78,7 +78,7 @@ jobs:
       matrix:
         version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
     steps:
-      - name: Checkout nodebin
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Download and verify yarn distribution
