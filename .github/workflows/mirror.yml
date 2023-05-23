@@ -21,7 +21,9 @@ jobs:
           toolchain: stable
       - id: get-unmirrored-versions
         name: Get unmirrored Node.js versions
-        run: echo "versions=$(AWS_S3_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: echo "versions=$(VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
 
   get-unmirrored-yarn-versions:
     name: Get unmirrored Yarn versions
@@ -38,7 +40,9 @@ jobs:
           toolchain: stable
       - id: get-unmirrored-versions
         name: Get unmirrored Yarn versions
-        run: echo "versions=$(AWS_S3_BUCKET=heroku-nodebin-staging VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
+        env:
+          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: echo "versions=$(VERSION_LIMIT=2 cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
 
   mirror-node-distribution:
     name: Mirror Node.js Distribution ${{ matrix.version }} ${{ matrix.platform }}
