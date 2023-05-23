@@ -1,8 +1,9 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::distribution::Distribution;
-use heroku_nodejs_utils::distribution::DEFAULT_BUCKET;
-use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::{
+    distribution::{Distribution, DEFAULT_BUCKET},
+    inv::Inventory,
+};
 use std::str::FromStr;
 
 const FAILED_EXIT_CODE: i32 = 1;

@@ -1,7 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::inv::Inventory;
-use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::{inv::Inventory, vrs::Requirement};
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;

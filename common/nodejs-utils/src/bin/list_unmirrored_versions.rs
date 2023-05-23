@@ -1,8 +1,9 @@
 #![warn(clippy::pedantic)]
 
-use heroku_nodejs_utils::distribution::Distribution;
-use heroku_nodejs_utils::distribution::DEFAULT_BUCKET;
-use heroku_nodejs_utils::vrs::Version;
+use heroku_nodejs_utils::{
+    distribution::{Distribution, DEFAULT_BUCKET},
+    vrs::Version,
+};
 
 /// This command prints a list of Yarn or Node.js versions that have not
 /// yet been published to Nodebin (S3 bucket). It checks the list of upstream

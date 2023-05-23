@@ -1,5 +1,4 @@
-use crate::distribution::Distribution;
-use crate::s3;
+use crate::{distribution::Distribution, s3};
 use anyhow::anyhow;
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
