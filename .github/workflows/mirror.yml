@@ -49,6 +49,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: get-unmirrored-node-versions
     strategy:
+      fail-fast: false
       matrix:
         platform: ["linux-x64"]
         version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
@@ -74,6 +75,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: get-unmirrored-yarn-versions
     strategy:
+      fail-fast: false
       matrix:
         version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
     steps:
