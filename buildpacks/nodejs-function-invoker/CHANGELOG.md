@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Drop support for the heroku-20 stack. ([#536](https://github.com/heroku/buildpacks-nodejs/pull/536))
+
 ## [0.3.11] 2023/05/22
 
 - Change release target from ECR to docker.io/heroku/buildpack-nodejs-function-invoker.
