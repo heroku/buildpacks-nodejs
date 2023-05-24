@@ -13,7 +13,7 @@ jobs:
   shell-lint:
     runs-on: ubuntu-22.04
     container:
-      image: koalaman/shellcheck-alpine:v0.8.0
+      image: koalaman/shellcheck-alpine:v0.9.0
     steps:
       - run: apk add git
       - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
@@ -21,11 +21,7 @@ jobs:
       - name: shellcheck
         run: shfmt -f . | grep -v ^test/ | xargs shellcheck
       - name: shfmt
-        run: |-
-          scripts=$(shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$');  \
-          if ! echo $scripts | xargs shfmt -d > /dev/null; then           \
-            echo $scripts | xargs shfmt -w && git diff --exit-code;       \
-          fi
+        run: shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$' | xargs shfmt -d
 
   rust-lint:
     runs-on: ubuntu-22.04

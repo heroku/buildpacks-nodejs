@@ -3,10 +3,10 @@
 #![warn(clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod distribution;
 pub mod inv;
-pub mod nodebin_s3;
+mod nodejs_org;
+mod npmjs_org;
 pub mod package_json;
+mod s3;
 pub mod vrs;
-
-#[cfg(test)]
-use ureq as _;

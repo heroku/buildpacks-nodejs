@@ -1,0 +1,25 @@
+use crate::vrs::Version;
+use anyhow::anyhow;
+use serde::Deserialize;
+use std::collections::HashMap;
+
+const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
+
+#[derive(Deserialize)]
+struct NpmPackage {
+    versions: HashMap<String, NpmRelease>,
+}
+
+#[derive(Deserialize)]
+pub(crate) struct NpmRelease {
+    pub(crate) version: Version,
+}
+
+pub(crate) fn list_releases(package: &str) -> anyhow::Result<Vec<NpmRelease>> {
+    ureq::get(&format!("{NPMJS_ORG_HOST}/{package}"))
+        .call()
+        .map_err(|e| anyhow!("Couldn't fetch npmjs.org package info: {e}"))?
+        .into_json::<NpmPackage>()
+        .map_err(|e| anyhow!("Couldn't serialize nodejs.org release list from package: {e}"))
+        .map(|rel| rel.versions.into_values().collect())
+}
