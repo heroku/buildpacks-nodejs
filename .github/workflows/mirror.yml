@@ -13,11 +13,10 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.2.1
       - id: get-unmirrored-versions
         name: Get unmirrored Node.js versions
         env:
@@ -32,11 +31,10 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2.2.1
       - id: get-unmirrored-versions
         name: Get unmirrored Yarn versions
         env:
