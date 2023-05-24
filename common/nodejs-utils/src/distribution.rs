@@ -105,7 +105,7 @@ impl Distribution {
 
 fn list_upstream_node_versions() -> anyhow::Result<VersionSet> {
     nodejs_org::list_releases()?
-        .iter()
+        .into_iter()
         .map(|rls| {
             Version::parse(&rls.version).map_err(|e| {
                 anyhow!("Couldn't parse upstream nodejs.org version as a version: {e}")
