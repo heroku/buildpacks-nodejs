@@ -87,10 +87,12 @@ impl Distribution {
             Self::Yarn => "yarn",
         }
     }
+
+    /// The range of versions considered active for mirroring purposes.
     fn active_requirement(self) -> anyhow::Result<Requirement> {
         Requirement::parse(match self {
-            Self::Node => ">= 16",
-            Self::Yarn => ">= 1.22",
+            Self::Node => ">=16",
+            Self::Yarn => ">=1.22 >=4.0.0-rc.35",
         })
         .map_err(|e| anyhow!("{e}"))
     }
