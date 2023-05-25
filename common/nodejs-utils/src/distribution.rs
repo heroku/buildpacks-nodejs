@@ -129,7 +129,6 @@ fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vrs::VersionError;
 
     #[test]
     fn upstream_versions_node() {
