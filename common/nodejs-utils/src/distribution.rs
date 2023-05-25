@@ -92,7 +92,7 @@ impl Distribution {
     fn active_requirement(self) -> anyhow::Result<Requirement> {
         Requirement::parse(match self {
             Self::Node => ">=16",
-            Self::Yarn => ">=1.22 >=4.0.0-rc.35",
+            Self::Yarn => ">=1.22 || >=4.0.0-rc.35",
         })
         .map_err(|e| anyhow!("{e}"))
     }
@@ -186,30 +186,22 @@ mod tests {
 
     #[test]
     fn filter_active_yarn() {
-        let versions = [
-            "0.20.2",
-            "1.20.1",
-            "1.22.19",
-            "2.0.0",
-            "3.2.3",
-            "4.0.0",
-            "4.0.0-rc.44",
-        ]
-        .into_iter()
-        .map(Version::parse)
-        .collect::<Result<Vec<Version>, VersionError>>()
-        .expect("Expected to parse all valid versions");
+        let versions = ["1.20.1", "1.22.19", "3.0.0-rc.1", "3.2.3", "4.0.0-rc.44"]
+            .into_iter()
+            .map(Version::parse)
+            .collect::<Result<VersionSet, _>>()
+            .expect("Expected to parse all valid versions");
 
-        let filtered: Vec<String> = Distribution::Yarn {}
+        let filtered: VersionSet = Distribution::Yarn {}
             .filter_inactive_versions(versions.iter())
-            .expect("Expected to filter versions without an error")
-            .iter()
-            .map(Version::to_string)
-            .collect();
-        let expected: Vec<String> = ["1.22.19", "2.0.0", "3.2.3", "4.0.0", "4.0.0-rc.44"]
-            .iter()
-            .map(std::string::ToString::to_string)
-            .collect();
+            .expect("Expected to filter versions without an error");
+
+        let expected: VersionSet = ["1.22.19", "3.2.3", "4.0.0-rc.44"]
+            .into_iter()
+            .map(Version::parse)
+            .collect::<Result<VersionSet, _>>()
+            .expect("Expected to parse all valid versions");
+
         assert_eq!(expected, filtered);
     }
 }
