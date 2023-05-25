@@ -1,4 +1,4 @@
-name = "yarn"
+name = "Yarn"
 
 [[releases]]
 version = "0.1.0"
