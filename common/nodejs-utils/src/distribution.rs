@@ -185,18 +185,39 @@ mod tests {
     }
 
     #[test]
-    fn filter_active_yarn() {
+    fn filter_inactive_yarn() {
         let versions = ["1.20.1", "1.22.19", "3.0.0-rc.1", "3.2.3", "4.0.0-rc.44"]
             .into_iter()
             .map(Version::parse)
             .collect::<Result<VersionSet, _>>()
             .expect("Expected to parse all valid versions");
 
-        let filtered: VersionSet = Distribution::Yarn {}
+        let filtered = Distribution::Yarn {}
             .filter_inactive_versions(versions.iter())
             .expect("Expected to filter versions without an error");
 
-        let expected: VersionSet = ["1.22.19", "3.2.3", "4.0.0-rc.44"]
+        let expected = ["1.22.19", "3.2.3", "4.0.0-rc.44"]
+            .into_iter()
+            .map(Version::parse)
+            .collect::<Result<VersionSet, _>>()
+            .expect("Expected to parse all valid versions");
+
+        assert_eq!(expected, filtered);
+    }
+
+    #[test]
+    fn filter_inactive_node() {
+        let versions = ["0.10.1", "14.2.4", "18.3.0", "20.2.0"]
+            .into_iter()
+            .map(Version::parse)
+            .collect::<Result<VersionSet, _>>()
+            .expect("Expected to parse all valid versions");
+
+        let filtered = Distribution::Node {}
+            .filter_inactive_versions(versions.iter())
+            .expect("Expected to filter versions without an error");
+
+        let expected = ["18.3.0", "20.2.0"]
             .into_iter()
             .map(Version::parse)
             .collect::<Result<VersionSet, _>>()
