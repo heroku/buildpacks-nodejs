@@ -129,6 +129,7 @@ fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vrs::VersionError;
 
     #[test]
     fn upstream_versions_node() {
@@ -181,5 +182,34 @@ mod tests {
             .get(&expected_version)
             .expect("Expected to find a matching version");
         assert_eq!(&expected_version, actual_version);
+    }
+
+    #[test]
+    fn filter_active_yarn() {
+        let versions = [
+            "0.20.2",
+            "1.20.1",
+            "1.22.19",
+            "2.0.0",
+            "3.2.3",
+            "4.0.0",
+            "4.0.0-rc.44",
+        ]
+        .into_iter()
+        .map(Version::parse)
+        .collect::<Result<Vec<Version>, VersionError>>()
+        .expect("Expected to parse all valid versions");
+
+        let filtered: Vec<String> = Distribution::Yarn {}
+            .filter_inactive_versions(versions.iter())
+            .expect("Expected to filter versions without an error")
+            .iter()
+            .map(Version::to_string)
+            .collect();
+        let expected: Vec<String> = ["1.22.19", "2.0.0", "3.2.3", "4.0.0", "4.0.0-rc.44"]
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect();
+        assert_eq!(expected, filtered);
     }
 }
