@@ -4,6 +4,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- - Removed Yarn version 3.2.3.
 ## [0.4.3] 2023/05/22
 
 - Change release target from ECR to docker.io/heroku/buildpack-nodejs-yarn.
