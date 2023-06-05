@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Upgrade to Buildpack API version `0.9`. ([#552](https://github.com/heroku/buildpacks-nodejs/pull/552))
+
 ## [0.8.22] 2023/05/22
 
 - Change release target from ECR to docker.io/heroku/buildpack-nodejs-engine.
