@@ -107,7 +107,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     .process(
                         ProcessBuilder::new(
                             process_type!("web"),
-                            [command, serve, &context.app_dir.to_string_lossy()],
+                            [command, "serve", &context.app_dir.to_string_lossy()],
                         )
                         .args(vec![
                             "--workers",
