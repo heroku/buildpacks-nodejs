@@ -760,9 +760,9 @@ checksum = "201de327520df007757c1f0adce6e827fe8562fbc28bfd9c15571c66ca1f5f79"
 
 [[package]]
 name = "libcnb"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e4fd7573558173267930e31446da65a0275770bde88847cad4b4cf9a6ff8375"
+checksum = "027cd4a736600564c4e7aebf124eabb9d7dc622bcfeefb414cc7c4c7d7ac6595"
 dependencies = [
  "libcnb-data",
  "libcnb-proc-macros",
@@ -773,9 +773,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-data"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c0112478d479c8900929894426818bea8e769ce923536a58baac719d3ca4dcb"
+checksum = "6e8840246c7aced3307fa193edc5d26482f92f992986a33860b6b3b523a67975"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -786,9 +786,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aacd18d358a1078cf48f518ef8398c504f8d4fc691ba2e8773bafa1a71d66b59"
+checksum = "27205236a28660f7395598a3f65afb9315de8ce3054c39375b0be673fa6288e7"
 dependencies = [
  "cargo_metadata",
  "libcnb-data",
@@ -798,21 +798,21 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5930cea22615255081c0c44b902e6e8b37a824ebe1374a7c7d52724d5b7d6e4e"
+checksum = "c9e31cc93a20d00f1d54ecb55dcff681669871e6d8a8b63ac0320e77fca1987c"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
  "quote",
- "syn 1.0.107",
+ "syn 2.0.15",
 ]
 
 [[package]]
 name = "libcnb-test"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f86e8c1847c8ba3c37e30841ee241887203110f4373731e7967706ab77c42b7d"
+checksum = "ff3f26e5f4ad90ea4036618dcba858c567f8c46a281daa72856eab3be0972885"
 dependencies = [
  "bollard",
  "cargo_metadata",
@@ -828,9 +828,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.11.5"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "878674906e0140191f89047ef1e8c142cb31becce91b4e64b1b6419fe03da7c1"
+checksum = "4ee2764ebf688454c4fcbcd7c52ff277b5cb2e196c502ff4ce92de563cb10ea2"
 dependencies = [
  "crossbeam-utils",
  "flate2",
