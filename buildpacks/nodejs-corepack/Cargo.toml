@@ -10,7 +10,7 @@ publish.workspace = true
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
 libcnb = "0.11"
 libherokubuildpack = "0.11"
-serde = "1.0.149"
+serde = "1.0.163"
 thiserror = "1.0"
 indoc = "2.0"
 
