@@ -95,8 +95,7 @@ impl Buildpack for PnpmInstallBuildpack {
                 .launch(
                     LaunchBuilder::new()
                         .process(
-                            ProcessBuilder::new(process_type!("web"), "pnpm")
-                                .arg("start")
+                            ProcessBuilder::new(process_type!("web"), ["pnpm", "start"])
                                 .default(true)
                                 .build(),
                         )

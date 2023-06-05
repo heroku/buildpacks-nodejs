@@ -105,22 +105,22 @@ impl Buildpack for NodeJsInvokerBuildpack {
             .launch(
                 LaunchBuilder::new()
                     .process(
-                        ProcessBuilder::new(process_type!("web"), command)
-                            .args(vec![
-                                "serve",
-                                &context.app_dir.to_string_lossy(),
-                                "--workers",
-                                "2",
-                                "--host",
-                                "::",
-                                "--port",
-                                "${PORT:-8080}",
-                                "--debug-port",
-                                "${DEBUG_PORT:-}",
-                            ])
-                            .default(true)
-                            .direct(false)
-                            .build(),
+                        ProcessBuilder::new(
+                            process_type!("web"),
+                            [command, serve, &context.app_dir.to_string_lossy()],
+                        )
+                        .args(vec![
+                            "--workers",
+                            "2",
+                            "--host",
+                            "::",
+                            "--port",
+                            "${PORT:-8080}",
+                            "--debug-port",
+                            "${DEBUG_PORT:-}",
+                        ])
+                        .default(true)
+                        .build(),
                     )
                     .build(),
             )

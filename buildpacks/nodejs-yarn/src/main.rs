@@ -152,8 +152,7 @@ impl Buildpack for YarnBuildpack {
                 .launch(
                     LaunchBuilder::new()
                         .process(
-                            ProcessBuilder::new(process_type!("web"), "yarn")
-                                .arg("start")
+                            ProcessBuilder::new(process_type!("web"), ["yarn", "start"])
                                 .default(true)
                                 .build(),
                         )
