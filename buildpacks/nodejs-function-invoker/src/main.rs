@@ -112,9 +112,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
                         ProcessBuilder::new(
                             process_type!("web"),
                             [
-                                "bash",
-                                "-c",
-                                &format!("{NODEJS_RUNTIME_SCRIPT} $1 $2"),
                                 NODEJS_RUNTIME_SCRIPT,
                                 command,
                                 &context.app_dir.to_string_lossy(),
