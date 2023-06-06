@@ -7,7 +7,9 @@ use crate::function::{
     get_declared_runtime_package_version, get_main, is_function, ExplicitRuntimeDependencyError,
     MainError,
 };
-use crate::layers::{RuntimeLayer, RuntimeLayerError};
+use crate::layers::{
+    RuntimeLayer, RuntimeLayerError, ScriptLayer, ScriptLayerError, NODEJS_RUNTIME_SCRIPT,
+};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -70,11 +72,11 @@ impl Buildpack for NodeJsInvokerBuildpack {
         let package_version = &metadata_runtime.package_version;
 
         log_info("Checking for function file");
-        get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunctionError)?;
+        get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunction)?;
 
         let declared_runtime_package_version =
             get_declared_runtime_package_version(app_dir, package_name)
-                .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError)?;
+                .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunction)?;
 
         if let Some(package_version) = declared_runtime_package_version.clone() {
             log_info(format!(
@@ -101,26 +103,22 @@ impl Buildpack for NodeJsInvokerBuildpack {
             None => "sf-fx-runtime-nodejs",                      // global (implicit)
         };
 
+        context.handle_layer(layer_name!("script"), ScriptLayer {})?;
+
         BuildResultBuilder::new()
             .launch(
                 LaunchBuilder::new()
                     .process(
-                        ProcessBuilder::new(process_type!("web"), command)
-                            .args(vec![
-                                "serve",
+                        ProcessBuilder::new(
+                            process_type!("web"),
+                            [
+                                NODEJS_RUNTIME_SCRIPT,
+                                command,
                                 &context.app_dir.to_string_lossy(),
-                                "--workers",
-                                "2",
-                                "--host",
-                                "::",
-                                "--port",
-                                "${PORT:-8080}",
-                                "--debug-port",
-                                "${DEBUG_PORT:-}",
-                            ])
-                            .default(true)
-                            .direct(false)
-                            .build(),
+                            ],
+                        )
+                        .default(true)
+                        .build(),
                     )
                     .build(),
             )
@@ -132,16 +130,19 @@ impl Buildpack for NodeJsInvokerBuildpack {
             |bp_err| {
                 let err_string = bp_err.to_string();
                 match bp_err {
-                    NodeJsInvokerBuildpackError::MainFunctionError(_) => {
+                    NodeJsInvokerBuildpackError::MainFunction(_) => {
                         log_error(
                             "Node.js Function Invoker main function detection error",
                             err_string,
                         );
                     }
-                    NodeJsInvokerBuildpackError::RuntimeLayerError(_) => {
+                    NodeJsInvokerBuildpackError::RuntimeLayer(_) => {
                         log_error("Node.js Function Invoker runtime layer error", err_string);
                     }
-                    NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunctionError(_) => {
+                    NodeJsInvokerBuildpackError::ScriptLayer(_) => {
+                        log_error("Node.js Function Invoker script layer error", err_string);
+                    }
+                    NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunction(_) => {
                         log_error(
                             "Node.js Function Invoker explicit Node.js function runtime dependency error",
                             err_string,
@@ -157,11 +158,13 @@ impl Buildpack for NodeJsInvokerBuildpack {
 #[derive(Error, Debug)]
 pub enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
-    MainFunctionError(#[from] MainError),
+    MainFunction(#[from] MainError),
     #[error("{0}")]
-    RuntimeLayerError(#[from] RuntimeLayerError),
+    RuntimeLayer(#[from] RuntimeLayerError),
     #[error("{0}")]
-    ExplicitRuntimeDependencyFunctionError(#[from] ExplicitRuntimeDependencyError),
+    ScriptLayer(#[from] ScriptLayerError),
+    #[error("{0}")]
+    ExplicitRuntimeDependencyFunction(#[from] ExplicitRuntimeDependencyError),
 }
 
 impl From<NodeJsInvokerBuildpackError> for libcnb::Error<NodeJsInvokerBuildpackError> {

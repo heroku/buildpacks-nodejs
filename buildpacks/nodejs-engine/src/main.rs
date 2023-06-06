@@ -106,10 +106,12 @@ impl Buildpack for NodeJsEngineBuildpack {
             .map(|path| {
                 LaunchBuilder::new()
                     .process(
-                        ProcessBuilder::new(process_type!("web"), "node")
-                            .args(vec![path.to_string_lossy()])
-                            .default(true)
-                            .build(),
+                        ProcessBuilder::new(
+                            process_type!("web"),
+                            ["node", &path.to_string_lossy()],
+                        )
+                        .default(true)
+                        .build(),
                     )
                     .build()
             });
