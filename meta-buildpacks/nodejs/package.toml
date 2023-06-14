@@ -8,7 +8,7 @@ uri = "docker://docker.io/heroku/buildpack-nodejs-engine@sha256:5578de3a6c79180a
 uri = "docker://docker.io/heroku/buildpack-nodejs-npm@sha256:99d7bac02c7593dff5d79870ecd66fdaacea7118416aff2292e1fa13ccc8bc58"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-pnpm-install@sha256:12754c9155038ca92c12ed9e765158b8a6f873078c8f61215d133ff3038387f8"
+uri = "docker://docker.io/heroku/buildpack-nodejs-pnpm-install@sha256:cc87179839c45349d603d6a1c61284608ad3a44a19078167b7981c89b2fa1fb8"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/buildpack-nodejs-yarn@sha256:34e87425fcd015f3ffe4f14af18a903825e6b9a825d0143d82687ad31d8a00a7"
