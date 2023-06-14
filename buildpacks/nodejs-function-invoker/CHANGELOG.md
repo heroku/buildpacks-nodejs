@@ -4,6 +4,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.12] 2023/06/14
+
 - Upgrade to Buildpack API version `0.9`. ([#552](https://github.com/heroku/buildpacks-nodejs/pull/552))
 - Drop support for the heroku-20 stack. ([#536](https://github.com/heroku/buildpacks-nodejs/pull/536))
 
