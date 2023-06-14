@@ -8,4 +8,4 @@ uri = "docker://docker.io/heroku/buildpack-nodejs-engine@sha256:0146b1f1e5a4ecb7
 uri = "docker://docker.io/heroku/buildpack-nodejs-npm@sha256:99d7bac02c7593dff5d79870ecd66fdaacea7118416aff2292e1fa13ccc8bc58"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-function-invoker@sha256:2fca1217a5d4fc38d19e3f634a69e76214d05ce3fe9b672ef9d19c574ecda36c"
+uri = "docker://docker.io/heroku/buildpack-nodejs-function-invoker@sha256:306395b758de5c06ec4d7a1a979a853d83784a4ff91f47bc377ec209228b1896"
