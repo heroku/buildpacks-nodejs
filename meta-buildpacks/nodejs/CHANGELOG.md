@@ -4,6 +4,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.6] 2023/06/15
+* Upgraded `heroku/nodejs-pnpm-install` to `0.1.1`
+* Upgraded `heroku/nodejs-engine` to `0.8.23`
+* Upgraded `heroku/nodejs-yarn` to `0.4.4`
+
 ## [0.6.5] 2023/05/22
 * Upgraded `heroku/nodejs-npm` to `0.5.3`
 * Upgraded `heroku/nodejs-yarn` to `0.4.3`

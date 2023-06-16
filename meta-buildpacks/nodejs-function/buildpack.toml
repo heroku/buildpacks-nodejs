@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs-function"
-version = "0.10.6"
+version = "0.10.7"
 name = "Node.js Function"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 
@@ -13,7 +13,7 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "0.8.22"
+version = "0.8.23"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
@@ -21,7 +21,7 @@ version = "0.5.3"
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
-version = "0.3.11"
+version = "0.3.12"
 
 [metadata]
 [metadata.release]
