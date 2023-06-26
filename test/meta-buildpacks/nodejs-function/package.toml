@@ -2,10 +2,10 @@
 uri = "."
 
 [[dependencies]]
-uri = "../../../buildpacks/nodejs-engine"
+uri = "libcnb:heroku/nodejs-engine"
 
 [[dependencies]]
 uri = "../../../buildpacks/npm"
 
 [[dependencies]]
-uri = "../../../buildpacks/nodejs-function-invoker"
+uri = "libcnb:heroku/nodejs-function-invoker"
