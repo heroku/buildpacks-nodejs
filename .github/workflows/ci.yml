@@ -141,19 +141,11 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v5.2.0
       - name: Install yj
         uses: buildpacks/github-actions/setup-tools@v5.2.0
-      - name: Build and package buildpack with retries
-        run: |-
-          n=1
-          until [ "$n" -ge 5 ]
-          do
-            package_toml="${{ matrix.buildpack-dir }}/package.toml"
-            if [[ -f "${{ matrix.buildpack-dir }}/build.sh" ]]; then
-              "./${{ matrix.buildpack-dir }}/build.sh"
-              package_toml="${{ matrix.buildpack-dir }}/target/package.toml"
-            fi
-            pack buildpack package test --config "${package_toml}" && break
-            ((n++))
-          done
+      - name: Package buildpack
+        id: package
+        run: echo "output_dir=$(cargo libcnb package --release)" >> $GITHUB_OUTPUT
+      - name: Test packaged buildpack
+        run: pack buildpack package test --config "${{ steps.package.outputs.output_dir }}/package.toml"
 
   cutlass-integration-test:
     runs-on: ubuntu-22.04
