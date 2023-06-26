@@ -143,7 +143,7 @@ jobs:
         uses: buildpacks/github-actions/setup-tools@v5.2.0
       - name: Package buildpack
         id: package
-        working_dir: ${{ matrix.buildpack-dir }}
+        working-directory: ${{ matrix.buildpack-dir }}
         run: echo "output_dir=$(cargo libcnb package --release)" >> $GITHUB_OUTPUT
       - name: Test packaged buildpack
         run: pack buildpack package test --config "${{ steps.package.outputs.output_dir }}/package.toml"
