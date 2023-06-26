@@ -2,19 +2,19 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-engine@sha256:e17edd5fc68cd7326eab47fb1469c44c122673ee11953c40bc2e6e8e2940ddec"
+uri = "libcnb:heroku/nodejs-engine"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-npm@sha256:99d7bac02c7593dff5d79870ecd66fdaacea7118416aff2292e1fa13ccc8bc58"
+uri = "libcnb:heroku/nodejs-npm"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-pnpm-install@sha256:cc87179839c45349d603d6a1c61284608ad3a44a19078167b7981c89b2fa1fb8"
+uri = "libcnb:heroku/nodejs-pnpm-install"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-yarn@sha256:1f4c7d7cd530fec979aebd5d1d824f1d53f84a7aa0c0ee60382156323cdf89ab"
+uri = "libcnb:heroku/nodejs-yarn"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-corepack@sha256:0ad3bd41ac2ce27ee7aeaa74051a2561ad885a6b8cb529d65ae3d0494e30a8a2"
+uri = "libcnb:heroku/nodejs-corepack"
 
 [[dependencies]]
 uri = "docker://docker.io/heroku/procfile-cnb:2.0.0"
