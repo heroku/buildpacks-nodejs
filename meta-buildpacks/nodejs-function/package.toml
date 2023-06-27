@@ -2,10 +2,10 @@
 uri = "."
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-engine@sha256:e17edd5fc68cd7326eab47fb1469c44c122673ee11953c40bc2e6e8e2940ddec"
+uri = "libcnb:heroku/nodejs-engine"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-npm@sha256:99d7bac02c7593dff5d79870ecd66fdaacea7118416aff2292e1fa13ccc8bc58"
+uri = "../../buildpacks/npm"
 
 [[dependencies]]
-uri = "docker://docker.io/heroku/buildpack-nodejs-function-invoker@sha256:306395b758de5c06ec4d7a1a979a853d83784a4ff91f47bc377ec209228b1896"
+uri = "libcnb:heroku/nodejs-function-invoker"
