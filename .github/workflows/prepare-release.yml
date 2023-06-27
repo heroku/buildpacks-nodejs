@@ -1,6 +1,7 @@
 name: Prepare Buildpack Releases
 
 on:
+  push:
   workflow_dispatch:
     inputs:
       bump:
