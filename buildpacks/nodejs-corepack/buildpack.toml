@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs-corepack"
-version = "1.0.0"
+version = "1.0.1"
 name = "Heroku Node.js Corepack"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["corepack", "node", "node.js", "nodejs", "javascript", "js"]
