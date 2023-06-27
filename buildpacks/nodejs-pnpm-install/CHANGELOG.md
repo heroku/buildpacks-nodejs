@@ -1,14 +1,24 @@
 # Changelog
+
+All notable changes to this project will be documented in this file.
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## [0.1.1] 2023/06/14
+## [1.0.1] - 2023-06-27
+
+- No changes
+
+## [0.1.1] - 2023-06-14
 
 - Upgrade to Buildpack API version `0.9`. ([#552](https://github.com/heroku/buildpacks-nodejs/pull/552))
 - Drop explicit support for the End-of-Life stack `heroku-18`.
 
-## [0.1.0] 2023/04/17
+## [0.1.0] - 2023-04-17
 
 - Initial release ([#488](https://github.com/heroku/buildpacks-nodejs/pull/488))
+
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.0.1
