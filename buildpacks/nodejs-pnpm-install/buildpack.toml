@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs-pnpm-install"
-version = "1.0.1"
+version = "1.0.0"
 name = "Heroku Node.js pnpm install"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["node", "node.js", "nodejs", "javascript", "js", "pnpm"]

@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs-yarn"
-version = "1.0.1"
+version = "1.0.0"
 name = "Heroku Node.js Yarn"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 keywords = ["node", "node.js", "nodejs", "javascript", "js", "yarn", "yarnpkg"]
