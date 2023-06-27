@@ -1,92 +1,81 @@
-name: Release Buildpack
+name: Release Buildpacks
+
 on:
   workflow_dispatch:
-    inputs:
-      requested_buildpack_id:
-        description: "Buildpack ID"
-        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  release:
-    name: Release ${{ github.event.inputs.requested_buildpack_id }}
-    runs-on: pub-hk-ubuntu-22.04-small
-    permissions:
-      contents: write
-      pull-requests: write
-    env:
-      REQUESTED_BUILDPACK_ID: ${{ github.event.inputs.requested_buildpack_id }}
-    steps:
-      - id: checkout
-        name: "Checkout code"
-        uses: actions/checkout@v3
-      - id: setup-pack
-        name: "Setup pack"
-        uses: buildpacks/github-actions/setup-pack@v5.2.0
-      - name: Install yj
-        uses: buildpacks/github-actions/setup-tools@v5.2.0
-      - id: dockerhub-login
-        name: "Login to Docker Hub"
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-      - id: install-musl-tools
-        run: sudo apt-get install musl-tools
-      - id: install-rust-toolchain
-        name: "Install Rust toolchain"
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: "x86_64-unknown-linux-musl"
-      - id: install-libcnb-cargo
-        name: "Install libcnb-cargo"
-        uses: actions-rs/install@v0.1
-        with:
-          crate: libcnb-cargo
-          version: latest
-      - id: package
-        name: "Package buildpack and publish to container registry"
-        run: ./.github/scripts/release-workflow-package-push.sh
-        shell: bash
-      - id: add-registry-entry
-        name: "Request Registry Entry"
-        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:4.0.0
-        with:
-          token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
-          id: ${{ steps.package.outputs.id }}
-          version: ${{ steps.package.outputs.version }}
-          address: ${{ steps.package.outputs.address }}
-      - id: create_release
-        name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.package.outputs.id }}_${{ steps.package.outputs.version }}
-          release_name: ${{ steps.package.outputs.id }} ${{ steps.package.outputs.version }}
-          body: |
-            Find the changelog here: [CHANGELOG](${{ steps.package.outputs.path }}/CHANGELOG.md)
-          draft: false
-          prerelease: false
-      - id: release_package
-        name: Upload buildpackage to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.package.outputs.package }}
-          tag: ${{ steps.package.outputs.id }}_${{ steps.package.outputs.version }}
-          overwrite: true
-      - id: prepare-pr
-        name: "Prepare PR with version bumps and CHANGELOG updates"
-        run: ./.github/scripts/release-workflow-prepare-pr.sh "${{ steps.package.outputs.id }}" "${{ steps.package.outputs.version }}" "docker://${{ steps.package.outputs.address }}"
-        shell: bash
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          title: "Post-release updates: ${{ steps.package.outputs.id }} ${{ steps.package.outputs.version }}"
-          commit-message: "Post-release updates: ${{ steps.package.outputs.id }} ${{ steps.package.outputs.version }}"
-          branch-suffix: "random"
-          labels: "automation"
-          body: |
-            Automated pull-request to update buildpack versions and changelogs
-            after releasing version `${{ steps.package.outputs.version }}` of `${{ steps.package.outputs.id }}`.
+  detect:
+    name: Detecting Buildpacks
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-detect.yml@main
+
+  package:
+    name: ${{ matrix.buildpack_id }}
+    needs: [ detect ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-package.yml@main
+    with:
+      buildpack_id: ${{ matrix.buildpack_id }}
+      buildpack_dir: ${{ matrix.buildpack_dir }}
+      buildpack_version: ${{ matrix.buildpack_version }}
+      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
+
+  publish-docker:
+    name: ${{ matrix.buildpack_id }}
+    needs: [ detect, package ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-docker.yml@main
+    with:
+      buildpack_id: ${{ matrix.buildpack_id }}
+      buildpack_version: ${{ matrix.buildpack_version }}
+      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
+      docker_repository: ${{ matrix.docker_repository }}
+    secrets:
+      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
+      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
+
+  publish-github:
+    name: ${{ matrix.buildpack_id }}
+    needs: [ detect, package ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-github.yml@main
+    with:
+      buildpack_version: ${{ matrix.buildpack_version }}
+      buildpack_artifact_prefix: ${{ matrix.buildpack_artifact_prefix }}
+
+  publish-cnb:
+    name: ${{ matrix.buildpack_id }}
+    needs: [ detect, publish-docker ]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.detect.outputs.buildpacks) }}
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-publish-cnb-registry.yml@main
+    with:
+      buildpack_id: ${{ matrix.buildpack_id }}
+      buildpack_version: ${{ matrix.buildpack_version }}
+      docker_repository: ${{ matrix.docker_repository }}
+    secrets:
+      cnb_registry_token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
+
+  update-builder:
+    name: Update Builder
+    needs: [ detect, publish-docker, publish-cnb, publish-github ]
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release-update-builder.yml@main
+    with:
+      app_id: ${{ vars.LINGUIST_GH_APP_ID }}
+      buildpack_version: ${{ needs.detect.outputs.version }}
+    secrets:
+      app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
