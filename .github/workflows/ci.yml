@@ -110,44 +110,6 @@ jobs:
       - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
         run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
 
-  package-buildpack:
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        buildpack-dir:
-        - buildpacks/nodejs-engine
-        - buildpacks/nodejs-function-invoker
-        - buildpacks/nodejs-pnpm-install
-        - buildpacks/nodejs-yarn
-        - buildpacks/npm
-        - meta-buildpacks/nodejs
-        - meta-buildpacks/nodejs-function
-        - test/meta-buildpacks/nodejs
-        - test/meta-buildpacks/nodejs-function
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install musl-tools
-        run: sudo apt-get install musl-tools --no-install-recommends
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Install Rust linux-musl target
-        run: rustup target add x86_64-unknown-linux-musl
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.4.0
-      - name: Install libcnb
-        run: cargo install libcnb-cargo
-      - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v5.2.0
-      - name: Install yj
-        uses: buildpacks/github-actions/setup-tools@v5.2.0
-      - name: Package buildpack
-        id: package
-        working-directory: ${{ matrix.buildpack-dir }}
-        run: echo "output_dir=$(cargo libcnb package --release)" >> $GITHUB_OUTPUT
-      - name: Test packaged buildpack
-        run: pack buildpack package test --config "${{ steps.package.outputs.output_dir }}/package.toml"
-
   cutlass-integration-test:
     runs-on: ubuntu-22.04
     strategy:

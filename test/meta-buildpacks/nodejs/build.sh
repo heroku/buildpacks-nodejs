@@ -1,1 +1,0 @@
-../../../common/meta-build.sh

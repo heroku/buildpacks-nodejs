@@ -9,7 +9,8 @@ def test_dir
   Pathname(__dir__).join("../..")
 end
 
-NODEJS_BUILDPACK = Cutlass::LocalBuildpack.new(directory: test_dir.join("meta-buildpacks/nodejs"))
+NODEJS_BUILDPACK = Cutlass::LocalBuildpack.new(directory: test_dir.join("../meta-buildpacks/nodejs"))
+
 Cutlass.config do |config|
   config.default_buildpack_paths = [NODEJS_BUILDPACK]
   config.default_builder = "heroku/buildpacks:20"
