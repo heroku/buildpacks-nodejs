@@ -16,6 +16,6 @@ thiserror = "1.0"
 toml = "0.7"
 
 [dev-dependencies]
-libcnb-test = "0.12"
+libcnb-test = "0.13"
 test_support = { path = "../../test_support" }
 ureq = "2"

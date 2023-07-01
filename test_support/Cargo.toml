@@ -7,6 +7,6 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-libcnb-test = "0.12"
+libcnb-test = "0.13"
 tempfile = "3"
 ureq = "2"

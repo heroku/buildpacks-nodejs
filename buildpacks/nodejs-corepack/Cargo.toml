@@ -15,6 +15,6 @@ thiserror = "1.0"
 indoc = "2.0"
 
 [dev-dependencies]
-libcnb-test = "0.12"
+libcnb-test = "0.13"
 test_support = { path = "../../test_support" }
 ureq = "2.6.2"
