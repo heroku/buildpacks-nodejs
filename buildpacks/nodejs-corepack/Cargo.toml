@@ -8,13 +8,13 @@ publish.workspace = true
 
 [dependencies]
 heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
-libcnb = "0.12"
-libherokubuildpack = "0.12"
-serde = "1.0.166"
-thiserror = "1.0"
-indoc = "2.0"
+libcnb = "0.13"
+libherokubuildpack = "0.13"
+serde = "1"
+thiserror = "1"
+indoc = "2"
 
 [dev-dependencies]
-libcnb-test = "0.12"
+libcnb-test = "0.13"
 test_support = { path = "../../test_support" }
-ureq = "2.7.1"
+ureq = "2"
