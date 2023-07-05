@@ -11,7 +11,7 @@ heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
 libcnb = "0.13"
 libherokubuildpack = "0.13"
 serde = "1"
-indoc = "2.0"
+indoc = "2"
 toml = "0.7"
 
 [dev-dependencies]
