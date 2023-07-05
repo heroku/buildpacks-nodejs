@@ -363,6 +363,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fastrand"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6999dc1837253364c2ebb0704ba97994bd874e8f195d665c50b7548f6ea92764"
+
+[[package]]
 name = "filetime"
 version = "0.2.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,6 +379,12 @@ dependencies = [
  "redox_syscall 0.2.16",
  "windows-sys 0.42.0",
 ]
+
+[[package]]
+name = "fixedbitset"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0ce7134b9999ecaf8bcd65542e436736ef32ddca1b3e06094cb6ec5755203b80"
 
 [[package]]
 name = "flate2"
@@ -782,6 +794,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
+
+[[package]]
 name = "libc"
 version = "0.2.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -789,9 +807,9 @@ checksum = "b4668fb0ea861c1df094127ac5f1da3409a82116a4ba74fca2e58ef927159bb3"
 
 [[package]]
 name = "libcnb"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "027cd4a736600564c4e7aebf124eabb9d7dc622bcfeefb414cc7c4c7d7ac6595"
+checksum = "39d5e0e5f0ea6fe91d867457289d88c4f56631e37fac072d11676ff970715012"
 dependencies = [
  "libcnb-data",
  "libcnb-proc-macros",
@@ -802,34 +820,36 @@ dependencies = [
 
 [[package]]
 name = "libcnb-data"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e8840246c7aced3307fa193edc5d26482f92f992986a33860b6b3b523a67975"
+checksum = "631bda3e80115baf38894609cde58b796d3b3fc0f47cca369321c230df53d563"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
  "serde",
  "thiserror",
  "toml",
+ "uriparse",
 ]
 
 [[package]]
 name = "libcnb-package"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27205236a28660f7395598a3f65afb9315de8ce3054c39375b0be673fa6288e7"
+checksum = "17f8f85f26a1cacea4c3e3fd01484e2c86ca0d9c252a1e81adb22ab7e5ee0451"
 dependencies = [
  "cargo_metadata",
  "libcnb-data",
+ "petgraph",
  "toml",
  "which",
 ]
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9e31cc93a20d00f1d54ecb55dcff681669871e6d8a8b63ac0320e77fca1987c"
+checksum = "1ab33c1d63ffd280516abc7ada744fc1b653a888c439f5e2962d5371d0aecaf7"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -839,13 +859,13 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff3f26e5f4ad90ea4036618dcba858c567f8c46a281daa72856eab3be0972885"
+checksum = "0b41b862dfd56b90b266cc5eeb7387bbe1d7912f713af70d988bc9a52d7fe935"
 dependencies = [
  "bollard",
  "cargo_metadata",
- "fastrand",
+ "fastrand 2.0.0",
  "fs_extra",
  "libcnb-data",
  "libcnb-package",
@@ -857,9 +877,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ee2764ebf688454c4fcbcd7c52ff277b5cb2e196c502ff4ce92de563cb10ea2"
+checksum = "9580036bf74433923229f3669b3eee4031f771272f6e419754bc49698f320851"
 dependencies = [
  "crossbeam-utils",
  "flate2",
@@ -1012,6 +1032,16 @@ name = "percent-encoding"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b2a4787296e9989611394c33f193f676704af1686e70b8f8033ab5ba9a35a94"
+
+[[package]]
+name = "petgraph"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dd7d28ee937e54fe3080c91faa1c3a46c06de6252988a7f4592ba2310ef22a4"
+dependencies = [
+ "fixedbitset",
+ "indexmap 1.9.2",
+]
 
 [[package]]
 name = "pin-project"
@@ -1347,7 +1377,7 @@ checksum = "31c0432476357e58790aaa47a8efb0c5138f137343f3b5f23bd36a27e3b0a6d6"
 dependencies = [
  "autocfg",
  "cfg-if",
- "fastrand",
+ "fastrand 1.8.0",
  "redox_syscall 0.3.5",
  "rustix",
  "windows-sys 0.48.0",
@@ -1607,6 +1637,16 @@ dependencies = [
  "serde_json",
  "url",
  "webpki-roots",
+]
+
+[[package]]
+name = "uriparse"
+version = "0.6.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0200d0fc04d809396c2ad43f3c95da3582a2556eba8d453c1087f4120ee352ff"
+dependencies = [
+ "fnv",
+ "lazy_static",
 ]
 
 [[package]]
