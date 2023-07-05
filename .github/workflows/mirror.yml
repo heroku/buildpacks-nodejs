@@ -16,7 +16,7 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.4.0
+        uses: Swatinem/rust-cache@v2.5.1
       - id: get-unmirrored-versions
         name: Get unmirrored Node.js versions
         env:
@@ -34,7 +34,7 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.4.0
+        uses: Swatinem/rust-cache@v2.5.1
       - id: get-unmirrored-versions
         name: Get unmirrored Yarn versions
         env:
