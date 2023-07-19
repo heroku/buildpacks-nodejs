@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-07-19
+
+- No changes
+
 ## [1.1.1] - 2023-07-07
 
 - Added Yarn version 3.6.1, 4.0.0-rc-47, 4.0.0-rc.48.
@@ -116,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.1.0
