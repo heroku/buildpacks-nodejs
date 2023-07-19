@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2023-07-19
+
+- Updated `heroku/nodejs-engine` to `1.1.2`
+- Updated `heroku/nodejs-corepack` to `1.1.2`
+- Updated `heroku/nodejs-pnpm-install` to `1.1.2`
+- Updated `heroku/nodejs-engine` to `1.1.2`
+- Updated `heroku/nodejs-corepack` to `1.1.2`
+- Updated `heroku/nodejs-yarn` to `1.1.2`
+- Updated `heroku/nodejs-engine` to `1.1.2`
+- Updated `heroku/nodejs-npm` to `1.1.2`
+
 ## [1.1.1] - 2023-07-07
 
 - Updated `heroku/nodejs-engine` to `1.1.1`
@@ -208,6 +219,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.1.0
