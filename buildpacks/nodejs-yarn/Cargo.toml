@@ -7,15 +7,15 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-heroku-nodejs-utils = { path = "../../common/nodejs-utils" }
-libcnb = "0.13"
-libherokubuildpack = "0.13"
-serde = "1"
-tempfile = "3"
-thiserror = "1"
-toml = "0.7"
+heroku-nodejs-utils.workspace = true
+libcnb.workspace = true
+libherokubuildpack.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tempfile.workspace = true
+toml.workspace = true
 
 [dev-dependencies]
-libcnb-test = "0.13"
-test_support = { path = "../../test_support" }
-ureq = "2"
+libcnb-test.workspace = true
+test_support.workspace = true
+ureq.workspace = true
