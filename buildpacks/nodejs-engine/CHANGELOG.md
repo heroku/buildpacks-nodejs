@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2023-07-24
+
 - Added Node.js version 20.5.0.
+
 ## [1.1.2] - 2023-07-19
 
 - Added Node.js version 18.17.0.
@@ -232,7 +235,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.1.0
