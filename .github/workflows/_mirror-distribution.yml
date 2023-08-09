@@ -68,13 +68,13 @@ jobs:
 
   mirror-npm-package-distribution:
     if: inputs.distribution != 'node'
-    name: Mirror Distribution - ${{ inputs.name }} - ${{ matrix.version }} ${{ matrix.platform }}
+    name: Mirror Distribution - ${{ inputs.name }} - ${{ matrix.version }}
     runs-on: ubuntu-22.04
     needs: [get-unmirrored-versions]
     strategy:
       fail-fast: false
       matrix:
-        version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
+        version: ${{ fromJson(needs.get-unmirrored-versions.outputs.versions) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
