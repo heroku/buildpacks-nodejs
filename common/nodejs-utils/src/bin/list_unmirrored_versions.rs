@@ -64,5 +64,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin list_unmirrored_versions <node|yarn>");
+    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin list_unmirrored_versions <node|yarn|npm>");
 }

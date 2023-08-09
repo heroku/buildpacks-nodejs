@@ -1,4 +1,5 @@
 name: Update Inventory
+
 on:
   workflow_dispatch:
   schedule:
@@ -6,79 +7,25 @@ on:
 
 jobs:
   update-nodejs-inventory:
-    name: Update Node.js Engine Inventory
-    runs-on: pub-hk-ubuntu-22.04-small
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - id: set-diff-msg
-        name: Set Diff Message
-        run: echo "::set-output name=msg::$(cargo run --bin diff_versions node buildpacks/nodejs-engine/inventory.toml)"
-      - name: Rebuild Inventory
-        run: "cargo run --bin generate_inventory node > buildpacks/nodejs-engine/inventory.toml"
-      - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n{}/' buildpacks/nodejs-engine/CHANGELOG.md
-      - uses: heroku/use-app-token-action@main
-        id: generate-token
-        with:
-          app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
-      - name: Create Pull Request
-        id: pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ steps.generate-token.outputs.app_token }}
-          title: "Update Node.js Engine Inventory"
-          commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.set-diff-msg.outputs.msg }}"
-          branch: update-nodejs-inventory
-          labels: "automation"
-          body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
-      - name: Configure PR
-        if: steps.pr.outputs.pull-request-operation == 'created'
-        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
-          
+    uses: ./_update-inventory.yml
+    with:
+      name: Node.js Engine
+      distribution: node
+      buildpack_id: heroku/nodejs-engine
+      buildpack_path: buildpacks/nodejs-engine
+
   update-yarn-inventory:
-    name: Update Node.js Yarn Inventory
-    runs-on: pub-hk-ubuntu-22.04-small
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-      - id: set-diff-msg
-        name: Set Diff Message
-        run: echo "::set-output name=msg::$(cargo run --bin diff_versions yarn buildpacks/nodejs-yarn/inventory.toml)"
-      - name: Rebuild Inventory
-        run: "cargo run --bin generate_inventory yarn > buildpacks/nodejs-yarn/inventory.toml"
-      - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n{}/' buildpacks/nodejs-yarn/CHANGELOG.md
-      - uses: heroku/use-app-token-action@main
-        id: generate-token
-        with:
-          app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}   
-      - name: Create Pull Request
-        id: pr
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ steps.generate-token.outputs.app_token }}
-          title: "Update Node.js Yarn Inventory"
-          commit-message: "Update Inventory for heroku/nodejs-yarn\n\n${{ steps.set-diff-msg.outputs.msg }}"
-          branch: update-yarn-inventory
-          labels: "automation"
-          body: "Automated pull-request to update heroku/nodejs-yarn inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
-      - name: Configure PR
-        if: steps.pr.outputs.pull-request-operation == 'created'
-        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
+    uses: ./_update-inventory.yml
+    with:
+      name: Yarn
+      distribution: yarn
+      buildpack_id: heroku/nodejs-yarn
+      buildpack_path: buildpacks/nodejs-yarn
+
+  update-npm-inventory:
+    uses: ./_update-inventory.yml
+    with:
+      name: NPM
+      distribution: npm
+      buildpack_id: heroku/nodejs-npm-engine
+      buildpack_path: buildpacks/nodejs-npm-engine

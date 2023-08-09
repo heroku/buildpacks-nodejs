@@ -34,5 +34,5 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin generate_inventory <node|yarn>");
+    eprintln!("Usage: $ AWS_S3_BUCKET=heroku-nodebin generate_inventory <node|yarn|npm>");
 }

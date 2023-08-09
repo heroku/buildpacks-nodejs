@@ -18,8 +18,8 @@ pub(crate) struct NpmRelease {
 pub(crate) fn list_releases(package: &str) -> anyhow::Result<Vec<NpmRelease>> {
     ureq::get(&format!("{NPMJS_ORG_HOST}/{package}"))
         .call()
-        .map_err(|e| anyhow!("Couldn't fetch npmjs.org package info: {e}"))?
+        .map_err(|e| anyhow!("Couldn't fetch npmjs registry release list from for {package}: {e}"))?
         .into_json::<NpmPackage>()
-        .map_err(|e| anyhow!("Couldn't serialize nodejs.org release list from package: {e}"))
+        .map_err(|e| anyhow!("Couldn't serialize npmjs registry release list for {package}: {e}"))
         .map(|rel| rel.versions.into_values().collect())
 }
