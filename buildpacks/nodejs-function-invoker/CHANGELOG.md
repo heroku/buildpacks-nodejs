@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2023-08-10
+
+- No changes.
+
 ## [1.1.3] - 2023-07-24
 
 - No changes.
@@ -171,7 +175,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial implementation ([#47](https://github.com/heroku/buildpacks-node/pull/47))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.3...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
