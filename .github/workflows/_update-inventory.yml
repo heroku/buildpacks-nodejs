@@ -52,17 +52,15 @@ jobs:
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            #cargo run --bin diff_versions ${{ inputs.distribution }} ${{ inputs.buildpack_path }}/inventory.toml
-            echo "Added Node.js version 20.3.1.\nAdded Node.js version x.y.z\nRemoved Node.js version a.b.c"
+            cargo run --bin diff_versions "${{ inputs.distribution }}" "${{ inputs.buildpack_path }}/inventory.toml"
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
 
       - name: Rebuild Inventory
-        run: cargo run --bin generate_inventory ${{ inputs.distribution }} > ${{ inputs.buildpack_path }}/inventory.toml
+        run: cargo run --bin generate_inventory "${{ inputs.distribution }}" > "${{ inputs.buildpack_path }}/inventory.toml"
 
       - name: Update Changelog
-        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 
-          ${{ inputs.buildpack_path }}/CHANGELOG.md
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e "${{ inputs.buildpack_path }}/CHANGELOG.md"
 
       - name: Create Pull Request
         id: pr

@@ -21,6 +21,7 @@ pub const ARCH: &str = "x64";
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Inventory {
     pub name: String,
+    #[serde(default)]
     pub releases: Vec<Release>,
 }
 
