@@ -7,7 +7,7 @@ on:
 
 jobs:
   update-nodejs-inventory:
-    uses: ./_update-inventory.yml
+    uses: ./.github/workflows/_update-inventory.yml
     with:
       name: Node.js Engine
       distribution: node
@@ -15,7 +15,7 @@ jobs:
       buildpack_path: buildpacks/nodejs-engine
 
   update-yarn-inventory:
-    uses: ./_update-inventory.yml
+    uses: ./.github/workflows/_update-inventory.yml
     with:
       name: Yarn
       distribution: yarn
@@ -23,7 +23,7 @@ jobs:
       buildpack_path: buildpacks/nodejs-yarn
 
   update-npm-inventory:
-    uses: ./_update-inventory.yml
+    uses: ./.github/workflows/_update-inventory.yml
     with:
       name: NPM
       distribution: npm

@@ -1,5 +1,8 @@
 name: _get-unmirrored-distributions
 
+env:
+  CARGO_TERM_COLOR: always
+  
 on:
   workflow_call:
     inputs:

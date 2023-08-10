@@ -6,21 +6,21 @@ on:
 
 jobs:
   mirror-node:
-    uses: ./_mirror-distribution.yml
+    uses: ./.github/workflows/_mirror-distribution.yml
     with:
       name: Node.js
       distribution: node
     secrets: inherit
 
   mirror-yarn:
-    uses: ./_mirror-distribution.yml
+    uses: ./.github/workflows/_mirror-distribution.yml
     with:
       name: Yarn
       distribution: yarn
     secrets: inherit
 
   mirror-npm:
-    uses: ./_mirror-distribution.yml
+    uses: ./.github/workflows/_mirror-distribution.yml
     with:
       name: NPM
       distribution: npm
