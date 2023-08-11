@@ -67,12 +67,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           if [ "${{ inputs.distribution }}" = "node" ]; then
-#            aws s3 cp \
-#              "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz" \
-#              "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
+            echo "ignore"
           else
             echo "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz -> s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
-#            aws s3 cp \
-#              "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz" \
-#              "s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
           fi
