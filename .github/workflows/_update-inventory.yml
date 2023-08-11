@@ -1,0 +1,79 @@
+name: _update-inventory
+
+env:
+  CARGO_TERM_COLOR: always
+
+on:
+  workflow_call:
+    inputs:
+      buildpack_id:
+        type: string
+        required: true
+      buildpack_path:
+        type: string
+        required: true
+      distribution:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+    secrets:
+      LINGUIST_GH_PRIVATE_KEY:
+        required: true
+
+jobs:
+  update-inventory:
+    name: Update Inventory
+    runs-on: pub-hk-ubuntu-22.04-small
+    steps:
+      - uses: heroku/use-app-token-action@main
+        id: generate-token
+        with:
+          app_id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate-token.outputs.app_token }}
+
+      - name: Update Rust toolchain
+        run: rustup update
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2.6.0
+
+      - name: Set Diff Message
+        id: set-diff-msg
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "msg<<${delimiter}"
+            cargo run --bin diff_versions "${{ inputs.distribution }}" "${{ inputs.buildpack_path }}/inventory.toml"
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Rebuild Inventory
+        run: cargo run --bin generate_inventory "${{ inputs.distribution }}" > "${{ inputs.buildpack_path }}/inventory.toml"
+
+      - name: Update Changelog
+        run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n{}/' "${{ inputs.buildpack_path }}/CHANGELOG.md"
+
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ steps.generate-token.outputs.app_token }}
+          title: Update Inventory - ${{ inputs.name }}
+          branch: update-${{ inputs.distribution }}-inventory
+          commit-message: "Update Inventory for ${{ inputs.buildpack_id }}\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          body: "Automated pull-request to update ${{ inputs.buildpack_id }} inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
+
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"

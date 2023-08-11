@@ -60,5 +60,7 @@ fn main() {
 }
 
 fn print_usage() {
-    eprintln!("$ AWS_S3_BUCKET=heroku-nodebin diff_versions <node|yarn> path/to/inventory.toml");
+    eprintln!(
+        "$ AWS_S3_BUCKET=heroku-nodebin diff_versions <node|yarn|npm> path/to/inventory.toml"
+    );
 }

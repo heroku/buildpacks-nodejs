@@ -5,89 +5,23 @@ on:
     - cron: '00 1 * * 1-5'
 
 jobs:
-  get-unmirrored-node-versions:
-    name: Get unmirrored Node.js versions
-    runs-on: ubuntu-22.04
-    outputs:
-      versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
-      - id: get-unmirrored-versions
-        name: Get unmirrored Node.js versions
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: echo "versions=$(cargo run --bin list_unmirrored_versions node)" >> $GITHUB_OUTPUT
+  mirror-node:
+    name: Mirror Node.js
+    uses: ./.github/workflows/_mirror-distribution.yml
+    with:
+      distribution: node
+    secrets: inherit
 
-  get-unmirrored-yarn-versions:
-    name: Get unmirrored Yarn versions
-    runs-on: ubuntu-22.04
-    outputs:
-      versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
-    steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
-      - id: get-unmirrored-versions
-        name: Get unmirrored Yarn versions
-        env:
-          AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-        run: echo "versions=$(cargo run --bin list_unmirrored_versions yarn)" >> $GITHUB_OUTPUT
+  mirror-yarn:
+    name: Mirror Yarn
+    uses: ./.github/workflows/_mirror-distribution.yml
+    with:
+      distribution: yarn
+    secrets: inherit
 
-  mirror-node-distribution:
-    name: Mirror Node.js Distribution ${{ matrix.version }} ${{ matrix.platform }}
-    runs-on: ubuntu-22.04
-    needs: get-unmirrored-node-versions
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: ["linux-x64"]
-        version: ${{ fromJson(needs.get-unmirrored-node-versions.outputs.versions) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download and Verify Node.js distribution
-        run: common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
-
-      - name: Upload Node.js distribution to Nodebin S3 bucket
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        run: >
-          aws s3 cp
-          "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
-          "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
-
-  mirror-yarn-distribution:
-    name: Mirror Yarn Distribution ${{ matrix.version }}
-    runs-on: ubuntu-22.04
-    needs: get-unmirrored-yarn-versions
-    strategy:
-      fail-fast: false
-      matrix:
-        version: ${{ fromJson(needs.get-unmirrored-yarn-versions.outputs.versions) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Download and verify yarn distribution
-        run: common/bin/download-verify-yarn "${{ matrix.version }}"
-
-      - name: Upload Yarn distribution to S3 bucket
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        run: >
-          aws s3 cp
-          "yarn-v${{ matrix.version }}.tar.gz"
-          "s3://${{ secrets.AWS_S3_BUCKET }}/yarn/release/yarn-v${{ matrix.version }}.tar.gz"
+  mirror-npm:
+    name: Mirror npm
+    uses: ./.github/workflows/_mirror-distribution.yml
+    with:
+      distribution: npm
+    secrets: inherit

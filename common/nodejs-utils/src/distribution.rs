@@ -16,6 +16,7 @@ pub const DEFAULT_REGION: &str = "us-east-1";
 pub enum Distribution {
     Yarn,
     Node,
+    Npm,
 }
 
 impl FromStr for Distribution {
@@ -24,6 +25,7 @@ impl FromStr for Distribution {
         match s {
             "Node.js" | "node" => Ok(Self::Node),
             "Yarn" | "yarn" => Ok(Self::Yarn),
+            "Npm" | "npm" => Ok(Self::Npm),
             other => Err(anyhow!("Unknown distribution: {other}")),
         }
     }
@@ -34,6 +36,7 @@ impl fmt::Display for Distribution {
         match self {
             Self::Node => write!(f, "Node.js"),
             Self::Yarn => write!(f, "Yarn"),
+            Self::Npm => write!(f, "npm"),
         }
     }
 }
@@ -48,6 +51,7 @@ impl Distribution {
         match self {
             Self::Node => list_upstream_node_versions(),
             Self::Yarn => list_upstream_yarn_versions(),
+            Self::Npm => list_upstream_npm_versions(),
         }
     }
 
@@ -85,6 +89,7 @@ impl Distribution {
         match self {
             Self::Node => "node",
             Self::Yarn => "yarn",
+            Self::Npm => "npm",
         }
     }
 
@@ -93,6 +98,7 @@ impl Distribution {
         Requirement::parse(match self {
             Self::Node => ">=16",
             Self::Yarn => ">=1.22 || >=4.0.0-rc.35",
+            Self::Npm => ">=8",
         })
         .map_err(|e| anyhow!("{e}"))
     }
@@ -101,6 +107,7 @@ impl Distribution {
         Regex::new(match self {
             Self::Node => r"node/(?P<channel>\w+)/(?P<arch>[\w-]+)/node-v(?P<version>\d+\.\d+\.\d+)[\w-]+\.tar\.gz",
             Self::Yarn => r"yarn/(?P<channel>\w+)/yarn-v(?P<version>\d+\.\d+\.\d+(-[\w\.]+)?)\.tar\.gz",
+            Self::Npm => r"npm/(?P<channel>\w+)/npm-v(?P<version>\d+\.\d+\.\d+(-[\w\.]+)?)\.tar\.gz"
         }).map_err(|e| anyhow!("Mirrored release regex error: {e}"))
     }
 }
@@ -126,6 +133,15 @@ fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
     Ok(vset)
 }
 
+fn list_upstream_npm_versions() -> anyhow::Result<VersionSet> {
+    npmjs_org::list_releases("npm").map(|releases| {
+        releases
+            .into_iter()
+            .map(|release| release.version)
+            .collect()
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -148,6 +164,19 @@ mod tests {
         let dist = Distribution::Yarn {};
         let expected_version =
             Version::parse("1.22.17").expect("Expected to parse a valid version");
+        let versions = dist
+            .upstream_versions()
+            .expect("Expected to list upstream remote versions, but got an error");
+        let actual_version = versions
+            .get(&expected_version)
+            .expect("Expected to find a matching version");
+        assert_eq!(&expected_version, actual_version);
+    }
+
+    #[test]
+    fn upstream_versions_npm() {
+        let dist = Distribution::Npm {};
+        let expected_version = Version::parse("9.7.2").expect("Expected to parse a valid version");
         let versions = dist
             .upstream_versions()
             .expect("Expected to list upstream remote versions, but got an error");

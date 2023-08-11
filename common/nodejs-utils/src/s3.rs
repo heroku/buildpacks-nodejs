@@ -8,6 +8,7 @@ use url::Url;
 #[allow(dead_code)]
 pub(crate) struct Content {
     // Examples of keys:
+    // * npm/release/npm-v9.7.2.tar.gz
     // * yarn/release/yarn-v0.16.0.tar.gz
     // * node/release/darwin-x64/node-v0.10.0-darwin-x64.tar.gz
     pub(crate) key: String,
