@@ -28,7 +28,7 @@ fi
 npm_url="https://registry.npmjs.com/${package_name}/${package_version}"
 
 echo "Determining dist url from ${npm_url}"
-url=$(curl -sSf "npm_url" | jq -r '.dist.tarball')
+url=$(curl -sSf "$npm_url}" | jq -r '.dist.tarball')
 
 echo "Downloading ${package_name} tarball..." >&2
 curl -sSf -o "./${package_name}-v${package_version}.tar.gz" "${url}"
