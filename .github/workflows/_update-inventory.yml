@@ -65,21 +65,18 @@ jobs:
       - name: Update Changelog
         run: echo "${{ steps.set-diff-msg.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n{}/' "${{ inputs.buildpack_path }}/CHANGELOG.md"
 
-      - name: Test
-        run: cat "${{ inputs.buildpack_path }}/CHANGELOG.md"
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ steps.generate-token.outputs.app_token }}
+          title: Update Inventory - ${{ inputs.name }}
+          branch: update-${{ inputs.distribution }}-inventory
+          commit-message: "Update Inventory for ${{ inputs.buildpack_id }}\n\n${{ steps.set-diff-msg.outputs.msg }}"
+          body: "Automated pull-request to update ${{ inputs.buildpack_id }} inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
 
-#      - name: Create Pull Request
-#        id: pr
-#        uses: peter-evans/create-pull-request@v5
-#        with:
-#          token: ${{ steps.generate-token.outputs.app_token }}
-#          title: Update Inventory - ${{ inputs.name }}
-#          branch: update-${{ inputs.distribution }}-inventory
-#          commit-message: "Update Inventory for ${{ inputs.buildpack_id }}\n\n${{ steps.set-diff-msg.outputs.msg }}"
-#          body: "Automated pull-request to update ${{ inputs.buildpack_id }} inventory:\n\n${{ steps.set-diff-msg.outputs.msg }}"
-#
-#      - name: Configure PR
-#        if: steps.pr.outputs.pull-request-operation == 'created'
-#        env:
-#          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
-#        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.app_token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
