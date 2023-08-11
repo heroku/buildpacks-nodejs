@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        distribution: [${{ inputs.distribution }}]
+        distribution: ${{ inputs.distribution }}
         version: ${{ fromJson(needs.get-unmirrored-versions.outputs.versions) }}
         include:
           - distribution: node
