@@ -54,7 +54,6 @@ jobs:
 
       - name: Download and verify distribution
         run: |
-          echo "${{ toJson(matrix) }}"
           if [ "${{ inputs.distribution }}" = "node" ]; then
             common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
           else
