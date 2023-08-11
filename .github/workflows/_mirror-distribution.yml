@@ -39,8 +39,7 @@ jobs:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: echo "versions=$(cargo run --bin list_unmirrored_versions ${{ inputs.distribution }})" >> $GITHUB_OUTPUT
 
-  mirror-node-distribution:
-    if: inputs.distribution == 'node'
+  mirror-distribution:
     name: Mirror v${{ matrix.version }} ${{ matrix.platform && format('({0})', matrix.platform) || '' }}
     needs: [get-unmirrored-versions]
     runs-on: ubuntu-22.04
