@@ -6,22 +6,25 @@ env:
 on:
   workflow_call:
     inputs:
-      name:
-        type: string
-        required: true
-      distribution:
-        type: string
-        required: true
       buildpack_id:
         type: string
         required: true
       buildpack_path:
         type: string
         required: true
+      distribution:
+        type: string
+        required: true
+      name:
+        type: string
+        required: true
+    secrets:
+      LINGUIST_GH_PRIVATE_KEY:
+        required: true
 
 jobs:
   update-inventory:
-    name: Update Inventory - ${{ inputs.name }}
+    name: Update Inventory
     runs-on: pub-hk-ubuntu-22.04-small
     steps:
       - uses: heroku/use-app-token-action@main

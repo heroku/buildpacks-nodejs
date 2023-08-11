@@ -7,25 +7,31 @@ on:
 
 jobs:
   update-nodejs-inventory:
+    name: Node.js
     uses: ./.github/workflows/_update-inventory.yml
     with:
-      name: Node.js Engine
+      name: Node.js
       distribution: node
       buildpack_id: heroku/nodejs-engine
       buildpack_path: buildpacks/nodejs-engine
+    secrets: inherit
 
   update-yarn-inventory:
+    name: Yarn
     uses: ./.github/workflows/_update-inventory.yml
     with:
       name: Yarn
       distribution: yarn
       buildpack_id: heroku/nodejs-yarn
       buildpack_path: buildpacks/nodejs-yarn
+    secrets: inherit
 
   update-npm-inventory:
+    name: npm
     uses: ./.github/workflows/_update-inventory.yml
     with:
       name: NPM
       distribution: npm
       buildpack_id: heroku/nodejs-npm-engine
       buildpack_path: buildpacks/nodejs-npm-engine
+    secrets: inherit

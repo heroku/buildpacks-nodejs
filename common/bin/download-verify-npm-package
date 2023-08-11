@@ -25,8 +25,12 @@ if [ "yarn" = "${package_name}" ]; then
 	package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
 fi
 
+npm_url="https://registry.npmjs.com/${package_name}/${package_version}"
+
+echo "Determining dist url from ${npm_url}"
+url=$(curl -sSf "npm_url" | jq -r '.dist.tarball')
+
 echo "Downloading ${package_name} tarball..." >&2
-url=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.tarball')
 curl -sSf -o "./${package_name}-v${package_version}.tar.gz" "${url}"
 
 # Check the file's sha against npm's published sha. This section assumes all
