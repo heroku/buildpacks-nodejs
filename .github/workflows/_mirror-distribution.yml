@@ -57,7 +57,7 @@ jobs:
           if [ "${{ inputs.distribution }}" = "node" ]; then
             common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
           else
-            common/bin/download-verify-npm-package ${{ inputs.distribution }} "${{ matrix.version }}"
+            common/bin/download-verify-npm-package "${{ inputs.distribution }}" "${{ matrix.version }}"
           fi
 
       - name: Upload ${{ matrix.version }} to S3
@@ -67,12 +67,11 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: |
           if [ "${{ inputs.distribution }}" = "node" ]; then
-            aws s3 cp \
-              "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz" \
-              "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
+#            aws s3 cp \
+#              "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz" \
+#              "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
           else
-            echo \
-               "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz -> s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
+            echo "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz -> s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
 #            aws s3 cp \
 #              "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz" \
 #              "s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
