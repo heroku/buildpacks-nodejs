@@ -69,5 +69,6 @@ jobs:
           if [ "${{ inputs.distribution }}" = "node" ]; then
             echo "ignore"
           else
-            echo "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz -> s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
+            echo \
+              "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz -> s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
           fi
