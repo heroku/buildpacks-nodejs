@@ -7,10 +7,70 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.0.0.
 etag = "f57e5811cb6e26d00b8b06e1eea67c65"
 
 [[releases]]
+version = "8.1.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.1.0.tar.gz"
+etag = "0a29c338adba902749b7bb265007bab9"
+
+[[releases]]
+version = "8.1.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.1.1.tar.gz"
+etag = "5996c416396cdd330ddc3a7540a1f18d"
+
+[[releases]]
+version = "8.1.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.1.2.tar.gz"
+etag = "6c5b07cc8552123ec82e7403fe1e2f0f"
+
+[[releases]]
+version = "8.1.3"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.1.3.tar.gz"
+etag = "83e60269c91ed4606161b9803dd9ed30"
+
+[[releases]]
+version = "8.1.4"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.1.4.tar.gz"
+etag = "be0df53c851b31d4d507a4bcd8689933"
+
+[[releases]]
+version = "8.10.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.10.0.tar.gz"
+etag = "325b552c2ed890aef120fa4d13292114"
+
+[[releases]]
+version = "8.11.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.11.0.tar.gz"
+etag = "2c3c661e95ef0503816fb0319c152093"
+
+[[releases]]
 version = "8.12.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.12.0.tar.gz"
 etag = "576b8b3f3c082fd4316b8e1ab9e73c74"
+
+[[releases]]
+version = "8.12.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.12.1.tar.gz"
+etag = "71d59274edd60f15c053d0236fdd2bbe"
+
+[[releases]]
+version = "8.12.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.12.2.tar.gz"
+etag = "afcc70608c87a0583a325e9fe4281e25"
+
+[[releases]]
+version = "8.13.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.13.0.tar.gz"
+etag = "2a6a6603fddb70939609bc933bb31f93"
 
 [[releases]]
 version = "8.13.1"
@@ -19,10 +79,28 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.13.1
 etag = "5e7e57ef4d8ac7ad6744716ae334bc93"
 
 [[releases]]
+version = "8.13.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.13.2.tar.gz"
+etag = "4eb61d6ee6415c32f5ca360741c7024e"
+
+[[releases]]
+version = "8.14.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.14.0.tar.gz"
+etag = "192c90ee0ecd40511685a7d3a568c33c"
+
+[[releases]]
 version = "8.15.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.15.0.tar.gz"
 etag = "080f4eff8f327063315a273346edfd6d"
+
+[[releases]]
+version = "8.15.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.15.1.tar.gz"
+etag = "c86616f24edef13b44faec0119ac65fe"
 
 [[releases]]
 version = "8.16.0"
@@ -35,6 +113,42 @@ version = "8.17.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.17.0.tar.gz"
 etag = "3a4dad8e78d927befbb77ae84a0773bd"
+
+[[releases]]
+version = "8.18.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.18.0.tar.gz"
+etag = "4cc6097152a77bfdca8593f476c3db6a"
+
+[[releases]]
+version = "8.19.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.19.0.tar.gz"
+etag = "f2658620f95443db7d317ee113493365"
+
+[[releases]]
+version = "8.19.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.19.1.tar.gz"
+etag = "04159b834f76086fecd2337db3a3224d"
+
+[[releases]]
+version = "8.19.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.19.2.tar.gz"
+etag = "886f933d3d8955ff150d713ae9725ba5"
+
+[[releases]]
+version = "8.19.3"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.19.3.tar.gz"
+etag = "940c84adc0b2492c14c0375ff32cea6c"
+
+[[releases]]
+version = "8.19.4"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.19.4.tar.gz"
+etag = "00cdcfb88101c64d910169a6d15e6aa2"
 
 [[releases]]
 version = "8.2.0"
@@ -55,10 +169,22 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.3.1.
 etag = "927fad24c43cd064ae2e010d7886732d"
 
 [[releases]]
+version = "8.3.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.3.2.tar.gz"
+etag = "878c74309efeabbd907fab935fe05bb3"
+
+[[releases]]
 version = "8.4.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.4.0.tar.gz"
 etag = "e805e6dee82d4f70dfbb353e19917796"
+
+[[releases]]
+version = "8.4.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.4.1.tar.gz"
+etag = "1ed8fc6340d71a12d105c4e7eacf68ae"
 
 [[releases]]
 version = "8.5.0"
@@ -73,16 +199,64 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.5.1.
 etag = "5b4c9dcd3dfb70b3ae838a72f3336b9e"
 
 [[releases]]
+version = "8.5.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.5.2.tar.gz"
+etag = "eef4c4e44a99510e0d21952a35b2fa12"
+
+[[releases]]
+version = "8.5.3"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.5.3.tar.gz"
+etag = "adaee7af0c32997e1b10138b887b64d7"
+
+[[releases]]
+version = "8.5.4"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.5.4.tar.gz"
+etag = "1ca70f32efea790d7d765da9fb0f945e"
+
+[[releases]]
 version = "8.5.5"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.5.5.tar.gz"
 etag = "c3ea22c421f419c940daf6915025f7b1"
 
 [[releases]]
+version = "8.6.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.6.0.tar.gz"
+etag = "50460002e456814fea3869bc23d3a343"
+
+[[releases]]
 version = "8.7.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.7.0.tar.gz"
 etag = "fdd55021ab1efa755ded1decedc63149"
+
+[[releases]]
+version = "8.8.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.8.0.tar.gz"
+etag = "60f5e3abea1cf0466116115e587f7b07"
+
+[[releases]]
+version = "8.9.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.9.0.tar.gz"
+etag = "5befe879deb83adaa644be39a841251b"
+
+[[releases]]
+version = "9.0.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.0.0.tar.gz"
+etag = "2afebf2e6192dc5dad60479e21be5e0a"
+
+[[releases]]
+version = "9.0.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.0.1.tar.gz"
+etag = "ac1bf9cdea7a8027118e63d3ec719f4e"
 
 [[releases]]
 version = "9.1.0"
@@ -97,16 +271,46 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.1.1.
 etag = "18d7655ca1a6ca49e5303edddbe5ad14"
 
 [[releases]]
+version = "9.1.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.1.2.tar.gz"
+etag = "be2bf5582ea3cf887ae11375b54254f6"
+
+[[releases]]
 version = "9.1.3"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.1.3.tar.gz"
 etag = "f6d39cec10e75f8f61bb465f0e1964f2"
 
 [[releases]]
+version = "9.2.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.2.0.tar.gz"
+etag = "1a1714da4d8169f2229be7c4457d38b1"
+
+[[releases]]
+version = "9.3.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.3.0.tar.gz"
+etag = "0073b825084c551fa2d13420ab439e20"
+
+[[releases]]
 version = "9.3.1"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.3.1.tar.gz"
 etag = "9a3e9f5d0c3357e68bf4810ecac0306b"
+
+[[releases]]
+version = "9.4.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.4.0.tar.gz"
+etag = "40af9283db14b4f01ab6c81677dd7221"
+
+[[releases]]
+version = "9.4.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.4.1.tar.gz"
+etag = "1f7d00ce4e2ea14f75b9d70677185145"
 
 [[releases]]
 version = "9.4.2"
@@ -121,6 +325,12 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.5.0.
 etag = "2dc0b3d652470c78eba35ce6edc82454"
 
 [[releases]]
+version = "9.5.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.5.1.tar.gz"
+etag = "58e994784a937c1afd392b9ada600822"
+
+[[releases]]
 version = "9.6.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.0.tar.gz"
@@ -133,6 +343,24 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.1.
 etag = "445470c705ba61da5da3742fe02528bf"
 
 [[releases]]
+version = "9.6.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.2.tar.gz"
+etag = "f8c27527296077334574f98c99330d89"
+
+[[releases]]
+version = "9.6.3"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.3.tar.gz"
+etag = "9ccac52b1e317d0a23759ff7f8200b01"
+
+[[releases]]
+version = "9.6.4"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.4.tar.gz"
+etag = "7f6a72bf960610de1c905ade67bc0dc7"
+
+[[releases]]
 version = "9.6.5"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.5.tar.gz"
@@ -143,4 +371,40 @@ version = "9.6.6"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.6.tar.gz"
 etag = "aebff29bee406bcc491573f00106edd2"
+
+[[releases]]
+version = "9.6.7"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.7.tar.gz"
+etag = "b85f34d64a8224a25221c5b57b8a29e5"
+
+[[releases]]
+version = "9.7.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.7.0.tar.gz"
+etag = "290bb0fc344dd0da80732d7703d3614a"
+
+[[releases]]
+version = "9.7.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.7.1.tar.gz"
+etag = "aaa52932b8cf3ccad629f9e14ca39ad2"
+
+[[releases]]
+version = "9.7.2"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.7.2.tar.gz"
+etag = "10d35fb2b79993038464ce698ec0d2c5"
+
+[[releases]]
+version = "9.8.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.8.0.tar.gz"
+etag = "f7d03233261854ef783504dfbb103f23"
+
+[[releases]]
+version = "9.8.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.8.1.tar.gz"
+etag = "a54b82af3b9133e8d9a4825ee04bbbb1"
 
