@@ -7,39 +7,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Added npm version 8.17.0.
-- Added npm version 9.5.0.
-- Added npm version 8.5.0.
-- Added npm version 8.2.0.
-- Added npm version 8.7.0.
-- Added npm version 8.12.0.
-- Added npm version 9.3.1.
-- Added npm version 8.13.1.
-- Added npm version 9.6.6.
-- Added npm version 8.0.0.
-- Added npm version 9.4.2.
-- Added npm version 8.4.0.
-- Added npm version 8.5.5.
-- Added npm version 8.3.1.
-- Added npm version 9.1.0.
-- Added npm version 8.5.1.
-- Added npm version 9.6.1.
-- Added npm version 9.1.3.
-- Added npm version 8.15.0.
-- Added npm version 9.1.1.
-- Added npm version 8.16.0.
-- Added npm version 9.6.5.
-- Added npm version 9.6.0.
-- Added npm version 8.3.0.
-- Added npm version 9.6.6.
-- Added npm version 8.12.0.
-- Added npm version 9.1.3.
-- Added npm version 8.3.0.
-- Added npm version 8.5.5.
-- Added npm version 9.6.5.
-- Added npm version 9.5.0.
-- Added npm version 9.3.1.
-- Added npm version 8.7.0.
-- Added npm version 8.17.0.
-- Added npm version 8.16.0.
-- Added npm version 8.4.0.
+- Initial release

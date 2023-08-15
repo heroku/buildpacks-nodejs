@@ -36,7 +36,7 @@ impl Buildpack for NodeJsEngineBuildpack {
     type Error = NodeJsEngineBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let mut plan_builder = BuildPlanBuilder::new().provides("node");
+        let mut plan_builder = BuildPlanBuilder::new().provides("node").provides("npm");
 
         // If there are common node artifacts, this buildpack should both
         // provide and require node so that it may be used without other
