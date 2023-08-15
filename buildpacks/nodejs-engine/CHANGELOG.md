@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Provides `npm` added to the build plan since a default version of `npm` is bundled with Node.js.
+
 ## [1.1.4] - 2023-08-10
 
 - Added Node.js version 16.20.2.
