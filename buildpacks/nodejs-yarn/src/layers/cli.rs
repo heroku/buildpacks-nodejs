@@ -80,11 +80,18 @@ impl Layer for CliLayer {
         move_directory_contents(layer_path.join(dist_name), layer_path)
             .map_err(CliLayerError::Installation)?;
 
-        fs::set_permissions(
-            layer_path.join("bin").join("yarn"),
-            fs::Permissions::from_mode(0o755),
-        )
-        .map_err(CliLayerError::Permissions)?;
+        let yarn_bin_dir = layer_path.join("bin");
+        let yarn_cli = yarn_bin_dir.join("yarn");
+
+        if self.release.version.to_string() == "2.4.3" {
+            // XXX: workaround for yarn 2.4.3, unlike our other 2.4.x inventory entries comes from `yarn` instead of `@yarnpkg/cli-dist`
+            //      so the layout structure is different. there is just a single `bin/yarn.js` in the package which contains a she-bang
+            //      of `#!/usr/bin/env node`. renaming it to the expected `bin/yarn` command allows it to be used.
+            fs::rename(yarn_bin_dir.join("yarn.js"), &yarn_cli).unwrap();
+        }
+
+        fs::set_permissions(yarn_cli, fs::Permissions::from_mode(0o755))
+            .map_err(CliLayerError::Permissions)?;
 
         LayerResultBuilder::new(CliLayerMetadata::current(self, context)).build()
     }

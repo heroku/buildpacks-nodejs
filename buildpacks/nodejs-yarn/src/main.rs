@@ -78,7 +78,7 @@ impl Buildpack for YarnBuildpack {
 
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
-                        log_info("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})");
+                        log_info(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
                         Requirement::parse(DEFAULT_YARN_REQUIREMENT)
                             .map_err(YarnBuildpackError::YarnDefaultParse)?
                     }
