@@ -20,9 +20,9 @@ if [ -z "$package_version" ]; then
 fi
 
 if [ "yarn" = "${package_name}" ]; then
-	# Yarn 2+ (aka: "berry") is hosted under a different npm package (except for version 2.4.3).
+	# Yarn 2+ (aka: "berry") is hosted under a different npm package.
 	major_version=$(echo "$package_version" | cut -d "." -f 1)
-	package_name=$([ "$major_version" -ge 2 ] && [ "$package_version" != "2.4.3" ] && echo "@yarnpkg/cli-dist" || echo "yarn")
+	package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
 fi
 
 npm_url="https://registry.npmjs.com/${package_name}/${package_version}"
