@@ -49,7 +49,7 @@ please see [heroku/nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
 
 ```
 pack build example-app \
-  --buildpack <project_root>/target/buildpack/debug/heroku_nodejs \ 
+  --buildpack <project_root>/packaged/x86_64-unknown-linux-musl/debug/heroku_nodejs \ 
   --path /path/to/example-app
 ```
 
