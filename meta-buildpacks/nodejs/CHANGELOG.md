@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Updated `heroku/procfile` to `2.0.1`. ([#639](https://github.com/heroku/buildpacks-node/pull/639))
+
 ## [1.1.4] - 2023-08-10
 
 - Updated `heroku/nodejs-corepack` to `1.1.4`.
