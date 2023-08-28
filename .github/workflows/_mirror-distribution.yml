@@ -43,6 +43,7 @@ jobs:
     name: Mirror v${{ matrix.version }} ${{ matrix.platform && format('({0})', matrix.platform) || '' }}
     needs: [get-unmirrored-versions]
     runs-on: ubuntu-22.04
+    if: needs.get-unmirrored-versions.outputs.versions != '[]'
     strategy:
       fail-fast: false
       matrix:
