@@ -1,5 +1,8 @@
 use crate::errors::NpmEngineBuildpackError;
 use crate::NpmEngineBuildpack;
+use commons::fun_run::CommandWithName;
+use commons::output::fmt;
+use commons::output::section_log::{log_step, log_step_timed, SectionLogger};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -8,30 +11,23 @@ use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::download::{download_file, DownloadError};
-use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::path::Path;
-use std::process::{Command, Stdio};
+use std::process::Command;
 
 /// A layer that downloads and sets up npm
-pub(crate) struct NpmEngineLayer {
-    pub npm_release: Release,
-    pub node_version: Version,
-}
-
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub(crate) struct NpmEngineLayerMetadata {
-    layer_version: String,
-    npm_version: String,
-    node_version: String,
-    stack_id: StackId,
+pub(crate) struct NpmEngineLayer<'a> {
+    pub(crate) npm_release: Release,
+    pub(crate) node_version: Version,
+    // this ensures we have a logging section already created
+    pub(crate) _section_logger: &'a dyn SectionLogger,
 }
 
 const LAYER_VERSION: &str = "1";
 
-impl Layer for NpmEngineLayer {
+impl<'a> Layer for NpmEngineLayer<'a> {
     type Buildpack = NpmEngineBuildpack;
     type Metadata = NpmEngineLayerMetadata;
 
@@ -52,20 +48,35 @@ impl Layer for NpmEngineLayer {
         // https://www.npmjs.com/install.sh
         let npm_tgz = layer_path.join("npm.tgz");
 
-        log_info("Downloading and extracting npm...");
-        download_file(&self.npm_release.url, &npm_tgz).map_err(NpmEngineLayerError::Download)?;
-
-        let mut npm_tgz_file = File::open(&npm_tgz).map_err(NpmEngineLayerError::OpenTarball)?;
-        decompress_tarball(&mut npm_tgz_file, layer_path)
-            .map_err(NpmEngineLayerError::DecompressTarball)?;
+        log_step_timed(
+            format!("Downloading {}", fmt::value(&self.npm_release.url)),
+            || {
+                download_file(&self.npm_release.url, &npm_tgz)
+                    .map_err(NpmEngineLayerError::Download)
+                    .and_then(|_| File::open(&npm_tgz).map_err(NpmEngineLayerError::OpenTarball))
+                    .and_then(|mut npm_tgz_file| {
+                        decompress_tarball(&mut npm_tgz_file, layer_path)
+                            .map_err(NpmEngineLayerError::DecompressTarball)
+                    })
+            },
+        )?;
 
         let npm_cli_script = layer_path.join("package/bin/npm-cli.js");
 
+        log_step("Removing existing npm");
         Command::new("node")
-            .args([&npm_cli_script.to_string_lossy(), "rm", "npm", "-gf"])
-            .output()
+            .args([
+                &npm_cli_script.to_string_lossy(),
+                "rm",
+                "npm",
+                "-gf",
+                "--loglevel=silent",
+            ])
+            .named_output()
+            .and_then(|cmd| cmd.nonzero_captured())
             .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)?;
 
+        log_step("Installing requested npm");
         Command::new("node")
             .args([
                 &npm_cli_script.to_string_lossy(),
@@ -73,8 +84,8 @@ impl Layer for NpmEngineLayer {
                 "-gf",
                 &npm_tgz.to_string_lossy(),
             ])
-            .stdout(Stdio::piped())
-            .output()
+            .named_output()
+            .and_then(|cmd| cmd.nonzero_captured())
             .map_err(NpmEngineLayerError::InstallNpm)?;
 
         LayerResultBuilder::new(NpmEngineLayerMetadata::current(self, context)).build()
@@ -85,13 +96,45 @@ impl Layer for NpmEngineLayer {
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        if layer_data.content_metadata.metadata == NpmEngineLayerMetadata::current(self, context) {
-            log_info("Reusing cached npm...");
+        let old_meta = &layer_data.content_metadata.metadata;
+        let new_meta = &NpmEngineLayerMetadata::current(self, context);
+        if old_meta == new_meta {
+            log_step("Using cached npm");
             Ok(ExistingLayerStrategy::Keep)
         } else {
+            log_step(format!(
+                "Invalidating cached npm ({} changed)",
+                changed_metadata_fields(old_meta, new_meta).join(", ")
+            ));
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
+}
+
+fn changed_metadata_fields(
+    old: &NpmEngineLayerMetadata,
+    new: &NpmEngineLayerMetadata,
+) -> Vec<String> {
+    let mut changed = vec![];
+    if old.npm_version != new.npm_version {
+        changed.push("npm version".to_string());
+    } else if old.node_version != new.node_version {
+        changed.push("node version".to_string());
+    } else if old.layer_version != new.layer_version {
+        changed.push("layer version".to_string());
+    } else if old.stack_id != new.stack_id {
+        changed.push("stack id".to_string());
+    }
+    changed.sort();
+    changed
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+pub(crate) struct NpmEngineLayerMetadata {
+    layer_version: String,
+    npm_version: String,
+    node_version: String,
+    stack_id: StackId,
 }
 
 impl NpmEngineLayerMetadata {
@@ -110,12 +153,12 @@ pub(crate) enum NpmEngineLayerError {
     Download(DownloadError),
     OpenTarball(std::io::Error),
     DecompressTarball(std::io::Error),
-    RemoveExistingNpmInstall(std::io::Error),
-    InstallNpm(std::io::Error),
+    RemoveExistingNpmInstall(commons::fun_run::CmdError),
+    InstallNpm(commons::fun_run::CmdError),
 }
 
 impl From<NpmEngineLayerError> for NpmEngineBuildpackError {
     fn from(value: NpmEngineLayerError) -> Self {
-        NpmEngineBuildpackError::NpmSetupLayer(value)
+        NpmEngineBuildpackError::NpmEngineLayer(value)
     }
 }

@@ -4,6 +4,8 @@ mod layers;
 
 use crate::errors::NpmEngineBuildpackError;
 use crate::layers::npm_engine::NpmEngineLayer;
+use commons::output::build_log::{BuildLog, Logger};
+use commons::output::fmt;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::PackageJson;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -12,7 +14,7 @@ use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::{log_header, log_info};
+use std::io::stdout;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
@@ -49,41 +51,62 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        log_header("Heroku npm Engine Buildpack");
+        let mut logger = BuildLog::new(stdout()).buildpack_name("Heroku npm Engine Buildpack");
 
         let env = Env::from_current();
 
         let package_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(NpmEngineBuildpackError::PackageJson)?;
 
+        let section = logger.section("Installing npm");
+
         let npm_requirement = package_json
             .engines
             .and_then(|engines| engines.npm)
             .ok_or(NpmEngineBuildpackError::MissingNpmEngineRequirement)?;
+
+        let section = section.step(&format!(
+            "Found {} version {} declared in {}",
+            fmt::value("engines.npm"),
+            fmt::value(npm_requirement.to_string()),
+            fmt::value("package.json")
+        ));
 
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
 
         let npm_release = inventory
             .resolve(&npm_requirement)
-            .ok_or(NpmEngineBuildpackError::NpmVersionResolve(npm_requirement))?
+            .ok_or(NpmEngineBuildpackError::NpmVersionResolve(
+                npm_requirement.clone(),
+            ))?
             .to_owned();
 
-        let node_version =
-            cmd::node_version(&env).map_err(NpmEngineBuildpackError::NodeVersionCommand)?;
+        let section = section.step(&format!(
+            "Resolved version {} to {}",
+            fmt::value(npm_requirement.to_string()),
+            fmt::value(npm_release.version.to_string())
+        ));
 
-        log_info(format!("Resolved npm version: {}", npm_release.version));
+        let node_version = cmd::node_version(&env).map_err(NpmEngineBuildpackError::Command)?;
+
         context.handle_layer(
             layer_name!("npm_engine"),
             NpmEngineLayer {
                 npm_release,
                 node_version,
+                _section_logger: section.as_ref(),
             },
         )?;
 
-        let npm_version =
-            cmd::npm_version(&env).map_err(NpmEngineBuildpackError::NpmVersionCommand)?;
-        log_info(format!("Installed npm version: {npm_version}"));
+        let npm_version = cmd::npm_version(&env).map_err(NpmEngineBuildpackError::Command)?;
+        let section = section.step(&format!(
+            "Successfully installed {}",
+            fmt::value(format!("npm@{npm_version}")),
+        ));
+
+        logger = section.end_section();
+        logger.finish_logging();
 
         BuildResultBuilder::new().build()
     }

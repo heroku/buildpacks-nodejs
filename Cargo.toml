@@ -19,9 +19,10 @@ publish = false
 [workspace.dependencies]
 heroku-nodejs-utils = { path = "./common/nodejs-utils" }
 indoc = "2"
-libcnb-test = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_local_and_meta_buildpack_support" }
-libcnb = "0.13"
-libherokubuildpack = "0.13"
+libcnb-test = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_meta_buildpack_support" }
+libcnb = "=0.14"
+libcnb-data = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_meta_buildpack_support" }
+libherokubuildpack = "=0.14"
 serde = "1"
 serde_json = "1"
 test_support = { path = "./test_support" }
@@ -29,6 +30,7 @@ tempfile = "3"
 thiserror = "1"
 toml = "0.7"
 ureq = "2"
+commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "schneems/logging-state-machine-continued" }
 
 [profile.release]
 strip = true

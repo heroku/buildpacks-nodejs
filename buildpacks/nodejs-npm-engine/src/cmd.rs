@@ -1,37 +1,33 @@
+use commons::fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
-use std::process::{Command, ExitStatus};
-
-type Result<T> = std::result::Result<T, Error>;
+use std::process::Command;
 
 #[derive(Debug)]
 pub(crate) enum Error {
-    Wait(std::io::Error),
-    Exit(ExitStatus),
-    Parse(String),
+    NpmVersionCommand(CmdError),
+    ParseNpmVersion(String),
+    NodeVersionCommand(CmdError),
+    ParseNodeVersion(String),
 }
 
-pub(crate) fn node_version(env: &Env) -> Result<Version> {
+pub(crate) fn node_version(env: &Env) -> Result<Version, Error> {
     exec_version_command("node", env)
+        .map_err(Error::NodeVersionCommand)
+        .and_then(|output| output.parse().map_err(|_| Error::ParseNpmVersion(output)))
 }
 
-pub(crate) fn npm_version(env: &Env) -> Result<Version> {
+pub(crate) fn npm_version(env: &Env) -> Result<Version, Error> {
     exec_version_command("npm", env)
+        .map_err(Error::NpmVersionCommand)
+        .and_then(|output| output.parse().map_err(|_| Error::ParseNodeVersion(output)))
 }
 
-fn exec_version_command(program: &str, env: &Env) -> Result<Version> {
-    let output = Command::new(program)
+fn exec_version_command(program: &str, env: &Env) -> Result<String, CmdError> {
+    Command::new(program)
         .args(["--version"])
         .envs(env)
-        .output()
-        .map_err(Error::Wait)?;
-
-    if !output.status.success() {
-        return Err(Error::Exit(output.status));
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout
-        .parse::<Version>()
-        .map_err(|_| Error::Parse(stdout.into_owned()))
+        .named_output()
+        .and_then(|output| output.nonzero_captured())
+        .map(|output| output.stdout_lossy())
 }

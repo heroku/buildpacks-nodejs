@@ -1,3 +1,4 @@
+use libcnb_data::buildpack_id;
 use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, TestContext, TestRunner,
 };
@@ -22,9 +23,7 @@ pub fn nodejs_integration_test(fixture: &str, test_body: fn(TestContext)) {
 
     let builder = get_integration_test_builder();
     let app_dir = cargo_manifest_dir.join("tests").join(fixture);
-    let buildpacks = vec![BuildpackReference::Local(PathBuf::from(
-        "../../meta-buildpacks/nodejs",
-    ))];
+    let buildpacks = vec![BuildpackReference::LibCnbRs(buildpack_id!("heroku/nodejs"))];
 
     let mut build_config = BuildConfig::new(builder, app_dir);
     build_config.buildpacks(buildpacks);
@@ -140,9 +139,7 @@ pub fn assert_health_check_responds(ctx: &TestContext) {
     ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
         std::thread::sleep(Duration::from_secs(TIMEOUT));
 
-        let addr = container
-            .address_for_port(PORT)
-            .expect("couldn't get container address");
+        let addr = container.address_for_port(PORT);
 
         let resp = ureq::post(&format!("http://{addr}"))
             .set("x-health-check", "true")
@@ -159,9 +156,7 @@ pub fn assert_web_response(ctx: &TestContext, text: &'static str) {
     ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
         std::thread::sleep(Duration::from_secs(5));
 
-        let addr = container
-            .address_for_port(PORT)
-            .expect("couldn't get container address");
+        let addr = container.address_for_port(PORT);
 
         let resp = ureq::get(&format!("http://{addr}/"))
             .call()
