@@ -140,7 +140,6 @@ pub fn assert_health_check_responds(ctx: &TestContext) {
         std::thread::sleep(Duration::from_secs(TIMEOUT));
 
         let addr = container.address_for_port(PORT);
-
         let resp = ureq::post(&format!("http://{addr}"))
             .set("x-health-check", "true")
             .call()
@@ -157,7 +156,6 @@ pub fn assert_web_response(ctx: &TestContext, text: &'static str) {
         std::thread::sleep(Duration::from_secs(5));
 
         let addr = container.address_for_port(PORT);
-
         let resp = ureq::get(&format!("http://{addr}/"))
             .call()
             .expect("request to container failed")

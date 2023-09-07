@@ -31,7 +31,7 @@ jobs:
         run: rustup update
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.6.2
 
       - name: Get unmirrored versions
         id: get-unmirrored-versions
@@ -43,6 +43,7 @@ jobs:
     name: Mirror v${{ matrix.version }} ${{ matrix.platform && format('({0})', matrix.platform) || '' }}
     needs: [get-unmirrored-versions]
     runs-on: ubuntu-22.04
+    if: needs.get-unmirrored-versions.outputs.versions != '[]'
     strategy:
       fail-fast: false
       matrix:

@@ -123,11 +123,28 @@ fn list_upstream_node_versions() -> anyhow::Result<VersionSet> {
         .collect()
 }
 
+const IGNORE_YARN_VERSIONS: [&str; 1] = [
+    // This version is ignored because all of the current 2.x versions are published by the `@yarnpkg/cli-dist`
+    // module except for this one which is published by the `yarn` module. The layout of this package
+    // differs from what we expect so instead of coding in some edge case handling when we install this
+    // yarn version in the buildpack, we've decided to ignore it.
+    //
+    // There should be little user impact here because our Yarn inventory only controls the "global" binary
+    // that is installed which acts as a wrapper to the actual version of Yarn used when building.
+    // For Yarn 2+ projects, the actual Yarn version used is meant to be committed to the folder
+    // `.yarn/release` and the global binary delegates all operations to the committed version.
+    "2.4.3",
+];
+
 fn list_upstream_yarn_versions() -> anyhow::Result<VersionSet> {
     let mut vset = VersionSet::new();
     for pkg in ["yarn", "@yarnpkg/cli-dist"] {
         for release in npmjs_org::list_releases(pkg)? {
-            vset.insert(release.version);
+            let ignore_release = pkg == "yarn"
+                && IGNORE_YARN_VERSIONS.contains(&release.version.to_string().as_str());
+            if !ignore_release {
+                vset.insert(release.version);
+            }
         }
     }
     Ok(vset)

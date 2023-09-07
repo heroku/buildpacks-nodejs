@@ -21,9 +21,7 @@ fn test_node(fixture: &str, builder: &str, expect_lines: &[&str]) {
 
 fn test_response(container: &ContainerContext, text: &str) {
     std::thread::sleep(Duration::from_secs(5));
-    let addr = container
-        .address_for_port(PORT)
-        .expect("couldn't get container address");
+    let addr = container.address_for_port(PORT);
     let resp = ureq::get(&format!("http://{addr}"))
         .call()
         .expect("request to container failed")

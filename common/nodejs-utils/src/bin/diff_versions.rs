@@ -1,9 +1,11 @@
 #![warn(clippy::pedantic)]
 
+use heroku_nodejs_utils::vrs::Version;
 use heroku_nodejs_utils::{
     distribution::{Distribution, DEFAULT_BUCKET},
     inv::Inventory,
 };
+use std::collections::HashSet;
 use std::str::FromStr;
 
 const FAILED_EXIT_CODE: i32 = 1;
@@ -42,21 +44,35 @@ fn main() {
         .map(|r| r.version.clone())
         .collect();
 
-    let msg = [
-        ("Added", mirrored_versions.difference(&local_versions)),
-        ("Removed", local_versions.difference(&mirrored_versions)),
-    ]
-    .iter()
-    .filter(|(_, versions)| versions.clone().count() > 0)
-    .flat_map(|(change, versions)| {
-        versions
-            .clone()
-            .map(|version| format!("- {} {} version {}.", *change, distribution, version))
-    })
-    .collect::<Vec<String>>()
-    .join("\n");
+    let added_versions = list_version_differences(&mirrored_versions, &local_versions)
+        .into_iter()
+        .map(|version| format!("- Added {distribution} version {version}."))
+        .collect::<Vec<_>>();
 
-    println!("{msg}");
+    if !added_versions.is_empty() {
+        println!("{}", added_versions.join("\n"));
+    }
+
+    let removed_versions = list_version_differences(&local_versions, &mirrored_versions)
+        .into_iter()
+        .map(|version| format!("- Removed {distribution} version {version}."))
+        .collect::<Vec<_>>();
+
+    if !removed_versions.is_empty() {
+        println!("{}", removed_versions.join("\n"));
+    }
+}
+
+fn list_version_differences(
+    versions_a: &HashSet<Version>,
+    versions_b: &HashSet<Version>,
+) -> Vec<Version> {
+    let mut differences = versions_a
+        .difference(versions_b)
+        .cloned()
+        .collect::<Vec<_>>();
+    differences.sort();
+    differences
 }
 
 fn print_usage() {
