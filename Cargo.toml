@@ -19,9 +19,12 @@ publish = false
 [workspace.dependencies]
 heroku-nodejs-utils = { path = "./common/nodejs-utils" }
 indoc = "2"
-libcnb-test = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_local_and_meta_buildpack_support" }
-libcnb = "0.13"
-libherokubuildpack = "0.13"
+# libcnb has a much bigger impact on buildpack behaviour than any other dependencies,
+# so it's pinned to an exact version to isolate it from lockfile refreshes.
+libcnb-data = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_meta_buildpack_support" }
+libcnb-test = { git = "https://github.com/heroku/libcnb.rs", branch = "libcnb_test_meta_buildpack_support" }
+libcnb = "=0.14.0"
+libherokubuildpack = "=0.14.0"
 serde = "1"
 serde_json = "1"
 test_support = { path = "./test_support" }

@@ -31,7 +31,7 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.6.2
       - name: Clippy
         run: cargo clippy --all-targets --locked -- --deny warnings
       - name: rustfmt
@@ -45,7 +45,7 @@ jobs:
       - name: Update Rust toolchain
         run: rustup update
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.6.2
       - name: Run unit tests
         run: cargo test --locked
 
@@ -81,9 +81,9 @@ jobs:
       - name: Install Rust linux-musl target
         run: rustup target add x86_64-unknown-linux-musl
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.6.2
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v5.3.0
+        uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Run integration tests
         working-directory: ${{ matrix.buildpack-directory }}
         run: cargo test --locked -- --ignored --test-threads 16
@@ -132,12 +132,12 @@ jobs:
       - name: Install Rust linux-musl target
         run: rustup target add x86_64-unknown-linux-musl
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.6.2
       - name: Install libcnb
         run: cargo install libcnb-cargo
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v5.3.0
+        uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Install yj
-        uses: buildpacks/github-actions/setup-tools@v5.3.0
+        uses: buildpacks/github-actions/setup-tools@v5.4.0
       - name: Run rspec tests against a given directory
         run: bundle exec rspec ${{ matrix.test-dir }}
