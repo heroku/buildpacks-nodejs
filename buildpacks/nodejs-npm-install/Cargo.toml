@@ -7,6 +7,7 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
+commons.workspace = true
 heroku-nodejs-utils.workspace = true
 libcnb.workspace = true
 libherokubuildpack.workspace = true

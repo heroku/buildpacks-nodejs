@@ -9,5 +9,6 @@ pub mod inv;
 mod nodejs_org;
 mod npmjs_org;
 pub mod package_json;
+pub mod package_manager;
 mod s3;
 pub mod vrs;
