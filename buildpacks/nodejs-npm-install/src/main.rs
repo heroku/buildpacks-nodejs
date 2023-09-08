@@ -20,7 +20,7 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::stdout;
+use std::io::{stdout, Stdout};
 use std::path::Path;
 use std::process::Command;
 
@@ -59,7 +59,7 @@ impl Buildpack for NpmInstallBuildpack {
         let package_json = PackageJson::read(app_dir.join("package.json"))
             .map_err(NpmInstallBuildpackError::PackageJson)?;
 
-        run_application_checks(app_dir)?;
+        run_application_checks(app_dir, &warn_later)?;
 
         let section = logger.section("Installing node modules");
         log_npm_version(&env, section.as_ref())?;
@@ -85,8 +85,11 @@ impl Buildpack for NpmInstallBuildpack {
     }
 }
 
-fn run_application_checks(app_dir: &Path) -> Result<(), NpmInstallBuildpackError> {
-    application::warn_prebuilt_modules(app_dir);
+fn run_application_checks(
+    app_dir: &Path,
+    warn_later: &WarnGuard<Stdout>,
+) -> Result<(), NpmInstallBuildpackError> {
+    application::warn_prebuilt_modules(app_dir, warn_later);
     application::check_for_multiple_lockfiles(app_dir)
         .map_err(NpmInstallBuildpackError::Application)
 }

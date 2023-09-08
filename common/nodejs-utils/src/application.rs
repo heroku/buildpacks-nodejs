@@ -1,7 +1,9 @@
 use crate::package_manager::PackageManager;
 use commons::output::section_log::log_warning_later;
+use commons::output::warn_later::WarnGuard;
 use indoc::{indoc, writedoc};
 use std::fmt::{Display, Formatter};
+use std::io::Stdout;
 use std::path::Path;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -31,7 +33,7 @@ pub fn check_for_multiple_lockfiles(app_dir: &Path) -> Result<()> {
 /// the application contains files that it shouldn't in its git repository. If this is the case,
 /// a delayed warning will be published to the logger. To ensure the delayed warning is properly
 /// displayed it should be used in conjunction with a [`WarnGuard`].
-pub fn warn_prebuilt_modules(app_dir: &Path) {
+pub fn warn_prebuilt_modules(app_dir: &Path, _warn_later: &WarnGuard<Stdout>) {
     if app_dir.join("node_modules").exists() {
         log_warning_later(indoc! {"
             Warning: node_modules checked into source control
