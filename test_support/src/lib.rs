@@ -17,21 +17,14 @@ pub fn get_integration_test_builder() -> String {
 }
 
 pub fn nodejs_integration_test(fixture: &str, test_body: fn(TestContext)) {
-    let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .expect("The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests but it was not");
-
-    let builder = get_integration_test_builder();
-    let app_dir = cargo_manifest_dir.join("tests").join(fixture);
-    let buildpacks = vec![BuildpackReference::LibCnbRs(buildpack_id!("heroku/nodejs"))];
-
-    let mut build_config = BuildConfig::new(builder, app_dir);
-    build_config.buildpacks(buildpacks);
-
-    TestRunner::default().build(build_config, test_body);
+    nodejs_integration_test_with_config(fixture, |_| {}, test_body);
 }
 
-pub fn nodejs_integration_test_with_config(fixture: &str, with_config: fn(&mut BuildConfig), test_body: fn(TestContext)) {
+pub fn nodejs_integration_test_with_config(
+    fixture: &str,
+    with_config: fn(&mut BuildConfig),
+    test_body: fn(TestContext),
+) {
     let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
         .expect("The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests but it was not");
