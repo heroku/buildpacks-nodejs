@@ -44,49 +44,14 @@ impl<'a> Layer for NpmEngineLayer<'a> {
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NpmEngineBuildpackError> {
-        // this install process is generalized from the npm install script at:
-        // https://www.npmjs.com/install.sh
-        let npm_tgz = layer_path.join("npm.tgz");
-
-        log_step_timed(
-            format!("Downloading {}", fmt::value(&self.npm_release.url)),
-            || {
-                download_file(&self.npm_release.url, &npm_tgz)
-                    .map_err(NpmEngineLayerError::Download)
-                    .and_then(|_| File::open(&npm_tgz).map_err(NpmEngineLayerError::OpenTarball))
-                    .and_then(|mut npm_tgz_file| {
-                        decompress_tarball(&mut npm_tgz_file, layer_path)
-                            .map_err(NpmEngineLayerError::DecompressTarball)
-                    })
-            },
-        )?;
-
+        let downloaded_package_path = layer_path.join("npm.tgz");
         let npm_cli_script = layer_path.join("package/bin/npm-cli.js");
 
-        log_step("Removing existing npm");
-        Command::new("node")
-            .args([
-                &npm_cli_script.to_string_lossy(),
-                "rm",
-                "npm",
-                "-gf",
-                "--loglevel=silent",
-            ])
-            .named_output()
-            .and_then(|cmd| cmd.nonzero_captured())
-            .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)?;
-
-        log_step("Installing requested npm");
-        Command::new("node")
-            .args([
-                &npm_cli_script.to_string_lossy(),
-                "install",
-                "-gf",
-                &npm_tgz.to_string_lossy(),
-            ])
-            .named_output()
-            .and_then(|cmd| cmd.nonzero_captured())
-            .map_err(NpmEngineLayerError::InstallNpm)?;
+        // this install process is generalized from the npm install script at:
+        // https://www.npmjs.com/install.sh
+        download_and_unpack_release(&self.npm_release.url, &downloaded_package_path, layer_path)?;
+        remove_existing_npm_installation(&npm_cli_script)?;
+        install_npm_package(&npm_cli_script, &downloaded_package_path)?;
 
         LayerResultBuilder::new(NpmEngineLayerMetadata::current(self, context)).build()
     }
@@ -109,6 +74,53 @@ impl<'a> Layer for NpmEngineLayer<'a> {
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
+}
+
+fn download_and_unpack_release(
+    download_from: &String,
+    download_to: &Path,
+    unpack_into: &Path,
+) -> Result<(), NpmEngineLayerError> {
+    log_step_timed(format!("Downloading {}", fmt::value(download_from)), || {
+        download_file(download_from, download_to)
+            .map_err(NpmEngineLayerError::Download)
+            .and_then(|_| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
+            .and_then(|mut npm_tgz_file| {
+                decompress_tarball(&mut npm_tgz_file, unpack_into)
+                    .map_err(NpmEngineLayerError::DecompressTarball)
+            })
+    })
+}
+
+fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmEngineLayerError> {
+    log_step("Removing existing npm");
+    Command::new("node")
+        .args([
+            &npm_cli_script.to_string_lossy(),
+            "rm",
+            "npm",
+            "-gf",
+            "--loglevel=silent",
+        ])
+        .named_output()
+        .and_then(|cmd| cmd.nonzero_captured())
+        .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)
+        .map(|_| ())
+}
+
+fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmEngineLayerError> {
+    log_step("Installing requested npm");
+    Command::new("node")
+        .args([
+            &npm_cli_script.to_string_lossy(),
+            "install",
+            "-gf",
+            &package.to_string_lossy(),
+        ])
+        .named_output()
+        .and_then(|cmd| cmd.nonzero_captured())
+        .map_err(NpmEngineLayerError::InstallNpm)
+        .map(|_| ())
 }
 
 fn changed_metadata_fields(

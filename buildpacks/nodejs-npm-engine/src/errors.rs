@@ -1,5 +1,5 @@
-use crate::cmd;
 use crate::layers::npm_engine::NpmEngineLayerError;
+use crate::{node, npm};
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
 use commons::output::fmt::DEBUG_INFO;
 use heroku_nodejs_utils::package_json::PackageJsonError;
@@ -21,7 +21,8 @@ pub(crate) enum NpmEngineBuildpackError {
     InventoryParse(toml::de::Error),
     NpmVersionResolve(Requirement),
     NpmEngineLayer(NpmEngineLayerError),
-    Command(cmd::Error),
+    NodeVersion(node::VersionError),
+    NpmVersion(npm::VersionError),
 }
 
 pub(crate) fn on_error(error: Error<NpmEngineBuildpackError>) {
@@ -43,7 +44,8 @@ fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Box<dyn StartedLog
             on_npm_version_resolve_error(requirement, logger)
         }
         NpmEngineBuildpackError::NpmEngineLayer(e) => on_npm_engine_layer_error(e, logger),
-        NpmEngineBuildpackError::Command(e) => on_command_error(e, logger),
+        NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e, logger),
+        NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
     }
 }
 
@@ -175,31 +177,9 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
     }
 }
 
-fn on_command_error(error: cmd::Error, logger: Box<dyn StartedLogger>) {
+fn on_node_version_error(error: node::VersionError, logger: Box<dyn StartedLogger>) {
     match error {
-        cmd::Error::NpmVersionCommand(e) => {
-            print_error_details(logger, e)
-                .announce()
-                .error(&formatdoc! {"
-                    Failed to determine npm version information
-    
-                    An unexpected error occurred while executing `npm --version`.
-                    
-                    Please {TRY_BUILDING_AGAIN}. 
-                "});
-        }
-        cmd::Error::ParseNpmVersion(e) => {
-            print_error_details(logger, e)
-                .announce()
-                .error(&formatdoc! {"
-                    Failed to parse npm version information
-    
-                    An unexpected error occurred while parsing the output from `npm --version`.
-                    
-                    Please {TRY_BUILDING_AGAIN}. 
-                "});
-        }
-        cmd::Error::NodeVersionCommand(e) => {
+        node::VersionError::Command(e) => {
             print_error_details(logger, e)
                 .announce()
                 .error(&formatdoc! {"
@@ -210,16 +190,39 @@ fn on_command_error(error: cmd::Error, logger: Box<dyn StartedLogger>) {
                     Please {TRY_BUILDING_AGAIN}. 
                 "});
         }
-        cmd::Error::ParseNodeVersion(e) => {
+        node::VersionError::Parse(e) => {
+            logger.announce().error(&formatdoc! {"
+                Failed to parse Node version information
+
+                An unexpected error occurred while parsing version information from `{e}`. 
+                
+                Please {TRY_BUILDING_AGAIN}. 
+            "});
+        }
+    }
+}
+
+fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>) {
+    match error {
+        npm::VersionError::Command(e) => {
             print_error_details(logger, e)
                 .announce()
                 .error(&formatdoc! {"
-                    Failed to parse Node version information
+                    Failed to determine npm version information
     
-                    An unexpected error occurred while parsing the output from `node --version`.
+                    An unexpected error occurred while executing `node --version`. 
                     
                     Please {TRY_BUILDING_AGAIN}. 
                 "});
+        }
+        npm::VersionError::Parse(e) => {
+            logger.announce().error(&formatdoc! {"
+                Failed to parse npm version information
+
+                An unexpected error occurred while parsing version information from `{e}`. 
+                
+                Please {TRY_BUILDING_AGAIN}. 
+            "});
         }
     }
 }
