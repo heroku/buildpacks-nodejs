@@ -32,17 +32,17 @@ echo "Determining dist url from ${npm_url}" >&2
 tarball_url=$(curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.tarball')
 echo "Downloading ${package_name} tarball from ${tarball_url} ..." >&2
 
-download_file="./${distribution_name}-v${package_version}.tar.gz"
-echo "Saving as ${download_file}" >&2
+downloaded_tarball="./${distribution_name}-v${package_version}.tar.gz"
+echo "Saving as ${downloaded_tarball}" >&2
 
-curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 --output "${download_file}" "${tarball_url}"
+curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 --output "${downloaded_tarball}" "${tarball_url}"
 
 # Check the file's sha against npm's published sha. This section assumes all
 # packages are published with sha512. That was true at the time of writing,
 # but if npmjs.org starts using additional checksum algorithms, this section
 # will need to be changed.
 echo "Checking ${package_name} tarball integrity..." >&2
-shasum=$(shasum -b -a 512 "${download_file}" | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
+shasum=$(shasum -b -a 512 "${downloaded_tarball}" | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
 actual_integrity="sha512-${shasum}"
 published_integrity=$(curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.integrity')
 if [ "$actual_integrity" != "$published_integrity" ]; then
