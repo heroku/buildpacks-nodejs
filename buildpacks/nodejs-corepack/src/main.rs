@@ -15,7 +15,8 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
-use opentelemetry::trace::Tracer;
+use opentelemetry::trace::{TraceContextExt, Tracer};
+use opentelemetry::KeyValue;
 
 #[cfg(test)]
 use libcnb_test as _;
@@ -67,16 +68,26 @@ impl Buildpack for CorepackBuildpack {
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let tracer = init_tracer(format!("{}", context.buildpack_descriptor.buildpack.id));
-        tracer.in_span("nodejs-corepack-build", |_cx| {
+        tracer.in_span("nodejs-corepack-build", |cx| {
             let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
                 .map_err(CorepackBuildpackError::PackageJson)?
                 .package_manager
                 .ok_or(CorepackBuildpackError::PackageManagerMissing)?;
 
+            cx.span().set_attributes([
+                KeyValue::new("package_manager.name", pkg_mgr.name.clone()),
+                KeyValue::new("package_manager.version", pkg_mgr.version.to_string()),
+            ]);
+
             let env = &Env::from_current();
 
             let corepack_version =
                 cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
+
+            cx.span().set_attribute(KeyValue::new(
+                "corepack.version",
+                corepack_version.to_string(),
+            ));
 
             log_header(format!(
                 "Installing {} {} via corepack {corepack_version}",
