@@ -15,7 +15,6 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
-use opentelemetry::global;
 use opentelemetry::trace::Tracer;
 
 #[cfg(test)]

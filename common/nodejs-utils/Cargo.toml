@@ -20,7 +20,7 @@ ureq = { workspace = true, features = ["json"] }
 url = "2"
 opentelemetry.workspace = true
 opentelemetry-stdout = { version = "0.1.0", features = ["trace"] }
-opentelemetry_sdk = { version = "0.20.0", features = ["trace", "rt-tokio"] }
+opentelemetry_sdk = { version = "0.20.0", features = ["trace"] }
 
 [dev-dependencies]
 tempfile.workspace = true
