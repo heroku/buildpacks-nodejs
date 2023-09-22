@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add basic OpenTelemetry tracing. ([#652](https://github.com/heroku/buildpacks-nodejs/pull/652))
+
 ## [1.1.5] - 2023-09-19
 
 - No changes.
