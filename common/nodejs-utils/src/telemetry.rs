@@ -12,16 +12,15 @@ use opentelemetry_sdk::{
     Resource,
 };
 
-pub fn init_tracer(buildpack_name: String) -> BoxedTracer {
-    let buildpack_file_name = buildpack_name.replace('/', "_");
-    let telemetry_file_path = Path::new("/tmp")
+pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
+    let bp_name = buildpack_name.into();
+    let telem_file_path = Path::new("/tmp")
         .join("cnb-telemetry")
-        .join(format!("{buildpack_file_name}.jsonl"));
-    if let Some(pd) = telemetry_file_path.parent() {
-        let _ = create_dir_all(pd);
+        .join(format!("{}.jsonl", bp_name.replace('/', "_")));
+    if let Some(parent_dir) = telem_file_path.parent() {
+        let _ = create_dir_all(parent_dir);
     }
-    let telemetry_writer = File::create(telemetry_file_path);
-    let exporter = match telemetry_writer {
+    let exporter = match File::create(telem_file_path) {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
             .with_writer(f)
             .build(),
@@ -31,13 +30,13 @@ pub fn init_tracer(buildpack_name: String) -> BoxedTracer {
         .with_config(
             Config::default().with_resource(Resource::new(vec![KeyValue::new(
                 "service.name",
-                buildpack_name.clone(),
+                bp_name.clone(),
             )])),
         )
         .with_simple_exporter(exporter)
         .build();
     global::set_tracer_provider(provider);
-    global::tracer(buildpack_name)
+    global::tracer(bp_name)
 }
 
 #[cfg(test)]
