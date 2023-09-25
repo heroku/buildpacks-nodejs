@@ -16,7 +16,7 @@ use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
 use opentelemetry::trace::{TraceContextExt, Tracer};
-use opentelemetry::KeyValue;
+use opentelemetry::{global, KeyValue};
 
 #[cfg(test)]
 use libcnb_test as _;
@@ -39,7 +39,7 @@ impl Buildpack for CorepackBuildpack {
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
-        tracer.in_span("nodejs-corepack-detect", |_cx| {
+        let detect_result = tracer.in_span("nodejs-corepack-detect", |_cx| {
             // Corepack requires the `packageManager` key from `package.json`.
             // This buildpack won't be detected without it.
             let pkg_json_path = context.app_dir.join("package.json");
@@ -63,12 +63,14 @@ impl Buildpack for CorepackBuildpack {
             } else {
                 DetectResultBuilder::fail().build()
             }
-        })
+        });
+        global::shutdown_tracer_provider();
+        detect_result
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
-        tracer.in_span("nodejs-corepack-build", |cx| {
+        let build_result = tracer.in_span("nodejs-corepack-build", |cx| {
             let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
                 .map_err(CorepackBuildpackError::PackageJson)?
                 .package_manager
@@ -109,7 +111,9 @@ impl Buildpack for CorepackBuildpack {
             cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
 
             BuildResultBuilder::new().build()
-        })
+        });
+        global::shutdown_tracer_provider();
+        build_result
     }
 
     fn on_error(&self, err: libcnb::Error<Self::Error>) {
