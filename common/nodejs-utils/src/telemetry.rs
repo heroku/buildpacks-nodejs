@@ -81,13 +81,6 @@ mod tests {
         });
         global::shutdown_tracer_provider();
 
-        init_tracer(buildpack_name.to_string());
-        let tracer = global::tracer("");
-        tracer.in_span(test_span_name, |cx| {
-            cx.span().add_event(test_event_name, Vec::new());
-        });
-        global::shutdown_tracer_provider();
-
         let contents = fs::read_to_string(telemetry_file_path)
             .expect("expected to read existing telemetry file");
         println!("Contents: {contents}");
