@@ -22,8 +22,9 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
     }
     let exporter = match File::options()
         .read(false)
-        .append(true)
         .create(true)
+        .append(true)
+        .truncate(false)
         .open(telem_file_path)
     {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
