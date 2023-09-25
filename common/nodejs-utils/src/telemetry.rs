@@ -20,8 +20,10 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
     if let Some(parent_dir) = telem_file_path.parent() {
         let _ = create_dir_all(parent_dir);
     }
+
     let exporter = match File::options()
-        .read(false)
+        .read(true)
+        .write(true)
         .create(true)
         .append(true)
         .truncate(false)
