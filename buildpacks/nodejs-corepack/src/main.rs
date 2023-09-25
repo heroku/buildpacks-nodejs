@@ -38,32 +38,29 @@ impl Buildpack for CorepackBuildpack {
     type Error = CorepackBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
-        tracer.in_span("nodejs-corepack-detect", |_cx| {
-            // Corepack requires the `packageManager` key from `package.json`.
-            // This buildpack won't be detected without it.
-            let pkg_json_path = context.app_dir.join("package.json");
-            if pkg_json_path.exists() {
-                let pkg_json = PackageJson::read(pkg_json_path)
-                    .map_err(CorepackBuildpackError::PackageJson)?;
-                cfg::get_supported_package_manager(&pkg_json).map_or_else(
-                    || DetectResultBuilder::fail().build(),
-                    |pkg_mgr| {
-                        DetectResultBuilder::pass()
-                            .build_plan(
-                                BuildPlanBuilder::new()
-                                    .requires("node")
-                                    .requires(&pkg_mgr)
-                                    .provides(pkg_mgr)
-                                    .build(),
-                            )
-                            .build()
-                    },
-                )
-            } else {
-                DetectResultBuilder::fail().build()
-            }
-        })
+        // Corepack requires the `packageManager` key from `package.json`.
+        // This buildpack won't be detected without it.
+        let pkg_json_path = context.app_dir.join("package.json");
+        if pkg_json_path.exists() {
+            let pkg_json = PackageJson::read(pkg_json_path)
+                .map_err(CorepackBuildpackError::PackageJson)?;
+            cfg::get_supported_package_manager(&pkg_json).map_or_else(
+                || DetectResultBuilder::fail().build(),
+                |pkg_mgr| {
+                    DetectResultBuilder::pass()
+                        .build_plan(
+                            BuildPlanBuilder::new()
+                                .requires("node")
+                                .requires(&pkg_mgr)
+                                .provides(pkg_mgr)
+                                .build(),
+                        )
+                        .build()
+                },
+            )
+        } else {
+            DetectResultBuilder::fail().build()
+        }
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
