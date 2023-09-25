@@ -17,18 +17,21 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
     let telem_file_path = Path::new("/tmp")
         .join("cnb-telemetry")
         .join(format!("{}.jsonl", bp_name.replace('/', "_")));
+
+    // Ensure the telemetry dir exists
     if let Some(parent_dir) = telem_file_path.parent() {
         let _ = create_dir_all(parent_dir);
     }
 
-    let exporter = match File::options()
-        .read(true)
-        .write(true)
+    // Create the telemetry file if it doesn't exist
+    let _ = File::options()
         .create(true)
-        .append(true)
-        .truncate(false)
-        .open(telem_file_path)
-    {
+        .write(true)
+        .open(&telem_file_path);
+
+    // Create a telemetry exporter that writes to the telemetry file
+    // (or /dev/null in case of file issues)
+    let exporter = match File::options().append(true).open(telem_file_path) {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
             .with_writer(f)
             .build(),
@@ -39,6 +42,8 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
                 .build()
         }
     };
+
+    // Create a global tracer provider with the exporter.
     let provider = TracerProvider::builder()
         .with_config(
             Config::default().with_resource(Resource::new(vec![KeyValue::new(
@@ -49,6 +54,7 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
         .with_simple_exporter(exporter)
         .build();
     global::set_tracer_provider(provider);
+    // Return a named tracer for convenience
     global::tracer(bp_name)
 }
 
@@ -74,9 +80,17 @@ mod tests {
             cx.span().add_event(test_event_name, Vec::new());
         });
         global::shutdown_tracer_provider();
+
+        init_tracer(buildpack_name.to_string());
+        let tracer = global::tracer("");
+        tracer.in_span(test_span_name, |cx| {
+            cx.span().add_event(test_event_name, Vec::new());
+        });
+        global::shutdown_tracer_provider();
+
         let contents = fs::read_to_string(telemetry_file_path)
             .expect("expected to read existing telemetry file");
-        println!("{contents}");
+        println!("Contents: {contents}");
 
         if !contents.contains(buildpack_name) {
             Err("File export did not include buildpack name")?;
