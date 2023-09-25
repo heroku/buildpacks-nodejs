@@ -30,9 +30,12 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
             .with_writer(f)
             .build(),
-        Err(_) => opentelemetry_stdout::SpanExporter::builder()
-            .with_writer(std::io::sink())
-            .build(),
+        Err(err) => {
+            println!("Error creating telemetry pipeline: {err:?}");
+            opentelemetry_stdout::SpanExporter::builder()
+                .with_writer(std::io::sink())
+                .build()
+        }
     };
     let provider = TracerProvider::builder()
         .with_config(
