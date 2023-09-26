@@ -51,6 +51,7 @@ fn corepack_yarn() {
         |config| {
             config.app_dir_preprocessor(|app_dir| {
                 set_package_manager(&app_dir, "yarn@2.4.1");
+                fs::rename(app_dir.join("yarn.v2.4.1.lock"), app_dir.join("yarn.lock")).unwrap();
             });
         },
         |ctx| {
@@ -61,6 +62,7 @@ fn corepack_yarn() {
             let mut config = ctx.config.clone();
             config.app_dir_preprocessor(|app_dir| {
                 set_package_manager(&app_dir, "yarn@3.2.0");
+                fs::rename(app_dir.join("yarn.v3.2.0.lock"), app_dir.join("yarn.lock")).unwrap();
             });
 
             ctx.rebuild(config, |ctx| {
