@@ -64,13 +64,14 @@ jobs:
         run: echo "buildpack_dirs=$(find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print | sort | uniq | jq -nRc '[inputs]')" >> $GITHUB_OUTPUT
 
   rust-integration-test:
-    name: libcnb.rs integration tests (${{ matrix.buildpack-directory }})
+    name: Tests / ${{ matrix.buildpack-directory }} / ${{ matrix.builder }}
     runs-on: pub-hk-ubuntu-22.04-large
     needs: find-libcnb-buildpacks
     strategy:
       fail-fast: false
       matrix:
         buildpack-directory: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.buildpack_dirs) }}
+        builder: ["builder:22", "builder:20"]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -86,6 +87,8 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Run integration tests
         working-directory: ${{ matrix.buildpack-directory }}
+        env:
+          INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
         run: cargo test --locked -- --ignored --test-threads 16
 
   shpec:
@@ -110,34 +113,3 @@ jobs:
       - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
         run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
 
-  cutlass-integration-test:
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        test-dir:
-        - test/specs/node-function
-        - test/specs/node
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Set up Ruby, bundler, and cache
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.0.2
-          bundler-cache: true
-      - name: Install musl-tools
-        run: sudo apt-get install musl-tools --no-install-recommends
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Install Rust linux-musl target
-        run: rustup target add x86_64-unknown-linux-musl
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.6.2
-      - name: Install libcnb
-        run: cargo install libcnb-cargo
-      - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v5.4.0
-      - name: Install yj
-        uses: buildpacks/github-actions/setup-tools@v5.4.0
-      - name: Run rspec tests against a given directory
-        run: bundle exec rspec ${{ matrix.test-dir }}

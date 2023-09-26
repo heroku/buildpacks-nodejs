@@ -10,6 +10,10 @@ use crate::function::{
 use crate::layers::{
     RuntimeLayer, RuntimeLayerError, ScriptLayer, ScriptLayerError, NODEJS_RUNTIME_SCRIPT,
 };
+#[cfg(test)]
+use base64 as _;
+#[cfg(test)]
+use hex as _;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -21,10 +25,14 @@ use libcnb::{buildpack_main, Buildpack};
 use libcnb_test as _;
 use libherokubuildpack::error::on_error;
 use libherokubuildpack::log::{log_error, log_header, log_info, log_warning};
+#[cfg(test)]
+use rand as _;
 use serde::Deserialize;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
+#[cfg(test)]
+use ureq as _;
 
 mod function;
 mod layers;

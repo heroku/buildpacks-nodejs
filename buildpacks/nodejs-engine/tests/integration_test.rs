@@ -1,99 +1,72 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, BuildConfig, ContainerConfig, ContainerContext, TestRunner};
-use std::time::Duration;
+use libcnb_test::assert_contains;
+use test_support::{
+    assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
+    set_node_engine,
+};
 
-const PORT: u16 = 8080;
+#[test]
+#[ignore]
+fn simple_indexjs() {
+    nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Detected Node.js version range: *");
+        assert_contains!(ctx.pack_stdout, "Installing Node.js");
+        assert_web_response(&ctx, "node-with-indexjs");
+    });
+}
 
-fn test_node(fixture: &str, builder: &str, expect_lines: &[&str]) {
-    TestRunner::default().build(
-        BuildConfig::new(builder, format!("../../test/fixtures/{fixture}")),
+#[test]
+#[ignore]
+fn simple_serverjs() {
+    nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0");
+        assert_web_response(&ctx, "node-with-serverjs");
+    });
+}
+
+#[test]
+#[ignore]
+fn reinstalls_node_if_version_changes() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "^14.0");
+            });
+        },
         |ctx| {
-            for expect_line in expect_lines {
-                assert_contains!(ctx.pack_stdout, expect_line);
-            }
-            ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-                test_response(&container, fixture);
+            assert_contains!(ctx.pack_stdout, "Installing Node.js 14");
+            let mut config = ctx.config.clone();
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "^16.0");
+            });
+            ctx.rebuild(config, |ctx| {
+                assert_contains!(ctx.pack_stdout, "Installing Node.js 16");
             });
         },
     );
 }
 
-fn test_response(container: &ContainerContext, text: &str) {
-    std::thread::sleep(Duration::from_secs(5));
-    let addr = container.address_for_port(PORT);
-    let resp = ureq::get(&format!("http://{addr}"))
-        .call()
-        .expect("request to container failed")
-        .into_string()
-        .expect("response read error");
-
-    assert_contains!(resp, text);
-}
-
+// TODO: move this test & fixture to the npm buildpack once that is ready
 #[test]
 #[ignore]
-fn simple_indexjs_heroku20() {
-    test_node(
-        "node-with-indexjs",
-        "heroku/buildpacks:20",
-        &["Detected Node.js version range: *", "Installing Node.js"],
-    );
+fn npm_project_with_no_lockfile() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node");
+        assert_contains!(ctx.pack_stdout, "Installing node modules");
+    });
 }
 
+// TODO: move this test & fixture to the npm buildpack once that is ready
 #[test]
 #[ignore]
-fn simple_indexjs_heroku22() {
-    test_node(
-        "node-with-indexjs",
-        "heroku/builder:22",
-        &["Detected Node.js version range: *", "Installing Node.js"],
-    );
-}
-
-#[test]
-#[ignore]
-fn simple_serverjs_heroku20() {
-    test_node(
-        "node-with-serverjs",
-        "heroku/buildpacks:20",
-        &["Installing Node.js 16.0.0"],
-    );
-}
-
-#[test]
-#[ignore]
-fn simple_serverjs_heroku22() {
-    test_node(
-        "node-with-serverjs",
-        "heroku/builder:22",
-        &["Installing Node.js 16.0.0"],
-    );
-}
-
-#[test]
-#[ignore]
-fn upgrade_simple_indexjs_from_heroku20_to_heroku22() {
-    TestRunner::default().build(
-        BuildConfig::new(
-            "heroku/buildpacks:20",
-            "../../test/fixtures/node-with-indexjs",
-        ),
-        |initial_ctx| {
-            assert_contains!(initial_ctx.pack_stdout, "Installing Node.js");
-            initial_ctx.rebuild(
-                BuildConfig::new("heroku/builder:22", "../../test/fixtures/node-with-indexjs"),
-                |upgrade_ctx| {
-                    assert_contains!(upgrade_ctx.pack_stdout, "Installing Node.js");
-                    let port = 8080;
-                    upgrade_ctx.start_container(
-                        ContainerConfig::new().expose_port(port),
-                        |container| {
-                            test_response(&container, "node-with-index");
-                        },
-                    );
-                },
-            );
-        },
-    );
+fn npm_project_with_lockfile() {
+    nodejs_integration_test("./fixtures/npm-project-with-lockfile", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node");
+        assert_contains!(
+            ctx.pack_stdout,
+            "Installing node modules from ./package-lock.json"
+        );
+    });
 }

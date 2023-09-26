@@ -1,0 +1,15 @@
+{
+  "name": "corepack-with-pnpm",
+  "version": "1.0.0",
+  "packageManager": "pnpm@8.4.0",
+  "engines": {
+    "node": "18.x"
+  },
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "debug": "^4.3.4"
+  }
+}

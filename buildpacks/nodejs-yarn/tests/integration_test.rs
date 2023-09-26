@@ -1,15 +1,20 @@
 #![warn(clippy::pedantic)]
 
 use libcnb_test::{assert_contains, assert_not_contains};
-use test_support::Builder::{Heroku20, Heroku22};
-use test_support::{assert_web_response, test_yarn_app};
+use test_support::{assert_web_response, nodejs_integration_test};
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_1_typescript_heroku_20() {
-    test_yarn_app("yarn-1-typescript", Heroku20, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
+fn yarn_1_typescript() {
+    nodejs_integration_test("./fixtures/yarn-1-typescript", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node");
+        assert_not_contains!(ctx.pack_stdout, "corepack");
+        assert_contains!(ctx.pack_stdout, "Installing yarn CLI");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_not_contains!(
+            ctx.pack_stdout,
+            "Installing node modules from ./package-lock.json"
+        );
         assert_contains!(ctx.pack_stdout, "Running `build` script");
         assert_web_response(&ctx, "yarn-1-typescript");
     });
@@ -17,22 +22,17 @@ fn yarn_1_typescript_heroku_20() {
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_1_typescript_heroku_22() {
-    test_yarn_app("yarn-1-typescript", Heroku22, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Running `build` script");
-        assert_web_response(&ctx, "yarn-1-typescript");
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn yarn_2_pnp_zero_heroku_20() {
-    test_yarn_app("yarn-2-pnp-zero", Heroku20, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
+fn yarn_2_pnp_zero() {
+    nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node");
+        assert_contains!(ctx.pack_stdout, "Installing yarn 2.4.1 via corepack");
+        assert_contains!(ctx.pack_stdout, "Installing yarn CLI");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_not_contains!(
+            ctx.pack_stdout,
+            "Installing node modules from ./package-lock.json"
+        );
         assert_not_contains!(
             ctx.pack_stdout,
             "can't be found in the cache and will be fetched from the remote registry"
@@ -47,27 +47,8 @@ fn yarn_2_pnp_zero_heroku_20() {
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_2_pnp_zero_heroku_22() {
-    test_yarn_app("yarn-2-pnp-zero", Heroku22, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_not_contains!(
-            ctx.pack_stdout,
-            "can't be found in the cache and will be fetched from the remote registry"
-        );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-2-pnp-zero");
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn yarn_2_modules_nonzero_heroku_20() {
-    test_yarn_app("yarn-2-modules-nonzero", Heroku20, |ctx| {
+fn yarn_2_modules_nonzero() {
+    nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
@@ -85,46 +66,8 @@ fn yarn_2_modules_nonzero_heroku_20() {
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_2_modules_nonzero_heroku_22() {
-    test_yarn_app("yarn-2-modules-nonzero", Heroku22, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(
-            ctx.pack_stdout,
-            "can't be found in the cache and will be fetched from the remote registry"
-        );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-2-modules-nonzero");
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn yarn_3_pnp_nonzero_heroku_20() {
-    test_yarn_app("yarn-3-pnp-nonzero", Heroku20, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
-        assert_contains!(
-            ctx.pack_stdout,
-            "can't be found in the cache and will be fetched from the remote registry"
-        );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-3-pnp-nonzero");
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn yarn_3_pnp_nonzero_heroku_22() {
-    test_yarn_app("yarn-3-pnp-nonzero", Heroku22, |ctx| {
+fn yarn_3_pnp_nonzero() {
+    nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
@@ -142,27 +85,8 @@ fn yarn_3_pnp_nonzero_heroku_22() {
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_3_modules_zero_heroku_20() {
-    test_yarn_app("yarn-3-modules-zero", Heroku20, |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_not_contains!(
-            ctx.pack_stdout,
-            "can't be found in the cache and will be fetched from the remote registry"
-        );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-3-modules-zero");
-    });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn yarn_3_modules_zero_heroku_22() {
-    test_yarn_app("yarn-3-modules-zero", Heroku22, |ctx| {
+fn yarn_3_modules_zero() {
+    nodejs_integration_test("./fixtures/yarn-3-modules-zero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");

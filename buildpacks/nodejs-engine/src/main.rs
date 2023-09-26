@@ -22,7 +22,10 @@ mod layers;
 
 #[cfg(test)]
 use libcnb_test as _;
-
+#[cfg(test)]
+use serde_json as _;
+#[cfg(test)]
+use test_support as _;
 #[cfg(test)]
 use ureq as _;
 

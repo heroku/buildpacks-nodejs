@@ -1,0 +1,7 @@
+{
+  "name": "yarn-2-pnp-zero",
+  "packageManager": "yarn@2.4.1",
+  "dependencies": {
+    "debug": "^4.3.4"
+  }
+}
