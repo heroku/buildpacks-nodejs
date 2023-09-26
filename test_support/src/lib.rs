@@ -16,7 +16,7 @@ pub enum Builder {
 impl fmt::Display for Builder {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match *self {
-            Builder::Heroku20 => write!(f, "heroku/buildpacks:20"),
+            Builder::Heroku20 => write!(f, "heroku/builder:20"),
             Builder::Heroku22 => write!(f, "heroku/builder:22"),
         }
     }
