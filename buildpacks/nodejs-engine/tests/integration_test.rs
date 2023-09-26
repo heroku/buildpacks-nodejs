@@ -36,7 +36,7 @@ fn test_response(container: &ContainerContext, text: &str) {
 fn simple_indexjs_heroku20() {
     test_node(
         "node-with-indexjs",
-        "heroku/buildpacks:20",
+        "heroku/builder:20",
         &["Detected Node.js version range: *", "Installing Node.js"],
     );
 }
@@ -56,7 +56,7 @@ fn simple_indexjs_heroku22() {
 fn simple_serverjs_heroku20() {
     test_node(
         "node-with-serverjs",
-        "heroku/buildpacks:20",
+        "heroku/builder:20",
         &["Installing Node.js 16.0.0"],
     );
 }
@@ -75,10 +75,7 @@ fn simple_serverjs_heroku22() {
 #[ignore]
 fn upgrade_simple_indexjs_from_heroku20_to_heroku22() {
     TestRunner::default().build(
-        BuildConfig::new(
-            "heroku/buildpacks:20",
-            "../../test/fixtures/node-with-indexjs",
-        ),
+        BuildConfig::new("heroku/builder:20", "../../test/fixtures/node-with-indexjs"),
         |initial_ctx| {
             assert_contains!(initial_ctx.pack_stdout, "Installing Node.js");
             initial_ctx.rebuild(

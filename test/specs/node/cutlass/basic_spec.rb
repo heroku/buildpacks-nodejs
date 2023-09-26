@@ -4,7 +4,7 @@ require_relative "../spec_helper"
 
 
 describe "Heroku's Nodejs CNB" do
-  ["heroku/buildpacks:20", "heroku/builder:22"].each do |builder|
+  ["heroku/builder:20", "heroku/builder:22"].each do |builder|
     describe "with #{builder}" do
       it "handles a downgrade of node engine" do
         Cutlass::App.new("simple-function", builder: builder).transaction do |app|

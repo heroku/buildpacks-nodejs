@@ -13,7 +13,7 @@ NODEJS_BUILDPACK = Cutlass::LocalBuildpack.new(directory: test_dir.join("../meta
 
 Cutlass.config do |config|
   config.default_buildpack_paths = [NODEJS_BUILDPACK]
-  config.default_builder = "heroku/buildpacks:20"
+  config.default_builder = "heroku/builder:22"
   config.default_repo_dirs = [test_dir.join("fixtures")]
 end
 
