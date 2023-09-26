@@ -3,16 +3,13 @@ use std::{
     path::Path,
 };
 
-use opentelemetry::{
-    global::{self, BoxedTracer},
-    KeyValue,
-};
+use opentelemetry::{global, KeyValue};
 use opentelemetry_sdk::{
     trace::{Config, TracerProvider},
     Resource,
 };
 
-pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
+pub fn init_tracing(buildpack_name: impl Into<String>) -> TracerProvider {
     let bp_name = buildpack_name.into();
     let telem_file_path = Path::new("/tmp")
         .join("cnb-telemetry")
@@ -53,16 +50,15 @@ pub fn init_tracer(buildpack_name: impl Into<String>) -> BoxedTracer {
         )
         .with_simple_exporter(exporter)
         .build();
-    global::set_tracer_provider(provider);
-    // Return a named tracer for convenience
-    global::tracer(bp_name)
+    global::set_tracer_provider(provider.clone());
+    provider
 }
 
 #[cfg(test)]
 mod tests {
     use std::fs::{self};
 
-    use super::init_tracer;
+    use super::init_tracing;
     use opentelemetry::{global, trace::TraceContextExt, trace::Tracer};
 
     #[test]
@@ -74,7 +70,7 @@ mod tests {
 
         let _ = fs::remove_file(&telemetry_file_path);
 
-        init_tracer(buildpack_name.to_string());
+        init_tracing(buildpack_name.to_string());
         let tracer = global::tracer("");
         tracer.in_span(test_span_name, |cx| {
             cx.span().add_event(test_event_name, Vec::new());

@@ -4,7 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::telemetry::init_tracer;
+use heroku_nodejs_utils::telemetry::init_tracing;
 use layers::{ManagerLayer, ShimLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -38,7 +38,8 @@ impl Buildpack for CorepackBuildpack {
     type Error = CorepackBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
+        let provider = init_tracing(context.buildpack_descriptor.buildpack.id.to_string());
+        let tracer = global::tracer(context.buildpack_descriptor.buildpack.id.to_string());
         let detect_result = tracer.in_span("nodejs-corepack-detect", |_cx| {
             // Corepack requires the `packageManager` key from `package.json`.
             // This buildpack won't be detected without it.
@@ -64,12 +65,14 @@ impl Buildpack for CorepackBuildpack {
                 DetectResultBuilder::fail().build()
             }
         });
+        provider.force_flush();
         global::shutdown_tracer_provider();
         detect_result
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
+        let provider = init_tracing(context.buildpack_descriptor.buildpack.id.to_string());
+        let tracer = global::tracer(context.buildpack_descriptor.buildpack.id.to_string());
         let build_result = tracer.in_span("nodejs-corepack-build", |cx| {
             let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
                 .map_err(CorepackBuildpackError::PackageJson)?
@@ -112,6 +115,7 @@ impl Buildpack for CorepackBuildpack {
 
             BuildResultBuilder::new().build()
         });
+        provider.force_flush();
         global::shutdown_tracer_provider();
         build_result
     }
