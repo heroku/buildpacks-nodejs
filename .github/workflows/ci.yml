@@ -66,17 +66,16 @@ jobs:
             find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
             | sort \
             | uniq \
-            | jq -nRc '[inputs] | map({ buildpack_dir: ., buildpack_name: split("/") | last })' \
+            | jq -nRc '[inputs] | map({ dir: ., name: split("/") | last } | [. + { builder_tag: 20 }, . + { builder_tag: 22 }]) | flatten' \
           )" >> $GITHUB_OUTPUT
 
   rust-integration-test:
-    name: Tests (${{ matrix.builder-tag }}, ${{ matrix.buildpack_name }})
+    name: Tests (${{ matrix.builder_tag }}, ${{ matrix.name }})
     runs-on: pub-hk-ubuntu-22.04-large
     needs: find-libcnb-buildpacks
     strategy:
       fail-fast: false
       matrix:
-        builder-tag: ["22", "20"]
         include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
     steps:
       - name: Checkout
@@ -92,9 +91,9 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Run integration tests
-        working-directory: ${{ matrix.buildpack_dir }}
+        working-directory: ${{ matrix.dir }}
         env:
-          INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder-tag }}
+          INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
         run: cargo test --locked -- --ignored --test-threads 16
 
   shpec:
