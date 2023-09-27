@@ -6,10 +6,11 @@ use libcnb_test::{
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use std::{env, fs};
+use std::{env, fs, panic};
 
 const PORT: u16 = 8080;
-const TIMEOUT: u64 = 5;
+const START_CONTAINER_RETRIES: u64 = 10;
+const START_CONTAINER_RETRY_DELAY_IN_SECONDS: u64 = 1;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 
@@ -82,9 +83,20 @@ fn integration_test_with_config(
 
 pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
     ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        std::thread::sleep(Duration::from_secs(TIMEOUT));
-        let socket_addr = container.address_for_port(PORT);
-        in_container(&container, &socket_addr);
+        for attempt in 0..START_CONTAINER_RETRIES {
+            std::thread::sleep(Duration::from_secs(START_CONTAINER_RETRY_DELAY_IN_SECONDS));
+            match panic::catch_unwind(|| container.address_for_port(PORT)) {
+                Ok(socket_addr) => {
+                    in_container(&container, &socket_addr);
+                    break;
+                }
+                Err(error) => {
+                    if attempt == START_CONTAINER_RETRIES - 1 {
+                        panic::resume_unwind(error)
+                    }
+                }
+            }
+        }
     });
 }
 
