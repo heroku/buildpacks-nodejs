@@ -53,7 +53,7 @@ jobs:
     name: Find libcnb buildpacks
     runs-on: ubuntu-22.04
     outputs:
-      buildpack_dirs: ${{ steps.find-buildpack-dirs.outputs.buildpack_dirs }}
+      libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -61,17 +61,23 @@ jobs:
           submodules: true
       - id: find-buildpack-dirs
         name: Find libcnb buildpack directories
-        run: echo "buildpack_dirs=$(find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print | sort | uniq | jq -nRc '[inputs]')" >> $GITHUB_OUTPUT
+        run: |
+          echo "buildpacks=$( \
+            find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
+            | sort \
+            | uniq \
+            | jq -nRc '[inputs] | map({ buildpack_dir: ., buildpack_name: split("/") | last })' \
+          )" >> $GITHUB_OUTPUT
 
   rust-integration-test:
-    name: Tests (${{ matrix.builder-tag }}, ${{ matrix.buildpack-directory }})
+    name: Tests (${{ matrix.builder-tag }}, ${{ matrix.buildpack_name }})
     runs-on: pub-hk-ubuntu-22.04-large
     needs: find-libcnb-buildpacks
     strategy:
       fail-fast: false
       matrix:
-        buildpack-directory: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.buildpack_dirs) }}
         builder-tag: ["22", "20"]
+        include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -86,7 +92,7 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Run integration tests
-        working-directory: ${{ matrix.buildpack-directory }}
+        working-directory: ${{ matrix.buildpack_dir }}
         env:
           INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder-tag }}
         run: cargo test --locked -- --ignored --test-threads 16
