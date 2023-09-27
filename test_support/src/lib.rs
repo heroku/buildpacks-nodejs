@@ -8,9 +8,9 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{env, fs, panic};
 
-const PORT: u16 = 8080;
-const START_CONTAINER_RETRIES: u64 = 10;
-const START_CONTAINER_RETRY_DELAY_IN_SECONDS: u64 = 1;
+pub const PORT: u16 = 8080;
+pub const DEFAULT_RETRIES: u32 = 10;
+pub const DEFAULT_RETRY_DELAY_IN_SECONDS: u64 = 1;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 
@@ -81,34 +81,54 @@ fn integration_test_with_config(
     TestRunner::default().build(build_config, test_body);
 }
 
-pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
-    ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        for attempt in 0..START_CONTAINER_RETRIES {
-            std::thread::sleep(Duration::from_secs(START_CONTAINER_RETRY_DELAY_IN_SECONDS));
-            match panic::catch_unwind(|| container.address_for_port(PORT)) {
-                Ok(socket_addr) => {
-                    in_container(&container, &socket_addr);
+pub fn retry<T, E>(
+    attempts: u32,
+    retry_delay_in_secs: u64,
+    retryable_action: impl Fn() -> Result<T, E>,
+    on_success: impl FnOnce(T),
+    on_fail: impl FnOnce(E),
+) {
+    for attempt in 0..attempts {
+        match retryable_action() {
+            Ok(result) => {
+                on_success(result);
+                break;
+            }
+            Err(error) => {
+                if attempt == attempts - 1 {
+                    on_fail(error);
                     break;
-                }
-                Err(error) => {
-                    if attempt == START_CONTAINER_RETRIES - 1 {
-                        panic::resume_unwind(error)
-                    }
                 }
             }
         }
+        std::thread::sleep(Duration::from_secs(retry_delay_in_secs));
+    }
+}
+
+pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
+    ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
+        retry(
+            DEFAULT_RETRIES,
+            DEFAULT_RETRY_DELAY_IN_SECONDS,
+            || panic::catch_unwind(|| container.address_for_port(PORT)),
+            |socket_addr| in_container(&container, &socket_addr),
+            |error| panic::resume_unwind(error),
+        );
     });
 }
 
-pub fn assert_web_response(ctx: &TestContext, text: &'static str) {
-    let text = text.clone();
+pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
     start_container(ctx, |_container, socket_addr| {
-        let resp = ureq::get(&format!("http://{socket_addr}/"))
-            .call()
-            .expect("request to container failed")
-            .into_string()
-            .expect("response read error");
-        assert_contains!(resp, text);
+        retry(
+            DEFAULT_RETRIES,
+            DEFAULT_RETRY_DELAY_IN_SECONDS,
+            || ureq::get(&format!("http://{socket_addr}/")).call(),
+            |res| {
+                let response_body = res.into_string().unwrap();
+                assert_contains!(response_body, expected_response_body)
+            },
+            |error| panic!("request to assert web response failed: {error}"),
+        );
     });
 }
 
