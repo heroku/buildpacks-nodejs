@@ -5,7 +5,7 @@ fastify.get('/', (_request, reply) => {
   reply.send("Hello from pnpm-7-pnp");
 });
 
-fastify.listen({ port }, (err, address) => {
+fastify.listen({ host: "0.0.0.0", port }, (err, address) => {
   if (err) throw err
   console.log(`pnpm-7-pnp running on ${address}.`)
 })
