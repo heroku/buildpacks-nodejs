@@ -18,7 +18,7 @@ fn yarn_1_typescript() {
 #[ignore = "integration test"]
 fn yarn_2_pnp_zero() {
     nodejs_integration_test("../../../test/fixtures/yarn-2-pnp-zero", |ctx| {
-        assert_not_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_not_contains!(
