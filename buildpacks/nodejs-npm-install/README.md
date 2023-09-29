@@ -47,9 +47,9 @@ added that executes `npm start`.
 
 ### Provides
 
-| Name           | Description                                                                         |
-|----------------|-------------------------------------------------------------------------------------|
-| `node_modules` | Allows other buildpacks to depend on a the Node modules provided by this buildpack. |
+| Name           | Description                                                                       |
+|----------------|-----------------------------------------------------------------------------------|
+| `node_modules` | Allows other buildpacks to depend on the Node modules provided by this buildpack. |
 
 ## License
 
