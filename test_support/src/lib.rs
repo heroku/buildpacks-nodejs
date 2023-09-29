@@ -26,21 +26,21 @@ pub fn get_function_invoker_buildpacks() -> Vec<BuildpackReference> {
     vec![
         BuildpackReference::Other(String::from("heroku/nodejs-engine")),
         BuildpackReference::Other(String::from("heroku/nodejs-npm")),
-        BuildpackReference::Crate,
+        BuildpackReference::CurrentCrate,
     ]
 }
 
 pub fn get_yarn_buildpacks() -> Vec<BuildpackReference> {
     vec![
         BuildpackReference::Other(String::from("heroku/nodejs-engine")),
-        BuildpackReference::Crate,
+        BuildpackReference::CurrentCrate,
     ]
 }
 
 pub fn get_corepack_buildpacks() -> Vec<BuildpackReference> {
     vec![
         BuildpackReference::Other(String::from("heroku/nodejs-engine")),
-        BuildpackReference::Crate,
+        BuildpackReference::CurrentCrate,
     ]
 }
 
@@ -48,7 +48,7 @@ pub fn get_pnpm_buildpacks() -> Vec<BuildpackReference> {
     vec![
         BuildpackReference::Other(String::from("heroku/nodejs-engine")),
         BuildpackReference::Other(String::from("heroku/nodejs-corepack")),
-        BuildpackReference::Crate,
+        BuildpackReference::CurrentCrate,
     ]
 }
 
