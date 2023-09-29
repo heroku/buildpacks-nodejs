@@ -478,7 +478,9 @@ dependencies = [
  "libcnb-test",
  "libherokubuildpack",
  "serde",
+ "serde_json",
  "tempfile",
+ "test_support",
  "thiserror",
  "toml",
  "ureq",
@@ -498,6 +500,7 @@ dependencies = [
  "test_support",
  "thiserror",
  "toml",
+ "ureq",
 ]
 
 [[package]]
@@ -1287,7 +1290,9 @@ dependencies = [
 name = "test_support"
 version = "0.0.0"
 dependencies = [
+ "libcnb",
  "libcnb-test",
+ "serde_json",
  "tempfile",
  "ureq",
 ]

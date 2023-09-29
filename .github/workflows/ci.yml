@@ -53,7 +53,7 @@ jobs:
     name: Find libcnb buildpacks
     runs-on: ubuntu-22.04
     outputs:
-      buildpack_dirs: ${{ steps.find-buildpack-dirs.outputs.buildpack_dirs }}
+      libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -61,16 +61,22 @@ jobs:
           submodules: true
       - id: find-buildpack-dirs
         name: Find libcnb buildpack directories
-        run: echo "buildpack_dirs=$(find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print | sort | uniq | jq -nRc '[inputs]')" >> $GITHUB_OUTPUT
+        run: |
+          echo "buildpacks=$( \
+            find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
+            | sort \
+            | uniq \
+            | jq -nRc '[inputs] | map({ dir: ., name: split("/") | last } | [. + { builder_tag: 20 }, . + { builder_tag: 22 }]) | flatten' \
+          )" >> $GITHUB_OUTPUT
 
   rust-integration-test:
-    name: libcnb.rs integration tests (${{ matrix.buildpack-directory }})
+    name: Test (${{ matrix.builder_tag }}, ${{ matrix.name }})
     runs-on: pub-hk-ubuntu-22.04-large
     needs: find-libcnb-buildpacks
     strategy:
       fail-fast: false
       matrix:
-        buildpack-directory: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.buildpack_dirs) }}
+        include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -85,7 +91,9 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.4.0
       - name: Run integration tests
-        working-directory: ${{ matrix.buildpack-directory }}
+        working-directory: ${{ matrix.dir }}
+        env:
+          INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
         run: cargo test --locked -- --ignored --test-threads 16
 
   shpec:
@@ -95,10 +103,10 @@ jobs:
     strategy:
       matrix:
         stack-version:
-        - '20'
-        - '22'
+          - '20'
+          - '22'
         buildpack-dir:
-        - buildpacks/npm
+          - buildpacks/npm
     defaults:
       run:
         shell: bash
@@ -115,8 +123,8 @@ jobs:
     strategy:
       matrix:
         test-dir:
-        - test/specs/node-function
-        - test/specs/node
+          - test/specs/node-function
+          - test/specs/node
     steps:
       - name: Checkout
         uses: actions/checkout@v3

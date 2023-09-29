@@ -19,3 +19,4 @@ libcnb-test.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
 test_support.workspace = true
+ureq.workspace = true
