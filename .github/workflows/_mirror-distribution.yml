@@ -31,7 +31,7 @@ jobs:
         run: rustup update
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.6.2
+        uses: Swatinem/rust-cache@v2.7.0
 
       - name: Get unmirrored versions
         id: get-unmirrored-versions
