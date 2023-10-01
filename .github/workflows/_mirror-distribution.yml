@@ -25,7 +25,7 @@ jobs:
       versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Update Rust toolchain
         run: rustup update
@@ -51,7 +51,7 @@ jobs:
         include: ${{ fromJson(inputs.distribution == 'node' && '[{"platform":"linux-x64"}]' || '[]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download and verify distribution
         run: |
