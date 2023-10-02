@@ -56,7 +56,7 @@ manager is installed.
 ## Usage
 
 For most users, it's simplest to build an app using [`pack`](https://buildpacks.io/docs/tools/pack/)
-and Heroku's [builder](https://github.com/builder), which includes this buildpack.
+and Heroku's [builder](https://github.com/heroku/cnb-builder-images), which includes this buildpack.
 
 ```
 pack build example-app-image --builder heroku/builder:22 --path /my/example-app
