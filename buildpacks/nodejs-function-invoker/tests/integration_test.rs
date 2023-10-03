@@ -132,48 +132,33 @@ fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> ser
         "functionInvocationId": serde_json::Value::Null
     }));
 
-    let mut json_body = None;
+    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+        ureq::post(&format!("http://{socket_addr}"))
+            .set("Content-Type", "application/json")
+            .set("Authorization", "")
+            .set("ce-id", &id)
+            .set("ce-time", "2020-09-03T20:56:28.297915Z")
+            .set("ce-type", "")
+            .set("ce-source", "")
+            .set("ce-specversion", "1.0")
+            .set("ce-sfcontext", &sf_context)
+            .set("ce-sffncontext", &ssfn_context)
+            .send_json(payload.clone())
+    })
+    .unwrap();
 
-    retry(
-        DEFAULT_RETRIES,
-        DEFAULT_RETRY_DELAY_IN_SECONDS,
-        || {
-            ureq::post(&format!("http://{socket_addr}"))
-                .set("Content-Type", "application/json")
-                .set("Authorization", "")
-                .set("ce-id", &id)
-                .set("ce-time", "2020-09-03T20:56:28.297915Z")
-                .set("ce-type", "")
-                .set("ce-source", "")
-                .set("ce-specversion", "1.0")
-                .set("ce-sfcontext", &sf_context)
-                .set("ce-sffncontext", &ssfn_context)
-                .send_json(payload.clone())
-        },
-        |res| {
-            json_body = Some(res.into_json().expect("expected response to be json"));
-        },
-        |error| panic!("request to assert function health check response failed: {error}"),
-    );
-
-    json_body.unwrap()
+    response.into_json().expect("expected response to be json")
 }
 
 fn assert_health_check_responds(socket_addr: &SocketAddr) {
-    retry(
-        DEFAULT_RETRIES,
-        DEFAULT_RETRY_DELAY_IN_SECONDS,
-        || {
-            ureq::post(&format!("http://{socket_addr}"))
-                .set("x-health-check", "true")
-                .call()
-        },
-        |res| {
-            let response_body = res.into_string().unwrap();
-            assert_contains!(response_body, "OK");
-        },
-        |error| panic!("request to assert function health check response failed: {error}"),
-    );
+    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+        ureq::post(&format!("http://{socket_addr}"))
+            .set("x-health-check", "true")
+            .call()
+    })
+    .unwrap();
+    let response_body = response.into_string().unwrap();
+    assert_contains!(response_body, "OK");
 }
 
 fn start_container_and_assert_health_check_responds(ctx: &TestContext) {
