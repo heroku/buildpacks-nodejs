@@ -20,20 +20,18 @@ pub fn init_tracing(buildpack_name: impl Into<String>) -> TracerProvider {
         let _ = create_dir_all(parent_dir);
     }
 
-    // Create the telemetry file if it doesn't exist
-    let _ = File::options()
-        .create(true)
-        .write(true)
-        .open(&telem_file_path);
-
     // Create a telemetry exporter that writes to the telemetry file
     // (or /dev/null in case of file issues)
-    let exporter = match File::options().append(true).open(telem_file_path) {
+    let exporter = match File::options()
+        .create(true)
+        .append(true)
+        .open(&telem_file_path)
+    {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
             .with_writer(std::io::BufWriter::new(NoisyFileWriter(f)))
             .build(),
         Err(err) => {
-            println!("Error creating telemetry pipeline: {err:?}");
+            println!("Error writing to file {telem_file_path:?}: {err}");
             opentelemetry_stdout::SpanExporter::builder()
                 .with_writer(std::io::sink())
                 .build()
