@@ -25,6 +25,8 @@ use serde::Deserialize;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
+#[cfg(test)]
+use ureq as _;
 
 mod function;
 mod layers;
