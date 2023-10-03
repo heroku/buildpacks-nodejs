@@ -37,10 +37,6 @@ please see [heroku/nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
 - [`jq`](https://github.com/stedolan/jq) >= `1.6`
 - [`shpec`](https://github.com/rylnd/shpec)
 
-#### For cutlass integration tests
-- `Ruby` >= `2.7`
-- `bundler` via `gem install bundler`
-
 ### Building
 
 1. Run `cargo install libcnb-cargo` to [install the `libcnb` Cargo command](https://github.com/heroku/libcnb.rs#libcnb-cargo-command)
@@ -55,9 +51,8 @@ pack build example-app \
 
 ### Testing
 
-- `cargo test` performs Rust unit and intgration tests for the `heroku/nodejs-engine` buildpack.
-- `bundle exec rspec test/specs/node` runs cutlass integration tests for the `heroku/nodejs` buildpack.
-- `bundle exec rspec test/specs/node-function` runs cutlass integration tests for the `heroku/nodejs-function` buildpack.
+- `cargo test` runs Rust unit tests.
+- `cargo test -- --ignored` runs Rust integration tests.
 - `shpec buildpacks/npm/shpec/*_shpec.sh` runs the shpec unit tests for the `heroku/nodejs-npm` buildpack.
 - `shpec buildpacks/nodejs-function-invoker/shpec/*_shpec.sh` runs the shpec unit tests for the `heroku/nodejs-function-invoker` buildpack.
 
