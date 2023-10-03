@@ -28,7 +28,7 @@ pub fn init_tracing(buildpack_name: impl Into<String>) -> TracerProvider {
         .open(&telem_file_path)
     {
         Ok(f) => opentelemetry_stdout::SpanExporter::builder()
-            .with_writer(std::io::BufWriter::new(NoisyFileWriter(f)))
+            .with_writer(std::io::BufWriter::new(f))
             .build(),
         Err(err) => {
             println!("Error writing to file {telem_file_path:?}: {err}");
@@ -92,18 +92,5 @@ mod tests {
         }
 
         Ok(())
-    }
-}
-
-#[derive(Debug)]
-struct NoisyFileWriter(File);
-impl std::io::Write for NoisyFileWriter {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        println!("Writing to {self:?}! {}", String::from_utf8_lossy(buf));
-        self.0.write(buf)
-    }
-    fn flush(&mut self) -> std::io::Result<()> {
-        println!("Flushing {self:?}!");
-        self.0.flush()
     }
 }
