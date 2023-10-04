@@ -25,13 +25,13 @@ jobs:
       versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Update Rust toolchain
         run: rustup update
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.5.1
+        uses: Swatinem/rust-cache@v2.7.0
 
       - name: Get unmirrored versions
         id: get-unmirrored-versions
@@ -43,6 +43,7 @@ jobs:
     name: Mirror v${{ matrix.version }} ${{ matrix.platform && format('({0})', matrix.platform) || '' }}
     needs: [get-unmirrored-versions]
     runs-on: ubuntu-22.04
+    if: needs.get-unmirrored-versions.outputs.versions != '[]'
     strategy:
       fail-fast: false
       matrix:
@@ -50,7 +51,7 @@ jobs:
         include: ${{ fromJson(inputs.distribution == 'node' && '[{"platform":"linux-x64"}]' || '[]') }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download and verify distribution
         run: |

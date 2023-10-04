@@ -4,6 +4,7 @@
 #![allow(clippy::module_name_repetitions)]
 
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
+use heroku_nodejs_utils::telemetry::init_tracer;
 use layers::{ManagerLayer, ShimLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -14,6 +15,8 @@ use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
+use opentelemetry::trace::{TraceContextExt, Tracer};
+use opentelemetry::KeyValue;
 
 #[cfg(test)]
 use libcnb_test as _;
@@ -35,62 +38,78 @@ impl Buildpack for CorepackBuildpack {
     type Error = CorepackBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        // Corepack requires the `packageManager` key from `package.json`.
-        // This buildpack won't be detected without it.
-        let pkg_json_path = context.app_dir.join("package.json");
-        if pkg_json_path.exists() {
-            let pkg_json =
-                PackageJson::read(pkg_json_path).map_err(CorepackBuildpackError::PackageJson)?;
-            cfg::get_supported_package_manager(&pkg_json).map_or_else(
-                || DetectResultBuilder::fail().build(),
-                |pkg_mgr| {
-                    DetectResultBuilder::pass()
-                        .build_plan(
-                            BuildPlanBuilder::new()
-                                .requires("node")
-                                .requires(&pkg_mgr)
-                                .provides(pkg_mgr)
-                                .build(),
-                        )
-                        .build()
-                },
-            )
-        } else {
-            DetectResultBuilder::fail().build()
-        }
+        let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
+        tracer.in_span("nodejs-corepack-detect", |_cx| {
+            // Corepack requires the `packageManager` key from `package.json`.
+            // This buildpack won't be detected without it.
+            let pkg_json_path = context.app_dir.join("package.json");
+            if pkg_json_path.exists() {
+                let pkg_json = PackageJson::read(pkg_json_path)
+                    .map_err(CorepackBuildpackError::PackageJson)?;
+                cfg::get_supported_package_manager(&pkg_json).map_or_else(
+                    || DetectResultBuilder::fail().build(),
+                    |pkg_mgr| {
+                        DetectResultBuilder::pass()
+                            .build_plan(
+                                BuildPlanBuilder::new()
+                                    .requires("node")
+                                    .requires(&pkg_mgr)
+                                    .provides(pkg_mgr)
+                                    .build(),
+                            )
+                            .build()
+                    },
+                )
+            } else {
+                DetectResultBuilder::fail().build()
+            }
+        })
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(CorepackBuildpackError::PackageJson)?
-            .package_manager
-            .ok_or(CorepackBuildpackError::PackageManagerMissing)?;
+        let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
+        tracer.in_span("nodejs-corepack-build", |cx| {
+            let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
+                .map_err(CorepackBuildpackError::PackageJson)?
+                .package_manager
+                .ok_or(CorepackBuildpackError::PackageManagerMissing)?;
 
-        let env = &Env::from_current();
+            cx.span().set_attributes([
+                KeyValue::new("package_manager.name", pkg_mgr.name.clone()),
+                KeyValue::new("package_manager.version", pkg_mgr.version.to_string()),
+            ]);
 
-        let corepack_version =
-            cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
+            let env = &Env::from_current();
 
-        log_header(format!(
-            "Installing {} {} via corepack {corepack_version}",
-            pkg_mgr.name, pkg_mgr.version
-        ));
+            let corepack_version =
+                cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
 
-        let shims_layer =
-            context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
-        cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
-            .map_err(CorepackBuildpackError::CorepackEnable)?;
+            cx.span().set_attribute(KeyValue::new(
+                "corepack.version",
+                corepack_version.to_string(),
+            ));
 
-        let mgr_layer = context.handle_layer(
-            layer_name!("mgr"),
-            ManagerLayer {
-                package_manager: pkg_mgr,
-            },
-        )?;
-        let mgr_env = mgr_layer.env.apply(Scope::Build, env);
-        cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+            log_header(format!(
+                "Installing {} {} via corepack {corepack_version}",
+                pkg_mgr.name, pkg_mgr.version
+            ));
 
-        BuildResultBuilder::new().build()
+            let shims_layer =
+                context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
+            cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
+                .map_err(CorepackBuildpackError::CorepackEnable)?;
+
+            let mgr_layer = context.handle_layer(
+                layer_name!("mgr"),
+                ManagerLayer {
+                    package_manager: pkg_mgr,
+                },
+            )?;
+            let mgr_env = mgr_layer.env.apply(Scope::Build, env);
+            cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+
+            BuildResultBuilder::new().build()
+        })
     }
 
     fn on_error(&self, err: libcnb::Error<Self::Error>) {

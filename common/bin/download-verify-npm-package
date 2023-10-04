@@ -7,9 +7,9 @@
 set -o pipefail
 set -e
 
-package_name=$1
-if [ "npm" != "${package_name}" ] && [ "yarn" != "${package_name}" ]; then
-	echo "Unrecognized distribution - ${package_name}"
+distribution_name=$1
+if [ "npm" != "${distribution_name}" ] && [ "yarn" != "${distribution_name}" ]; then
+	echo "Unrecognized distribution - ${distribution_name}"
 	exit 1
 fi
 
@@ -19,28 +19,32 @@ if [ -z "$package_version" ]; then
 	exit 1
 fi
 
+package_name="${distribution_name}"
 if [ "yarn" = "${package_name}" ]; then
-	# Yarn 2+ (aka: "berry") is hosted under a different npm package (except for version 2.4.3).
+	# Yarn 2+ (aka: "berry") is hosted under a different npm package.
 	major_version=$(echo "$package_version" | cut -d "." -f 1)
-	package_name=$([ "$major_version" -ge 2 ] && [ "$package_version" != "2.4.3" ] && echo "@yarnpkg/cli-dist" || echo "yarn")
+	package_name=$([ "$major_version" -ge 2 ] && echo "@yarnpkg/cli-dist" || echo "yarn")
 fi
 
 npm_url="https://registry.npmjs.com/${package_name}/${package_version}"
-
 echo "Determining dist url from ${npm_url}" >&2
-url=$(curl -sSf "${npm_url}" | jq -r '.dist.tarball')
 
-echo "Downloading ${package_name} tarball from ${url} ..." >&2
-curl -sSf -o "./${package_name}-v${package_version}.tar.gz" "${url}"
+tarball_url=$(curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.tarball')
+echo "Downloading ${package_name} tarball from ${tarball_url} ..." >&2
+
+downloaded_tarball="./${distribution_name}-v${package_version}.tar.gz"
+echo "Saving as ${downloaded_tarball}" >&2
+
+curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 --output "${downloaded_tarball}" "${tarball_url}"
 
 # Check the file's sha against npm's published sha. This section assumes all
 # packages are published with sha512. That was true at the time of writing,
 # but if npmjs.org starts using additional checksum algorithms, this section
 # will need to be changed.
 echo "Checking ${package_name} tarball integrity..." >&2
-shasum=$(shasum -b -a 512 "${package_name}"-v"${package_version}".tar.gz | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
+shasum=$(shasum -b -a 512 "${downloaded_tarball}" | awk '{ print $1 }' | xxd -r -p | base64 | tr -d "\n")
 actual_integrity="sha512-${shasum}"
-published_integrity=$(curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.integrity')
+published_integrity=$(curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.integrity')
 if [ "$actual_integrity" != "$published_integrity" ]; then
 	echo "Couldn't verify package integrity. Expected '$published_integrity', got '$actual_integrity'." >&2
 	exit 1
@@ -56,7 +60,7 @@ npm_pubkey="MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp
 printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" >npm-pubkey.pem
 
 # Fetch the signature from the published package data
-curl -sSf "https://registry.npmjs.com/${package_name}/${package_version}" | jq -r '.dist.signatures[0].sig' | base64 -d >npm-signature.bin
+curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.signatures[0].sig' | base64 -d >npm-signature.bin
 
 # Build the signing message
 echo -n "${package_name}@${package_version}:${published_integrity}" >message.txt

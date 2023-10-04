@@ -2,13 +2,12 @@
 
 use indoc::formatdoc;
 use libcnb_test::{assert_contains, assert_empty};
-use test_support::Builder::{Heroku20, Heroku22};
-use test_support::{assert_web_response, test_pnpm_app};
+use test_support::{assert_web_response, nodejs_integration_test};
 
 #[test]
 #[ignore = "integration test"]
-fn pnpm_7_pnp_heroku_20() {
-    test_pnpm_app("pnpm-7-pnp", Heroku20, |ctx| {
+fn pnpm_7_pnp() {
+    nodejs_integration_test("../../../test/fixtures/pnpm-7-pnp", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stdout,
@@ -58,8 +57,8 @@ fn pnpm_7_pnp_heroku_20() {
 
 #[test]
 #[ignore = "integration test"]
-fn pnpm_8_hoist_heroku_22() {
-    test_pnpm_app("pnpm-8-hoist", Heroku22, |ctx| {
+fn pnpm_8_hoist() {
+    nodejs_integration_test("../../../test/fixtures/pnpm-8-hoist", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stdout,
