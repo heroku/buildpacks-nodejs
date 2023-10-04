@@ -5,8 +5,7 @@ use libcnb_test::{assert_contains, assert_not_contains, TestContext};
 use rand::RngCore;
 use std::net::SocketAddr;
 use test_support::{
-    function_integration_test, retry, start_container, DEFAULT_RETRIES,
-    DEFAULT_RETRY_DELAY_IN_SECONDS,
+    function_integration_test, retry, start_container, DEFAULT_RETRIES, DEFAULT_RETRY_DELAY,
 };
 
 #[test]
@@ -132,7 +131,7 @@ fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> ser
         "functionInvocationId": serde_json::Value::Null
     }));
 
-    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
         ureq::post(&format!("http://{socket_addr}"))
             .set("Content-Type", "application/json")
             .set("Authorization", "")
@@ -151,7 +150,7 @@ fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> ser
 }
 
 fn assert_health_check_responds(socket_addr: &SocketAddr) {
-    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
         ureq::post(&format!("http://{socket_addr}"))
             .set("x-health-check", "true")
             .call()

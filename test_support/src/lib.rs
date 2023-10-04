@@ -10,7 +10,7 @@ use std::time::Duration;
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 pub const PORT: u16 = 8080;
 pub const DEFAULT_RETRIES: u32 = 10;
-pub const DEFAULT_RETRY_DELAY_IN_SECONDS: u64 = 1;
+pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(1);
 
 pub fn get_integration_test_builder() -> String {
     std::env::var("INTEGRATION_TEST_CNB_BUILDER").unwrap_or(DEFAULT_BUILDER.to_string())
@@ -80,7 +80,7 @@ fn integration_test_with_config(
 
 pub fn retry<T, E>(
     attempts: u32,
-    retry_delay_in_secs: u64,
+    retry_delay: Duration,
     retryable_action: impl Fn() -> Result<T, E>,
 ) -> Result<T, E> {
     let mut result = retryable_action();
@@ -88,7 +88,7 @@ pub fn retry<T, E>(
         if result.is_ok() {
             return result;
         }
-        std::thread::sleep(Duration::from_secs(retry_delay_in_secs));
+        std::thread::sleep(retry_delay);
         result = retryable_action();
     }
     result
@@ -96,7 +96,7 @@ pub fn retry<T, E>(
 
 pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
     ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+        let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             std::panic::catch_unwind(|| container.address_for_port(PORT))
         })
         .unwrap();
@@ -106,7 +106,7 @@ pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContex
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
     start_container(ctx, |_container, socket_addr| {
-        let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY_IN_SECONDS, || {
+        let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             ureq::get(&format!("http://{socket_addr}/")).call()
         })
         .unwrap();
