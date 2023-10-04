@@ -1,12 +1,15 @@
+use heroku_nodejs_utils::package_manager::PackageManager;
 use libcnb_test::{assert_contains, assert_not_contains};
 use serde_json::json;
-use std::fs;
 use std::path::Path;
-use test_support::{nodejs_integration_test, nodejs_integration_test_with_config};
+use test_support::{
+    add_build_script, add_package_json_dependency, nodejs_integration_test,
+    nodejs_integration_test_with_config, update_json_file,
+};
 
 #[test]
 #[ignore = "integration test"]
-fn test_npm_install() {
+fn test_npm_install_with_lockfile() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
         assert_contains!(ctx.pack_stdout, "# Heroku npm Engine Buildpack");
         assert_contains!(ctx.pack_stdout, "- Installing node modules");
@@ -23,6 +26,38 @@ fn test_npm_install() {
             "- Skipping default web process (no start script defined)"
         );
     });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_npm_install_with_no_lockfile() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::remove_file(app_dir.join(PackageManager::Npm.lockfile())).unwrap();
+            });
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "# Heroku npm Engine Buildpack");
+            assert_contains!(ctx.pack_stdout, "- Installing node modules");
+            assert_contains!(ctx.pack_stdout, "- Using npm version `6.14.18`");
+            assert_contains!(ctx.pack_stdout, "- Creating npm cache");
+            assert_contains!(ctx.pack_stdout, "- Configuring npm cache directory");
+            assert_contains!(
+                ctx.pack_stdout,
+                "- Running `npm install --no-package-lock \"--production=false\"`"
+            );
+            assert_contains!(ctx.pack_stdout, "added 4 packages");
+            assert_contains!(ctx.pack_stdout, "- Running scripts");
+            assert_contains!(ctx.pack_stdout, "- No build scripts found");
+            assert_contains!(ctx.pack_stdout, "- Configuring default processes");
+            assert_contains!(
+                ctx.pack_stdout,
+                "- Skipping default web process (no start script defined)"
+            );
+        },
+    );
 }
 
 #[test]
@@ -132,45 +167,9 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
     );
 }
 
-fn add_package_json_dependency(app_dir: &Path, package_name: &str, package_version: &str) {
-    update_package_json(app_dir, |json| {
-        let dependencies = json["dependencies"].as_object_mut().unwrap();
-        dependencies.insert(
-            package_name.to_string(),
-            serde_json::Value::String(package_version.to_string()),
-        );
-    });
-}
-
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
-    update_lockfile(app_dir, |json| {
+    update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();
         dependencies.insert(package_name.to_string(), lockfile_entry);
     });
-}
-
-fn add_build_script(app_dir: &Path, script: &str) {
-    update_package_json(app_dir, |json| {
-        let scripts = json["scripts"].as_object_mut().unwrap();
-        scripts.insert(
-            script.to_string(),
-            serde_json::Value::String(format!("echo 'executed {script}'")),
-        );
-    });
-}
-
-fn update_package_json(app_dir: &Path, update: impl FnOnce(&mut serde_json::Value)) {
-    update_json_file(&app_dir.join("package.json"), update);
-}
-
-fn update_lockfile(app_dir: &Path, update: impl FnOnce(&mut serde_json::Value)) {
-    update_json_file(&app_dir.join("package-lock.json"), update);
-}
-
-fn update_json_file(path: &Path, update: impl FnOnce(&mut serde_json::Value)) {
-    let json_file = fs::read_to_string(path).unwrap();
-    let mut json: serde_json::Value = serde_json::from_str(&json_file).unwrap();
-    update(&mut json);
-    let new_contents = serde_json::to_string(&json).unwrap();
-    fs::write(path, new_contents).unwrap();
 }

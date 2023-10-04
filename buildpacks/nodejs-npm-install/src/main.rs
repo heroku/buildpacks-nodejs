@@ -11,7 +11,6 @@ use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
-use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -23,6 +22,7 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use std::io::{stdout, Stdout};
 use std::path::Path;
 use std::process::Command;
+use heroku_nodejs_utils::package_manager::PackageManager;
 
 pub(crate) struct NpmInstallBuildpack;
 
@@ -34,7 +34,7 @@ impl Buildpack for NpmInstallBuildpack {
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         context
             .app_dir
-            .join(PackageManager::Npm.lockfile())
+            .join("package.json")
             .exists()
             .then(|| {
                 DetectResultBuilder::pass()
@@ -58,13 +58,14 @@ impl Buildpack for NpmInstallBuildpack {
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
             .map_err(NpmInstallBuildpackError::PackageJson)?;
+        let with_lockfile = app_dir.join(PackageManager::Npm.lockfile()).exists();
 
         run_application_checks(app_dir, &warn_later)?;
 
         let section = logger.section("Installing node modules");
         log_npm_version(&env, section.as_ref())?;
         configure_npm_cache_layer(&context, &env, section.as_ref())?;
-        run_npm_install(&env, section.as_ref())?;
+        run_npm_install(&env, with_lockfile, section.as_ref())?;
         let logger = section.end_section();
 
         let section = logger.section("Running scripts");
@@ -137,9 +138,10 @@ fn configure_npm_cache_layer(
 
 fn run_npm_install(
     env: &Env,
+    with_lockfile: bool,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
-    let mut npm_install = Command::from(npm::Install { env });
+    let mut npm_install = Command::from(npm::Install { env, with_lockfile });
     log_step_stream(
         format!("Running {}", fmt::command(npm_install.name())),
         |stream| {
