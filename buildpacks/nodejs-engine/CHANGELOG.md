@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - Added Node.js version 20.8.0.
+- Provides `npm` added to the build plan since a default version of `npm` is bundled with Node.js. ([#622](https://github.com/heroku/buildpacks-nodejs/pull/622))
+
 ## [1.1.6] - 2023-09-25
 
 - No changes.
