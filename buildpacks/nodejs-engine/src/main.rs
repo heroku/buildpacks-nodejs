@@ -15,16 +15,18 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
-use libherokubuildpack::log::{log_error, log_header, log_info};
-use thiserror::Error;
-
-mod layers;
-
 #[cfg(test)]
 use libcnb_test as _;
-
+use libherokubuildpack::log::{log_error, log_header, log_info};
+#[cfg(test)]
+use serde_json as _;
+#[cfg(test)]
+use test_support as _;
+use thiserror::Error;
 #[cfg(test)]
 use ureq as _;
+
+mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 

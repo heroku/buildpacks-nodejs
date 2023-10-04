@@ -34,7 +34,7 @@ jobs:
           private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
 
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ steps.generate-token.outputs.app_token }}
 
@@ -42,7 +42,7 @@ jobs:
         run: rustup update
 
       - name: Rust cache
-        uses: Swatinem/rust-cache@v2.6.2
+        uses: Swatinem/rust-cache@v2.7.0
 
       - name: Set Diff Message
         id: set-diff-msg

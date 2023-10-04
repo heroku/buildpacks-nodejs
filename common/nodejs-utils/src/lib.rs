@@ -11,4 +11,5 @@ mod npmjs_org;
 pub mod package_json;
 pub mod package_manager;
 mod s3;
+pub mod telemetry;
 pub mod vrs;
