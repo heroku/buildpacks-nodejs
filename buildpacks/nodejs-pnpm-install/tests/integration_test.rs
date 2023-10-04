@@ -7,7 +7,7 @@ use test_support::{assert_web_response, nodejs_integration_test};
 #[test]
 #[ignore = "integration test"]
 fn pnpm_7_pnp() {
-    nodejs_integration_test("../../../test/fixtures/pnpm-7-pnp", |ctx| {
+    nodejs_integration_test("./fixtures/pnpm-7-pnp", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stdout,
@@ -58,7 +58,7 @@ fn pnpm_7_pnp() {
 #[test]
 #[ignore = "integration test"]
 fn pnpm_8_hoist() {
-    nodejs_integration_test("../../../test/fixtures/pnpm-8-hoist", |ctx| {
+    nodejs_integration_test("./fixtures/pnpm-8-hoist", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stdout,

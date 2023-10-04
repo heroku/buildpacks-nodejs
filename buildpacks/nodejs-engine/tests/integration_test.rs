@@ -9,7 +9,7 @@ use test_support::{
 #[test]
 #[ignore]
 fn simple_indexjs() {
-    nodejs_integration_test("../../../test/fixtures/node-with-indexjs", |ctx| {
+    nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
         assert_contains!(ctx.pack_stdout, "Detected Node.js version range: *");
         assert_contains!(ctx.pack_stdout, "Installing Node.js");
         assert_web_response(&ctx, "node-with-indexjs");
@@ -19,7 +19,7 @@ fn simple_indexjs() {
 #[test]
 #[ignore]
 fn simple_serverjs() {
-    nodejs_integration_test("../../../test/fixtures/node-with-serverjs", |ctx| {
+    nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0");
         assert_web_response(&ctx, "node-with-serverjs");
     });
@@ -29,7 +29,7 @@ fn simple_serverjs() {
 #[ignore]
 fn reinstalls_node_if_version_changes() {
     nodejs_integration_test_with_config(
-        "../../../test/fixtures/node-with-indexjs",
+        "./fixtures/node-with-indexjs",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
                 set_node_engine(&app_dir, "^14.0");
@@ -52,7 +52,7 @@ fn reinstalls_node_if_version_changes() {
 #[test]
 #[ignore]
 fn npm_project_with_no_lockfile() {
-    nodejs_integration_test("../../../test/fixtures/npm-project", |ctx| {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node");
         assert_contains!(ctx.pack_stdout, "Installing node modules");
 
@@ -69,7 +69,7 @@ fn npm_project_with_no_lockfile() {
 #[test]
 #[ignore]
 fn npm_project_with_lockfile() {
-    nodejs_integration_test("../../../test/fixtures/npm-project-with-lockfile", |ctx| {
+    nodejs_integration_test("./fixtures/npm-project-with-lockfile", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node");
         assert_contains!(ctx.pack_stdout, "Installing node modules");
         assert_contains!(
