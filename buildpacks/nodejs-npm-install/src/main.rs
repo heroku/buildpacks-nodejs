@@ -11,6 +11,7 @@ use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
+use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -22,7 +23,6 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use std::io::{stdout, Stdout};
 use std::path::Path;
 use std::process::Command;
-use heroku_nodejs_utils::package_manager::PackageManager;
 
 pub(crate) struct NpmInstallBuildpack;
 
