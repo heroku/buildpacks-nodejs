@@ -9,4 +9,5 @@ mod nodejs_org;
 mod npmjs_org;
 pub mod package_json;
 mod s3;
+pub mod telemetry;
 pub mod vrs;

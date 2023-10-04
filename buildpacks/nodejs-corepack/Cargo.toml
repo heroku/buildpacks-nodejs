@@ -10,6 +10,7 @@ publish.workspace = true
 heroku-nodejs-utils.workspace = true
 libcnb.workspace = true
 libherokubuildpack.workspace = true
+opentelemetry.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 indoc.workspace = true
