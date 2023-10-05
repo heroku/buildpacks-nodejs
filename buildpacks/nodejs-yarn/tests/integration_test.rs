@@ -25,7 +25,7 @@ fn yarn_1_typescript() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_2_pnp_zero() {
-    nodejs_integration_test("./yarn-2-pnp-zero", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node");
         assert_contains!(ctx.pack_stdout, "Installing yarn 2.4.1 via corepack");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
