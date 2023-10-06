@@ -68,7 +68,7 @@ pub(crate) struct RunScript<'a> {
 impl<'a> From<RunScript<'a>> for Command {
     fn from(value: RunScript<'a>) -> Self {
         let mut cmd = Command::new("npm");
-        cmd.args(["run", "-s", &value.script]);
+        cmd.args(["run", &value.script]);
         cmd.envs(value.env);
         cmd
     }
