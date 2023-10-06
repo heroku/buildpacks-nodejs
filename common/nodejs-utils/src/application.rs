@@ -62,12 +62,13 @@ impl Display for Error {
                     Multiple lockfiles found: {lockfiles}
     
                     More than one package manager has created lockfiles for this application but only
-                    one can be used to install dependencies. 
+                    one can be used to install dependencies. Installing dependencies using the wrong package 
+                    manager can result in missing packages or subtle bugs in production.
 
                 ")?;
 
                 for package_manager in PackageManager::iterator() {
-                    writedoc!(f, "- To use {package_manager} to install your application's dependencies please the following lockfiles:\n\n")?;
+                    writedoc!(f, "- To use {package_manager} to install your application's dependencies please delete the following lockfiles:\n\n")?;
                     for other_package_manager in PackageManager::iterator() {
                         if package_manager != other_package_manager {
                             let other_lockfile = other_package_manager
@@ -79,6 +80,7 @@ impl Display for Error {
                     }
                     writedoc!(f, "\n")?;
                 }
+                writedoc!(f, "https://help.heroku.com/0KU2EM53\n")?;
 
                 Ok(())
             }
@@ -105,23 +107,25 @@ mod tests {
                 Multiple lockfiles found: package-lock.json, pnpm-lock.yaml, yarn.lock
 
                 More than one package manager has created lockfiles for this application but only
-                one can be used to install dependencies. 
+                one can be used to install dependencies. Installing dependencies using the wrong package 
+                manager can result in missing packages or subtle bugs in production.
 
-                - To use npm to install your application's dependencies please the following lockfiles:
+                - To use npm to install your application's dependencies please delete the following lockfiles:
 
                     $ git rm pnpm-lock.yaml
                     $ git rm yarn.lock
 
-                - To use pnpm to install your application's dependencies please the following lockfiles:
+                - To use pnpm to install your application's dependencies please delete the following lockfiles:
 
                     $ git rm package-lock.json
                     $ git rm yarn.lock
                 
-                - To use Yarn to install your application's dependencies please the following lockfiles:
+                - To use Yarn to install your application's dependencies please delete the following lockfiles:
                 
                     $ git rm package-lock.json
                     $ git rm pnpm-lock.yaml
 
+                https://help.heroku.com/0KU2EM53
             "}
         );
     }
