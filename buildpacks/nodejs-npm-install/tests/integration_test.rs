@@ -115,13 +115,13 @@ fn test_npm_build_scripts() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "- Running `npm run -s heroku-prebuild`");
+            assert_contains!(ctx.pack_stdout, "- Running `npm run heroku-prebuild`");
             assert_contains!(ctx.pack_stdout, "executed heroku-prebuild");
 
-            assert_contains!(ctx.pack_stdout, "- Running `npm run -s build`");
+            assert_contains!(ctx.pack_stdout, "- Running `npm run build`");
             assert_contains!(ctx.pack_stdout, "executed build");
 
-            assert_contains!(ctx.pack_stdout, "- Running `npm run -s heroku-postbuild`");
+            assert_contains!(ctx.pack_stdout, "- Running `npm run heroku-postbuild`");
             assert_contains!(ctx.pack_stdout, "executed heroku-postbuild");
         },
     );
@@ -139,10 +139,10 @@ fn test_npm_build_scripts_prefers_heroku_build_over_build() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "- Running `npm run -s heroku-build`");
+            assert_contains!(ctx.pack_stdout, "- Running `npm run heroku-build`");
             assert_contains!(ctx.pack_stdout, "executed heroku-build");
 
-            assert_not_contains!(ctx.pack_stdout, "- Running `npm run -s build`");
+            assert_not_contains!(ctx.pack_stdout, "- Running `npm run build`");
             assert_not_contains!(ctx.pack_stdout, "executed build");
         },
     );

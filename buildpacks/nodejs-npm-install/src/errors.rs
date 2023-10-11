@@ -167,7 +167,7 @@ fn on_framework_error(
             If the issue persists and you think you found a bug in the buildpack or framework, reproduce \
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
-        ", buildpack_name = fmt::value("heroku/nodejs-npm-install") });
+        ", buildpack_name = fmt::value("Heroku npm Engine Buildpack") });
 }
 
 fn print_error_details(
