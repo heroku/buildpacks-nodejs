@@ -67,9 +67,9 @@ checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
 
 [[package]]
 name = "base64"
-version = "0.21.2"
+version = "0.21.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "604178f6c5c21f02dc555784810edfb88d34ac2c73b2eae109655649ee73ce3d"
+checksum = "9ba43ea6f343b788c8764558649e08df62f86c6ef251fdaeb1ffd010a9ae50a2"
 
 [[package]]
 name = "bit-set"
@@ -218,7 +218,7 @@ dependencies = [
 [[package]]
 name = "commons"
 version = "0.1.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=schneems/logging-state-machine-continued#64c7e62c13ba9c80e928783256c6c7b3c736fd2b"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=schneems/logging-state-machine-continued#7c85b5e586366f0fff99e16a2db582ecf5ca931a"
 dependencies = [
  "ascii_table",
  "byte-unit",
@@ -597,7 +597,7 @@ dependencies = [
  "tempfile",
  "test_support",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
 ]
 
@@ -617,7 +617,7 @@ dependencies = [
  "tempfile",
  "test_support",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
 ]
 
@@ -632,7 +632,7 @@ dependencies = [
  "libherokubuildpack 0.15.0",
  "serde",
  "test_support",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
 ]
 
@@ -652,7 +652,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
  "url",
 ]
@@ -669,7 +669,7 @@ dependencies = [
  "tempfile",
  "test_support",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
 ]
 
@@ -687,7 +687,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "test_support",
- "toml 0.8.1",
+ "toml 0.8.2",
 ]
 
 [[package]]
@@ -850,7 +850,7 @@ dependencies = [
  "libcnb-proc-macros 0.15.0",
  "serde",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
 ]
 
 [[package]]
@@ -861,7 +861,7 @@ checksum = "53c4c77089f294316c1d8a285d0ed9973e796a2653c676b22b3f7703d73aa828"
 dependencies = [
  "serde",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
 ]
 
 [[package]]
@@ -888,7 +888,7 @@ dependencies = [
  "libcnb-proc-macros 0.15.0",
  "serde",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "uriparse",
 ]
 
@@ -978,7 +978,7 @@ dependencies = [
  "tar",
  "termcolor",
  "thiserror",
- "toml 0.8.1",
+ "toml 0.8.2",
  "ureq",
 ]
 
@@ -1603,14 +1603,14 @@ dependencies = [
 
 [[package]]
 name = "toml"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1bc1433177506450fe920e46a4f9812d0c211f5dd556da10e731a0a3dfa151f0"
+checksum = "185d8ab0dfbb35cf1399a6344d8484209c088f75f8f68230da55d48d95d43e3d"
 dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_edit 0.20.1",
+ "toml_edit 0.20.2",
 ]
 
 [[package]]
@@ -1637,9 +1637,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.20.1"
+version = "0.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca676d9ba1a322c1b64eb8045a5ec5c0cfb0c9d08e15e9ff622589ad5221c8fe"
+checksum = "396e4d48bbb2b7554c944bde63101b5ae446cff6ec4a24227428f15eb72ef338"
 dependencies = [
  "indexmap 2.0.0",
  "serde",
