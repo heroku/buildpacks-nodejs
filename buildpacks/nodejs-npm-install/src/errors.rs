@@ -1,6 +1,7 @@
 use crate::npm;
 use commons::fun_run::CmdError;
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
+use commons::output::fmt;
 use commons::output::fmt::DEBUG_INFO;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJsonError;
@@ -8,10 +9,12 @@ use indoc::formatdoc;
 use std::fmt::Display;
 use std::io::stdout;
 
-const OPEN_A_SUPPORT_TICKET: &str =
-    "open a support ticket and include the full log output of this build";
+const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
+Use the debug information above to troubleshoot and retry your build.";
 
-const TRY_BUILDING_AGAIN: &str = "try again and to see if the error resolves itself";
+const SUBMIT_AN_ISSUE: &str = "\
+If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
+locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
@@ -50,23 +53,28 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
             print_error_details(logger, e)
                 .announce()
                 .error(&formatdoc! {"
-                    Failed to read package.json
+                    Error reading {package_json}
 
-                    An unexpected error occurred while reading package.json. 
+                    The Node buildpack requires {package_json} to complete the build but the file can’t be read. 
                     
-                    Please {TRY_BUILDING_AGAIN}. 
-                "});
+                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+
+                    {SUBMIT_AN_ISSUE}
+                ", package_json = fmt::value("package.json") });
         }
         PackageJsonError::ParseError(e) => {
             print_error_details(logger, e)
                 .announce()
                 .error(&formatdoc! {"
-                    Failed to parse package.json
+                    Error reading {package_json}
 
-                    An unexpected error occurred while parsing package.json. 
+                    The Node buildpack requires {package_json} to complete the build but the file \
+                    can’t be parsed. Check the formatting in your file. 
                     
-                    Please {TRY_BUILDING_AGAIN}.   
-                "});
+                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+
+                    {SUBMIT_AN_ISSUE}
+                ", package_json = fmt::value("package.json")});
         }
     }
 }
@@ -76,12 +84,14 @@ fn on_set_cache_dir_error(error: CmdError, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, error)
         .announce()
         .error(&formatdoc! {"
-            Failed to set the npm cache directory
+            Failed to set the {npm} cache directory
 
-            An unexpected error occurred while executing `{command}`. 
-            
-            Please {TRY_BUILDING_AGAIN}. 
-        "});
+            An unexpected error occurred while setting the {npm} cache directory. 
+                    
+            {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+
+            {SUBMIT_AN_ISSUE}
+        ", npm = fmt::value("npm") });
 }
 
 fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>) {
@@ -91,21 +101,23 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
             print_error_details(logger, e)
                 .announce()
                 .error(&formatdoc! {"
-                    Failed to determine npm version information
-        
-                    An unexpected error occurred while executing `{command}`. 
+                    Failed to determine {npm} version information
+
+                    An unexpected error occurred while executing {npm_version}.  
                     
-                    Please {TRY_BUILDING_AGAIN}. 
-                "});
+                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+        
+                    {SUBMIT_AN_ISSUE}
+                ", npm = fmt::value("npm"), npm_version = fmt::value(command) });
         }
-        npm::VersionError::Parse(e) => {
+        npm::VersionError::Parse(stdout) => {
             logger.announce().error(&formatdoc! {"
-                    Failed to parse npm version information
-        
-                    An unexpected error occurred while parsing version information from `{e}`. 
-                    
-                    Please {TRY_BUILDING_AGAIN}. 
-                "});
+                Failed to parse {npm} version information
+    
+                An unexpected error occurred while parsing version information from {output}. 
+                
+                {SUBMIT_AN_ISSUE}
+            ", npm = fmt::value("npm"), output = fmt::value(stdout) });
         }
     }
 }
@@ -115,15 +127,14 @@ fn on_npm_install_error(error: CmdError, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, error)
         .announce()
         .error(&formatdoc! {"
-            Failed to install node modules
+            Failed to install Node modules
 
-            An unexpected error occurred while executing `{command}`. See the log output above for more information.
+            An unexpected error occurred while executing {npm_install}. See the log output above for more information.
 
-            In some cases, this happens due to an unstable network connection. Please {TRY_BUILDING_AGAIN}.
+            This error can occur due to an unstable network connection. Retry your build.
             
-            If that does not help, check the status of npm (the upstream Node module repository service) here:
-            https://status.npmjs.org/
-        "});
+            If that doesn’t help, check the status of the upstream Node module repository service at https://status.npmjs.org/.
+        ", npm_install = fmt::value(command) });
 }
 
 fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
@@ -133,10 +144,10 @@ fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
         .error(&formatdoc! {"
             Failed to execute build script
 
-            An unexpected error occurred while executing `{command}`. 
+            An unexpected error occurred while executing {build_script}. See the log output above for more information.
             
-            Please try running this command locally to verify that it works as expected. 
-        "});
+            Run this command locally to verify that it works as expected.
+        ", build_script = fmt::value(command) });
 }
 
 fn on_application_error(error: application::Error, logger: Box<dyn StartedLogger>) {
@@ -150,11 +161,16 @@ fn on_framework_error(
     print_error_details(logger, error)
         .announce()
         .error(&formatdoc! {"
-            Internal buildpack error
+            heroku/nodejs-npm-install internal buildpack error
 
-            An unexpected internal error was reported by the framework used by this buildpack. 
+            The framework used by this buildpack encountered an unexpected error.
             
-            Please {OPEN_A_SUPPORT_TICKET}.
+            If you can't deploy to Heroku due to this issue, check the official Heroku Status page at \
+            status.heroku.com for any ongoing incidents. After all incidents resolve, retry your build.
+
+            If the issue persists and you think you found a bug in the buildpack or framework, reproduce \
+            the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
+            and include the details.
         "});
 }
 
