@@ -80,7 +80,6 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
 }
 
 fn on_set_cache_dir_error(error: CmdError, logger: Box<dyn StartedLogger>) {
-    let command = error.name().to_string();
     print_error_details(logger, error)
         .announce()
         .error(&formatdoc! {"
