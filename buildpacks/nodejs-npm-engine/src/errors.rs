@@ -271,7 +271,7 @@ fn on_framework_error(error: Error<NpmEngineBuildpackError>, logger: Box<dyn Sta
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
 
-        ", buildpack_name = fmt::value("heroku/nodejs-npm-engine") });
+        ", buildpack_name = fmt::value("Heroku Node.js npm Engine") });
 }
 
 fn print_error_details(
