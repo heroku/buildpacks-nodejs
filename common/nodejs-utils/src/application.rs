@@ -1,7 +1,8 @@
 use crate::package_manager::PackageManager;
+use commons::output::fmt;
 use commons::output::section_log::log_warning_later;
 use commons::output::warn_later::WarnGuard;
-use indoc::{indoc, writedoc};
+use indoc::{formatdoc, writedoc};
 use std::fmt::{Display, Formatter};
 use std::io::Stdout;
 use std::path::Path;
@@ -35,11 +36,12 @@ pub fn check_for_multiple_lockfiles(app_dir: &Path) -> Result<()> {
 /// displayed it should be used in conjunction with a [`WarnGuard`].
 pub fn warn_prebuilt_modules(app_dir: &Path, _warn_later: &WarnGuard<Stdout>) {
     if app_dir.join("node_modules").exists() {
-        log_warning_later(indoc! {"
-            Warning: node_modules checked into source control
+        log_warning_later(formatdoc! {"
+            Warning: {node_modules} checked into source control
 
+            Add these files and directories to {gitignore}. See the Dev Center for more info: 
             https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
-        "});
+        ", node_modules = fmt::value("node_modules"), gitignore = fmt::value(".gitignore") });
     }
 }
 
@@ -61,14 +63,13 @@ impl Display for Error {
                 writedoc!(f, "
                     Multiple lockfiles found: {lockfiles}
     
-                    More than one package manager has created lockfiles for this application but only
-                    one can be used to install dependencies. Installing dependencies using the wrong package 
-                    manager can result in missing packages or subtle bugs in production.
+                    More than one package manager has created lockfiles for this application. Only one \
+                    can be used to install dependencies. 
 
                 ")?;
 
                 for package_manager in PackageManager::iterator() {
-                    writedoc!(f, "- To use {package_manager} to install your application's dependencies please delete the following lockfiles:\n\n")?;
+                    writedoc!(f, "- To use {} to install your application's dependencies please delete the following lockfiles:\n\n", fmt::value(package_manager.to_string()))?;
                     for other_package_manager in PackageManager::iterator() {
                         if package_manager != other_package_manager {
                             let other_lockfile = other_package_manager
@@ -80,7 +81,10 @@ impl Display for Error {
                     }
                     writedoc!(f, "\n")?;
                 }
-                writedoc!(f, "https://help.heroku.com/0KU2EM53\n")?;
+                writedoc!(
+                    f,
+                    "See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53\n"
+                )?;
 
                 Ok(())
             }
@@ -92,7 +96,8 @@ impl Display for Error {
 mod tests {
     use crate::application::Error;
     use crate::package_manager::PackageManager;
-    use indoc::indoc;
+    use commons::output::fmt;
+    use indoc::formatdoc;
 
     #[test]
     fn test_error_output_for_multiple_lockfiles() {
@@ -103,30 +108,28 @@ mod tests {
         ]);
         assert_eq!(
             error.to_string(),
-            indoc! {"
+            formatdoc! {"
                 Multiple lockfiles found: package-lock.json, pnpm-lock.yaml, yarn.lock
 
-                More than one package manager has created lockfiles for this application but only
-                one can be used to install dependencies. Installing dependencies using the wrong package 
-                manager can result in missing packages or subtle bugs in production.
+                More than one package manager has created lockfiles for this application. Only one can be used to install dependencies. 
 
-                - To use npm to install your application's dependencies please delete the following lockfiles:
+                - To use {npm} to install your application's dependencies please delete the following lockfiles:
 
                     $ git rm pnpm-lock.yaml
                     $ git rm yarn.lock
 
-                - To use pnpm to install your application's dependencies please delete the following lockfiles:
+                - To use {pnpm} to install your application's dependencies please delete the following lockfiles:
 
                     $ git rm package-lock.json
                     $ git rm yarn.lock
                 
-                - To use Yarn to install your application's dependencies please delete the following lockfiles:
+                - To use {yarn} to install your application's dependencies please delete the following lockfiles:
                 
                     $ git rm package-lock.json
                     $ git rm pnpm-lock.yaml
 
-                https://help.heroku.com/0KU2EM53
-            "}
+                See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53
+            ", npm = fmt::value("npm"), pnpm = fmt::value("pnpm"), yarn = fmt::value("Yarn") }
         );
     }
 }
