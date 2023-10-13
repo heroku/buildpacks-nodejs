@@ -31,18 +31,16 @@ impl Buildpack for NpmEngineBuildpack {
     type Error = NpmEngineBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let package_json = context.app_dir.join("package.json");
-        package_json
-            .exists()
-            .then(|| {
-                PackageJson::read(package_json)
-                    .map(|package_json| package_json.engines)
-                    .unwrap_or(None)
-                    .and_then(|engines| engines.npm)
-            })
-            .flatten()
-            .map(|_| {
-                DetectResultBuilder::pass()
+        let package_json_path = context.app_dir.join("package.json");
+        if package_json_path.exists() {
+            let package_json = PackageJson::read(package_json_path)
+                .map_err(NpmEngineBuildpackError::PackageJson)?;
+            if package_json
+                .engines
+                .and_then(|engines| engines.npm)
+                .is_some()
+            {
+                return DetectResultBuilder::pass()
                     .build_plan(
                         BuildPlanBuilder::new()
                             .requires("npm")
@@ -50,9 +48,10 @@ impl Buildpack for NpmEngineBuildpack {
                             .provides("npm")
                             .build(),
                     )
-                    .build()
-            })
-            .unwrap_or_else(|| DetectResultBuilder::fail().build())
+                    .build();
+            }
+        }
+        DetectResultBuilder::fail().build()
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
@@ -127,7 +126,7 @@ fn install_npm_release(
             let stdout = output.stdout_lossy();
             stdout
                 .parse::<Version>()
-                .map_err(|_| node::VersionError::Parse(stdout))
+                .map_err(|e| node::VersionError::Parse(stdout, e))
         })
         .map_err(NpmEngineBuildpackError::NodeVersion)?;
 
@@ -155,7 +154,7 @@ fn log_installed_npm_version(
             let stdout = output.stdout_lossy();
             stdout
                 .parse::<Version>()
-                .map_err(|_| npm::VersionError::Parse(stdout))
+                .map_err(|e| npm::VersionError::Parse(stdout, e))
         })
         .map_err(NpmEngineBuildpackError::NpmVersion)
         .map(|npm_version| {

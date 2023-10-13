@@ -17,6 +17,8 @@ const SUBMIT_AN_ISSUE: &str = "\
 If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
 locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
 
+const BUILDPACK_NAME: &str = "Heroku npm Engine Buildpack";
+
 #[derive(Debug)]
 pub(crate) enum NpmEngineBuildpackError {
     PackageJson(PackageJsonError),
@@ -74,12 +76,12 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     Error reading {package_json}.
 
                     The Node buildpack requires {package_json} to complete the build but the file \
-                    can’t be parsed. Check the formatting in your file. 
+                    can’t be parsed. Ensure {npm_install} runs locally to check the formatting in your file. 
                     
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json")});
+                ", package_json = fmt::value("package.json"), npm_install = fmt::value("npm install") });
         }
     }
 }
@@ -217,14 +219,16 @@ fn on_node_version_error(error: node::VersionError, logger: Box<dyn StartedLogge
                     {SUBMIT_AN_ISSUE}
                 ", node = fmt::value("Node"), node_version = fmt::value(e.name()) });
         }
-        node::VersionError::Parse(stdout) => {
-            logger.announce().error(&formatdoc! {"
-                Failed to parse {node} version information.
-    
-                An unexpected error occurred while parsing version information from {output}. 
-                
-                {SUBMIT_AN_ISSUE}
-            ", node = fmt::value("Node"), output = fmt::value(stdout) });
+        node::VersionError::Parse(stdout, e) => {
+            print_error_details(logger, &e)
+                .announce()
+                .error(&formatdoc! {"
+                    Failed to parse {node} version information.
+        
+                    An unexpected error occurred while parsing version information from {output}. 
+                    
+                    {SUBMIT_AN_ISSUE}
+                ", node = fmt::value("Node"), output = fmt::value(stdout) });
         }
     }
 }
@@ -244,14 +248,16 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
                     {SUBMIT_AN_ISSUE}
                 ", npm = fmt::value("npm"), npm_version = fmt::value(e.name())});
         }
-        npm::VersionError::Parse(stdout) => {
-            logger.announce().error(&formatdoc! {"
-                Failed to parse {npm} version information.
-    
-                An unexpected error occurred while parsing version information from {output}. 
-                
-                {SUBMIT_AN_ISSUE}
-            ", npm = fmt::value("npm"), output = fmt::value(stdout) });
+        npm::VersionError::Parse(stdout, e) => {
+            print_error_details(logger, &e)
+                .announce()
+                .error(&formatdoc! {"
+                    Failed to parse {npm} version information.
+        
+                    An unexpected error occurred while parsing version information from {output}. 
+                    
+                    {SUBMIT_AN_ISSUE}
+                ", npm = fmt::value("npm"), output = fmt::value(stdout) });
         }
     }
 }
@@ -271,7 +277,7 @@ fn on_framework_error(error: Error<NpmEngineBuildpackError>, logger: Box<dyn Sta
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
 
-        ", buildpack_name = fmt::value("Heroku Node.js npm Engine") });
+        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
 fn print_error_details(
