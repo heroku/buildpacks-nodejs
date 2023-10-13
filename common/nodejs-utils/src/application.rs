@@ -64,7 +64,8 @@ impl Display for Error {
                     Multiple lockfiles found: {lockfiles}
     
                     More than one package manager has created lockfiles for this application. Only one \
-                    can be used to install dependencies. 
+                    can be used to install dependencies but the buildpack can't determine which when multiple \
+                    lockfiles are present. 
 
                 ")?;
 
@@ -82,8 +83,11 @@ impl Display for Error {
                     writedoc!(f, "\n")?;
                 }
                 writedoc!(
-                    f,
-                    "See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53\n"
+                    f, "
+                        See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53
+                        
+                        Once your application has only one lockfile, commit the results to git and retry your build.
+                    "
                 )?;
 
                 Ok(())
@@ -111,7 +115,7 @@ mod tests {
             formatdoc! {"
                 Multiple lockfiles found: package-lock.json, pnpm-lock.yaml, yarn.lock
 
-                More than one package manager has created lockfiles for this application. Only one can be used to install dependencies. 
+                More than one package manager has created lockfiles for this application. Only one can be used to install dependencies but the buildpack can't determine which when multiple lockfiles are present. 
 
                 - To use {npm} to install your application's dependencies please delete the following lockfiles:
 
@@ -129,6 +133,8 @@ mod tests {
                     $ git rm pnpm-lock.yaml
 
                 See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53
+
+                Once your application has only one lockfile, commit the results to git and retry your build.
             ", npm = fmt::value("npm"), pnpm = fmt::value("pnpm"), yarn = fmt::value("Yarn") }
         );
     }

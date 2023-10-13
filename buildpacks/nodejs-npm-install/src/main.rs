@@ -32,23 +32,26 @@ impl Buildpack for NpmInstallBuildpack {
     type Error = NpmInstallBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        context
+        let package_json_exists = context
             .app_dir
             .join("package.json")
-            .exists()
-            .then(|| {
-                DetectResultBuilder::pass()
-                    .build_plan(
-                        BuildPlanBuilder::new()
-                            .provides("node_modules")
-                            .requires("npm")
-                            .requires("node_modules")
-                            .requires("node")
-                            .build(),
-                    )
-                    .build()
-            })
-            .unwrap_or_else(|| DetectResultBuilder::fail().build())
+            .try_exists()
+            .map_err(NpmInstallBuildpackError::Detect)?;
+
+        if package_json_exists {
+            DetectResultBuilder::pass()
+                .build_plan(
+                    BuildPlanBuilder::new()
+                        .provides("node_modules")
+                        .requires("npm")
+                        .requires("node_modules")
+                        .requires("node")
+                        .build(),
+                )
+                .build()
+        } else {
+            DetectResultBuilder::fail().build()
+        }
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
@@ -107,7 +110,7 @@ fn log_npm_version(
             let stdout = output.stdout_lossy();
             stdout
                 .parse::<Version>()
-                .map_err(|_| npm::VersionError::Parse(stdout))
+                .map_err(|e| npm::VersionError::Parse(stdout, e))
         })
         .map_err(NpmInstallBuildpackError::NpmVersion)
         .map(|version| {

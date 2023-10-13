@@ -16,10 +16,13 @@ const SUBMIT_AN_ISSUE: &str = "\
 If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
 locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
 
+const BUILDPACK_NAME: &str = "Heroku npm Engine Buildpack";
+
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
     Application(application::Error),
     BuildScript(CmdError),
+    Detect(std::io::Error),
     NpmInstall(CmdError),
     NpmSetCacheDir(CmdError),
     NpmVersion(npm::VersionError),
@@ -38,12 +41,13 @@ pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
 
 pub(crate) fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLogger>) {
     match error {
-        NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
+        NpmInstallBuildpackError::Application(e) => on_application_error(e, logger),
+        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(e, logger),
+        NpmInstallBuildpackError::Detect(e) => on_detect_error(e, logger),
+        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(e, logger),
         NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(e, logger),
         NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
-        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(e, logger),
-        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(e, logger),
-        NpmInstallBuildpackError::Application(e) => on_application_error(e, logger),
+        NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
     }
 }
 
@@ -69,12 +73,12 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     Error reading {package_json}.
 
                     The Node buildpack requires {package_json} to complete the build but the file \
-                    can’t be parsed. Check the formatting in your file. 
+                    can’t be parsed. Ensure {npm_install} runs locally to check the formatting in your file.
                     
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json")});
+                ", package_json = fmt::value("package.json"), npm_install = fmt::value("npm install") });
         }
     }
 }
@@ -103,19 +107,19 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
 
                     An unexpected error occurred while executing {npm_version}.  
                     
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-        
                     {SUBMIT_AN_ISSUE}
                 ", npm = fmt::value("npm"), npm_version = fmt::value(e.name()) });
         }
-        npm::VersionError::Parse(stdout) => {
-            logger.announce().error(&formatdoc! {"
-                Failed to parse {npm} version information.
-    
-                An unexpected error occurred while parsing version information from {output}. 
-                
-                {SUBMIT_AN_ISSUE}
-            ", npm = fmt::value("npm"), output = fmt::value(stdout) });
+        npm::VersionError::Parse(stdout, e) => {
+            print_error_details(logger, &e)
+                .announce()
+                .error(&formatdoc! {"
+                    Failed to parse {npm} version information.
+        
+                    An unexpected error occurred while parsing version information from {output}. 
+                    
+                    {SUBMIT_AN_ISSUE}
+                ", npm = fmt::value("npm"), output = fmt::value(stdout) });
         }
     }
 }
@@ -126,12 +130,14 @@ fn on_npm_install_error(error: CmdError, logger: Box<dyn StartedLogger>) {
         .error(&formatdoc! {"
             Failed to install Node modules.
 
-            An unexpected error occurred while executing {npm_install}. See the log output above for more information.
+            The {buildpack_name} uses the command {npm_install} to install your Node modules. This command \
+            failed and the buildpack cannot continue. See the log output above for more information.
 
-            This error can occur due to an unstable network connection. Retry your build.
+            This error can occur due to an unstable network connection. Ensure that this command runs locally \
+            without error and retry your build.
             
             If that doesn’t help, check the status of the upstream Node module repository service at https://status.npmjs.org/.
-        ", npm_install = fmt::value(error.name()) });
+        ", npm_install = fmt::value(error.name()), buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
 fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
@@ -140,14 +146,39 @@ fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
         .error(&formatdoc! {"
             Failed to execute build script.
 
+            The {buildpack_name} allows customization of the build process by executing the following scripts \
+            if they are defined in {package_json}:
+            - {heroku_prebuild} 
+            - {heroku_build} or {build} 
+            - {heroku_postbuild}
+
             An unexpected error occurred while executing {build_script}. See the log output above for more information.
-            
-            Run this command locally to verify that it works as expected.
-        ", build_script = fmt::value(error.name()) });
+
+            Ensure that this command runs locally without error and retry your build.
+        ",
+            build_script = fmt::value(error.name()),
+            buildpack_name = fmt::value(BUILDPACK_NAME),
+            package_json = fmt::value("package.json"),
+            heroku_prebuild = fmt::value("heroku-prebuild"),
+            heroku_build = fmt::value("heroku-build"),
+            build = fmt::value("build"),
+            heroku_postbuild = fmt::value("heroku-postbuild"),
+        });
 }
 
 fn on_application_error(error: application::Error, logger: Box<dyn StartedLogger>) {
     logger.announce().error(&error.to_string());
+}
+
+fn on_detect_error(error: std::io::Error, logger: Box<dyn StartedLogger>) {
+    print_error_details(logger, &error)
+        .announce()
+        .error(&formatdoc! {"
+            Unable to complete buildpack detection.
+
+            An unexpected error occurred while determining if the {buildpack_name} should be \
+            run for this application. See the log output above for more information. 
+        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
 fn on_framework_error(
@@ -157,7 +188,7 @@ fn on_framework_error(
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
-            {buildpack_name} internal buildpack error.
+            {buildpack_name} internal error.
 
             The framework used by this buildpack encountered an unexpected error.
             
@@ -167,7 +198,7 @@ fn on_framework_error(
             If the issue persists and you think you found a bug in the buildpack or framework, reproduce \
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
-        ", buildpack_name = fmt::value("Heroku npm Engine Buildpack") });
+        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
 fn print_error_details(

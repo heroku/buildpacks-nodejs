@@ -26,7 +26,7 @@ impl<'a> From<SetCacheConfig<'a>> for Command {
 #[derive(Debug)]
 pub(crate) enum VersionError {
     Command(CmdError),
-    Parse(String),
+    Parse(String, heroku_nodejs_utils::vrs::VersionError),
 }
 pub(crate) struct Version<'a> {
     pub(crate) env: &'a Env,
