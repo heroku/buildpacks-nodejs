@@ -14,8 +14,8 @@ const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
 
 const SUBMIT_AN_ISSUE: &str = "\
-If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
-locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
+If the issue persists and you think you found a bug in the buildpack then reproduce the issue \
+locally with a minimal example and open an issue in the buildpack's GitHub repository with the details.";
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
@@ -194,9 +194,7 @@ fn on_framework_error(
             If you can't deploy to Heroku due to this issue, check the official Heroku Status page at \
             status.heroku.com for any ongoing incidents. After all incidents resolve, retry your build.
 
-            If the issue persists and you think you found a bug in the buildpack or framework, reproduce \
-            the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
-            and include the details.
+            {SUBMIT_AN_ISSUE}
         ", buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
