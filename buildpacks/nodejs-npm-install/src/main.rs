@@ -24,6 +24,8 @@ use std::io::{stdout, Stdout};
 use std::path::Path;
 use std::process::Command;
 
+pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Install Buildpack";
+
 pub(crate) struct NpmInstallBuildpack;
 
 impl Buildpack for NpmInstallBuildpack {
@@ -55,7 +57,7 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let logger = BuildLog::new(stdout()).buildpack_name("Heroku npm Engine Buildpack");
+        let logger = BuildLog::new(stdout()).buildpack_name(BUILDPACK_NAME);
         let warn_later = WarnGuard::new(stdout());
         let env = Env::from_current();
         let app_dir = &context.app_dir;

@@ -11,7 +11,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn test_npm_install_with_lockfile() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "# Heroku npm Engine Buildpack");
+        assert_contains!(ctx.pack_stdout, "# Heroku Node.js npm Install Buildpack");
         assert_contains!(ctx.pack_stdout, "- Installing node modules");
         assert_contains!(ctx.pack_stdout, "- Using npm version `6.14.18`");
         assert_contains!(ctx.pack_stdout, "- Creating npm cache");

@@ -1,4 +1,5 @@
 use crate::npm;
+use crate::BUILDPACK_NAME;
 use commons::fun_run::CmdError;
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
 use commons::output::fmt;
@@ -15,8 +16,6 @@ Use the debug information above to troubleshoot and retry your build.";
 const SUBMIT_AN_ISSUE: &str = "\
 If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
 locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
-
-const BUILDPACK_NAME: &str = "Heroku npm Engine Buildpack";
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
