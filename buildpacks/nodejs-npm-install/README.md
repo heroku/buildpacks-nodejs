@@ -8,7 +8,7 @@ Heroku's official Cloud Native Buildpack for executing `npm install`.
 
 The buildpack will pass detection if:
  
-- A `package-lock.json` file is found at the root of the application source.
+- A `package.json` file is found at the root of the application source.
 
 ### Step 1: Configure npm cache
 
