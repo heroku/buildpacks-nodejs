@@ -58,7 +58,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                 .error(&formatdoc! {"
                     Error reading {package_json}.
 
-                    The Node buildpack requires {package_json} to complete the build but the file can’t be read. 
+                    This buildpack requires {package_json} to complete the build but the file can’t be read. 
                     
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
