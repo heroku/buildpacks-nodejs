@@ -55,6 +55,11 @@ id = "heroku/nodejs-engine"
 version = "1.1.7"
 
 [[order.group]]
+id = "heroku/nodejs-npm-engine"
+version = "1.1.7"
+optional = true
+
+[[order.group]]
 id = "heroku/nodejs-npm"
 version = "1.1.7"
 
