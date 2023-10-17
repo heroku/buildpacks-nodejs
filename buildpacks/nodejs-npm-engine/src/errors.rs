@@ -1,4 +1,5 @@
 use crate::layers::npm_engine::NpmEngineLayerError;
+use crate::BUILDPACK_NAME;
 use crate::{node, npm};
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
 use commons::output::fmt;
@@ -14,10 +15,8 @@ const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
 
 const SUBMIT_AN_ISSUE: &str = "\
-If the issue persists and you think you found a bug in the buildpack or framework, reproduce the issue \
-locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details.";
-
-const BUILDPACK_NAME: &str = "Heroku npm Engine Buildpack";
+If the issue persists and you think you found a bug in the buildpack then reproduce the issue \
+locally with a minimal example and open an issue in the buildpack's GitHub repository with the details.";
 
 #[derive(Debug)]
 pub(crate) enum NpmEngineBuildpackError {
@@ -62,7 +61,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                 .error(&formatdoc! {"
                     Error reading {package_json}.
 
-                    The Node buildpack requires {package_json} to complete the build but the file can’t be read. 
+                    This buildpack requires {package_json} to complete the build but the file can’t be read. 
                     
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
@@ -75,7 +74,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                 .error(&formatdoc! {"
                     Error reading {package_json}.
 
-                    The Node buildpack requires {package_json} to complete the build but the file \
+                    This buildpack requires {package_json} to complete the build but the file \
                     can’t be parsed. Ensure {npm_install} runs locally to check the formatting in your file. 
                     
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
@@ -123,7 +122,8 @@ fn on_npm_version_resolve_error(requirement: Requirement, logger: Box<dyn Starte
             
                 $ npm show 'npm@{requirement}' versions
     
-            Update the {engines_key} field in {package_json} to a published {npm} version.
+            Update the {engines_key} field in {package_json} to a single version or version range that \
+            includes a published {npm} version.
     
             {SUBMIT_AN_ISSUE}
         ",
@@ -153,8 +153,6 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
             print_error_details(logger, &e)
                 .announce()
                 .error(&formatdoc! {"
-                    Can’t open the downloaded {npm} package.
-
                     An unexpected error occurred while opening the downloaded {npm} package file. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
@@ -166,8 +164,6 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
             print_error_details(logger, &e)
                 .announce()
                 .error(&formatdoc! {"
-                    Can’t extract the downloaded {npm} package contents.
-
                     An unexpected error occurred while extracting the contents of the downloaded {npm} package file.
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
@@ -179,8 +175,6 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
             print_error_details(logger, &e)
                 .announce()
                 .error(&formatdoc! {"
-                    Can’t remove the existing {npm} installation.
-
                     An unexpected error occurred while removing the existing {npm} installation. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
@@ -192,8 +186,6 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
             print_error_details(logger, &e)
                 .announce()
                 .error(&formatdoc! {"
-                    Can’t install the downloaded {npm} installation.
-    
                     An unexpected error occurred while installing the downloaded {npm} package. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
@@ -266,7 +258,7 @@ fn on_framework_error(error: Error<NpmEngineBuildpackError>, logger: Box<dyn Sta
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
-            {buildpack_name} internal buildpack error.
+            {buildpack_name} internal error.
     
             The framework used by this buildpack encountered an unexpected error.
 

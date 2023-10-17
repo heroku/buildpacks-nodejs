@@ -21,6 +21,8 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use std::io::stdout;
 use std::process::Command;
 
+pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine Buildpack";
+
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 pub(crate) struct NpmEngineBuildpack;
