@@ -642,8 +642,6 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "chrono",
- "commons",
- "indoc",
  "node-semver",
  "opentelemetry",
  "opentelemetry-stdout",
@@ -676,7 +674,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "heroku-npm-install-buildpack"
+name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
@@ -687,9 +685,9 @@ dependencies = [
  "libherokubuildpack 0.15.0",
  "serde",
  "serde_json",
+ "tempfile",
  "test_support",
  "toml 0.8.2",
- "ureq",
 ]
 
 [[package]]
