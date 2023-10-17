@@ -133,7 +133,7 @@ fn on_npm_install_error(error: CmdError, logger: Box<dyn StartedLogger>) {
             failed and the buildpack cannot continue. See the log output above for more information.
 
             This error can occur due to an unstable network connection. Ensure that this command runs locally \
-            without error and retry your build.
+            without error (exit status = 0) and retry your build.
             
             If that doesn’t help, check the status of the upstream Node module repository service at https://status.npmjs.org/.
         ", npm_install = fmt::value(error.name()), buildpack_name = fmt::value(BUILDPACK_NAME) });
