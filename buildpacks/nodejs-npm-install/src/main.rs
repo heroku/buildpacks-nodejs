@@ -36,7 +36,7 @@ impl Buildpack for NpmInstallBuildpack {
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         let package_json_exists = context
             .app_dir
-            .join("package.json")
+            .join(PackageManager::Npm.lockfile())
             .try_exists()
             .map_err(NpmInstallBuildpackError::Detect)?;
 
@@ -63,14 +63,13 @@ impl Buildpack for NpmInstallBuildpack {
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
             .map_err(NpmInstallBuildpackError::PackageJson)?;
-        let with_lockfile = app_dir.join(PackageManager::Npm.lockfile()).exists();
 
         run_application_checks(app_dir, &warn_later)?;
 
         let section = logger.section("Installing node modules");
         log_npm_version(&env, section.as_ref())?;
         configure_npm_cache_layer(&context, &env, section.as_ref())?;
-        run_npm_install(&env, with_lockfile, section.as_ref())?;
+        run_npm_install(&env, section.as_ref())?;
         let logger = section.end_section();
 
         let section = logger.section("Running scripts");
@@ -143,10 +142,9 @@ fn configure_npm_cache_layer(
 
 fn run_npm_install(
     env: &Env,
-    with_lockfile: bool,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
-    let mut npm_install = Command::from(npm::Install { env, with_lockfile });
+    let mut npm_install = Command::from(npm::Install { env });
     log_step_stream(
         format!("Running {}", fmt::command(npm_install.name())),
         |stream| {

@@ -1,4 +1,3 @@
-use heroku_nodejs_utils::package_manager::PackageManager;
 use libcnb_test::{assert_contains, assert_not_contains};
 use serde_json::json;
 use std::path::Path;
@@ -26,38 +25,6 @@ fn test_npm_install_with_lockfile() {
             "- Skipping default web process (no start script defined)"
         );
     });
-}
-
-#[test]
-#[ignore = "integration test"]
-fn test_npm_install_with_no_lockfile() {
-    nodejs_integration_test_with_config(
-        "./fixtures/npm-project",
-        |config| {
-            config.app_dir_preprocessor(|app_dir| {
-                std::fs::remove_file(app_dir.join(PackageManager::Npm.lockfile())).unwrap();
-            });
-        },
-        |ctx| {
-            assert_contains!(ctx.pack_stdout, "# Heroku npm Engine Buildpack");
-            assert_contains!(ctx.pack_stdout, "- Installing node modules");
-            assert_contains!(ctx.pack_stdout, "- Using npm version `6.14.18`");
-            assert_contains!(ctx.pack_stdout, "- Creating npm cache");
-            assert_contains!(ctx.pack_stdout, "- Configuring npm cache directory");
-            assert_contains!(
-                ctx.pack_stdout,
-                "- Running `npm install --no-package-lock \"--production=false\"`"
-            );
-            assert_contains!(ctx.pack_stdout, "added 4 packages");
-            assert_contains!(ctx.pack_stdout, "- Running scripts");
-            assert_contains!(ctx.pack_stdout, "- No build scripts found");
-            assert_contains!(ctx.pack_stdout, "- Configuring default processes");
-            assert_contains!(
-                ctx.pack_stdout,
-                "- Skipping default web process (no start script defined)"
-            );
-        },
-    );
 }
 
 #[test]
