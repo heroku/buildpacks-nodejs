@@ -57,7 +57,7 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut logger = BuildLog::new(stdout()).buildpack_name("Heroku npm Engine Buildpack");
+        let mut logger = BuildLog::new(stdout()).buildpack_name(BUILDPACK_NAME);
         let env = Env::from_current();
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
