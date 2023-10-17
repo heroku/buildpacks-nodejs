@@ -60,7 +60,7 @@ version = "1.1.7"
 optional = true
 
 [[order.group]]
-id = "heroku/nodejs-npm"
+id = "heroku/nodejs-npm-install"
 version = "1.1.7"
 
 [[order.group]]

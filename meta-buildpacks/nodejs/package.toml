@@ -8,7 +8,7 @@ uri = "libcnb:heroku/nodejs-engine"
 uri = "libcnb:heroku/nodejs-npm-engine"
 
 [[dependencies]]
-uri = "../../buildpacks/npm"
+uri = "libcnb:heroku/nodejs-npm-install"
 
 [[dependencies]]
 uri = "libcnb:heroku/nodejs-pnpm-install"
