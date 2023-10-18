@@ -1,9 +1,7 @@
 #![warn(clippy::pedantic)]
 
 use libcnb_test::assert_contains;
-use test_support::{
-    nodejs_integration_test, nodejs_integration_test_with_config, set_package_manager,
-};
+use test_support::{nodejs_integration_test_with_config, set_package_manager};
 
 #[test]
 #[ignore = "integration test"]
