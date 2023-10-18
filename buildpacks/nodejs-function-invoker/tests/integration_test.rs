@@ -11,7 +11,7 @@ use test_support::{
 #[test]
 #[ignore]
 fn simple_javascript_function() {
-    function_integration_test("../../../test/fixtures/simple-function", |ctx| {
+    function_integration_test("./fixtures/simple-function", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
         start_container(&ctx, |container, socket_addr| {
             assert_health_check_responds(socket_addr);
@@ -27,7 +27,7 @@ fn simple_javascript_function() {
 #[test]
 #[ignore]
 fn simple_typescript_function() {
-    function_integration_test("../../../test/fixtures/simple-typescript-function", |ctx| {
+    function_integration_test("./fixtures/simple-typescript-function", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
         start_container(&ctx, |_container, socket_addr| {
             assert_health_check_responds(socket_addr);
@@ -44,65 +44,53 @@ fn simple_typescript_function() {
 #[test]
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_js() {
-    function_integration_test(
-        "../../../test/fixtures/functions/with-explicit-runtime-dependency-js",
-        |ctx| {
-            assert_contains!(
-                ctx.pack_stdout,
-                "Node.js function runtime declared in package.json"
-            );
-            assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
-            start_container_and_assert_health_check_responds(&ctx);
-        },
-    );
+    function_integration_test("./fixtures/with-explicit-runtime-dependency-js", |ctx| {
+        assert_contains!(
+            ctx.pack_stdout,
+            "Node.js function runtime declared in package.json"
+        );
+        assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        start_container_and_assert_health_check_responds(&ctx);
+    });
 }
 
 #[test]
 #[ignore]
 fn test_function_with_explicit_runtime_dependency_ts() {
-    function_integration_test(
-        "../../../test/fixtures/functions/with-explicit-runtime-dependency-ts",
-        |ctx| {
-            assert_contains!(
-                ctx.pack_stdout,
-                "Node.js function runtime declared in package.json"
-            );
-            assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
-            start_container_and_assert_health_check_responds(&ctx);
-        },
-    );
+    function_integration_test("./fixtures/with-explicit-runtime-dependency-ts", |ctx| {
+        assert_contains!(
+            ctx.pack_stdout,
+            "Node.js function runtime declared in package.json"
+        );
+        assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        start_container_and_assert_health_check_responds(&ctx);
+    });
 }
 
 #[test]
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_js() {
-    function_integration_test(
-        "../../../test/fixtures/functions/with-implicit-runtime-dependency-js",
-        |ctx| {
-            assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
-            assert_not_contains!(
-                ctx.pack_stdout,
-                "Node.js function runtime declared in package.json"
-            );
-            start_container_and_assert_health_check_responds(&ctx);
-        },
-    );
+    function_integration_test("./fixtures/with-implicit-runtime-dependency-js", |ctx| {
+        assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        assert_not_contains!(
+            ctx.pack_stdout,
+            "Node.js function runtime declared in package.json"
+        );
+        start_container_and_assert_health_check_responds(&ctx);
+    });
 }
 
 #[test]
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_ts() {
-    function_integration_test(
-        "../../../test/fixtures/functions/with-implicit-runtime-dependency-ts",
-        |ctx| {
-            assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
-            assert_not_contains!(
-                ctx.pack_stdout,
-                "Node.js function runtime declared in package.json"
-            );
-            start_container_and_assert_health_check_responds(&ctx);
-        },
-    );
+    function_integration_test("./fixtures/with-implicit-runtime-dependency-ts", |ctx| {
+        assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        assert_not_contains!(
+            ctx.pack_stdout,
+            "Node.js function runtime declared in package.json"
+        );
+        start_container_and_assert_health_check_responds(&ctx);
+    });
 }
 
 fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> serde_json::Value {

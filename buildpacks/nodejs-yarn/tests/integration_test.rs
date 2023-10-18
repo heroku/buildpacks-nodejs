@@ -6,7 +6,7 @@ use test_support::{assert_web_response, nodejs_integration_test};
 #[test]
 #[ignore = "integration test"]
 fn yarn_1_typescript() {
-    nodejs_integration_test("../../../test/fixtures/yarn-1-typescript", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-1-typescript", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node");
         assert_contains!(ctx.pack_stdout, "Installing yarn CLI");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
@@ -25,7 +25,7 @@ fn yarn_1_typescript() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_2_pnp_zero() {
-    nodejs_integration_test("../../../test/fixtures/yarn-2-pnp-zero", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing Node");
         assert_contains!(ctx.pack_stdout, "Installing yarn 2.4.1 via corepack");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
@@ -52,7 +52,7 @@ fn yarn_2_pnp_zero() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_2_modules_nonzero() {
-    nodejs_integration_test("../../../test/fixtures/yarn-2-modules-nonzero", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
@@ -71,7 +71,7 @@ fn yarn_2_modules_nonzero() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_3_pnp_nonzero() {
-    nodejs_integration_test("../../../test/fixtures/yarn-3-pnp-nonzero", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
@@ -90,7 +90,7 @@ fn yarn_3_pnp_nonzero() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_3_modules_zero() {
-    nodejs_integration_test("../../../test/fixtures/yarn-3-modules-zero", |ctx| {
+    nodejs_integration_test("./fixtures/yarn-3-modules-zero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
