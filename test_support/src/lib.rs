@@ -138,6 +138,26 @@ pub fn set_package_manager(app_dir: &Path, package_manager: &str) {
     });
 }
 
+pub fn add_package_json_dependency(app_dir: &Path, package_name: &str, package_version: &str) {
+    update_package_json(app_dir, |json| {
+        let dependencies = json["dependencies"].as_object_mut().unwrap();
+        dependencies.insert(
+            package_name.to_string(),
+            serde_json::Value::String(package_version.to_string()),
+        );
+    });
+}
+
+pub fn add_build_script(app_dir: &Path, script: &str) {
+    update_package_json(app_dir, |json| {
+        let scripts = json["scripts"].as_object_mut().unwrap();
+        scripts.insert(
+            script.to_string(),
+            serde_json::Value::String(format!("echo 'executed {script}'")),
+        );
+    });
+}
+
 pub fn update_package_json(
     app_dir: &Path,
     update: impl FnOnce(&mut serde_json::Map<String, serde_json::Value>),

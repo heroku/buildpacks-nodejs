@@ -1,19 +1,28 @@
 version: 2
 updates:
-  - package-ecosystem: "bundler"
-    directory: "/"
-    schedule:
-      interval: "monthly"
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "dependencies"
+      - "rust"
+      - "skip changelog"
     groups:
+      # Note: The group order matters, since updates are assigned to the first matching group.
       libcnb:
         patterns:
           - "libcnb*"
           - "libherokubuildpack"
+      rust-dependencies:
+        update-types:
+          - "minor"
+          - "patch"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    labels:
+      - "dependencies"
+      - "github actions"
+      - "skip changelog"

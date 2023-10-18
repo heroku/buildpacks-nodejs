@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, assert_not_contains};
+use libcnb_test::assert_contains;
 use test_support::{
     assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
     set_node_engine,
@@ -46,38 +46,4 @@ fn reinstalls_node_if_version_changes() {
             });
         },
     );
-}
-
-// TODO: move this test & fixture to the npm buildpack once that is ready
-#[test]
-#[ignore]
-fn npm_project_with_no_lockfile() {
-    nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node");
-        assert_contains!(ctx.pack_stdout, "Installing node modules");
-
-        assert_not_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_not_contains!(ctx.pack_stdout, "Installing node modules from ./yarn.lock");
-        assert_not_contains!(
-            ctx.pack_stdout,
-            "Installing node modules from ./package-lock.json"
-        );
-    });
-}
-
-// TODO: move this test & fixture to the npm buildpack once that is ready
-#[test]
-#[ignore]
-fn npm_project_with_lockfile() {
-    nodejs_integration_test("./fixtures/npm-project-with-lockfile", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node");
-        assert_contains!(ctx.pack_stdout, "Installing node modules");
-        assert_contains!(
-            ctx.pack_stdout,
-            "Installing node modules from ./package-lock.json"
-        );
-
-        assert_not_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_not_contains!(ctx.pack_stdout, "Installing node modules from ./yarn.lock");
-    });
 }
