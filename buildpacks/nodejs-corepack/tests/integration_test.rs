@@ -1,7 +1,9 @@
 #![warn(clippy::pedantic)]
 
 use libcnb_test::assert_contains;
-use test_support::{nodejs_integration_test_with_config, set_package_manager};
+use test_support::{
+    nodejs_integration_test, nodejs_integration_test_with_config, set_package_manager,
+};
 
 #[test]
 #[ignore = "integration test"]
@@ -83,6 +85,52 @@ fn corepack_pnpm_8() {
             assert_contains!(ctx.pack_stdout, "Preparing pnpm@8.4.0");
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "8.4.0");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn corepack_npm_8() {
+    nodejs_integration_test_with_config(
+        "./fixtures/corepack-template",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_package_manager(&app_dir, "npm@8.19.4");
+                std::fs::rename(
+                    app_dir.join("package-lock.v8.json"),
+                    app_dir.join("package-lock.json"),
+                )
+                .unwrap();
+            });
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "Preparing npm@8.19.4");
+            let output = ctx.run_shell_command("npm --version");
+            assert_contains!(output.stdout, "8.19.4");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn corepack_npm_10() {
+    nodejs_integration_test_with_config(
+        "./fixtures/corepack-template",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_package_manager(&app_dir, "npm@10.2.0");
+                std::fs::rename(
+                    app_dir.join("package-lock.v10.json"),
+                    app_dir.join("package-lock.json"),
+                )
+                .unwrap();
+            });
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "Preparing npm@10.2.0");
+            let output = ctx.run_shell_command("npm --version");
+            assert_contains!(output.stdout, "10.2.0");
         },
     );
 }
