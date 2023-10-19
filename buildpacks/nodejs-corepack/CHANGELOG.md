@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add support for using corepack to install npm ([#685](https://github.com/heroku/buildpacks-nodejs/pull/685))
+
 ## [1.1.7] - 2023-10-17
 
 - No changes.
