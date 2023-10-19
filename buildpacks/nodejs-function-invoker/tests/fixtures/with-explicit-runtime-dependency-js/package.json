@@ -9,7 +9,7 @@
     "type": "git"
   },
   "engines": {
-    "node": "^14.0"
+    "node": "^20.0"
   },
   "dependencies": {
     "@heroku/sf-fx-runtime-nodejs": "latest"
