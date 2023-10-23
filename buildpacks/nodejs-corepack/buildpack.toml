@@ -12,13 +12,7 @@ keywords = ["corepack", "heroku"]
 type = "MIT"
 
 [[stacks]]
-id = "heroku-20"
-
-[[stacks]]
-id = "heroku-22"
-
-[[stacks]]
-id = "io.buildpacks.stacks.bionic"
+id = "*"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-corepack" }

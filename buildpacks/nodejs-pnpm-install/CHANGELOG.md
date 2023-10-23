@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated buildpack description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
 
+### Removed
+
+- Removed redundant explicitly named supported stacks. ([#693](https://github.com/heroku/buildpacks-nodejs/pull/693))
+
 ## [1.1.7] - 2023-10-17
 
 - No changes.
