@@ -3,9 +3,10 @@ api = "0.9"
 [buildpack]
 id = "heroku/nodejs-npm-install"
 version = "1.1.7"
-name = "Heroku Node.js npm Install Buildpack"
+name = "Heroku Node.js npm Install"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["node", "node.js", "nodejs", "javascript", "js", "npm", "install"]
+description = "Heroku's Node.js npm install buildpack. A component of the 'heroku/nodejs' buildpack."
+keywords = ["npm", "heroku"]
 
 [[buildpack.licenses]]
 type = "MIT"
@@ -13,7 +14,5 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
-[metadata]
 [metadata.release]
-[metadata.release.image]
-repository = "docker.io/heroku/buildpack-nodejs-npm-install"
+image = { repository = "docker.io/heroku/buildpack-nodejs-npm-install" }
