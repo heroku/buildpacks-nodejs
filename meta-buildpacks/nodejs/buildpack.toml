@@ -3,8 +3,10 @@ api = "0.9"
 [buildpack]
 id = "heroku/nodejs"
 version = "1.1.7"
-name = "Node.js"
+name = "Heroku Node.js"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
+description = "Heroku's buildpack for Node.js applications."
+keywords = ["node.js", "nodejs", "javascript", "npm", "yarn", "pnpm", "heroku"]
 
 [[buildpack.licenses]]
 type = "MIT"
@@ -73,7 +75,5 @@ id = "heroku/procfile"
 version = "2.0.1"
 optional = true
 
-[metadata]
 [metadata.release]
-[metadata.release.image]
-repository = "docker.io/heroku/buildpack-nodejs"
+image = { repository = "docker.io/heroku/buildpack-nodejs" }
