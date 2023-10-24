@@ -218,7 +218,7 @@ dependencies = [
 [[package]]
 name = "commons"
 version = "0.1.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=schneems/logging-state-machine-continued#7c85b5e586366f0fff99e16a2db582ecf5ca931a"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=schneems/logging-state-machine-continued#bf253a115546d106caae13c5358be05ec999d5ba"
 dependencies = [
  "ascii_table",
  "byte-unit",
