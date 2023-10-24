@@ -70,8 +70,8 @@ fn yarn_2_modules_nonzero() {
 
 #[test]
 #[ignore = "integration test"]
-fn yarn_3_pnp_nonzero() {
-    nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
+fn yarn_4_pnp_nonzero() {
+    nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
@@ -83,7 +83,7 @@ fn yarn_3_pnp_nonzero() {
         assert_contains!(ctx.pack_stdout, "Fetch step");
         assert_contains!(ctx.pack_stdout, "Link step");
         assert_contains!(ctx.pack_stdout, "Completed");
-        assert_web_response(&ctx, "yarn-3-pnp-nonzero");
+        assert_web_response(&ctx, "yarn-4-pnp-nonzero");
     });
 }
 
