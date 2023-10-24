@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added Yarn version 4.0.0.
 ### Changed
 
 - Updated buildpack description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
