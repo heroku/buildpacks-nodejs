@@ -14,14 +14,5 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
-[[stacks]]
-id = "heroku-20"
-
-[[stacks]]
-id = "heroku-22"
-
-[[stacks]]
-id = "io.buildpacks.stacks.bionic"
-
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-yarn" }
