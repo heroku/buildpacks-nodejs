@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `heroku/nodejs-npm-engine` ([#686](https://github.com/heroku/buildpacks-nodejs/pull/686))
+- Added `heroku/nodejs-npm-install` ([#686](https://github.com/heroku/buildpacks-nodejs/pull/686))
+
+### Removed
+
+- Removed `heroku/nodejs-npm` ([#686](https://github.com/heroku/buildpacks-nodejs/pull/686))
+
 ### Changed
 
 - Updated buildpack display name and description. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))

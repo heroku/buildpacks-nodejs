@@ -9,7 +9,7 @@
     "type": "git"
   },
   "engines": {
-    "node": "^14.0"
+    "node": "^18.0"
   },
   "scripts": {
     "build": "npx tsc",
@@ -17,7 +17,7 @@
     "test": "mocha"
   },
   "devDependencies": {
-    "@types/node": "^14.0",
+    "@types/node": "^18.0",
     "sf-fx-sdk-nodejs": "latest"
   },
   "dependencies": {
