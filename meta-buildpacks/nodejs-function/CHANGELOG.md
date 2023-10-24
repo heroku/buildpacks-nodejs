@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2023-10-24
+
 ### Added
 
 - Added `heroku/nodejs-npm-engine` ([#686](https://github.com/heroku/buildpacks-nodejs/pull/686))
@@ -19,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated buildpack display name and description. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
+- Updated `heroku/nodejs-engine` to `2.0.0`.
+- Updated `heroku/nodejs-function-invoker` to `2.0.0`.
+- Updated `heroku/nodejs-npm-engine` to `2.0.0`.
+- Updated `heroku/nodejs-npm-install` to `2.0.0`.
 
 ## [1.1.7] - 2023-10-17
 
@@ -302,7 +308,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Switch from the Riff based invoker buildpacks to `heroku/nodejs-function` ([#48](https://github.com/heroku/buildpacks-node/pull/48))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.7...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...HEAD
+[2.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.7...v2.0.0
 [1.1.7]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.4...v1.1.5
