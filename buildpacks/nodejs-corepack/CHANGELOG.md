@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added support for using corepack to install npm. ([#685](https://github.com/heroku/buildpacks-nodejs/pull/685))
+
+### Changed
+
+- Updated buildpack description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
+- Switched from supporting explicitly named stacks to supporting the wildcard stack. ([#693](https://github.com/heroku/buildpacks-nodejs/pull/693))
+
 ## [1.1.7] - 2023-10-17
 
 - No changes.

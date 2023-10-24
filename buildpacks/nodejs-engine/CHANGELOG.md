@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added Node.js version 21.0.0.
+
+### Changed
+
+- Updated buildpack description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
+
+### Removed
+
+- Dropped support for the end of life `io.buildpacks.stacks.bionic` stack. ([#693](https://github.com/heroku/buildpacks-nodejs/pull/693))
+
 ## [1.1.7] - 2023-10-17
 
 - Added Node.js version 20.8.1.

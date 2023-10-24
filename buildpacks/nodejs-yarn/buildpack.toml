@@ -5,7 +5,8 @@ id = "heroku/nodejs-yarn"
 version = "1.1.7"
 name = "Heroku Node.js Yarn"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["node", "node.js", "nodejs", "javascript", "js", "yarn", "yarnpkg"]
+description = "Heroku's Node.js Yarn buildpack. A component of the 'heroku/nodejs' buildpack."
+keywords = ["yarn", "heroku"]
 
 [[buildpack.licenses]]
 type = "MIT"
@@ -13,16 +14,5 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
-[[stacks]]
-id = "heroku-20"
-
-[[stacks]]
-id = "heroku-22"
-
-[[stacks]]
-id = "io.buildpacks.stacks.bionic"
-
-[metadata]
 [metadata.release]
-[metadata.release.image]
-repository = "docker.io/heroku/buildpack-nodejs-yarn"
+image = { repository = "docker.io/heroku/buildpack-nodejs-yarn" }

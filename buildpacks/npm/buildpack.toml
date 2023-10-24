@@ -3,9 +3,9 @@ api = "0.6"
 [buildpack]
 id = "heroku/nodejs-npm"
 version = "1.1.7"
-name = "NPM Buildpack"
+name = "Heroku Node.js npm (DEPRECATED)"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
-keywords = ["nodejs", "node", "npm"]
+description = "[DEPRECATED] Heroku's Node.js npm buildpack. Replaced by the 'heroku/nodejs-npm-engine' and 'heroku/nodejs-npm-install' buildpacks."
 
 [[buildpack.licenses]]
 type = "MIT"
@@ -13,16 +13,5 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
-[[stacks]]
-id = "heroku-20"
-
-[[stacks]]
-id = "heroku-22"
-
-[[stacks]]
-id = "io.buildpacks.stacks.bionic"
-
-[metadata]
 [metadata.release]
-[metadata.release.image]
-repository = "docker.io/heroku/buildpack-nodejs-npm"
+image = { repository = "docker.io/heroku/buildpack-nodejs-npm" }
