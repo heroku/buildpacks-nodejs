@@ -16,7 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated buildpack display name, description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
-- 
 ### Removed
 
 - Removed the deprecated `heroku/nodejs-npm` from the buildpack group for npm support ([#625](https://github.com/heroku/buildpacks-nodejs/pull/625))
