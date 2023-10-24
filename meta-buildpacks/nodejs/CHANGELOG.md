@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated buildpack display name, description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
 
+### Removed
+
+- Removed `heroku/procfile`, since it's being added directly to the Heroku builder images instead. If you override the Heroku builder images' default buildpack detection order (or use this buildpack with a non-Heroku builder image), you will need to append `heroku/procfile` to your buildpacks list. ([#696](https://github.com/heroku/buildpacks-node/pull/696))
+
 ## [1.1.7] - 2023-10-17
 
 ### Changed
