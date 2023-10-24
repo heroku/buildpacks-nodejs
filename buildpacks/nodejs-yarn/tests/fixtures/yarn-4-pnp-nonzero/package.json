@@ -1,7 +1,7 @@
 {
-  "name": "yarn-3-modules-nonzero",
+  "name": "yarn-4-modules-nonzero",
   "version": "1.0.0",
-  "packageManager": "yarn@3.2.0",
+  "packageManager": "yarn@4.0.0",
   "scripts": {
     "start": "node server.js"
   },
