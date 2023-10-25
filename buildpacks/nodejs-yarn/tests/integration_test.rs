@@ -132,6 +132,7 @@ fn yarn_4_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-4-modules-zero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_not_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
         assert_contains!(
             ctx.pack_stdout,
             "Successfully set enableGlobalCache to false"
