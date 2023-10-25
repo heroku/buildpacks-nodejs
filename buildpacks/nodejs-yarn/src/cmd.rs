@@ -82,11 +82,11 @@ pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> 
 }
 
 /// Execute `yarn config set enableGlobalCache false`. This setting is
-/// only available on yarn >= 2. If set to true, the `cacheFolder` setting
+/// only available on yarn >= 2. If set to `true`, the `cacheFolder` setting
 /// will be ignored, and cached dependencies will be stored in the global
-/// yarn cache (/home/heroku/.yarn/cache by default), which isn't persisted
-/// into the final image. Yarn 2.x and 3.x default this value to false. Yarn 4.x
-/// defaults this value to true.
+/// Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
+/// persisted into the build cache or the final image. Yarn 2.x and 3.x have
+/// a default value to `false`. Yarn 4.x has a default value of `true`.
 pub(crate) fn yarn_disable_global_cache(yarn_line: &Yarn, env: &Env) -> Result<(), Error> {
     if yarn_line == &Yarn::Yarn1 {
         return Ok(());
