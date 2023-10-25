@@ -112,6 +112,10 @@ fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
         assert_contains!(ctx.pack_stdout, "Installing yarn");
         assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(
+            ctx.pack_stdout,
+            "Successfully set enableGlobalCache to false"
+        );
         assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
         assert_contains!(ctx.pack_stdout, "Resolution step");
         assert_contains!(ctx.pack_stdout, "Fetch step");
@@ -119,5 +123,24 @@ fn yarn_4_pnp_nonzero() {
         assert_contains!(ctx.pack_stdout, "Link step");
         assert_contains!(ctx.pack_stdout, "Completed");
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn yarn_4_modules_zero() {
+    nodejs_integration_test("./fixtures/yarn-4-modules-zero", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing yarn");
+        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(
+            ctx.pack_stdout,
+            "Successfully set enableGlobalCache to false"
+        );
+        assert_contains!(ctx.pack_stdout, "Resolution step");
+        assert_contains!(ctx.pack_stdout, "Fetch step");
+        assert_not_contains!(ctx.pack_stdout, "packages were added to the project");
+        assert_contains!(ctx.pack_stdout, "Link step");
+        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_web_response(&ctx, "yarn-4-modules-zero");
     });
 }

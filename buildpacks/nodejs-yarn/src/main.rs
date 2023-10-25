@@ -121,11 +121,11 @@ impl Buildpack for YarnBuildpack {
         log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
         log_header("Setting up yarn dependency cache");
+        cmd::yarn_disable_global_cache(&yarn, &env)
+            .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
-        cmd::yarn_disable_global_cache(&yarn, &env)
-            .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
         } else {
