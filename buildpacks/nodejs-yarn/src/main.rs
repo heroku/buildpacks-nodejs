@@ -124,6 +124,8 @@ impl Buildpack for YarnBuildpack {
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
+        cmd::yarn_disable_global_cache(&yarn, &env)
+            .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
         } else {
@@ -184,7 +186,9 @@ impl Buildpack for YarnBuildpack {
                     YarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    YarnBuildpackError::YarnCacheSet(_) | YarnBuildpackError::YarnCacheGet(_) => {
+                    YarnBuildpackError::YarnCacheSet(_)
+                    | YarnBuildpackError::YarnCacheGet(_)
+                    | YarnBuildpackError::YarnDisableGlobalCache(_) => {
                         log_error("Yarn cache error", err_string);
                     }
                     YarnBuildpackError::YarnInstall(_) => {
@@ -221,6 +225,8 @@ pub(crate) enum YarnBuildpackError {
     YarnCacheGet(cmd::Error),
     #[error("Couldn't set yarn cache folder: {0}")]
     YarnCacheSet(cmd::Error),
+    #[error("Couldn't disable yarn global cache: {0}")]
+    YarnDisableGlobalCache(cmd::Error),
     #[error("Yarn install error: {0}")]
     YarnInstall(cmd::Error),
     #[error("Couldn't determine yarn version: {0}")]

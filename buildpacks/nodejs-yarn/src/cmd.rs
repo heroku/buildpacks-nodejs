@@ -81,6 +81,25 @@ pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> 
     status.success().then_some(()).ok_or(Error::Exit(status))
 }
 
+/// Execute `yarn config set enableGlobalCache false`. This setting is
+/// only available on yarn >= 2. If set to true, the `cacheFolder` setting
+/// will be ignored, and cached dependencies will be stored in the global
+/// yarn cache (/home/heroku/.yarn/cache by default), which isn't persisted
+/// into the final image. Yarn 2.x and 3.x default this value to false. Yarn 4.x
+/// defaults this value to true.
+pub(crate) fn yarn_disable_global_cache(yarn_line: &Yarn, env: &Env) -> Result<(), Error> {
+    if yarn_line == &Yarn::Yarn1 {
+        return Ok(());
+    }
+    let mut process = Command::new("yarn")
+        .args(["config", "set", "enableGlobalCache", "false"])
+        .envs(env)
+        .spawn()
+        .map_err(Error::Spawn)?;
+    let status = process.wait().map_err(Error::Wait)?;
+    status.success().then_some(()).ok_or(Error::Exit(status))
+}
+
 /// Execute `yarn install` to install dependencies for a yarn project.
 pub(crate) fn yarn_install(
     yarn_line: &Yarn,
