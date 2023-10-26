@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Relax detection to use `package.json` instead of `package-lock.json`. 
+- Relax detection to use `package.json` instead of `package-lock.json`. ([#705](https://github.com/heroku/buildpacks-nodejs/pull/705))
+
+## [2.1.0] - 2023-10-26
+
+- No changes.
 
 ## [2.0.0] - 2023-10-24
 
@@ -15,5 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v2.0.0
