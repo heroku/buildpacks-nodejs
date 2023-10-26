@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn test_cache_unpopulated() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("./tests/fixtures/yarn-3-pnp-nonzero/.yarn/cache");
+            .join("./tests/fixtures/yarn-4-pnp-nonzero/.yarn/cache");
         assert!(
             !cache_populated(&path),
             "Expected non-zero-install app to have an unpopulated cache"

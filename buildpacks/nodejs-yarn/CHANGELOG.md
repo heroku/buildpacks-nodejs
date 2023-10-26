@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for Yarn 4. ([#698](https://github.com/heroku/buildpacks-nodejs/pull/698)
+
+### Changed
+
+- Now sets `enableGlobalCache` to `false` for Yarn 2+ builds. ([#698](https://github.com/heroku/buildpacks-nodejs/pull/698))
+
 ## [2.0.0] - 2023-10-24
 
 ### Changed
