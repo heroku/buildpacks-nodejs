@@ -151,6 +151,7 @@ install_modules() {
 			npm install --production=false
 		fi
 	else
+	  warning "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git."
 		info "Installing node modules"
 		npm install --production=false --no-package-lock
 	fi

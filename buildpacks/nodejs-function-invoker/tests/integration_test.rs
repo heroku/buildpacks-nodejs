@@ -93,6 +93,23 @@ fn test_function_with_implicit_runtime_dependency_ts() {
     });
 }
 
+#[test]
+#[ignore]
+fn function_with_no_lockfile() {
+    function_integration_test("./fixtures/function-with-no-lockfile", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stdout, "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git.");
+        start_container(&ctx, |container, socket_addr| {
+            assert_health_check_responds(socket_addr);
+            let payload = serde_json::json!({});
+            let result = invoke_function(socket_addr, &payload);
+            assert_eq!(result, serde_json::Value::String("hello world".to_string()));
+            let container_logs = container.logs_now();
+            assert_contains!(container_logs.stdout, "logging info is a fun 1");
+        });
+    });
+}
+
 fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> serde_json::Value {
     let id = format!("MyFunction-{}", random_hex_string(10));
 
