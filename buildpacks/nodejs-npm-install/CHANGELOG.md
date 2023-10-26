@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Relax detection to use `package.json` instead of `package-lock.json`. 
+
 ## [2.0.0] - 2023-10-24
 
 ### Added

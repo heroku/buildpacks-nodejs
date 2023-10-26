@@ -8,7 +8,7 @@ Heroku's official Cloud Native Buildpack for executing `npm install`.
 
 The buildpack will pass detection if:
  
-- A `package-lock.json` file is found at the root of the application source.
+- A `package.json` file is found at the root of the application source.
 
 ### Step 1: Configure npm cache
 
@@ -17,7 +17,12 @@ this cache speed up installs.
 
 ### Step 2: Install Node modules
 
-Node modules are installed by executing `npm ci --production=false`.
+Node modules are installed by executing `npm ci --production=false`. 
+
+> [!NOTE]
+> If no `package-lock.json` file is present the Node modules will be installed by 
+> executing `npm install --no-lockfile --production=false`. This is not recommended
+> and will be deprecated.
 
 ### Step 3: Execute build scripts
 
