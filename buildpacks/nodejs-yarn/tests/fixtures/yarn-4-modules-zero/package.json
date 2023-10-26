@@ -1,0 +1,14 @@
+{
+  "name": "yarn-4-modules-zero",
+  "engines": {
+    "node": "18.x",
+    "yarn": "4.x"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "packageManager": "yarn@4.0.0",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
