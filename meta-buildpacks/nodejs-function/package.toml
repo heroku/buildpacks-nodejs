@@ -5,10 +5,7 @@ uri = "."
 uri = "libcnb:heroku/nodejs-engine"
 
 [[dependencies]]
-uri = "libcnb:heroku/nodejs-npm-engine"
-
-[[dependencies]]
-uri = "libcnb:heroku/nodejs-npm-install"
+uri = "../../buildpacks/npm"
 
 [[dependencies]]
 uri = "libcnb:heroku/nodejs-function-invoker"
