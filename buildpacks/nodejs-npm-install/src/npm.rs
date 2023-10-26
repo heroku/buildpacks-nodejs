@@ -43,12 +43,17 @@ impl<'a> From<Version<'a>> for Command {
 
 pub(crate) struct Install<'a> {
     pub(crate) env: &'a Env,
+    pub(crate) has_lockfile: bool,
 }
 
 impl<'a> From<Install<'a>> for Command {
     fn from(value: Install<'a>) -> Self {
         let mut cmd = Command::new("npm");
-        cmd.arg("ci");
+        if value.has_lockfile {
+            cmd.arg("ci");
+        } else {
+            cmd.args(["install", "--no-package-lock"]);
+        }
         cmd.arg("--production=false");
         cmd.envs(value.env);
         cmd

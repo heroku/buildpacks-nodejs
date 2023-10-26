@@ -7,12 +7,13 @@ use crate::layers::npm_cache::NpmCacheLayer;
 use commons::fun_run::CommandWithName;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
-use commons::output::section_log::{log_step, log_step_stream};
+use commons::output::section_log::{log_step, log_step_stream, log_warning_later};
 use commons::output::warn_later::WarnGuard;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
+use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -34,9 +35,11 @@ impl Buildpack for NpmInstallBuildpack {
     type Error = NpmInstallBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
+        // this should check for package-lock.json but relaxing this restriction temporarily
+        // for Functions use cases
         let package_json_exists = context
             .app_dir
-            .join(PackageManager::Npm.lockfile())
+            .join("package.json")
             .try_exists()
             .map_err(NpmInstallBuildpackError::Detect)?;
 
@@ -63,13 +66,24 @@ impl Buildpack for NpmInstallBuildpack {
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
             .map_err(NpmInstallBuildpackError::PackageJson)?;
+        let has_lockfile = app_dir.join(PackageManager::Npm.lockfile()).exists();
 
         run_application_checks(app_dir, &warn_later)?;
+        if !has_lockfile {
+            log_warning_later(formatdoc! {"
+                This application is missing the npm lockfile ({package_lock_json}). Without a lockfile dependencies may unexpectedly 
+                change during deployment when `npm install` runs.
+
+                To avoid this:
+                - run {npm_install} locally to generate a fresh lockfile
+                - commit {package_lock_json} to git
+            " , npm_install = fmt::value("npm install"), package_lock_json = fmt::value(PackageManager::Npm.lockfile().display().to_string()) });
+        }
 
         let section = logger.section("Installing node modules");
         log_npm_version(&env, section.as_ref())?;
         configure_npm_cache_layer(&context, &env, section.as_ref())?;
-        run_npm_install(&env, section.as_ref())?;
+        run_npm_install(&env, has_lockfile, section.as_ref())?;
         let logger = section.end_section();
 
         let section = logger.section("Running scripts");
@@ -142,9 +156,10 @@ fn configure_npm_cache_layer(
 
 fn run_npm_install(
     env: &Env,
+    has_lockfile: bool,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
-    let mut npm_install = Command::from(npm::Install { env });
+    let mut npm_install = Command::from(npm::Install { env, has_lockfile });
     log_step_stream(
         format!("Running {}", fmt::command(npm_install.name())),
         |stream| {
