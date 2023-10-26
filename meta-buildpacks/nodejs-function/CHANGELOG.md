@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Rolled back the changes from [#686](https://github.com/heroku/buildpacks-nodejs/pull/686) to restore the previous npm buildpack due to issues with the detect requirement of `package-lock.json`.
+
 ## [2.0.0] - 2023-10-24
 
 ### Added
