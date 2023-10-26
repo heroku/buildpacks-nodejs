@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs-function"
-version = "2.0.0"
+version = "2.1.0"
 name = "Salesforce Node.js Function"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Salesforce's buildpack for Node.js Functions."
@@ -14,20 +14,20 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.0.0"
+version = "2.1.0"
 
 [[order.group]]
 id = "heroku/nodejs-npm-engine"
-version = "2.0.0"
+version = "2.1.0"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-npm-install"
-version = "2.0.0"
+version = "2.1.0"
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
-version = "2.0.0"
+version = "2.1.0"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-function" }
