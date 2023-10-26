@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Support for Yarn 4. ([#698](https://github.com/heroku/buildpacks-nodejs/pull/698)
+- Added Yarn version 4.0.0. ([#702](https://github.com/heroku/buildpacks-nodejs/pull/702))
 
 ### Changed
 
