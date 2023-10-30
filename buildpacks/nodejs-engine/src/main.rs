@@ -30,6 +30,8 @@ mod layers;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
+const LTS_VERSION: &str = "20.x";
+
 pub struct NodeJsEngineBuildpack;
 
 impl Buildpack for NodeJsEngineBuildpack {
@@ -70,13 +72,16 @@ impl Buildpack for NodeJsEngineBuildpack {
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
+        let default_version =
+            Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid");
+
         let version_range = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(NodeJsEngineBuildpackError::PackageJsonError)
             .map(|package_json| {
                 package_json
                     .engines
                     .and_then(|e| e.node)
-                    .unwrap_or_else(Requirement::any)
+                    .unwrap_or(default_version)
             })?;
         let version_range_string = version_range.to_string();
 

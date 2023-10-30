@@ -10,7 +10,10 @@ use test_support::{
 #[ignore]
 fn simple_indexjs() {
     nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Detected Node.js version range: *");
+        assert_contains!(
+            ctx.pack_stdout,
+            "Detected Node.js version range: >=20.0.0 <21.0.0-0"
+        );
         assert_contains!(ctx.pack_stdout, "Installing Node.js");
         assert_web_response(&ctx, "node-with-indexjs");
     });
