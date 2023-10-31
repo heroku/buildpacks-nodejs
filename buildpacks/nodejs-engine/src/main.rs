@@ -72,27 +72,24 @@ impl Buildpack for NodeJsEngineBuildpack {
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
-        let default_version =
-            Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid");
-
-        let version_range = PackageJson::read(context.app_dir.join("package.json"))
+        let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(NodeJsEngineBuildpackError::PackageJsonError)
-            .map(|package_json| {
-                package_json
-                    .engines
-                    .and_then(|e| e.node)
-                    .unwrap_or(default_version)
-            })?;
-        let version_range_string = version_range.to_string();
+            .map(|package_json| package_json.engines.and_then(|e| e.node))?;
 
-        log_info(format!(
-            "Detected Node.js version range: {version_range_string}"
-        ));
+        let version_range = if let Some(value) = requested_version_range {
+            log_info(format!("Detected Node.js version range: {value}"));
+            value
+        } else {
+            log_info(format!(
+                "Node.js version not specified, using {LTS_VERSION}"
+            ));
+            Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
+        };
 
         let target_release =
             inv.resolve(&version_range)
                 .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
-                    version_range_string,
+                    version_range.to_string(),
                 ))?;
 
         log_info(format!(

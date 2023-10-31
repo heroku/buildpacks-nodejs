@@ -10,10 +10,7 @@ use test_support::{
 #[ignore]
 fn simple_indexjs() {
     nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
-        assert_contains!(
-            ctx.pack_stdout,
-            "Detected Node.js version range: >=20.0.0 <21.0.0-0"
-        );
+        assert_contains!(ctx.pack_stdout, "Node.js version not specified, using 20.x");
         assert_contains!(ctx.pack_stdout, "Installing Node.js");
         assert_web_response(&ctx, "node-with-indexjs");
     });
@@ -23,6 +20,7 @@ fn simple_indexjs() {
 #[ignore]
 fn simple_serverjs() {
     nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
+        assert_contains!(ctx.pack_stdout, "Detected Node.js version range: 16.0.0");
         assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0");
         assert_web_response(&ctx, "node-with-serverjs");
     });
