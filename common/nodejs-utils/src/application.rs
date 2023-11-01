@@ -30,6 +30,22 @@ pub fn check_for_multiple_lockfiles(app_dir: &Path) -> Result<()> {
     }
 }
 
+/// Checks that a lockfile for a package manager we support exists in an
+/// expected location.
+#[must_use]
+pub fn supported_lockfile_exists(app_dir: &Path) -> bool {
+    for manager in [
+        PackageManager::Npm,
+        PackageManager::Pnpm,
+        PackageManager::Yarn,
+    ] {
+        if app_dir.join(manager.lockfile()).exists() {
+            return true;
+        }
+    }
+    false
+}
+
 /// Checks if the `node_modules` folder is present in the given directory which indicates that
 /// the application contains files that it shouldn't in its git repository. If this is the case,
 /// a delayed warning will be published to the logger. To ensure the delayed warning is properly

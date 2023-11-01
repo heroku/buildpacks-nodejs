@@ -25,6 +25,18 @@ pub struct PackageJson {
     pub package_manager: Option<PackageManager>,
 }
 
+impl PackageJson {
+    #[must_use]
+    pub fn has_dependencies(&self) -> bool {
+        for dep_group in [self.dependencies.as_ref(), self.dev_dependencies.as_ref()] {
+            if dep_group.map_or_else(|| false, |deps| !deps.is_empty()) {
+                return true;
+            }
+        }
+        false
+    }
+}
+
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Engines {
     pub node: Option<Requirement>,
