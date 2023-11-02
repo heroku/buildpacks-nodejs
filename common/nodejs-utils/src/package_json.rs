@@ -28,12 +28,9 @@ pub struct PackageJson {
 impl PackageJson {
     #[must_use]
     pub fn has_dependencies(&self) -> bool {
-        for dep_group in [self.dependencies.as_ref(), self.dev_dependencies.as_ref()] {
-            if dep_group.map_or_else(|| false, |deps| !deps.is_empty()) {
-                return true;
-            }
-        }
-        false
+        [self.dependencies.as_ref(), self.dev_dependencies.as_ref()]
+            .iter()
+            .any(|dep_group| dep_group.is_some_and(|deps| !deps.is_empty()))
     }
 }
 
