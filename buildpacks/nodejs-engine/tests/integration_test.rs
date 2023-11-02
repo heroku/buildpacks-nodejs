@@ -1,6 +1,6 @@
 #![warn(clippy::pedantic)]
 
-use libcnb_test::{assert_contains, PackResult};
+use libcnb_test::assert_contains;
 use test_support::{
     assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
     set_node_engine,
@@ -45,39 +45,6 @@ fn reinstalls_node_if_version_changes() {
             ctx.rebuild(config, |ctx| {
                 assert_contains!(ctx.pack_stdout, "Installing Node.js 16");
             });
-        },
-    );
-}
-
-#[test]
-#[ignore]
-fn errors_with_dependencies_and_missing_lockfile() {
-    nodejs_integration_test_with_config(
-        "./fixtures/dependencies-missing-lockfile",
-        |cfg| {
-            cfg.expected_pack_result(PackResult::Failure);
-        },
-        |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "A lockfile from a supported package manager is required"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "The package.json for this project specifies dependencies"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "To use npm to install dependencies, run `npm install`."
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "to use yarn to install dependencies, run `yarn install`."
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "to use pnpm to install dependencies, run `pnpm install`."
-            );
         },
     );
 }

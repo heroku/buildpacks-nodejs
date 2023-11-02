@@ -34,13 +34,16 @@ impl Buildpack for NpmInstallBuildpack {
     type Error = NpmInstallBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let package_json_exists = context
+        let npm_lockfile_exists = context
             .app_dir
             .join(PackageManager::Npm.lockfile())
             .try_exists()
             .map_err(NpmInstallBuildpackError::Detect)?;
 
-        if package_json_exists {
+        let package_json = PackageJson::read(context.app_dir.join("package.json"))
+            .map_err(NpmInstallBuildpackError::PackageJson)?;
+
+        if npm_lockfile_exists || package_json.has_dependencies() {
             DetectResultBuilder::pass()
                 .build_plan(
                     BuildPlanBuilder::new()
@@ -95,8 +98,7 @@ fn run_application_checks(
     warn_later: &WarnGuard<Stdout>,
 ) -> Result<(), NpmInstallBuildpackError> {
     application::warn_prebuilt_modules(app_dir, warn_later);
-    application::check_for_multiple_lockfiles(app_dir)
-        .map_err(NpmInstallBuildpackError::Application)
+    application::check_for_singular_lockfile(app_dir).map_err(NpmInstallBuildpackError::Application)
 }
 
 fn log_npm_version(

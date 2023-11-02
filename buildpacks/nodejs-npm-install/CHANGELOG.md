@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- Will now throw a build error message when attempting to build a project
+  with dependencies but without a lockfile, rather than failing detection.
+
 ## [2.2.0] - 2023-10-26
 
 - No changes.
