@@ -4,9 +4,12 @@
 #![allow(clippy::module_name_repetitions)]
 
 use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
+use heroku_nodejs_utils::application::supported_lockfile_exists;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
+use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Requirement;
+use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -67,15 +70,18 @@ impl Buildpack for NodeJsEngineBuildpack {
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Engine Buildpack");
-        log_header("Checking Node.js version");
+        let package_json = PackageJson::read(context.app_dir.join("package.json"))
+            .map_err(NodeJsEngineBuildpackError::PackageJsonError)?;
 
+        if package_json.has_dependencies() && !supported_lockfile_exists(&context.app_dir) {
+            Err(NodeJsEngineBuildpackError::MissingLockfileError)?;
+        }
+
+        log_header("Checking Node.js version");
         let inv: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
-        let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsEngineBuildpackError::PackageJsonError)
-            .map(|package_json| package_json.engines.and_then(|e| e.node))?;
-
+        let requested_version_range = package_json.engines.and_then(|e| e.node);
         let version_range = if let Some(value) = requested_version_range {
             log_info(format!("Detected Node.js version range: {value}"));
             value
@@ -142,6 +148,34 @@ impl Buildpack for NodeJsEngineBuildpack {
                     NodeJsEngineBuildpackError::InventoryParseError(_) => {
                         log_error("Node.js engine inventory parse error", err_string);
                     }
+                    NodeJsEngineBuildpackError::MissingLockfileError => {
+                        log_error(
+                            "Node.js missing lockfile error",
+                            formatdoc! {
+                                "
+                                    {err_string}
+
+                                    A lockfile from a supported package manager is required to install Node.js
+                                    dependencies. The package.json for this project specifies dependencies, but
+                                    there isn't a lockfile.
+
+                                    To use npm to install dependencies, run `npm install`. This command will
+                                    genereate a {npm_lockfile:?} lockfile.
+
+                                    Or, to use yarn to install dependencies, run `yarn install`. This command will
+                                    generate a {yarn_lockfile:?} lockfile.
+
+                                    Or, to use pnpm to install dependencies, run `pnpm install`. This command will
+                                    generate a {pnpm_lockfile:?} lockfile.
+
+                                    Ensure the resulting lockfile is committed to the repository, then try again.
+                                ",
+                                npm_lockfile = PackageManager::Npm.lockfile(),
+                                yarn_lockfile = PackageManager::Yarn.lockfile(),
+                                pnpm_lockfile = PackageManager::Pnpm.lockfile()
+                            },
+                        );
+                    }
                     NodeJsEngineBuildpackError::PackageJsonError(_) => {
                         log_error("Node.js engine package.json error", err_string);
                     }
@@ -163,6 +197,8 @@ pub enum NodeJsEngineBuildpackError {
     InventoryParseError(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]
     PackageJsonError(PackageJsonError),
+    #[error("Couldn't determine package manager. Package manager lockfile was not found.")]
+    MissingLockfileError,
     #[error("Couldn't resolve Node.js version: {0}")]
     UnknownVersionError(String),
     #[error("{0}")]

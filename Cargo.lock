@@ -578,6 +578,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
+ "indoc",
  "libcnb 0.15.0",
  "libcnb-test",
  "libherokubuildpack 0.15.0",

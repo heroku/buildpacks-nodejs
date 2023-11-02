@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated default node version to 20.x
+- Will now throw an appropriate error message when attempting to build a
+  project with package.json dependencies but without a supported lockfile.
 
 ## [2.2.0] - 2023-10-26
 
