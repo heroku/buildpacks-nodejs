@@ -61,26 +61,31 @@ impl Display for Error {
                 writedoc!(
                     f,
                     "
-                        Couldn't determine Node.js package manager. Package manager lockfile not found.
+                        Couldn't determine Node.js package manager. Package \
+                        manager lockfile not found.
 
-                        A lockfile from a supported package manager is required to install Node.js
-                        dependencies. The package.json for this project specifies dependencies, but
-                        there isn't a lockfile.
+                        A lockfile from a supported package manager is \
+                        required to install Node.js dependencies. The \
+                        package.json for this project specifies dependencies, \
+                        but there isn't a lockfile.
 
-                        To use npm to install dependencies, run `npm install`. This command will
-                        generate a {npm_lockfile:?} lockfile.
+                        To use npm to install dependencies, run {npm_install}. \
+                        This command will generate a {npm_lockfile} lockfile.
 
-                        Or, to use yarn to install dependencies, run `yarn install`. This command will
-                        generate a {yarn_lockfile:?} lockfile.
+                        Or, to use yarn to install dependencies, run {yarn_install}. \
+                        This command willgenerate a {yarn_lockfile} lockfile.
 
-                        Or, to use pnpm to install dependencies, run `pnpm install`. This command will
-                        generate a {pnpm_lockfile:?} lockfile.
+                        Or, to use pnpm to install dependencies, run {pnpm_install}. \
+                        This command will generate a {pnpm_lockfile} lockfile.
 
                         Ensure the resulting lockfile is committed to the repository, then try again.
                     ",
-                    npm_lockfile = PackageManager::Npm.lockfile(),
-                    yarn_lockfile = PackageManager::Yarn.lockfile(),
-                    pnpm_lockfile = PackageManager::Pnpm.lockfile()
+                    npm_install = fmt::value("npm install"),
+                    npm_lockfile = fmt::value(PackageManager::Npm.lockfile().to_string_lossy()),
+                    yarn_install = fmt::value("yarn install"),
+                    yarn_lockfile = fmt::value(PackageManager::Yarn.lockfile().to_string_lossy()),
+                    pnpm_install = fmt::value("pnpm install"),
+                    pnpm_lockfile = fmt::value(PackageManager::Pnpm.lockfile().to_string_lossy()),
                 )?;
                 Ok(())
             }
