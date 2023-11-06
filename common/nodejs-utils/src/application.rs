@@ -73,7 +73,7 @@ impl Display for Error {
                         This command will generate a {npm_lockfile} lockfile.
 
                         Or, to use yarn to install dependencies, run {yarn_install}. \
-                        This command willgenerate a {yarn_lockfile} lockfile.
+                        This command will generate a {yarn_lockfile} lockfile.
 
                         Or, to use pnpm to install dependencies, run {pnpm_install}. \
                         This command will generate a {pnpm_lockfile} lockfile.
