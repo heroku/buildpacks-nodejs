@@ -1,4 +1,4 @@
-use libcnb_test::{assert_contains, assert_not_contains};
+use libcnb_test::{assert_contains, assert_not_contains, PackResult};
 use serde_json::json;
 use std::path::Path;
 use test_support::{
@@ -129,6 +129,39 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
             assert_contains!(
                 ctx.pack_stdout,
                 "- Adding default web process for `npm start`"
+            );
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn test_dependencies_and_missing_lockfile_errors() {
+    nodejs_integration_test_with_config(
+        "./fixtures/dependencies-missing-lockfile",
+        |cfg| {
+            cfg.expected_pack_result(PackResult::Failure);
+        },
+        |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "A lockfile from a supported package manager is required"
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "The package.json for this project specifies dependencies"
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "To use npm to install dependencies, run `npm install`."
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "to use yarn to install dependencies, run `yarn install`."
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "to use pnpm to install dependencies, run `pnpm install`."
             );
         },
     );

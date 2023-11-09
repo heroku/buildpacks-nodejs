@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `heroku/nodejs-engine` is now available in it's own group, allowing
+  Node.js projects without dependencies to be built without requiring
+  a lockfile or running `heroku/nodejs-npm-install` during the build.
+
 ## [2.2.0] - 2023-10-26
 
 ### Changed

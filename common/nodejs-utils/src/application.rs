@@ -13,8 +13,10 @@ pub type Result<T> = std::result::Result<T, Error>;
 ///
 /// # Errors
 ///
-/// Will return `Err` if more than one lockfile is present in the given directory.
-pub fn check_for_multiple_lockfiles(app_dir: &Path) -> Result<()> {
+/// Will return an `Err` when:
+/// - More than one lockfile exists in the `app_dir`.
+/// - No lockfile exists in the `app_dir`.
+pub fn check_for_singular_lockfile(app_dir: &Path) -> Result<()> {
     let detected_lockfiles = [
         PackageManager::Npm,
         PackageManager::Pnpm,
@@ -25,7 +27,8 @@ pub fn check_for_multiple_lockfiles(app_dir: &Path) -> Result<()> {
     .collect::<Vec<_>>();
 
     match detected_lockfiles.len() {
-        0 | 1 => Ok(()),
+        0 => Err(Error::MissingLockfile),
+        1 => Ok(()),
         _ => Err(Error::MultipleLockfiles(detected_lockfiles)),
     }
 }
@@ -39,7 +42,7 @@ pub fn warn_prebuilt_modules(app_dir: &Path, _warn_later: &WarnGuard<Stdout>) {
         log_warning_later(formatdoc! {"
             Warning: {node_modules} checked into source control
 
-            Add these files and directories to {gitignore}. See the Dev Center for more info: 
+            Add these files and directories to {gitignore}. See the Dev Center for more info:
             https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
         ", node_modules = fmt::value("node_modules"), gitignore = fmt::value(".gitignore") });
     }
@@ -47,12 +50,45 @@ pub fn warn_prebuilt_modules(app_dir: &Path, _warn_later: &WarnGuard<Stdout>) {
 
 #[derive(Debug)]
 pub enum Error {
+    MissingLockfile,
     MultipleLockfiles(Vec<PackageManager>),
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Error::MissingLockfile => {
+                writedoc!(
+                    f,
+                    "
+                        Couldn't determine Node.js package manager. Package \
+                        manager lockfile not found.
+
+                        A lockfile from a supported package manager is \
+                        required to install Node.js dependencies. The \
+                        package.json for this project specifies dependencies, \
+                        but there isn't a lockfile.
+
+                        To use npm to install dependencies, run {npm_install}. \
+                        This command will generate a {npm_lockfile} lockfile.
+
+                        Or, to use yarn to install dependencies, run {yarn_install}. \
+                        This command will generate a {yarn_lockfile} lockfile.
+
+                        Or, to use pnpm to install dependencies, run {pnpm_install}. \
+                        This command will generate a {pnpm_lockfile} lockfile.
+
+                        Ensure the resulting lockfile is committed to the repository, then try again.
+                    ",
+                    npm_install = fmt::value("npm install"),
+                    npm_lockfile = fmt::value(PackageManager::Npm.lockfile().to_string_lossy()),
+                    yarn_install = fmt::value("yarn install"),
+                    yarn_lockfile = fmt::value(PackageManager::Yarn.lockfile().to_string_lossy()),
+                    pnpm_install = fmt::value("pnpm install"),
+                    pnpm_lockfile = fmt::value(PackageManager::Pnpm.lockfile().to_string_lossy()),
+                )?;
+                Ok(())
+            }
             Error::MultipleLockfiles(package_managers) => {
                 let lockfiles = package_managers
                     .iter()
@@ -62,10 +98,10 @@ impl Display for Error {
 
                 writedoc!(f, "
                     Multiple lockfiles found: {lockfiles}
-    
+
                     More than one package manager has created lockfiles for this application. Only one \
                     can be used to install dependencies but the buildpack can't determine which when multiple \
-                    lockfiles are present. 
+                    lockfiles are present.
 
                 ")?;
 
@@ -85,7 +121,7 @@ impl Display for Error {
                 writedoc!(
                     f, "
                         See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53
-                        
+
                         Once your application has only one lockfile, commit the results to git and retry your build.
                     "
                 )?;
@@ -115,7 +151,7 @@ mod tests {
             formatdoc! {"
                 Multiple lockfiles found: package-lock.json, pnpm-lock.yaml, yarn.lock
 
-                More than one package manager has created lockfiles for this application. Only one can be used to install dependencies but the buildpack can't determine which when multiple lockfiles are present. 
+                More than one package manager has created lockfiles for this application. Only one can be used to install dependencies but the buildpack can't determine which when multiple lockfiles are present.
 
                 - To use {npm} to install your application's dependencies please delete the following lockfiles:
 
@@ -126,9 +162,9 @@ mod tests {
 
                     $ git rm package-lock.json
                     $ git rm yarn.lock
-                
+
                 - To use {yarn} to install your application's dependencies please delete the following lockfiles:
-                
+
                     $ git rm package-lock.json
                     $ git rm pnpm-lock.yaml
 
