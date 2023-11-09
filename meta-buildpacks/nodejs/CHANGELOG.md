@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2023-11-09
+
 ### Added
 
 - `heroku/nodejs-engine` is now available in it's own group, allowing
   Node.js projects without dependencies to be built without requiring
   a lockfile or running `heroku/nodejs-npm-install` during the build.
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `2.3.0`.
+- Updated `heroku/nodejs-engine` to `2.3.0`.
+- Updated `heroku/nodejs-npm-engine` to `2.3.0`.
+- Updated `heroku/nodejs-npm-install` to `2.3.0`.
+- Updated `heroku/nodejs-pnpm-install` to `2.3.0`.
+- Updated `heroku/nodejs-yarn` to `2.3.0`.
 
 ## [2.2.0] - 2023-10-26
 
@@ -316,7 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.7...v2.0.0
