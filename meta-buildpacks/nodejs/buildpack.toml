@@ -2,7 +2,7 @@ api = "0.9"
 
 [buildpack]
 id = "heroku/nodejs"
-version = "2.2.0"
+version = "2.3.0"
 name = "Heroku Node.js"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's buildpack for Node.js applications."
@@ -15,56 +15,56 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-install"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "2.2.0"
+version = "2.3.0"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "2.2.0"
+version = "2.3.0"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-npm-engine"
-version = "2.2.0"
+version = "2.3.0"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-npm-install"
-version = "2.2.0"
+version = "2.3.0"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.2.0"
+version = "2.3.0"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs" }
