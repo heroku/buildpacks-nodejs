@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- This buildpack now implements Buildpack API 0.7 instead of 0.6. ([#721](https://github.com/heroku/buildpacks-nodejs/pull/721))
+
 ## [2.3.0] - 2023-11-09
 
 - No changes.
