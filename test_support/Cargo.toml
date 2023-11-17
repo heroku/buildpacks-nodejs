@@ -7,8 +7,8 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-libcnb = "=0.15.0"
-libcnb-test = "=0.15.0"
+libcnb = "=0.16.0"
+libcnb-test = "=0.16.0"
 serde_json = "1"
 tempfile = "3"
 ureq = "2"
