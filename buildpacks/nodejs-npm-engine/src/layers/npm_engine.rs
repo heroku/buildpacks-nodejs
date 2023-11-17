@@ -1,8 +1,8 @@
 use crate::errors::NpmEngineBuildpackError;
 use crate::NpmEngineBuildpack;
-use commons::fun_run::CommandWithName;
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_timed, SectionLogger};
+use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -165,8 +165,8 @@ pub(crate) enum NpmEngineLayerError {
     Download(DownloadError),
     OpenTarball(std::io::Error),
     DecompressTarball(std::io::Error),
-    RemoveExistingNpmInstall(commons::fun_run::CmdError),
-    InstallNpm(commons::fun_run::CmdError),
+    RemoveExistingNpmInstall(fun_run::CmdError),
+    InstallNpm(fun_run::CmdError),
 }
 
 impl From<NpmEngineLayerError> for NpmEngineBuildpackError {

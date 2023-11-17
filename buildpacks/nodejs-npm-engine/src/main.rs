@@ -5,10 +5,10 @@ mod npm;
 
 use crate::errors::NpmEngineBuildpackError;
 use crate::layers::npm_engine::NpmEngineLayer;
-use commons::fun_run::CommandWithName;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::log_step;
+use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::{Inventory, Release};
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::vrs::{Requirement, Version};

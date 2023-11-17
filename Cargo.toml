@@ -19,7 +19,7 @@ edition = "2021"
 publish = false
 
 [workspace.dependencies]
-commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "schneems/logging-state-machine-continued" }
+commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 heroku-nodejs-utils = { path = "./common/nodejs-utils" }
 indoc = "2"
 # libcnb has a much bigger impact on buildpack behaviour than any other dependencies,

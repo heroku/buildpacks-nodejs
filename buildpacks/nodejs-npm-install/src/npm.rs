@@ -1,4 +1,4 @@
-use commons::fun_run::CmdError;
+use fun_run::CmdError;
 use libcnb::Env;
 use std::path::PathBuf;
 use std::process::Command;

@@ -4,11 +4,11 @@ mod npm;
 
 use crate::errors::NpmInstallBuildpackError;
 use crate::layers::npm_cache::NpmCacheLayer;
-use commons::fun_run::CommandWithName;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
+use fun_run::CommandWithName;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::package_manager::PackageManager;
