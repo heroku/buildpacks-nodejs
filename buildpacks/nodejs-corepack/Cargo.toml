@@ -11,7 +11,7 @@ heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = "=0.16.0"
 libherokubuildpack = "=0.16.0"
-opentelemetry = "0.20.0"
+opentelemetry = "0.21"
 serde = "1"
 thiserror = "1"
 
