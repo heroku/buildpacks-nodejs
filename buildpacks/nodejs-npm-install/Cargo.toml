@@ -7,17 +7,17 @@ edition.workspace = true
 publish.workspace = true
 
 [dependencies]
-commons.workspace = true
+commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 fun_run = "0.1"
 heroku-nodejs-utils.workspace = true
-libcnb.workspace = true
-libherokubuildpack.workspace = true
-serde.workspace = true
-indoc.workspace = true
-toml.workspace = true
+indoc = "2"
+libcnb = "=0.15.0"
+libherokubuildpack = "=0.15.0"
+serde = "1"
+toml = "0.8"
 
 [dev-dependencies]
-libcnb-test.workspace = true
-serde_json.workspace = true
+libcnb-test = "=0.15.0"
+serde_json = "1"
 test_support.workspace = true
-ureq.workspace = true
+ureq = "2"

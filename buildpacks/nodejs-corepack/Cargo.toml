@@ -8,14 +8,14 @@ publish.workspace = true
 
 [dependencies]
 heroku-nodejs-utils.workspace = true
-libcnb.workspace = true
-libherokubuildpack.workspace = true
-opentelemetry.workspace = true
-serde.workspace = true
-thiserror.workspace = true
-indoc.workspace = true
+indoc = "2"
+libcnb = "=0.15.0"
+libherokubuildpack = "=0.15.0"
+opentelemetry = "0.20.0"
+serde = "1"
+thiserror = "1"
 
 [dev-dependencies]
-libcnb-test.workspace = true
+libcnb-test = "=0.15.0"
 test_support.workspace = true
-ureq.workspace = true
+ureq = "2"
