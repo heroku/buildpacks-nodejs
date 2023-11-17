@@ -1,9 +1,9 @@
 use crate::npm;
 use crate::BUILDPACK_NAME;
-use commons::fun_run::CmdError;
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
 use commons::output::fmt;
 use commons::output::fmt::DEBUG_INFO;
+use fun_run::CmdError;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;

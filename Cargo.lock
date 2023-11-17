@@ -654,6 +654,7 @@ name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
+ "fun_run",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb 0.15.0",
@@ -671,6 +672,7 @@ name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
+ "fun_run",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb 0.15.0",
