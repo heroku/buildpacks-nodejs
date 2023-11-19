@@ -646,7 +646,6 @@ dependencies = [
  "libherokubuildpack",
  "serde",
  "serde_json",
- "tempfile",
  "test_support",
  "toml",
 ]
@@ -661,12 +660,9 @@ dependencies = [
  "indoc",
  "libcnb",
  "libcnb-test",
- "libherokubuildpack",
  "serde",
  "serde_json",
  "test_support",
- "toml",
- "ureq",
 ]
 
 [[package]]
@@ -1393,7 +1389,6 @@ dependencies = [
  "libcnb",
  "libcnb-test",
  "serde_json",
- "tempfile",
  "ureq",
 ]
 

@@ -8,6 +8,7 @@ use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use std::fmt::Display;
+use std::io;
 use std::io::stdout;
 
 const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
@@ -21,7 +22,7 @@ locally with a minimal example and open an issue in the buildpack's GitHub repos
 pub(crate) enum NpmInstallBuildpackError {
     Application(application::Error),
     BuildScript(CmdError),
-    Detect(std::io::Error),
+    Detect(io::Error),
     NpmInstall(CmdError),
     NpmSetCacheDir(CmdError),
     NpmVersion(npm::VersionError),
@@ -32,19 +33,19 @@ pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
     let logger = BuildLog::new(stdout()).without_buildpack_name();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
-            on_buildpack_error(buildpack_error, logger)
+            on_buildpack_error(buildpack_error, logger);
         }
-        framework_error => on_framework_error(framework_error, logger),
+        framework_error => on_framework_error(&framework_error, logger),
     }
 }
 
 pub(crate) fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLogger>) {
     match error {
-        NpmInstallBuildpackError::Application(e) => on_application_error(e, logger),
-        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(e, logger),
-        NpmInstallBuildpackError::Detect(e) => on_detect_error(e, logger),
-        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(e, logger),
-        NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(e, logger),
+        NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
+        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),
+        NpmInstallBuildpackError::Detect(e) => on_detect_error(&e, logger),
+        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e, logger),
+        NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e, logger),
         NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
     }
@@ -82,7 +83,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
     }
 }
 
-fn on_set_cache_dir_error(error: CmdError, logger: Box<dyn StartedLogger>) {
+fn on_set_cache_dir_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
@@ -123,7 +124,7 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
     }
 }
 
-fn on_npm_install_error(error: CmdError, logger: Box<dyn StartedLogger>) {
+fn on_npm_install_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
@@ -139,7 +140,7 @@ fn on_npm_install_error(error: CmdError, logger: Box<dyn StartedLogger>) {
         ", npm_install = fmt::value(error.name()), buildpack_name = fmt::value(BUILDPACK_NAME) });
 }
 
-fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
+fn on_build_script_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
@@ -165,11 +166,11 @@ fn on_build_script_error(error: CmdError, logger: Box<dyn StartedLogger>) {
         });
 }
 
-fn on_application_error(error: application::Error, logger: Box<dyn StartedLogger>) {
+fn on_application_error(error: &application::Error, logger: Box<dyn StartedLogger>) {
     logger.announce().error(&error.to_string());
 }
 
-fn on_detect_error(error: std::io::Error, logger: Box<dyn StartedLogger>) {
+fn on_detect_error(error: &io::Error, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
@@ -181,7 +182,7 @@ fn on_detect_error(error: std::io::Error, logger: Box<dyn StartedLogger>) {
 }
 
 fn on_framework_error(
-    error: libcnb::Error<NpmInstallBuildpackError>,
+    error: &libcnb::Error<NpmInstallBuildpackError>,
     logger: Box<dyn StartedLogger>,
 ) {
     print_error_details(logger, &error)

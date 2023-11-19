@@ -1,6 +1,3 @@
-#![warn(unused_crate_dependencies)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::cargo)]
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use layers::{AddressableStoreLayer, VirtualStoreLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};

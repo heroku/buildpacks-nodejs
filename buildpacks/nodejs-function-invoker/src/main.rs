@@ -1,8 +1,3 @@
-#![warn(unused_crate_dependencies)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::cargo)]
-#![allow(clippy::module_name_repetitions)]
-
 use crate::function::{
     get_declared_runtime_package_version, get_main, is_function, ExplicitRuntimeDependencyError,
     MainError,

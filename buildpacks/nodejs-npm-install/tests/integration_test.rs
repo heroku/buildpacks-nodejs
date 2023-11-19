@@ -1,3 +1,6 @@
+// Required due to: https://github.com/rust-lang/rust/issues/95513
+#![allow(unused_crate_dependencies)]
+
 use libcnb_test::{assert_contains, assert_not_contains, PackResult};
 use serde_json::json;
 use std::path::Path;
@@ -37,7 +40,7 @@ fn test_npm_install_caching() {
         ctx.rebuild(config, |ctx| {
             assert_contains!(ctx.pack_stdout, "- Restoring npm cache");
             assert_contains!(ctx.pack_stdout, "added 4 packages");
-        })
+        });
     });
 }
 

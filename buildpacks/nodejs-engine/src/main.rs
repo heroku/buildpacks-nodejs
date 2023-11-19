@@ -1,8 +1,3 @@
-#![warn(unused_crate_dependencies)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::cargo)]
-#![allow(clippy::module_name_repetitions)]
-
 use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};

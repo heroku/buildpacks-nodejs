@@ -1,3 +1,6 @@
+// Required due to: https://github.com/rust-lang/rust/issues/95513
+#![allow(unused_crate_dependencies)]
+
 use libcnb_test::assert_contains;
 use std::fs;
 use std::path::Path;
@@ -30,7 +33,7 @@ fn test_npm_engine_caching() {
         ctx.rebuild(config, |ctx| {
             assert_contains!(ctx.pack_stdout, "Using cached npm");
             assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
-        })
+        });
     });
 }
 

@@ -8,7 +8,7 @@ use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
-use fun_run::CommandWithName;
+use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::package_manager::PackageManager;
@@ -20,9 +20,15 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
+#[cfg(test)]
+use libcnb_test as _;
+#[cfg(test)]
+use serde_json as _;
 use std::io::{stdout, Stdout};
 use std::path::Path;
 use std::process::Command;
+#[cfg(test)]
+use test_support as _;
 
 pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Install Buildpack";
 
@@ -89,7 +95,7 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        errors::on_error(error)
+        errors::on_error(error);
     }
 }
 
@@ -107,7 +113,7 @@ fn log_npm_version(
 ) -> Result<(), NpmInstallBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
-        .and_then(|output| output.nonzero_captured())
+        .and_then(NamedOutput::nonzero_captured)
         .map_err(npm::VersionError::Command)
         .and_then(|output| {
             let stdout = output.stdout_lossy();
@@ -127,17 +133,21 @@ fn log_npm_version(
 fn configure_npm_cache_layer(
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,
-    _section_logger: &dyn SectionLogger,
+    section_logger: &dyn SectionLogger,
 ) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
-    let npm_cache_layer =
-        context.handle_layer(layer_name!("npm_cache"), NpmCacheLayer { _section_logger })?;
+    let npm_cache_layer = context.handle_layer(
+        layer_name!("npm_cache"),
+        NpmCacheLayer {
+            _section_logger: section_logger,
+        },
+    )?;
     log_step("Configuring npm cache directory");
     Command::from(npm::SetCacheConfig {
         env,
         cache_dir: npm_cache_layer.path,
     })
     .named_output()
-    .and_then(|output| output.nonzero_captured())
+    .and_then(NamedOutput::nonzero_captured)
     .map_err(NpmInstallBuildpackError::NpmSetCacheDir)?;
     Ok(())
 }
@@ -152,7 +162,7 @@ fn run_npm_install(
         |stream| {
             npm_install
                 .stream_output(stream.io(), stream.io())
-                .and_then(|cmd| cmd.nonzero_captured())
+                .and_then(NamedOutput::nonzero_captured)
                 .map_err(NpmInstallBuildpackError::NpmInstall)
         },
     )?;
@@ -175,7 +185,7 @@ fn run_build_scripts(
                 |stream| {
                     npm_run
                         .stream_output(stream.io(), stream.io())
-                        .and_then(|cmd| cmd.nonzero_captured())
+                        .and_then(NamedOutput::nonzero_captured)
                         .map_err(NpmInstallBuildpackError::BuildScript)
                 },
             )?;

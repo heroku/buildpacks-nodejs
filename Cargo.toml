@@ -14,9 +14,18 @@ members = [
 
 [workspace.package]
 version = "0.0.0"
-rust-version = "1.67"
+rust-version = "1.74"
 edition = "2021"
 publish = false
+
+[workspace.lints.rust]
+unused_crate_dependencies = "warn"
+
+[workspace.lints.clippy]
+pedantic = "warn"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
 
 [workspace.dependencies]
 heroku-nodejs-utils = { path = "./common/nodejs-utils" }

@@ -1,8 +1,3 @@
-#![warn(unused_crate_dependencies)]
-#![warn(clippy::pedantic)]
-#![warn(clippy::cargo)]
-#![allow(clippy::module_name_repetitions)]
-
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::telemetry::init_tracer;
 use layers::{ManagerLayer, ShimLayer};

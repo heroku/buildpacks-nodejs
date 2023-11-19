@@ -12,6 +12,7 @@ pub const PORT: u16 = 8080;
 pub const DEFAULT_RETRIES: u32 = 10;
 pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(1);
 
+#[must_use]
 pub fn get_integration_test_builder() -> String {
     std::env::var("INTEGRATION_TEST_CNB_BUILDER").unwrap_or(DEFAULT_BUILDER.to_string())
 }
@@ -166,7 +167,7 @@ pub fn update_package_json(
         update(
             json.as_object_mut()
                 .expect("Deserialized package.json value should be an object"),
-        )
+        );
     });
 }
 

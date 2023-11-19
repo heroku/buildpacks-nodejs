@@ -2,7 +2,7 @@ use crate::errors::NpmEngineBuildpackError;
 use crate::NpmEngineBuildpack;
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_timed, SectionLogger};
-use fun_run::CommandWithName;
+use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -84,7 +84,7 @@ fn download_and_unpack_release(
     log_step_timed(format!("Downloading {}", fmt::value(download_from)), || {
         download_file(download_from, download_to)
             .map_err(NpmEngineLayerError::Download)
-            .and_then(|_| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
+            .and_then(|()| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
             .and_then(|mut npm_tgz_file| {
                 decompress_tarball(&mut npm_tgz_file, unpack_into)
                     .map_err(NpmEngineLayerError::DecompressTarball)
@@ -103,7 +103,7 @@ fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmEngi
             "--loglevel=silent",
         ])
         .named_output()
-        .and_then(|cmd| cmd.nonzero_captured())
+        .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)
         .map(|_| ())
 }
@@ -118,7 +118,7 @@ fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmE
             &package.to_string_lossy(),
         ])
         .named_output()
-        .and_then(|cmd| cmd.nonzero_captured())
+        .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmEngineLayerError::InstallNpm)
         .map(|_| ())
 }
