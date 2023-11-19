@@ -104,12 +104,7 @@ impl Requirement {
     }
 
     #[must_use]
-    pub fn any() -> Self {
-        Requirement(Range::any())
-    }
-
-    #[must_use]
-    pub fn satisfies(&self, ver: &Version) -> bool {
+    pub(crate) fn satisfies(&self, ver: &Version) -> bool {
         self.0.satisfies(&ver.0)
     }
 }
@@ -127,7 +122,7 @@ impl fmt::Display for Requirement {
     }
 }
 
-pub type VersionSet = HashSet<Version>;
+pub(crate) type VersionSet = HashSet<Version>;
 
 impl TryFrom<s3::BucketContent> for VersionSet {
     type Error = anyhow::Error;

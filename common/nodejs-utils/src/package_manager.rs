@@ -20,7 +20,7 @@ impl PackageManager {
         }
     }
 
-    pub fn iterator() -> impl Iterator<Item = PackageManager> {
+    pub(crate) fn iterator() -> impl Iterator<Item = PackageManager> {
         Self::VALUES.iter().copied()
     }
 }

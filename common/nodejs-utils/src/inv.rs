@@ -10,12 +10,12 @@ use thiserror::Error;
 
 /// Default/assumed operating system for node release lookups
 #[cfg(target_os = "macos")]
-pub const OS: &str = "darwin";
+const OS: &str = "darwin";
 #[cfg(target_os = "linux")]
-pub const OS: &str = "linux";
+const OS: &str = "linux";
 
 /// Default/assumed architecture for node release lookups
-pub const ARCH: &str = "x64";
+const ARCH: &str = "x64";
 
 /// Represents a software inventory with releases.
 #[derive(Debug, Deserialize, Serialize)]
@@ -47,7 +47,7 @@ impl Inventory {
     }
 
     #[must_use]
-    pub fn resolve_other(
+    fn resolve_other(
         &self,
         version_requirements: &Requirement,
         platform: &str,

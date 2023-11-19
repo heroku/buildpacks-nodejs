@@ -1,5 +1,7 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
+// Required due to: https://github.com/rust-lang/rust-clippy/issues/11119
+#![allow(clippy::unwrap_used)]
 
 use base64::Engine;
 use libcnb_test::{assert_contains, assert_not_contains, TestContext};

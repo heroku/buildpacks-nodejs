@@ -27,7 +27,7 @@ const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "20.x";
 
-pub struct NodeJsEngineBuildpack;
+struct NodeJsEngineBuildpack;
 
 impl Buildpack for NodeJsEngineBuildpack {
     type Platform = GenericPlatform;
@@ -153,7 +153,7 @@ impl Buildpack for NodeJsEngineBuildpack {
 }
 
 #[derive(Error, Debug)]
-pub enum NodeJsEngineBuildpackError {
+enum NodeJsEngineBuildpackError {
     #[error("Couldn't parse Node.js inventory: {0}")]
     InventoryParseError(toml::de::Error),
     #[error("Couldn't parse package.json: {0}")]

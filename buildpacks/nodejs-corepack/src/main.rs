@@ -25,7 +25,7 @@ mod cmd;
 mod errors;
 mod layers;
 
-pub(crate) struct CorepackBuildpack;
+struct CorepackBuildpack;
 
 impl Buildpack for CorepackBuildpack {
     type Platform = GenericPlatform;
@@ -113,7 +113,7 @@ impl Buildpack for CorepackBuildpack {
 }
 
 #[derive(Debug)]
-pub(crate) enum CorepackBuildpackError {
+enum CorepackBuildpackError {
     PackageManagerMissing,
     PackageJson(PackageJsonError),
     ShimLayer(std::io::Error),

@@ -22,7 +22,7 @@ mod errors;
 mod layers;
 mod store;
 
-pub(crate) struct PnpmInstallBuildpack;
+struct PnpmInstallBuildpack;
 
 impl Buildpack for PnpmInstallBuildpack {
     type Platform = GenericPlatform;
@@ -110,7 +110,7 @@ impl Buildpack for PnpmInstallBuildpack {
 }
 
 #[derive(Debug)]
-pub(crate) enum PnpmInstallBuildpackError {
+enum PnpmInstallBuildpackError {
     BuildScript(cmd::Error),
     PackageJson(PackageJsonError),
     PnpmDir(cmd::Error),

@@ -39,7 +39,7 @@ pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
     }
 }
 
-pub(crate) fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLogger>) {
+fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLogger>) {
     match error {
         NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),

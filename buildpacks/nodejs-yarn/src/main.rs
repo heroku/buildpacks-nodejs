@@ -30,7 +30,7 @@ mod yarn;
 const INVENTORY: &str = include_str!("../inventory.toml");
 const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 
-pub(crate) struct YarnBuildpack;
+struct YarnBuildpack;
 
 impl Buildpack for YarnBuildpack {
     type Platform = GenericPlatform;
@@ -205,7 +205,7 @@ impl Buildpack for YarnBuildpack {
 }
 
 #[derive(Error, Debug)]
-pub(crate) enum YarnBuildpackError {
+enum YarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
     BuildScript(cmd::Error),
     #[error("{0}")]

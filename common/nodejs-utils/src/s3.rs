@@ -23,7 +23,7 @@ pub(crate) struct Content {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 #[allow(dead_code)]
-pub(crate) struct ListBucketResult {
+struct ListBucketResult {
     name: String,
     pub(crate) prefix: String,
     max_keys: usize,

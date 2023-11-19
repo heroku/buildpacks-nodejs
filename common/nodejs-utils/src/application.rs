@@ -7,8 +7,6 @@ use std::fmt::{Display, Formatter};
 use std::io::Stdout;
 use std::path::Path;
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 /// Checks for npm, Yarn, pnpm, and shrink-wrap lockfiles and raises an error if multiple are detected.
 ///
 /// # Errors
@@ -16,7 +14,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Will return an `Err` when:
 /// - More than one lockfile exists in the `app_dir`.
 /// - No lockfile exists in the `app_dir`.
-pub fn check_for_singular_lockfile(app_dir: &Path) -> Result<()> {
+pub fn check_for_singular_lockfile(app_dir: &Path) -> Result<(), Error> {
     let detected_lockfiles = [
         PackageManager::Npm,
         PackageManager::Pnpm,

@@ -4,7 +4,7 @@ use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
 use thiserror::Error;
 
-pub fn is_function<P>(d: P) -> bool
+pub(crate) fn is_function<P>(d: P) -> bool
 where
     P: Into<PathBuf>,
 {
@@ -21,7 +21,7 @@ where
     }
 }
 
-pub fn get_main<P>(d: P) -> Result<PathBuf, MainError>
+pub(crate) fn get_main<P>(d: P) -> Result<PathBuf, MainError>
 where
     P: Into<PathBuf>,
 {
@@ -33,7 +33,7 @@ where
         .and_then(|path| path.exists().then_some(path).ok_or(MainError::MissingFile))
 }
 
-pub fn get_declared_runtime_package_version<P>(
+pub(crate) fn get_declared_runtime_package_version<P>(
     app_dir: P,
     package_name: &String,
 ) -> Result<Option<String>, ExplicitRuntimeDependencyError>
@@ -57,7 +57,7 @@ where
 }
 
 #[derive(Error, Debug)]
-pub enum MainError {
+pub(crate) enum MainError {
     #[error("Could not determine function file location from package.json. {0}")]
     PackageJson(#[from] PackageJsonError),
     #[error(
@@ -69,7 +69,7 @@ pub enum MainError {
 }
 
 #[derive(Error, Debug)]
-pub enum ExplicitRuntimeDependencyError {
+pub(crate) enum ExplicitRuntimeDependencyError {
     #[error("Failure while attempting to read from package.json. {0}")]
     PackageJson(#[from] PackageJsonError),
     #[error("The '{package_name}' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'.")]
