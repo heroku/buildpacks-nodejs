@@ -1,3 +1,6 @@
+// This module is only used for testing, where using unwrap() is acceptable.
+#![allow(clippy::unwrap_used)]
+
 use libcnb::data::buildpack_id;
 use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext,
@@ -8,12 +11,12 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
-pub const PORT: u16 = 8080;
+const PORT: u16 = 8080;
 pub const DEFAULT_RETRIES: u32 = 10;
 pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(1);
 
 #[must_use]
-pub fn get_integration_test_builder() -> String {
+fn get_integration_test_builder() -> String {
     std::env::var("INTEGRATION_TEST_CNB_BUILDER").unwrap_or(DEFAULT_BUILDER.to_string())
 }
 
@@ -40,7 +43,7 @@ pub fn function_integration_test(fixture: &str, test_body: fn(TestContext)) {
     function_integration_test_with_config(fixture, |_| {}, test_body);
 }
 
-pub fn function_integration_test_with_config(
+fn function_integration_test_with_config(
     fixture: &str,
     with_config: fn(&mut BuildConfig),
     test_body: fn(TestContext),
@@ -159,7 +162,7 @@ pub fn add_build_script(app_dir: &Path, script: &str) {
     });
 }
 
-pub fn update_package_json(
+fn update_package_json(
     app_dir: &Path,
     update: impl FnOnce(&mut serde_json::Map<String, serde_json::Value>),
 ) {

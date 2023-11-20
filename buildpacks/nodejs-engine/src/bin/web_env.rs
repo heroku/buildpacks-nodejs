@@ -13,7 +13,7 @@ const MAX_AVAILABLE_MEMORY_MB: usize = 14336;
 const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
 const DEFAULT_WEB_MEMORY_MB: usize = 512;
 
-pub fn main() {
+fn main() {
     write_exec_d_program_output(web_env(read_env("WEB_CONCURRENCY"), read_env("WEB_MEMORY")));
 }
 

@@ -32,17 +32,17 @@ use ureq as _;
 mod function;
 mod layers;
 
-pub struct NodeJsInvokerBuildpack;
+struct NodeJsInvokerBuildpack;
 
 #[derive(Deserialize, Debug)]
-pub struct NodeJsInvokerBuildpackMetadata {
-    pub runtime: NodeJsInvokerBuildpackRuntimeMetadata,
+struct NodeJsInvokerBuildpackMetadata {
+    runtime: NodeJsInvokerBuildpackRuntimeMetadata,
 }
 
 #[derive(Deserialize, Debug)]
-pub struct NodeJsInvokerBuildpackRuntimeMetadata {
-    pub package_name: String,
-    pub package_version: String,
+struct NodeJsInvokerBuildpackRuntimeMetadata {
+    package_name: String,
+    package_version: String,
 }
 
 impl Buildpack for NodeJsInvokerBuildpack {
@@ -159,7 +159,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
 }
 
 #[derive(Error, Debug)]
-pub enum NodeJsInvokerBuildpackError {
+enum NodeJsInvokerBuildpackError {
     #[error("{0}")]
     MainFunction(#[from] MainError),
     #[error("{0}")]

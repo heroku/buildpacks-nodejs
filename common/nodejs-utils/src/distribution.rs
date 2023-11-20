@@ -10,7 +10,7 @@ use std::{fmt, str::FromStr};
 /// Heroku nodebin AWS S3 Bucket name
 pub const DEFAULT_BUCKET: &str = "heroku-nodebin";
 /// Heroku nodebin AWS S3 Region
-pub const DEFAULT_REGION: &str = "us-east-1";
+pub(crate) const DEFAULT_REGION: &str = "us-east-1";
 
 #[derive(Debug, Clone, Copy)]
 pub enum Distribution {

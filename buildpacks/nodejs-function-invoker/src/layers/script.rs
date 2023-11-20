@@ -47,7 +47,7 @@ impl Layer for ScriptLayer {
 }
 
 #[derive(thiserror::Error, Debug)]
-pub enum ScriptLayerError {
+pub(crate) enum ScriptLayerError {
     #[error("Could not write runtime script to layer: {0}")]
     CouldNotWriteRuntimeScript(std::io::Error),
     #[error("Could not set executable bit on runtime script: {0}")]

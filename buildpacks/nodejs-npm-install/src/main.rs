@@ -30,9 +30,9 @@ use std::process::Command;
 #[cfg(test)]
 use test_support as _;
 
-pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Install Buildpack";
+const BUILDPACK_NAME: &str = "Heroku Node.js npm Install Buildpack";
 
-pub(crate) struct NpmInstallBuildpack;
+struct NpmInstallBuildpack;
 
 impl Buildpack for NpmInstallBuildpack {
     type Platform = GenericPlatform;

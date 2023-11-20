@@ -27,11 +27,11 @@ use std::process::Command;
 #[cfg(test)]
 use test_support as _;
 
-pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine Buildpack";
+const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine Buildpack";
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
-pub(crate) struct NpmEngineBuildpack;
+struct NpmEngineBuildpack;
 
 impl Buildpack for NpmEngineBuildpack {
     type Platform = GenericPlatform;

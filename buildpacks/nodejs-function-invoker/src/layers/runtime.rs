@@ -12,19 +12,19 @@ use std::process::Command;
 use thiserror::Error;
 
 /// A layer that installs the Node.js Invoker/Runtime package
-pub struct RuntimeLayer {
-    pub package: String,
+pub(crate) struct RuntimeLayer {
+    pub(crate) package: String,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
-pub struct RuntimeLayerMetadata {
+pub(crate) struct RuntimeLayerMetadata {
     layer_version: String,
     package: String,
     stack_id: StackId,
 }
 
 #[derive(Error, Debug)]
-pub enum RuntimeLayerError {
+pub(crate) enum RuntimeLayerError {
     #[error("Couldn't run `npm install` command: {0}")]
     NpmCommandError(std::io::Error),
     #[error("Couldn't install invoker runtime with `npm install`: #{0}")]

@@ -18,7 +18,7 @@ use thiserror::Error;
 
 /// A layer that downloads and installs the yarn cli
 pub(crate) struct CliLayer {
-    pub release: Release,
+    pub(crate) release: Release,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
