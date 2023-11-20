@@ -8,7 +8,7 @@ use crate::layers::npm_engine::NpmEngineLayer;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::log_step;
-use fun_run::CommandWithName;
+use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::inv::{Inventory, Release};
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::vrs::{Requirement, Version};
@@ -18,8 +18,14 @@ use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
+#[cfg(test)]
+use libcnb_test as _;
+#[cfg(test)]
+use serde_json as _;
 use std::io::stdout;
 use std::process::Command;
+#[cfg(test)]
+use test_support as _;
 
 pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine Buildpack";
 
@@ -118,11 +124,11 @@ fn install_npm_release(
     npm_release: Release,
     context: &BuildContext<NpmEngineBuildpack>,
     env: &Env,
-    _section_logger: &dyn SectionLogger,
+    section_logger: &dyn SectionLogger,
 ) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
     let node_version = Command::from(node::Version { env })
         .named_output()
-        .and_then(|output| output.nonzero_captured())
+        .and_then(NamedOutput::nonzero_captured)
         .map_err(node::VersionError::Command)
         .and_then(|output| {
             let stdout = output.stdout_lossy();
@@ -137,7 +143,7 @@ fn install_npm_release(
         NpmEngineLayer {
             npm_release,
             node_version,
-            _section_logger,
+            _section_logger: section_logger,
         },
     )?;
 
@@ -150,7 +156,7 @@ fn log_installed_npm_version(
 ) -> Result<(), NpmEngineBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
-        .and_then(|output| output.nonzero_captured())
+        .and_then(NamedOutput::nonzero_captured)
         .map_err(npm::VersionError::Command)
         .and_then(|output| {
             let stdout = output.stdout_lossy();

@@ -6,6 +6,9 @@ rust-version.workspace = true
 edition.workspace = true
 publish.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 heroku-nodejs-utils.workspace = true
 indoc = "2"

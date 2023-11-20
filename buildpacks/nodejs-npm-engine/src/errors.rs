@@ -7,7 +7,6 @@ use commons::output::fmt::DEBUG_INFO;
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
-use libcnb::Error;
 use std::fmt::Display;
 use std::io::stdout;
 
@@ -29,11 +28,13 @@ pub(crate) enum NpmEngineBuildpackError {
     NpmVersion(npm::VersionError),
 }
 
-pub(crate) fn on_error(error: Error<NpmEngineBuildpackError>) {
+pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
     let logger = BuildLog::new(stdout()).without_buildpack_name();
     match error {
-        Error::BuildpackError(buildpack_error) => on_buildpack_error(buildpack_error, logger),
-        framework_error => on_framework_error(framework_error, logger),
+        libcnb::Error::BuildpackError(buildpack_error) => {
+            on_buildpack_error(buildpack_error, logger);
+        }
+        framework_error => on_framework_error(&framework_error, logger),
     }
 }
 
@@ -41,11 +42,11 @@ fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Box<dyn StartedLog
     match error {
         NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
-            on_missing_npm_engine_requirement_error(logger)
+            on_missing_npm_engine_requirement_error(logger);
         }
-        NpmEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(e, logger),
+        NpmEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e, logger),
         NpmEngineBuildpackError::NpmVersionResolve(requirement) => {
-            on_npm_version_resolve_error(requirement, logger)
+            on_npm_version_resolve_error(&requirement, logger);
         }
         NpmEngineBuildpackError::NpmEngineLayer(e) => on_npm_engine_layer_error(e, logger),
         NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e, logger),
@@ -97,7 +98,7 @@ fn on_missing_npm_engine_requirement_error(logger: Box<dyn StartedLogger>) {
     ", engines_key = fmt::value("engines.npm"), package_json = fmt::value("package.json") });
 }
 
-fn on_inventory_parse_error(error: toml::de::Error, logger: Box<dyn StartedLogger>) {
+fn on_inventory_parse_error(error: &toml::de::Error, logger: Box<dyn StartedLogger>) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
@@ -108,10 +109,10 @@ fn on_inventory_parse_error(error: toml::de::Error, logger: Box<dyn StartedLogge
             {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
             {SUBMIT_AN_ISSUE}
-        ", npm = fmt::value("npm") })
+        ", npm = fmt::value("npm") });
 }
 
-fn on_npm_version_resolve_error(requirement: Requirement, logger: Box<dyn StartedLogger>) {
+fn on_npm_version_resolve_error(requirement: &Requirement, logger: Box<dyn StartedLogger>) {
     logger.announce().error(&formatdoc! {"
             Error resolving requested {npm} version {requested_version}.
             
@@ -131,7 +132,7 @@ fn on_npm_version_resolve_error(requirement: Requirement, logger: Box<dyn Starte
         requested_version = fmt::value(requirement.to_string()),
         package_json = fmt::value("package.json"),
         engines_key = fmt::value("engines.npm")
-    })
+    });
 }
 
 fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn StartedLogger>) {
@@ -254,7 +255,10 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
     }
 }
 
-fn on_framework_error(error: Error<NpmEngineBuildpackError>, logger: Box<dyn StartedLogger>) {
+fn on_framework_error(
+    error: &libcnb::Error<NpmEngineBuildpackError>,
+    logger: Box<dyn StartedLogger>,
+) {
     print_error_details(logger, &error)
         .announce()
         .error(&formatdoc! {"
