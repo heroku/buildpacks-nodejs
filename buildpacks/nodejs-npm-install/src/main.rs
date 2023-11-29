@@ -46,20 +46,21 @@ impl Buildpack for NpmInstallBuildpack {
             .try_exists()
             .map_err(NpmInstallBuildpackError::Detect)?;
 
-        let package_json = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NpmInstallBuildpackError::PackageJson)?;
-
-        if npm_lockfile_exists || package_json.has_dependencies() {
-            DetectResultBuilder::pass()
-                .build_plan(
-                    BuildPlanBuilder::new()
-                        .provides("node_modules")
-                        .requires("npm")
-                        .requires("node_modules")
-                        .requires("node")
-                        .build(),
-                )
-                .build()
+        if let Ok(package_json) = PackageJson::read(context.app_dir.join("package.json")) {
+            if npm_lockfile_exists || package_json.has_dependencies() {
+                DetectResultBuilder::pass()
+                    .build_plan(
+                        BuildPlanBuilder::new()
+                            .provides("node_modules")
+                            .requires("npm")
+                            .requires("node_modules")
+                            .requires("node")
+                            .build(),
+                    )
+                    .build()
+            } else {
+                DetectResultBuilder::fail().build()
+            }
         } else {
             DetectResultBuilder::fail().build()
         }

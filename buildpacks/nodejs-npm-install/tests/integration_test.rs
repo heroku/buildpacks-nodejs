@@ -172,6 +172,20 @@ fn test_dependencies_and_missing_lockfile_errors() {
     );
 }
 
+#[test]
+#[ignore]
+fn detect_rejects_non_npm_project() {
+    nodejs_integration_test_with_config(
+        "./fixtures/empty",
+        |config| {
+            config.expected_pack_result(PackResult::Failure);
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "fail: heroku/nodejs-npm-install");
+        },
+    );
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();
