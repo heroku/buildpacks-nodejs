@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Update function runtime to 0.14.3
+- Update function runtime to 0.14.3 ([#734](https://github.com/heroku/buildpacks-nodejs/pull/734))
 
 ## [2.3.0] - 2023-11-09
 
