@@ -74,7 +74,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
         let package_name = &metadata_runtime.package_name;
         let package_version = &metadata_runtime.package_version;
 
-        check_minumum_node_version(&app_dir)
+        check_minumum_node_version(app_dir)
             .map_err(NodeJsInvokerBuildpackError::MinimumNodeVersion)?;
 
         log_info("Checking for function file");
