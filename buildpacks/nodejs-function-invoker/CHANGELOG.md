@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The minimum version of Node.js required in Functions is validated during the build.
+
 ### Changed
 
 - Update function runtime to 0.14.3
