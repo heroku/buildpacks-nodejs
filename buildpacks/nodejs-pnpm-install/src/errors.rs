@@ -36,17 +36,6 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
                 "},
             );
         }
-        PnpmInstallBuildpackError::Symlink(err) => {
-            log_error(
-                "heroku/nodejs-pnpm-install symlink error",
-                formatdoc! {"
-                    There was an error while attempting to symlink the virtual
-                    store to the application's `node_modules`.
-
-                    Details: {err:?}
-                "},
-            );
-        }
         PnpmInstallBuildpackError::PackageJson(err) => log_error(
             "heroku/nodejs-pnpm package.json error",
             formatdoc! {"
@@ -90,6 +79,17 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
                     content-addressable store. {context}
 
                     Details: {details}
+                "},
+            );
+        }
+        PnpmInstallBuildpackError::VirtualLayer(err) => {
+            log_error(
+                "heroku/nodejs-pnpm-install virtual store layer error",
+                formatdoc! {"
+                    There was an error while attempting to create the virtual
+                    store layer for pnpm's installed dependencies.
+
+                    Details: {err:?}
                 "},
             );
         }

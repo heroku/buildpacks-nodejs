@@ -65,16 +65,6 @@ impl Buildpack for PnpmInstallBuildpack {
         cmd::pnpm_set_virtual_dir(&env, &virtual_layer.path.join("store"))
             .map_err(PnpmInstallBuildpackError::PnpmDir)?;
 
-        // Install a symlink from {virtual_layer}/node_modules to
-        // /workspace/node_modules, so that dependencies in
-        // {virtual_layer}/store/ can find their dependencies in an ancestor
-        // path's node_modules.
-        symlink(
-            context.app_dir.join("node_modules"),
-            virtual_layer.path.join("node_modules"),
-        )
-        .map_err(PnpmInstallBuildpackError::Symlink)?;
-
         log_header("Installing dependencies");
         cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
 
@@ -127,7 +117,7 @@ enum PnpmInstallBuildpackError {
     PnpmDir(cmd::Error),
     PnpmInstall(cmd::Error),
     PnpmStorePrune(cmd::Error),
-    Symlink(std::io::Error),
+    VirtualLayer(std::io::Error),
 }
 
 impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError> {
