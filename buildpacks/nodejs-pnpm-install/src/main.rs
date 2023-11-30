@@ -9,7 +9,7 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_header, log_info};
-use std::os::unix::fs::symlink;
+
 
 #[cfg(test)]
 use libcnb_test as _;
