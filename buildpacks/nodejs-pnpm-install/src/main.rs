@@ -10,7 +10,6 @@ use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_header, log_info};
 
-
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
