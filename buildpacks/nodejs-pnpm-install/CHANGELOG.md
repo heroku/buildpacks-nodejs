@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New symlink from {virtual_layer}/node_modules to {app_dir}/node_modules to
+  support transitory dependency resolution and nuxt apps.
+  ([#737](https://github.com/heroku/buildpacks-nodejs/pull/737))
+
+### Changed
+
+- Virtual store artifact location has moved form {virtual_layer}/* to
+  {virtual_layer}/store/* to support transitory dependency resolution and
+  nuxt apps. ([#737](https://github.com/heroku/buildpacks-nodejs/pull/737))
+
 ## [2.3.0] - 2023-11-09
 
 - No changes.
