@@ -106,3 +106,38 @@ fn pnpm_8_hoist() {
         assert_web_response(&ctx, "pnpm-8-hoist");
     });
 }
+
+#[test]
+#[ignore = "integration test"]
+fn pnpm_8_nuxt() {
+    nodejs_integration_test("./fixtures/pnpm-8-nuxt", |ctx| {
+        assert_empty!(ctx.pack_stderr);
+        assert_contains!(
+            ctx.pack_stdout,
+            &formatdoc! {"
+                [Setting up pnpm dependency store]
+                Creating new pnpm content-addressable store
+                Creating pnpm virtual store
+            "}
+        );
+
+        assert_contains!(
+            ctx.pack_stdout,
+            &formatdoc! {"
+                [Installing dependencies]
+                Lockfile is up to date, resolution step is skipped
+                Progress: resolved 1, reused 0, downloaded 0, added 0
+            "}
+        );
+
+        assert_contains!(ctx.pack_stdout, "Packages: +676");
+
+        assert_contains!(
+            ctx.pack_stdout,
+            &formatdoc! {"
+                [Running scripts]
+                Running `build` script
+            "}
+        );
+    });
+}
