@@ -9,11 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Collect Node.js Runtime Metrics if the application has opted-in. ([#742](https://github.com/heroku/buildpacks-nodejs/pull/742)) 
+ 
+## [2.4.0] - 2023-12-01
+
+### Added
+
 - Added Node.js version 21.3.0.
 - Added Node.js version 21.2.0.
 - Added Node.js version 20.10.0.
 - Added Node.js version 18.19.0.
-- Collect Node.js Runtime Metrics if the application has opted-in. ([#742](https://github.com/heroku/buildpacks-nodejs/pull/742)) 
 
 ## [2.3.0] - 2023-11-09
 
@@ -299,7 +304,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0
