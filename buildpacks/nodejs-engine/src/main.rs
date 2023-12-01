@@ -1,4 +1,6 @@
-use crate::layers::{DistLayer, DistLayerError, WebEnvLayer};
+use crate::layers::{
+    DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
+};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
@@ -101,6 +103,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         )?;
 
         context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
+        context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
 
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
@@ -143,6 +146,9 @@ impl Buildpack for NodeJsEngineBuildpack {
                     NodeJsEngineBuildpackError::UnknownVersionError(_) => {
                         log_error("Node.js engine version error", err_string);
                     }
+                    NodeJsEngineBuildpackError::NodeRuntimeMetricsError(_) => {
+                        log_error("Node.js engine runtime metric error", err_string);
+                    }
                 }
             }
             err => {
@@ -160,8 +166,10 @@ enum NodeJsEngineBuildpackError {
     PackageJsonError(PackageJsonError),
     #[error("Couldn't resolve Node.js version: {0}")]
     UnknownVersionError(String),
-    #[error("{0}")]
+    #[error(transparent)]
     DistLayerError(#[from] DistLayerError),
+    #[error(transparent)]
+    NodeRuntimeMetricsError(#[from] NodeRuntimeMetricsError),
 }
 
 impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackError> {
