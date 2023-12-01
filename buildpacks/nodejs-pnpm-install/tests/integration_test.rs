@@ -41,7 +41,7 @@ fn pnpm_7_pnp() {
             &formatdoc! {"
                 Packages are hard linked from the content-addressable store to the virtual store.
                   Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual
+                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store
             "}
         );
 
@@ -92,7 +92,7 @@ fn pnpm_8_hoist() {
             &formatdoc! {"
                 Packages are hard linked from the content-addressable store to the virtual store.
                   Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual
+                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store
             "}
         );
 
