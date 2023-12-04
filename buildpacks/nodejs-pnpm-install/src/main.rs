@@ -61,7 +61,7 @@ impl Buildpack for PnpmInstallBuildpack {
 
         cmd::pnpm_set_store_dir(&env, &addressable_layer.path)
             .map_err(PnpmInstallBuildpackError::PnpmDir)?;
-        cmd::pnpm_set_virtual_dir(&env, &virtual_layer.path)
+        cmd::pnpm_set_virtual_dir(&env, &virtual_layer.path.join("store"))
             .map_err(PnpmInstallBuildpackError::PnpmDir)?;
 
         log_header("Installing dependencies");
@@ -116,6 +116,7 @@ enum PnpmInstallBuildpackError {
     PnpmDir(cmd::Error),
     PnpmInstall(cmd::Error),
     PnpmStorePrune(cmd::Error),
+    VirtualLayer(std::io::Error),
 }
 
 impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError> {

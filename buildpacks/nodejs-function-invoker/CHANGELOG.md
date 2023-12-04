@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update function runtime to 0.14.4 ([#734](https://github.com/heroku/buildpacks-nodejs/pull/734))
 
+## [2.4.0] - 2023-12-01
+
+- No changes.
+
 ## [2.3.0] - 2023-11-09
 
 - No changes.
@@ -209,7 +213,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial implementation ([#47](https://github.com/heroku/buildpacks-node/pull/47))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...HEAD
+[2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0

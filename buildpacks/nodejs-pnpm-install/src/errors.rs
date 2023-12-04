@@ -82,6 +82,17 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
                 "},
             );
         }
+        PnpmInstallBuildpackError::VirtualLayer(err) => {
+            log_error(
+                "heroku/nodejs-pnpm-install virtual store layer error",
+                formatdoc! {"
+                    There was an error while attempting to create the virtual
+                    store layer for pnpm's installed dependencies.
+
+                    Details: {err:?}
+                "},
+            );
+        }
     };
 }
 
