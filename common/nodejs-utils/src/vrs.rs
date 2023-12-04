@@ -104,7 +104,7 @@ impl Requirement {
     }
 
     #[must_use]
-    pub fn satisfies(&self, ver: &Version) -> bool {
+    pub(crate) fn satisfies(&self, ver: &Version) -> bool {
         self.0.satisfies(&ver.0)
     }
 }

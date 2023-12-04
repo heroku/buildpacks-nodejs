@@ -1,6 +1,6 @@
 use crate::function::{
-    check_minumum_node_version, get_declared_runtime_package_version, get_main, is_function,
-    ExplicitRuntimeDependencyError, MainError, MinimumNodeVersionError,
+    get_declared_runtime_package_version, get_main, is_function, ExplicitRuntimeDependencyError,
+    MainError,
 };
 use crate::layers::{
     RuntimeLayer, RuntimeLayerError, ScriptLayer, ScriptLayerError, NODEJS_RUNTIME_SCRIPT,
@@ -73,9 +73,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
         let metadata_runtime = &context.buildpack_descriptor.metadata.runtime;
         let package_name = &metadata_runtime.package_name;
         let package_version = &metadata_runtime.package_version;
-
-        check_minumum_node_version(app_dir)
-            .map_err(NodeJsInvokerBuildpackError::MinimumNodeVersion)?;
 
         log_info("Checking for function file");
         get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunction)?;
@@ -154,12 +151,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
                             err_string,
                         );
                     }
-                    NodeJsInvokerBuildpackError::MinimumNodeVersion(_) => {
-                        log_error(
-                            "Node.js Function Invoker minimum Node.js version error",
-                            err_string,
-                        );
-                    }
                 }
             },
             error,
@@ -169,16 +160,14 @@ impl Buildpack for NodeJsInvokerBuildpack {
 
 #[derive(Error, Debug)]
 enum NodeJsInvokerBuildpackError {
-    #[error(transparent)]
+    #[error("{0}")]
     MainFunction(#[from] MainError),
-    #[error(transparent)]
+    #[error("{0}")]
     RuntimeLayer(#[from] RuntimeLayerError),
-    #[error(transparent)]
+    #[error("{0}")]
     ScriptLayer(#[from] ScriptLayerError),
-    #[error(transparent)]
+    #[error("{0}")]
     ExplicitRuntimeDependencyFunction(#[from] ExplicitRuntimeDependencyError),
-    #[error(transparent)]
-    MinimumNodeVersion(#[from] MinimumNodeVersionError),
 }
 
 impl From<NodeJsInvokerBuildpackError> for libcnb::Error<NodeJsInvokerBuildpackError> {

@@ -1,9 +1,7 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::{Requirement, Version};
-use libcnb::{read_toml_file, Env};
+use libcnb::read_toml_file;
 use libherokubuildpack::toml::toml_select_value;
 use std::path::PathBuf;
-use std::process::Command;
 use thiserror::Error;
 
 pub(crate) fn is_function<P>(d: P) -> bool
@@ -58,35 +56,6 @@ where
         .and_then(|dependencies| dependencies.get(package_name).cloned()))
 }
 
-pub(crate) fn check_minumum_node_version<P>(app_dir: P) -> Result<(), MinimumNodeVersionError>
-where
-    P: Into<PathBuf>,
-{
-    let minimum_version = Requirement::parse(">=16").expect("The minimum version should be valid.");
-
-    let version = Command::new("node")
-        .arg("--version")
-        .envs(&Env::from_current())
-        .current_dir(app_dir.into())
-        .output()
-        .map_err(MinimumNodeVersionError::Command)
-        .and_then(|output| {
-            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-            stdout
-                .parse::<Version>()
-                .map_err(|e| MinimumNodeVersionError::ParseVersion(stdout, e))
-        })?;
-
-    if minimum_version.satisfies(&version) {
-        Ok(())
-    } else {
-        Err(MinimumNodeVersionError::DoesNotMeetMinimumRequirement(
-            minimum_version,
-            version,
-        ))
-    }
-}
-
 #[derive(Error, Debug)]
 pub(crate) enum MainError {
     #[error("Could not determine function file location from package.json. {0}")]
@@ -105,16 +74,6 @@ pub(crate) enum ExplicitRuntimeDependencyError {
     PackageJson(#[from] PackageJsonError),
     #[error("The '{package_name}' package must be declared in the 'dependencies' field of your package.json but was found in 'devDependencies'.")]
     DeclaredAsDevDependency { package_name: String },
-}
-
-#[derive(Error, Debug)]
-pub(crate) enum MinimumNodeVersionError {
-    #[error("Failure while attempting to parse `node --version` output\nOutput: {0}\nError: {1}")]
-    ParseVersion(String, heroku_nodejs_utils::vrs::VersionError),
-    #[error("Failure while attempting to execute `node --version`\nError: {0}")]
-    Command(std::io::Error),
-    #[error("The minimum required version of Node.js is {0} but version {1} is installed. Please update the `engines.node` field in your package.json to a newer version.")]
-    DoesNotMeetMinimumRequirement(Requirement, Version),
 }
 
 #[cfg(test)]

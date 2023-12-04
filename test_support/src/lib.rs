@@ -43,7 +43,7 @@ pub fn function_integration_test(fixture: &str, test_body: fn(TestContext)) {
     function_integration_test_with_config(fixture, |_| {}, test_body);
 }
 
-pub fn function_integration_test_with_config(
+fn function_integration_test_with_config(
     fixture: &str,
     with_config: fn(&mut BuildConfig),
     test_body: fn(TestContext),

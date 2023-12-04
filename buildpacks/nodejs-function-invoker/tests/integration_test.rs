@@ -4,12 +4,11 @@
 #![allow(clippy::unwrap_used)]
 
 use base64::Engine;
-use libcnb_test::{assert_contains, assert_not_contains, PackResult, TestContext};
+use libcnb_test::{assert_contains, assert_not_contains, TestContext};
 use rand::RngCore;
 use std::net::SocketAddr;
 use test_support::{
-    function_integration_test, function_integration_test_with_config, retry, start_container,
-    DEFAULT_RETRIES, DEFAULT_RETRY_DELAY,
+    function_integration_test, retry, start_container, DEFAULT_RETRIES, DEFAULT_RETRY_DELAY,
 };
 
 #[test]
@@ -112,26 +111,6 @@ fn function_with_no_lockfile() {
             assert_contains!(container_logs.stdout, "logging info is a fun 1");
         });
     });
-}
-
-#[test]
-#[ignore]
-fn when_node_engine_is_less_than_the_minimum_version_allowed() {
-    function_integration_test_with_config(
-        "./fixtures/minimum-version",
-        |config| {
-            config.expected_pack_result(PackResult::Failure);
-        },
-        |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "\
-[Error: Node.js Function Invoker minimum Node.js version error]
-The minimum required version of Node.js is >=16.0.0 but version 14.21.3 is installed. \
-Please update the `engines.node` field in your package.json to a newer version."
-            );
-        },
-    );
 }
 
 fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> serde_json::Value {
