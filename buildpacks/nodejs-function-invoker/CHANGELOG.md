@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update function runtime to 0.14.4 ([#734](https://github.com/heroku/buildpacks-nodejs/pull/734))
+
 ## [2.4.0] - 2023-12-01
 
 - No changes.
