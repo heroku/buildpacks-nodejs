@@ -37,8 +37,9 @@ impl PackageJson {
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Engines {
     pub node: Option<Requirement>,
-    pub yarn: Option<Requirement>,
     pub npm: Option<Requirement>,
+    pub pnpm: Option<Requirement>,
+    pub yarn: Option<Requirement>,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

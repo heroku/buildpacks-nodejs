@@ -666,6 +666,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "heroku-pnpm-engine-buildpack"
+version = "0.0.0"
+dependencies = [
+ "commons",
+ "fun_run",
+ "heroku-nodejs-utils",
+ "indoc",
+ "libcnb",
+ "libcnb-test",
+ "serde",
+ "serde_json",
+ "test_support",
+]
+
+[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
