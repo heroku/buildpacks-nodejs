@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2023-12-07
+
 ### Added
 
 - Enabled libcnb `trace` feature, so that OpenTelemetry file exports with
@@ -194,7 +196,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...HEAD
+[2.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...v2.5.0
 [2.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
