@@ -10,7 +10,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-libcnb = "=0.16.0"
-libcnb-test = "=0.16.0"
+libcnb = "=0.17.0"
+libcnb-test = "=0.17.0"
 serde_json = "1"
 ureq = "2"
