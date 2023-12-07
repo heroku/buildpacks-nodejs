@@ -12,7 +12,7 @@ workspace = true
 [dependencies]
 heroku-nodejs-utils.workspace = true
 indoc = "2"
-libcnb = "=0.17.0"
+libcnb = { version = "=0.17.0", features = ["trace"] }
 libherokubuildpack = "=0.17.0"
 serde = "1"
 toml = "0.8"

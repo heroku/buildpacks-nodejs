@@ -14,7 +14,7 @@ commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 fun_run = "0.1"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
-libcnb = "=0.17.0"
+libcnb = { version = "=0.17.0", features = ["trace"] }
 serde = "1"
 
 [dev-dependencies]
