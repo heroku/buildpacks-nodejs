@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
 - Added Node.js version 21.4.0.
+- Enabled libcnb `trace` feature, so that OpenTelemetry file exports with
+  buildpack detect and build traces are emitted to the file system.
+  ([#749](https://github.com/heroku/buildpacks-nodejs/pull/749))
+
 ## [2.4.1] - 2023-12-04
 
 - No changes.
