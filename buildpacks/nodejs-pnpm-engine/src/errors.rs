@@ -29,13 +29,15 @@ fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Box<dyn StartedLo
             print_error_details(logger, &"Corepack Requirement Error")
                 .announce()
                 .error(&formatdoc! {"
-                    {pnpm} dependencies were detected, but the version of {pnpm}
-                    to install could not be determined.
+                    A pnpm lockfile ({pnpm_lockfile}) was detected, but the
+                    version of {pnpm} to install could not be determined.
 
-                    This buildpack requires the {pnpm} version to be set via
-                    the {package_manager} key in {package_json}.
+                    {pnpm} may be installed via the {heroku_nodejs_corepack}
+                    buildpack. It requires the desired {pnpm} version to be set
+                    via the {package_manager} key in {package_json}.
 
-                    To set {package_manager} in {package_json} to the latest {pnpm}, run:
+                    To set {package_manager} in {package_json} to the latest
+                    {pnpm}, run:
 
                     {corepack_enable}
                     {corepack_use_pnpm}
@@ -44,8 +46,10 @@ fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Box<dyn StartedLo
                 ",
                 corepack_enable = fmt::command("corepack enable"),
                 corepack_use_pnpm = fmt::command("corepack use pnpm@*"),
+                heroku_nodejs_corepack = fmt::command("heroku/nodejs-corepack"),
                 package_manager = fmt::value("packageManager"),
                 pnpm = fmt::value("pnpm"),
+                pnpm_lockfile = fmt::value("pnpm-lock.yaml"),
                 package_json = fmt::value("package.json")});
         }
         PnpmEngineBuildpackError::PackageJson(pjson_err) => {
