@@ -204,7 +204,7 @@ dependencies = [
 [[package]]
 name = "commons"
 version = "1.0.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#38e164a50db7139a66515c5f8629f7b166d270ec"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#6a8896e0d4ceac6a54c9ab9269d6aab9f603da57"
 dependencies = [
  "ascii_table",
  "byte-unit",
