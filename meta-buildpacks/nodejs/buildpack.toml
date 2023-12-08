@@ -33,17 +33,17 @@ version = "2.5.0"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-engine"
-version = "2.4.1"
+version = "2.5.0"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-install"
-version = "2.4.1"
+version = "2.5.0"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "2.4.1"
+version = "2.5.0"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
