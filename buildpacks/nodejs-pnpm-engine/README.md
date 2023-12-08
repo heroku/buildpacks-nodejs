@@ -4,14 +4,17 @@
 
 Heroku's official Cloud Native Buildpack for installing a version of `pnpm`.
 
+> [!IMPORTANT]
+> This buildpack is a stub implementation, and does not yet install `pnpm`.
+> To install `pnpm` during a build, use [heroku/nodejs-corepack] instead.
+
 ## How it works
 
 The buildpack will pass detection if:
 
 - A `package-lock.yaml` file is found at the root of the application source.
-- The `package.json` file contains an `engines` entry for `pnpm` that specifies a version range.
 
-The buildpack will not install `pnpm`, yet. The build phase will recommend using
+The buildpack will not install `pnpm`, yet. This buildpack will recommend using
 `corepack` to install `pnpm` via the [heroku/nodejs-corepack](heroku/nodejs-corepack)
 buildpack.
 
