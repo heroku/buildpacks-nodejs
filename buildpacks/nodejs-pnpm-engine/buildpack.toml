@@ -15,4 +15,4 @@ type = "MIT"
 id = "*"
 
 [metadata.release]
-image = { repository = "docker.io/heroku/buildpack-nodejs-pnpm-install" }
+image = { repository = "docker.io/heroku/buildpack-nodejs-pnpm-engine" }
