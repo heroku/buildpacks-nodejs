@@ -12,7 +12,7 @@ Heroku's official Cloud Native Buildpack for installing a version of `pnpm`.
 
 The buildpack will pass detection if:
 
-- A `package-lock.yaml` file is found at the root of the application source.
+- A `pnpm-lock.yaml` file is found at the root of the application source.
 
 The buildpack will not install `pnpm`, yet. This buildpack will recommend using
 `corepack` to install `pnpm` via the [heroku/nodejs-corepack](heroku/nodejs-corepack)
