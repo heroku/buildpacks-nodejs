@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2023-12-14
+
 ### Added
 
 - Initial release
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v2.6.0
