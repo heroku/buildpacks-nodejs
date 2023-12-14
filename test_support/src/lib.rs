@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
-const PORT: u16 = 8080;
+pub const PORT: u16 = 8080;
 pub const DEFAULT_RETRIES: u32 = 10;
 pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(1);
 
