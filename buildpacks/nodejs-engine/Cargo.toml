@@ -11,15 +11,15 @@ workspace = true
 
 [dependencies]
 heroku-nodejs-utils.workspace = true
-libcnb = "=0.16.0"
-libherokubuildpack = "=0.16.0"
+libcnb = { version = "=0.17.0", features = ["trace"] }
+libherokubuildpack = "=0.17.0"
 serde = "1"
 tempfile = "3"
 thiserror = "1"
 toml = "0.8"
 
 [dev-dependencies]
-libcnb-test = "=0.16.0"
+libcnb-test = "=0.17.0"
 serde_json = "1"
 test_support.workspace = true
 ureq = "2"

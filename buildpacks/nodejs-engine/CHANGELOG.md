@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Collect Node.js Runtime Metrics if the application has opted-in. ([#742](https://github.com/heroku/buildpacks-nodejs/pull/742)) 
  
+## [2.6.0] - 2023-12-14
+
+- No changes.
+
+## [2.5.0] - 2023-12-07
+
+### Added
+
+- Added Node.js version 21.4.0.
+- Enabled libcnb `trace` feature, so that OpenTelemetry file exports with
+  buildpack detect and build traces are emitted to the file system.
+  ([#749](https://github.com/heroku/buildpacks-nodejs/pull/749))
+
+## [2.4.1] - 2023-12-04
+
+- No changes.
+
 ## [2.4.0] - 2023-12-01
 
 ### Added
@@ -304,7 +321,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...v2.5.0
+[2.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0

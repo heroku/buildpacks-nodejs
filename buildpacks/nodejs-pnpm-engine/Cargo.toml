@@ -1,6 +1,6 @@
 [package]
-name = "heroku-nodejs-pnpm-install-buildpack"
-description = "Heroku Node.js pnpm install Cloud Native Buildpack"
+name = "heroku-pnpm-engine-buildpack"
+description = "Heroku Node.js pnpm Engine Cloud Native Buildpack"
 version.workspace = true
 rust-version.workspace = true
 edition.workspace = true
@@ -10,14 +10,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-heroku-nodejs-utils.workspace = true
+commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 indoc = "2"
 libcnb = { version = "=0.17.0", features = ["trace"] }
-libherokubuildpack = "=0.17.0"
-serde = "1"
-toml = "0.8"
 
 [dev-dependencies]
 libcnb-test = "=0.17.0"
 test_support.workspace = true
-ureq = "2"

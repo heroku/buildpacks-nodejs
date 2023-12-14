@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2023-12-14
+
+- Add `heroku/nodejs-pnpm-engine`.
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `2.6.0`.
+- Updated `heroku/nodejs-engine` to `2.6.0`.
+- Updated `heroku/nodejs-npm-engine` to `2.6.0`.
+- Updated `heroku/nodejs-npm-install` to `2.6.0`.
+- Updated `heroku/nodejs-pnpm-engine` to `2.6.0`.
+- Updated `heroku/nodejs-pnpm-install` to `2.6.0`.
+- Updated `heroku/nodejs-yarn` to `2.6.0`.
+
+## [2.5.0] - 2023-12-07
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `2.5.0`.
+- Updated `heroku/nodejs-engine` to `2.5.0`.
+- Updated `heroku/nodejs-npm-engine` to `2.5.0`.
+- Updated `heroku/nodejs-npm-install` to `2.5.0`.
+- Updated `heroku/nodejs-pnpm-install` to `2.5.0`.
+- Updated `heroku/nodejs-yarn` to `2.5.0`.
+
+## [2.4.1] - 2023-12-04
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `2.4.1`.
+- Updated `heroku/nodejs-engine` to `2.4.1`.
+- Updated `heroku/nodejs-npm-engine` to `2.4.1`.
+- Updated `heroku/nodejs-npm-install` to `2.4.1`.
+- Updated `heroku/nodejs-pnpm-install` to `2.4.1`.
+- Updated `heroku/nodejs-yarn` to `2.4.1`.
+
 ## [2.4.0] - 2023-12-01
 
 ### Changed
@@ -338,7 +374,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.0...HEAD
+[2.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...v2.6.0
+[2.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...v2.5.0
+[2.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...v2.4.1
 [2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
