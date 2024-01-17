@@ -47,7 +47,7 @@ fn detect_available_memory() -> usize {
     .find_map(|path| fs::read_to_string(path).ok())
     .and_then(|contents| contents.trim().parse().ok())
     .map_or(512, |max_bytes: usize| {
-        cmp::min(129024, max_bytes / 1_048_576)
+        cmp::min(129_024, max_bytes / 1_048_576)
     })
 }
 
@@ -114,7 +114,7 @@ mod tests {
         // memory heavy instance
         assert_eq!(default_web_memory(30720), 2048);
         // extra large memory heavy instance
-        assert_eq!(default_web_memory(129025), 2048);
+        assert_eq!(default_web_memory(129_025), 2048);
     }
 
     #[test]
