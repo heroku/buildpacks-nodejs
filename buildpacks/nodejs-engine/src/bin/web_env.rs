@@ -9,10 +9,6 @@ use std::collections::HashMap;
 use std::env;
 use std::fs;
 
-const MAX_AVAILABLE_MEMORY_MB: usize = 14336;
-const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
-const DEFAULT_WEB_MEMORY_MB: usize = 512;
-
 fn main() {
     write_exec_d_program_output(web_env(read_env("WEB_CONCURRENCY"), read_env("WEB_MEMORY")));
 }
@@ -22,8 +18,9 @@ fn web_env(
     memory: Option<usize>,
 ) -> HashMap<ExecDProgramOutputKey, String> {
     let available_memory = detect_available_memory();
-    let web_memory = memory.unwrap_or(DEFAULT_WEB_MEMORY_MB);
-    let web_concurrency = concurrency.unwrap_or_else(|| cmp::max(1, available_memory / web_memory));
+    let web_memory = memory.unwrap_or_else(|| default_web_memory(available_memory));
+    let web_concurrency =
+        concurrency.unwrap_or_else(|| calculate_web_concurrency(available_memory, web_memory));
 
     HashMap::from([
         (
@@ -49,9 +46,20 @@ fn detect_available_memory() -> usize {
     .iter()
     .find_map(|path| fs::read_to_string(path).ok())
     .and_then(|contents| contents.trim().parse().ok())
-    .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |max_bytes: usize| {
-        cmp::min(MAX_AVAILABLE_MEMORY_MB, max_bytes / 1_048_576)
+    .map_or(512, |max_bytes: usize| {
+        cmp::min(129024, max_bytes / 1_048_576)
     })
+}
+
+fn default_web_memory(available_memory: usize) -> usize {
+    if available_memory > 16384 {
+        return 2048;
+    }
+    512
+}
+
+fn calculate_web_concurrency(available_memory: usize, web_memory: usize) -> usize {
+    cmp::max(1, available_memory / web_memory)
 }
 
 #[cfg(test)]
@@ -73,8 +81,8 @@ mod tests {
             .expect("WEB_MEMORY should be a number");
 
         println!("WEB_CONCURRENCY: {web_concurrency}");
-        assert!((1..=32).contains(&web_concurrency));
-        assert!((256..=2048).contains(&web_memory));
+        assert!((1..=63).contains(&web_concurrency));
+        assert!([512, 2048].contains(&web_memory));
     }
 
     #[test]
@@ -93,5 +101,33 @@ mod tests {
 
         assert_eq!(web_concurrency, 42);
         assert_eq!(web_memory, 4242);
+    }
+
+    #[test]
+    fn test_default_web_memory() {
+        // heroku standard-1x
+        assert_eq!(default_web_memory(512), 512);
+        // heroku performance-m
+        assert_eq!(default_web_memory(2560), 512);
+        // heroku performance-l
+        assert_eq!(default_web_memory(14336), 512);
+        // memory heavy instance
+        assert_eq!(default_web_memory(30720), 2048);
+        // extra large memory heavy instance
+        assert_eq!(default_web_memory(129025), 2048);
+    }
+
+    #[test]
+    fn test_calculate_web_concurrency() {
+        // heroku standard-1x
+        assert_eq!(calculate_web_concurrency(512, 512), 1);
+        // heroku performance-m
+        assert_eq!(calculate_web_concurrency(2560, 512), 5);
+        // heroku performance-l
+        assert_eq!(calculate_web_concurrency(14336, 512), 28);
+        // large memory heavy instance
+        assert_eq!(calculate_web_concurrency(63488, 2048), 31);
+        // assert that the calculation won't select a value < 1
+        assert_eq!(calculate_web_concurrency(512, 2048), 1);
     }
 }
