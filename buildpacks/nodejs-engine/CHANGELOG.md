@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Adjusted WEB_MEMORY and WEB_CONCURRENCY calculation to be more appropriate on
+  memory heavy instances.
 - Added Node.js version 21.6.0.
 ## [2.6.3] - 2024-01-11
 
