@@ -1,7 +1,7 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use libcnb_test::{assert_contains, ContainerConfig};
+use libcnb_test::{assert_contains, assert_not_contains, ContainerConfig};
 use std::time::Duration;
 use test_support::{
     assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
@@ -100,4 +100,53 @@ fn runtime_metrics_script_is_not_activated_when_heroku_metrics_url_is_not_set() 
             );
         });
     });
+}
+
+#[test]
+#[ignore]
+fn runtime_metrics_script_is_activated_when_node_version_is_at_least_v14_10_0() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "14.10.0");
+            });
+        },
+        |ctx| {
+            let mut container_config = ContainerConfig::new();
+            container_config
+                .expose_port(PORT)
+                .env("NODE_DEBUG", "heroku")
+                .env("HEROKU_METRICS_URL", "http://localhost:3000");
+
+            ctx.start_container(container_config, |container| {
+                let output = container.logs_now();
+                assert_contains!(output.stderr, "Registering metrics instrumentation");
+            });
+        },
+    );
+}
+
+#[test]
+#[ignore]
+fn runtime_metrics_script_is_not_activated_when_node_version_is_less_than_v14_10_0() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "14.9.0");
+            });
+        },
+        |ctx| {
+            let mut container_config = ContainerConfig::new();
+            container_config
+                .expose_port(PORT)
+                .env("NODE_DEBUG", "heroku");
+
+            ctx.start_container(container_config, |container| {
+                let output = container.logs_now();
+                assert_not_contains!(output.stderr, "Registering metrics instrumentation");
+            });
+        },
+    );
 }
