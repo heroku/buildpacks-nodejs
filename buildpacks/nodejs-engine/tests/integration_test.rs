@@ -120,6 +120,7 @@ fn runtime_metrics_script_is_activated_when_node_version_is_at_least_v14_10_0() 
                 .env("HEROKU_METRICS_URL", "http://localhost:3000");
 
             ctx.start_container(container_config, |container| {
+                std::thread::sleep(Duration::from_secs(1));
                 let output = container.logs_now();
                 assert_contains!(output.stderr, "Registering metrics instrumentation");
             });
