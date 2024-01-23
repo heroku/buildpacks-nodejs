@@ -546,6 +546,7 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "commons",
  "heroku-nodejs-utils",
  "libcnb",
  "libcnb-test",
@@ -601,7 +602,9 @@ dependencies = [
  "anyhow",
  "chrono",
  "commons",
+ "fun_run",
  "indoc",
+ "libcnb",
  "node-semver",
  "opentelemetry",
  "opentelemetry-stdout",

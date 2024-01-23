@@ -11,6 +11,8 @@ anyhow = "1"
 chrono = { version = "0.4", features = ["serde"] }
 commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 indoc = "2"
+fun_run = "0.1"
+libcnb = { version = "=0.17.0", features = ["trace"] }
 node-semver = "2"
 opentelemetry = "0.21"
 opentelemetry_sdk = { version = "0.21", features = ["trace"] }

@@ -1,6 +1,5 @@
 mod errors;
 mod layers;
-mod node;
 mod npm;
 
 use crate::errors::NpmEngineBuildpackError;
@@ -10,6 +9,7 @@ use commons::output::fmt;
 use commons::output::section_log::log_step;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::inv::{Inventory, Release};
+use heroku_nodejs_utils::node::get_node_version;
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -126,17 +126,7 @@ fn install_npm_release(
     env: &Env,
     section_logger: &dyn SectionLogger,
 ) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
-    let node_version = Command::from(node::Version { env })
-        .named_output()
-        .and_then(NamedOutput::nonzero_captured)
-        .map_err(node::VersionError::Command)
-        .and_then(|output| {
-            let stdout = output.stdout_lossy();
-            stdout
-                .parse::<Version>()
-                .map_err(|e| node::VersionError::Parse(stdout, e))
-        })
-        .map_err(NpmEngineBuildpackError::NodeVersion)?;
+    let node_version = get_node_version(env).map_err(NpmEngineBuildpackError::NodeVersion)?;
 
     context.handle_layer(
         layer_name!("npm_engine"),

@@ -1,21 +1,17 @@
 use crate::layers::npm_engine::NpmEngineLayerError;
+use crate::npm;
 use crate::BUILDPACK_NAME;
-use crate::{node, npm};
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
 use commons::output::fmt;
-use commons::output::fmt::DEBUG_INFO;
+use heroku_nodejs_utils::errors::{
+    on_get_node_version_error, print_error_details, SUBMIT_AN_ISSUE,
+    USE_DEBUG_INFORMATION_AND_RETRY_BUILD,
+};
+use heroku_nodejs_utils::node;
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
-use std::fmt::Display;
 use std::io::stdout;
-
-const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
-Use the debug information above to troubleshoot and retry your build.";
-
-const SUBMIT_AN_ISSUE: &str = "\
-If the issue persists and you think you found a bug in the buildpack then reproduce the issue \
-locally with a minimal example and open an issue in the buildpack's GitHub repository with the details.";
 
 #[derive(Debug)]
 pub(crate) enum NpmEngineBuildpackError {
@@ -24,7 +20,7 @@ pub(crate) enum NpmEngineBuildpackError {
     InventoryParse(toml::de::Error),
     NpmVersionResolve(Requirement),
     NpmEngineLayer(NpmEngineLayerError),
-    NodeVersion(node::VersionError),
+    NodeVersion(node::GetNodeVersionError),
     NpmVersion(npm::VersionError),
 }
 
@@ -49,7 +45,7 @@ fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Box<dyn StartedLog
             on_npm_version_resolve_error(&requirement, logger);
         }
         NpmEngineBuildpackError::NpmEngineLayer(e) => on_npm_engine_layer_error(e, logger),
-        NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e, logger),
+        NpmEngineBuildpackError::NodeVersion(e) => on_get_node_version_error(e, logger),
         NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
     }
 }
@@ -197,35 +193,6 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
     }
 }
 
-fn on_node_version_error(error: node::VersionError, logger: Box<dyn StartedLogger>) {
-    match error {
-        node::VersionError::Command(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
-                    Failed to determine {node} version information.
-    
-                    An unexpected error occurred while executing {node_version}. 
-
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", node = fmt::value("Node"), node_version = fmt::value(e.name()) });
-        }
-        node::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
-                    Failed to parse {node} version information.
-        
-                    An unexpected error occurred while parsing version information from {output}. 
-                    
-                    {SUBMIT_AN_ISSUE}
-                ", node = fmt::value("Node"), output = fmt::value(stdout) });
-        }
-    }
-}
-
 fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>) {
     match error {
         npm::VersionError::Command(e) => {
@@ -274,14 +241,4 @@ fn on_framework_error(
             and include the details.
 
         ", buildpack_name = fmt::value(BUILDPACK_NAME) });
-}
-
-fn print_error_details(
-    logger: Box<dyn StartedLogger>,
-    error: &impl Display,
-) -> Box<dyn StartedLogger> {
-    logger
-        .section(DEBUG_INFO)
-        .step(&error.to_string())
-        .end_section()
 }

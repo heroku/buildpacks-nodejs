@@ -1,7 +1,10 @@
 use crate::layers::{
     DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
 };
+use commons::output::build_log::{BuildLog, Logger};
+use heroku_nodejs_utils::errors::on_get_node_version_error;
 use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::node;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::Requirement;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -11,12 +14,14 @@ use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
-use libcnb::{buildpack_main, Buildpack};
+use libcnb::layer_env::Scope;
+use libcnb::{buildpack_main, Buildpack, Env};
 #[cfg(test)]
 use libcnb_test as _;
 use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
 use serde_json as _;
+use std::io::stdout;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -28,6 +33,8 @@ mod layers;
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "20.x";
+
+const MINIMUM_NODE_VERSION_FOR_METRICS: &str = ">=14.10";
 
 struct NodeJsEngineBuildpack;
 
@@ -66,7 +73,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         log_header("Heroku Node.js Engine Buildpack");
         log_header("Checking Node.js version");
 
-        let inv: Inventory =
+        let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
         let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
@@ -83,11 +90,9 @@ impl Buildpack for NodeJsEngineBuildpack {
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
 
-        let target_release =
-            inv.resolve(&version_range)
-                .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
-                    version_range.to_string(),
-                ))?;
+        let target_release = inventory.resolve(&version_range).ok_or(
+            NodeJsEngineBuildpackError::UnknownVersionError(version_range.to_string()),
+        )?;
 
         log_info(format!(
             "Resolved Node.js version: {}",
@@ -95,15 +100,24 @@ impl Buildpack for NodeJsEngineBuildpack {
         ));
 
         log_header("Installing Node.js distribution");
-        context.handle_layer(
+        let dist_layer = context.handle_layer(
             layer_name!("dist"),
             DistLayer {
                 release: target_release.clone(),
             },
         )?;
 
+        let env = dist_layer.env.apply(Scope::Build, &Env::from_current());
+        let node_version = node::get_node_version(&env)
+            .map_err(NodeJsEngineBuildpackError::GetNodeVersionError)?;
+        if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
+            .expect("should be a valid version range")
+            .satisfies(&node_version)
+        {
+            context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
+        }
+
         context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
-        context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
 
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
@@ -149,6 +163,12 @@ impl Buildpack for NodeJsEngineBuildpack {
                     NodeJsEngineBuildpackError::NodeRuntimeMetricsError(_) => {
                         log_error("Node.js engine runtime metric error", err_string);
                     }
+                    NodeJsEngineBuildpackError::GetNodeVersionError(e) => {
+                        on_get_node_version_error(
+                            e,
+                            BuildLog::new(stdout()).without_buildpack_name(),
+                        );
+                    }
                 }
             }
             err => {
@@ -170,6 +190,8 @@ enum NodeJsEngineBuildpackError {
     DistLayerError(#[from] DistLayerError),
     #[error(transparent)]
     NodeRuntimeMetricsError(#[from] NodeRuntimeMetricsError),
+    #[error("Couldn't get Node.js version")]
+    GetNodeVersionError(node::GetNodeVersionError),
 }
 
 impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackError> {

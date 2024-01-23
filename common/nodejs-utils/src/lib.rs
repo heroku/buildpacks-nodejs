@@ -1,6 +1,8 @@
 pub mod application;
 pub mod distribution;
+pub mod errors;
 pub mod inv;
+pub mod node;
 mod nodejs_org;
 mod npmjs_org;
 pub mod package_json;
