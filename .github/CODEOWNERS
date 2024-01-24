@@ -1,1 +1,13 @@
+# The Languages team should be the default requested reviewer on all PRs
 * @heroku/languages
+
+# Expect for automation that:
+# - updates binary inventories
+# - updates project dependencies
+# - prepares releases
+# Only Node.js language owners should be the requested reviewers here
+CHANGELOG.md @joshwlewis @colincasey
+inventory.toml @joshwlewis @colincasey
+Cargo.toml @joshwlewis @colincasey
+Cargo.lock @joshwlewis @colincasey
+buildpack.toml @joshwlewis @colincasey
