@@ -1,7 +1,7 @@
 # The Languages team should be the default requested reviewer on all PRs
 * @heroku/languages
 
-# Expect for automation that:
+# Except for automation that:
 # - updates binary inventories
 # - updates project dependencies
 # - prepares releases
