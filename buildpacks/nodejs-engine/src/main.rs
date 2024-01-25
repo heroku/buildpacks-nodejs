@@ -29,6 +29,8 @@ const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "20.x";
 
+const MINIMUM_NODE_VERSION_FOR_METRICS: &str = ">=14.10";
+
 struct NodeJsEngineBuildpack;
 
 impl Buildpack for NodeJsEngineBuildpack {
@@ -103,7 +105,13 @@ impl Buildpack for NodeJsEngineBuildpack {
         )?;
 
         context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
-        context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
+
+        if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
+            .expect("should be a valid version range")
+            .satisfies(&target_release.version)
+        {
+            context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
+        }
 
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
