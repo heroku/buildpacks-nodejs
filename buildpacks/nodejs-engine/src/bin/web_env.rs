@@ -38,6 +38,10 @@ fn read_env(key: &str) -> Option<usize> {
     env::var(key).ok().and_then(|var| var.parse().ok())
 }
 
+const MAX_AVAILABLE_MEMORY_MB: usize = 129_024;
+const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
+const BYTES_PER_MB: usize = 1_048_576;
+
 fn detect_available_memory() -> usize {
     [
         "/sys/fs/cgroup/memory.max",
@@ -46,16 +50,20 @@ fn detect_available_memory() -> usize {
     .iter()
     .find_map(|path| fs::read_to_string(path).ok())
     .and_then(|contents| contents.trim().parse().ok())
-    .map_or(512, |max_bytes: usize| {
-        cmp::min(129_024, max_bytes / 1_048_576)
+    .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |max_bytes: usize| {
+        cmp::min(MAX_AVAILABLE_MEMORY_MB, max_bytes / BYTES_PER_MB)
     })
 }
 
+const DEFAULT_WEB_MEMORY_BREAKPOINT_MB: usize = 16384;
+const DEFAULT_WEB_MEMORY_MB: usize = 512;
+const DEFAULT_WEB_MEMORY_LARGE_MB: usize = 2048;
+
 fn default_web_memory(available_memory: usize) -> usize {
-    if available_memory > 16384 {
-        return 2048;
+    if available_memory > DEFAULT_WEB_MEMORY_BREAKPOINT_MB {
+        return DEFAULT_WEB_MEMORY_LARGE_MB;
     }
-    512
+    DEFAULT_WEB_MEMORY_MB
 }
 
 fn calculate_web_concurrency(available_memory: usize, web_memory: usize) -> usize {
