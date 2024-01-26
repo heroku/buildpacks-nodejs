@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Collect Node.js Runtime Metrics for v14.10.0 and up if the application has opted-in. ([#767](https://github.com/heroku/buildpacks-nodejs/pull/767))
+- Adjusted WEB_MEMORY and WEB_CONCURRENCY calculation to be more appropriate on memory heavy instances. ([#764](https://github.com/heroku/buildpacks-nodejs/pull/764))
 
 ## [2.6.4] - 2024-01-17
 
