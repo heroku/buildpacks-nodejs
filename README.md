@@ -56,7 +56,6 @@ pack build example-app \
 - `cargo test` runs Rust unit tests.
 - `cargo test -- --ignored` runs Rust integration tests.
 - `shpec buildpacks/npm/shpec/*_shpec.sh` runs the shpec unit tests for the `heroku/nodejs-npm` buildpack.
-- `shpec buildpacks/nodejs-function-invoker/shpec/*_shpec.sh` runs the shpec unit tests for the `heroku/nodejs-function-invoker` buildpack.
 
 ## Releasing
 
