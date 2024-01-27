@@ -57,10 +57,6 @@ pack build example-app \
 - `cargo test -- --ignored` runs Rust integration tests.
 - `shpec buildpacks/npm/shpec/*_shpec.sh` runs the shpec unit tests for the `heroku/nodejs-npm` buildpack.
 
-## Releasing
-
-[Deploy Cloud Native Buildpacks](https://github.com/heroku/languages-team/blob/main/languages/cnb/deploy.md)
-
 ## License
 
 Licensed under the MIT License. See [LICENSE](./LICENSE) file.
