@@ -32,7 +32,7 @@ please see [heroku/nodejs](https://github.com/heroku/heroku-buildpack-nodejs).
 - [Bash](https://www.gnu.org/software/bash/) >= `5.0`
 
 #### For libcnb.rs buildpacks:
-- All [libcnb.rs dependencies](https://https://github.com/Malax/libcnb.rs#development-environment-setup)
+- All [libcnb.rs dependencies](https://github.com/heroku/libcnb.rs#development-environment-setup)
 
 #### For bash buildpacks:
 - [`yj`](https://github.com/sclevine/yj) >= `5.0.0`
