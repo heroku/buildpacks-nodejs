@@ -191,17 +191,15 @@ checksum = "5bc015644b92d5890fab7489e49d21f879d5c990186827d42ec511919404f38b"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-targets 0.52.4",
 ]
 
 [[package]]
 name = "commons"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#6f45f7779c240c7288435461468329e9bd41ab63"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#04cb18ffaebf8a33c0cb40e55caa3cbc7584cab5"
 dependencies = [
  "ascii_table",
  "byte-unit",
@@ -901,7 +899,6 @@ dependencies = [
  "flate2",
  "libcnb",
  "pathdiff",
- "sha2",
  "tar",
  "termcolor",
  "thiserror",
