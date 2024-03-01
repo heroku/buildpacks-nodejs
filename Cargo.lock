@@ -191,17 +191,15 @@ checksum = "5bc015644b92d5890fab7489e49d21f879d5c990186827d42ec511919404f38b"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-targets 0.52.4",
 ]
 
 [[package]]
 name = "commons"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#6f45f7779c240c7288435461468329e9bd41ab63"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#04cb18ffaebf8a33c0cb40e55caa3cbc7584cab5"
 dependencies = [
  "ascii_table",
  "byte-unit",
@@ -558,7 +556,7 @@ dependencies = [
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
- "opentelemetry",
+ "opentelemetry 0.22.0",
  "serde",
  "test_support",
  "thiserror",
@@ -626,9 +624,9 @@ dependencies = [
  "commons",
  "indoc",
  "node-semver",
- "opentelemetry",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
+ "opentelemetry 0.22.0",
+ "opentelemetry-stdout 0.3.0",
+ "opentelemetry_sdk 0.22.1",
  "regex",
  "serde",
  "serde-xml-rs",
@@ -815,9 +813,9 @@ dependencies = [
  "libcnb-common",
  "libcnb-data",
  "libcnb-proc-macros",
- "opentelemetry",
- "opentelemetry-stdout",
- "opentelemetry_sdk",
+ "opentelemetry 0.21.0",
+ "opentelemetry-stdout 0.2.0",
+ "opentelemetry_sdk 0.21.2",
  "serde",
  "thiserror",
  "toml",
@@ -901,7 +899,6 @@ dependencies = [
  "flate2",
  "libcnb",
  "pathdiff",
- "sha2",
  "tar",
  "termcolor",
  "thiserror",
@@ -1031,6 +1028,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "opentelemetry"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "900d57987be3f2aeb70d385fff9b27fb74c5723cc9a52d904d4f9c807a0667bf"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "once_cell",
+ "pin-project-lite",
+ "thiserror",
+ "urlencoding",
+]
+
+[[package]]
 name = "opentelemetry-stdout"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1038,8 +1050,23 @@ checksum = "c13b2df4cd59c176099ac82806725ba340c8fa7b1a7004c0912daad30470f63e"
 dependencies = [
  "chrono",
  "futures-util",
- "opentelemetry",
- "opentelemetry_sdk",
+ "opentelemetry 0.21.0",
+ "opentelemetry_sdk 0.21.2",
+ "ordered-float",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "opentelemetry-stdout"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bdf28b381f23afcd150afc0b38a4183dd321fc96320c1554752b6b761648f78"
+dependencies = [
+ "chrono",
+ "futures-util",
+ "opentelemetry 0.22.0",
+ "opentelemetry_sdk 0.22.1",
  "ordered-float",
  "serde",
  "serde_json",
@@ -1057,7 +1084,26 @@ dependencies = [
  "futures-executor",
  "futures-util",
  "once_cell",
- "opentelemetry",
+ "opentelemetry 0.21.0",
+ "ordered-float",
+ "percent-encoding",
+ "rand",
+ "thiserror",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.22.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e90c7113be649e31e9a0f8b5ee24ed7a16923b322c3c5ab6367469c049d6b7e"
+dependencies = [
+ "async-trait",
+ "crossbeam-channel",
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "once_cell",
+ "opentelemetry 0.22.0",
  "ordered-float",
  "percent-encoding",
  "rand",

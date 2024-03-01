@@ -10,8 +10,8 @@ workspace = true
 heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = { version = "=0.17.0", features = ["trace"] }
-libherokubuildpack = "=0.17.0"
-opentelemetry = "0.21"
+libherokubuildpack = { version = "=0.17.0", default-features = false, features = ["log"] }
+opentelemetry = "0.22"
 serde = "1"
 thiserror = "1"
 
