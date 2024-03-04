@@ -13,6 +13,10 @@ type = "MIT"
 [[stacks]]
 id = "heroku-22"
 
+[[targets]]
+os = "linux"
+arch = "amd64"
+
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"
 package_version = "0.14.4"

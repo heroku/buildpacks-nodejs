@@ -14,5 +14,9 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
+[[targets]]
+os = "linux"
+arch = "amd64"
+
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-yarn" }

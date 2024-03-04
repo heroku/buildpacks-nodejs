@@ -12,10 +12,11 @@ keywords = ["node.js", "nodejs", "heroku"]
 type = "MIT"
 
 [[stacks]]
-id = "heroku-20"
+id = "*"
 
-[[stacks]]
-id = "heroku-22"
+[[targets]]
+os = "linux"
+arch = "amd64"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-engine" }
