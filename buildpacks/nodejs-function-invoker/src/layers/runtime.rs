@@ -1,6 +1,5 @@
 use crate::{NodeJsInvokerBuildpack, NodeJsInvokerBuildpackError};
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
@@ -20,7 +19,8 @@ pub(crate) struct RuntimeLayer {
 pub(crate) struct RuntimeLayerMetadata {
     layer_version: String,
     package: String,
-    stack_id: StackId,
+    arch: String,
+    os: String,
 }
 
 #[derive(Error, Debug)]
@@ -46,7 +46,7 @@ impl Layer for RuntimeLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsInvokerBuildpackError> {
@@ -78,7 +78,7 @@ impl Layer for RuntimeLayer {
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
@@ -98,8 +98,9 @@ impl RuntimeLayerMetadata {
     fn current(layer: &RuntimeLayer, context: &BuildContext<NodeJsInvokerBuildpack>) -> Self {
         RuntimeLayerMetadata {
             package: layer.package.clone(),
-            stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),
+            arch: context.target.arch.clone(),
+            os: context.target.os.clone(),
         }
     }
 }

@@ -23,7 +23,7 @@ impl Layer for NodeRuntimeMetricsLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {

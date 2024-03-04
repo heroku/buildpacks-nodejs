@@ -6,7 +6,6 @@ use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
@@ -40,7 +39,7 @@ impl<'a> Layer for NpmEngineLayer<'a> {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NpmEngineBuildpackError> {
@@ -57,7 +56,7 @@ impl<'a> Layer for NpmEngineLayer<'a> {
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
@@ -130,12 +129,18 @@ fn changed_metadata_fields(
     let mut changed = vec![];
     if old.npm_version != new.npm_version {
         changed.push("npm version".to_string());
-    } else if old.node_version != new.node_version {
+    }
+    if old.node_version != new.node_version {
         changed.push("node version".to_string());
-    } else if old.layer_version != new.layer_version {
+    }
+    if old.layer_version != new.layer_version {
         changed.push("layer version".to_string());
-    } else if old.stack_id != new.stack_id {
-        changed.push("stack id".to_string());
+    }
+    if old.os != new.os {
+        changed.push("operating system".to_string());
+    }
+    if old.arch != new.arch {
+        changed.push("compute architecture".to_string());
     }
     changed.sort();
     changed
@@ -146,7 +151,8 @@ pub(crate) struct NpmEngineLayerMetadata {
     layer_version: String,
     npm_version: String,
     node_version: String,
-    stack_id: StackId,
+    arch: String,
+    os: String,
 }
 
 impl NpmEngineLayerMetadata {
@@ -154,8 +160,9 @@ impl NpmEngineLayerMetadata {
         NpmEngineLayerMetadata {
             node_version: layer.node_version.to_string(),
             npm_version: layer.npm_release.version.to_string(),
-            stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),
+            arch: context.target.arch.clone(),
+            os: context.target.os.clone(),
         }
     }
 }
