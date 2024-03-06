@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Bump to Buildpack API 0.10.
   ([#789](https://github.com/heroku/buildpacks-nodejs/pull/789))
+- Added Yarn version 4.1.1.
+- Added Yarn version 3.8.1.
 
 ## [2.6.6] - 2024-02-15
 
