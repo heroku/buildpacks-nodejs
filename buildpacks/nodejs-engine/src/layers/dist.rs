@@ -1,7 +1,6 @@
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
@@ -23,7 +22,8 @@ pub(crate) struct DistLayer {
 pub(crate) struct DistLayerMetadata {
     layer_version: String,
     nodejs_version: String,
-    stack_id: StackId,
+    arch: String,
+    os: String,
 }
 
 #[derive(Error, Debug)]
@@ -53,7 +53,7 @@ impl Layer for DistLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
@@ -74,7 +74,7 @@ impl Layer for DistLayer {
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
@@ -91,8 +91,9 @@ impl DistLayerMetadata {
     fn current(layer: &DistLayer, context: &BuildContext<NodeJsEngineBuildpack>) -> Self {
         DistLayerMetadata {
             nodejs_version: layer.release.version.to_string(),
-            stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),
+            arch: context.target.arch.clone(),
+            os: context.target.os.clone(),
         }
     }
 }

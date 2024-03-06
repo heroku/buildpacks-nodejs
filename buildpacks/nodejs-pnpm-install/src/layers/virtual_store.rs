@@ -27,7 +27,7 @@ impl Layer for VirtualStoreLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, PnpmInstallBuildpackError> {

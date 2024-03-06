@@ -1,4 +1,4 @@
-api = "0.9"
+api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
@@ -12,6 +12,10 @@ type = "MIT"
 
 [[stacks]]
 id = "heroku-22"
+
+[[targets]]
+os = "linux"
+arch = "amd64"
 
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"

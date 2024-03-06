@@ -38,7 +38,7 @@ impl Layer for ShimLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, CorepackBuildpackError> {
@@ -47,7 +47,7 @@ impl Layer for ShimLayer {
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         _context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {

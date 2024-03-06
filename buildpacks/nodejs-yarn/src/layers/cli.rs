@@ -1,7 +1,6 @@
 use crate::{YarnBuildpack, YarnBuildpackError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
-use libcnb::data::buildpack::StackId;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
@@ -25,7 +24,8 @@ pub(crate) struct CliLayer {
 pub(crate) struct CliLayerMetadata {
     layer_version: String,
     yarn_version: String,
-    stack_id: StackId,
+    arch: String,
+    os: String,
 }
 
 #[derive(Error, Debug)]
@@ -57,7 +57,7 @@ impl Layer for CliLayer {
     }
 
     fn create(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, YarnBuildpackError> {
@@ -90,7 +90,7 @@ impl Layer for CliLayer {
     }
 
     fn existing_layer_strategy(
-        &self,
+        &mut self,
         context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
@@ -107,8 +107,9 @@ impl CliLayerMetadata {
     fn current(layer: &CliLayer, context: &BuildContext<YarnBuildpack>) -> Self {
         CliLayerMetadata {
             yarn_version: layer.release.version.to_string(),
-            stack_id: context.stack_id.clone(),
             layer_version: String::from(LAYER_VERSION),
+            arch: context.target.arch.clone(),
+            os: context.target.os.clone(),
         }
     }
 }

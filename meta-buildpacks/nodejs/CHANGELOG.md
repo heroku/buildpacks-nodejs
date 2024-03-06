@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Bump to Buildpack API 0.10.
+  ([#789](https://github.com/heroku/buildpacks-nodejs/pull/789))
+
 ## [2.6.6] - 2024-02-15
 
 ### Changed
