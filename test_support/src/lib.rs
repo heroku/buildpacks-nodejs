@@ -6,7 +6,6 @@ use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext,
     TestContext, TestRunner,
 };
-use std::any::Any;
 use std::net::SocketAddr;
 use std::panic;
 use std::path::{Path, PathBuf};
