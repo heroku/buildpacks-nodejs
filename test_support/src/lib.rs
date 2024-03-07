@@ -7,8 +7,9 @@ use libcnb_test::{
     TestContext, TestRunner,
 };
 use std::net::SocketAddr;
+use std::panic;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 pub const PORT: u16 = 8080;
@@ -117,6 +118,29 @@ pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static s
         let response_body = response.into_string().unwrap();
         assert_contains!(response_body, expected_response_body);
     });
+}
+
+pub fn wait_for<F>(condition: F, max_wait_time: Duration)
+where
+    F: Fn() + panic::RefUnwindSafe,
+{
+    let mut error = None;
+    let start_time = SystemTime::now();
+    while SystemTime::now()
+        .duration_since(start_time)
+        .expect("should not be an earlier time")
+        < max_wait_time
+    {
+        match panic::catch_unwind(&condition) {
+            Ok(()) => return,
+            Err(err) => error = Some(err),
+        }
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    match error {
+        None => panic!("timeout exceeded"),
+        Some(error) => panic::resume_unwind(error),
+    }
 }
 
 pub fn set_node_engine(app_dir: &Path, version_range: &str) {
