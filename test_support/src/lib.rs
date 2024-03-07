@@ -6,6 +6,7 @@ use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext,
     TestContext, TestRunner,
 };
+use std::any::Any;
 use std::net::SocketAddr;
 use std::panic;
 use std::path::{Path, PathBuf};
@@ -124,21 +125,23 @@ pub fn wait_for<F>(condition: F, max_wait_time: Duration)
 where
     F: Fn() + panic::RefUnwindSafe,
 {
+    let mut error = None;
     let start_time = SystemTime::now();
     while SystemTime::now()
         .duration_since(start_time)
         .expect("should not be an earlier time")
         < max_wait_time
     {
-        let result = panic::catch_unwind(|| {
-            condition();
-        });
-        if result.is_ok() {
-            return;
+        match panic::catch_unwind(&condition) {
+            Ok(()) => return,
+            Err(err) => error = Some(err),
         }
         std::thread::sleep(Duration::from_millis(10));
     }
-    panic!("timeout exceeded");
+    match error {
+        None => panic!("timeout exceeded"),
+        Some(error) => panic::resume_unwind(error),
+    }
 }
 
 pub fn set_node_engine(app_dir: &Path, version_range: &str) {
