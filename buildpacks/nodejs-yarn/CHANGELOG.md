@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added Yarn version 1.22.22.
 ## [3.0.0] - 2024-03-08
 
 - Bump to Buildpack API 0.10.
