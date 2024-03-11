@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added Node.js version 21.7.1.
 ## [3.0.0] - 2024-03-08
 
 - Added Node.js version 21.7.0.
