@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2024-03-11
+
+- No changes.
+
 ## [3.0.0] - 2024-03-08
 
 - Bump to Buildpack API 0.10.
@@ -42,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.1...HEAD
+[3.0.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.6...v3.0.0
 [2.6.6]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.5...v2.6.6
 [2.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.4...v2.6.5
