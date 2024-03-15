@@ -10,7 +10,7 @@ for Node.js applications. These buildpacks build Node.js application source code
 into application images with minimal configuration.
 
 > [!IMPORTANT]
-> This is a collection of [Cloud Native Buildpacks][cnb], and is a component of the [Heroku Cloud Native Buildpacks][heroku-buildpacks] project, which is in beta. If you are instead looking for the Heroku Classic Buildpack for Node.js (for use on the Heroku platform), you may find it [here][classic-buildpack].
+> This is a collection of [Cloud Native Buildpacks][cnb], and is a component of the [Heroku Cloud Native Buildpacks][heroku-buildpacks] project, which is in preview. If you are instead looking for the Heroku Classic Buildpack for Node.js (for use on the Heroku platform), you may find it [here][classic-buildpack].
 
 
 ## Usage
