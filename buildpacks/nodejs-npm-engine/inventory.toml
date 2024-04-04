@@ -67,6 +67,12 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v10.5.0
 etag = "a5fe0f3135e3f65cb057e1a0826e4683"
 
 [[releases]]
+version = "10.5.1"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v10.5.1.tar.gz"
+etag = "0cca0abd17032c3cfe809317f5cfda0d"
+
+[[releases]]
 version = "8.0.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.0.0.tar.gz"
