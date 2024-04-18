@@ -17,7 +17,7 @@ use thiserror::Error;
 
 /// A layer that downloads the Node.js distribution artifacts
 pub(crate) struct DistLayer {
-    pub(crate) release: Artifact<Version, Sha256>,
+    pub(crate) artifact: Artifact<Version, Sha256>,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
@@ -61,14 +61,14 @@ impl Layer for DistLayer {
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-        log_info(format!("Downloading Node.js {}", self.release.version));
-        download_file(&self.release.url, node_tgz.path()).map_err(DistLayerError::Download)?;
+        log_info(format!("Downloading Node.js {}", self.artifact.version));
+        download_file(&self.artifact.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
-        log_info(format!("Extracting Node.js {}", self.release.version));
+        log_info(format!("Extracting Node.js {}", self.artifact.version));
         decompress_tarball(&mut node_tgz.into_file(), layer_path).map_err(DistLayerError::Untar)?;
 
-        log_info(format!("Installing Node.js {}", self.release.version));
-        let dist_name = format!("node-v{}-{}", self.release.version, "linux-x64");
+        log_info(format!("Installing Node.js {}", self.artifact.version));
+        let dist_name = format!("node-v{}-{}", self.artifact.version, "linux-x64");
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
 
@@ -81,7 +81,7 @@ impl Layer for DistLayer {
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         if layer_data.content_metadata.metadata == DistLayerMetadata::current(self, context) {
-            log_info(format!("Reusing Node.js {}", self.release.version));
+            log_info(format!("Reusing Node.js {}", self.artifact.version));
             Ok(ExistingLayerStrategy::Keep)
         } else {
             Ok(ExistingLayerStrategy::Recreate)
@@ -92,7 +92,7 @@ impl Layer for DistLayer {
 impl DistLayerMetadata {
     fn current(layer: &DistLayer, context: &BuildContext<NodeJsEngineBuildpack>) -> Self {
         DistLayerMetadata {
-            nodejs_version: layer.release.version.to_string(),
+            nodejs_version: layer.artifact.version.to_string(),
             layer_version: String::from(LAYER_VERSION),
             arch: context.target.arch.clone(),
             os: context.target.os.clone(),

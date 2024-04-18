@@ -86,21 +86,21 @@ impl Buildpack for NodeJsEngineBuildpack {
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
 
-        let target_release = resolve(&inv.artifacts, Os::Linux, Arch::Amd64, &version_range)
+        let target_artifact = resolve(&inv.artifacts, Os::Linux, Arch::Amd64, &version_range)
             .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
                 version_range.to_string(),
             ))?;
 
         log_info(format!(
             "Resolved Node.js version: {}",
-            target_release.version
+            target_artifact.version
         ));
 
         log_header("Installing Node.js distribution");
         context.handle_layer(
             layer_name!("dist"),
             DistLayer {
-                release: target_release.clone(),
+                artifact: target_artifact.clone(),
             },
         )?;
 
@@ -108,7 +108,7 @@ impl Buildpack for NodeJsEngineBuildpack {
 
         if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
             .expect("should be a valid version range")
-            .satisfies(&target_release.version)
+            .satisfies(&target_artifact.version)
         {
             context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
         }
