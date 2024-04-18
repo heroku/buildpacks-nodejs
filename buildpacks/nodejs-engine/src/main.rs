@@ -1,9 +1,9 @@
 use crate::layers::{
     DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
 };
-use heroku_nodejs_utils::inv::Inventory;
+use heroku_inventory_utils::inv::{resolve, Arch, Inventory, Os};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -17,6 +17,7 @@ use libcnb_test as _;
 use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
 use serde_json as _;
+use sha2::Sha256;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -68,7 +69,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         log_header("Heroku Node.js Engine Buildpack");
         log_header("Checking Node.js version");
 
-        let inv: Inventory =
+        let inv: Inventory<Version, Sha256> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
         let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
@@ -85,11 +86,10 @@ impl Buildpack for NodeJsEngineBuildpack {
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
 
-        let target_release =
-            inv.resolve(&version_range)
-                .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
-                    version_range.to_string(),
-                ))?;
+        let target_release = resolve(&inv.artifacts, Os::Linux, Arch::Amd64, &version_range)
+            .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
+                version_range.to_string(),
+            ))?;
 
         log_info(format!(
             "Resolved Node.js version: {}",

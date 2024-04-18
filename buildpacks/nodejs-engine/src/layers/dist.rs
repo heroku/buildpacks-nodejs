@@ -1,5 +1,6 @@
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
-use heroku_nodejs_utils::inv::Release;
+use heroku_inventory_utils::inv::Artifact;
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
@@ -9,13 +10,14 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 use std::path::Path;
 use tempfile::NamedTempFile;
 use thiserror::Error;
 
 /// A layer that downloads the Node.js distribution artifacts
 pub(crate) struct DistLayer {
-    pub(crate) release: Release,
+    pub(crate) release: Artifact<Version, Sha256>,
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
