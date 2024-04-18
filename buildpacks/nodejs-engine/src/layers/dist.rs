@@ -59,7 +59,10 @@ impl Layer for DistLayer {
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-        log_info(format!("Downloading Node.js {}", self.artifact));
+        log_info(format!(
+            "Downloading Node.js {} from {}",
+            self.artifact, self.artifact.url
+        ));
         download_file(&self.artifact.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
         log_info(format!("Extracting Node.js {}", self.artifact));
