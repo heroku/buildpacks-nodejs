@@ -27,7 +27,7 @@ fn simple_indexjs() {
 fn simple_serverjs() {
     nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
         assert_contains!(ctx.pack_stdout, "Detected Node.js version range: 16.0.0");
-        assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0");
+        assert_contains!(ctx.pack_stdout, "Installing Node.js 16.0.0 (linux-amd64)");
         assert_web_response(&ctx, "node-with-serverjs");
     });
 }
