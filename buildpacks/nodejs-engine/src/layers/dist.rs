@@ -22,10 +22,8 @@ pub(crate) struct DistLayer {
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub(crate) struct DistLayerMetadata {
+    artifact: Artifact<Version, Sha256>,
     layer_version: String,
-    nodejs_version: String,
-    arch: String,
-    os: String,
 }
 
 #[derive(Error, Debug)]
@@ -56,7 +54,7 @@ impl Layer for DistLayer {
 
     fn create(
         &mut self,
-        context: &BuildContext<Self::Buildpack>,
+        _context: &BuildContext<Self::Buildpack>,
         layer_path: &Path,
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
@@ -72,15 +70,15 @@ impl Layer for DistLayer {
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
 
-        LayerResultBuilder::new(DistLayerMetadata::current(self, context)).build()
+        LayerResultBuilder::new(DistLayerMetadata::current(self)).build()
     }
 
     fn existing_layer_strategy(
         &mut self,
-        context: &BuildContext<Self::Buildpack>,
+        _context: &BuildContext<Self::Buildpack>,
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
-        if layer_data.content_metadata.metadata == DistLayerMetadata::current(self, context) {
+        if layer_data.content_metadata.metadata == DistLayerMetadata::current(self) {
             log_info(format!("Reusing Node.js {}", self.artifact.version));
             Ok(ExistingLayerStrategy::Keep)
         } else {
@@ -90,12 +88,10 @@ impl Layer for DistLayer {
 }
 
 impl DistLayerMetadata {
-    fn current(layer: &DistLayer, context: &BuildContext<NodeJsEngineBuildpack>) -> Self {
+    fn current(layer: &DistLayer) -> Self {
         DistLayerMetadata {
-            nodejs_version: layer.artifact.version.to_string(),
+            artifact: layer.artifact.clone(),
             layer_version: String::from(LAYER_VERSION),
-            arch: context.target.arch.clone(),
-            os: context.target.os.clone(),
         }
     }
 }
