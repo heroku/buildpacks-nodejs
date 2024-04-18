@@ -7,6 +7,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+heroku-inventory-utils = { git = "https://github.com/heroku/buildpacks-go/", rev = "28d59e1935a6474f854d030a18e2a52ea5cd258d" }
 heroku-nodejs-utils.workspace = true
 libcnb = { version = "=0.21.0", features = ["trace"] }
 libherokubuildpack = { version = "=0.21.0", default-features = false, features = ["download", "fs", "log", "tar"] }

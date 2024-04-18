@@ -1,5 +1,6 @@
 use crate::{distribution::Distribution, s3};
 use anyhow::anyhow;
+use heroku_inventory_utils::inv::VersionRequirement;
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -74,6 +75,12 @@ impl fmt::Display for Version {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
 pub struct Requirement(Range);
+
+impl VersionRequirement<Version> for Requirement {
+    fn satisfies(&self, version: &Version) -> bool {
+        self.satisfies(version)
+    }
+}
 
 impl Requirement {
     /// Parses `package.json` version string into a Requirement. Handles
