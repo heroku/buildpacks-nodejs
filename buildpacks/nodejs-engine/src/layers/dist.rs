@@ -59,13 +59,13 @@ impl Layer for DistLayer {
     ) -> Result<LayerResult<Self::Metadata>, NodeJsEngineBuildpackError> {
         let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-        log_info(format!("Downloading Node.js {}", self.artifact.version));
+        log_info(format!("Downloading Node.js {}", self.artifact));
         download_file(&self.artifact.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
-        log_info(format!("Extracting Node.js {}", self.artifact.version));
+        log_info(format!("Extracting Node.js {}", self.artifact));
         decompress_tarball(&mut node_tgz.into_file(), layer_path).map_err(DistLayerError::Untar)?;
 
-        log_info(format!("Installing Node.js {}", self.artifact.version));
+        log_info(format!("Installing Node.js {}", self.artifact));
         let dist_name = format!("node-v{}-{}", self.artifact.version, "linux-x64");
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
@@ -79,7 +79,7 @@ impl Layer for DistLayer {
         layer_data: &LayerData<Self::Metadata>,
     ) -> Result<ExistingLayerStrategy, <Self::Buildpack as Buildpack>::Error> {
         if layer_data.content_metadata.metadata == DistLayerMetadata::current(self) {
-            log_info(format!("Reusing Node.js {}", self.artifact.version));
+            log_info(format!("Reusing Node.js {}", self.artifact));
             Ok(ExistingLayerStrategy::Keep)
         } else {
             Ok(ExistingLayerStrategy::Recreate)
