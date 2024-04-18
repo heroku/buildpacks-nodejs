@@ -34,6 +34,8 @@ pub(crate) enum DistLayerError {
     Download(libherokubuildpack::download::DownloadError),
     #[error("Couldn't decompress Node.js distribution: {0}")]
     Untar(std::io::Error),
+    #[error("Couldn't extra tarball prefix from artifact URL: {0}")]
+    TarballPrefix(String),
     #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
     Installation(std::io::Error),
 }
@@ -69,7 +71,9 @@ impl Layer for DistLayer {
         decompress_tarball(&mut node_tgz.into_file(), layer_path).map_err(DistLayerError::Untar)?;
 
         log_info(format!("Installing Node.js {}", self.artifact));
-        let dist_name = format!("node-v{}-{}", self.artifact.version, "linux-x64");
+
+        let dist_name = extract_tarball_prefix(&self.artifact.url)
+            .ok_or_else(|| DistLayerError::TarballPrefix(self.artifact.url.clone()))?;
         let dist_path = Path::new(layer_path).join(dist_name);
         move_directory_contents(dist_path, layer_path).map_err(DistLayerError::Installation)?;
 
@@ -87,6 +91,17 @@ impl Layer for DistLayer {
         } else {
             Ok(ExistingLayerStrategy::Recreate)
         }
+    }
+}
+
+fn extract_tarball_prefix(url: &str) -> Option<&str> {
+    let last_slash = url.rfind('/')?;
+    let tar_gz_index = url.rfind(".tar.gz")?;
+
+    if tar_gz_index > last_slash {
+        Some(&url[last_slash + 1..tar_gz_index])
+    } else {
+        None
     }
 }
 
