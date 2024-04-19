@@ -1,3 +1,5 @@
+use std::env::consts;
+
 use crate::layers::{
     DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
 };
@@ -86,10 +88,13 @@ impl Buildpack for NodeJsEngineBuildpack {
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
 
-        let target_artifact = resolve(&inv.artifacts, Os::Linux, Arch::Amd64, &version_range)
-            .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
-                version_range.to_string(),
-            ))?;
+        let target_artifact = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
+            (Ok(os), Ok(arch)) => resolve(&inv.artifacts, os, arch, &version_range),
+            (_, _) => None,
+        }
+        .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
+            version_range.to_string(),
+        ))?;
 
         log_info(format!(
             "Resolved Node.js version: {}",
