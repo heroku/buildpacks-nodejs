@@ -73,7 +73,7 @@ impl Layer for DistLayer {
         ));
         download_file(&self.artifact.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
-        log_info("Verifying Node.js checksum");
+        log_info("Verifying checksum");
         let digest = sha256(node_tgz.path()).map_err(DistLayerError::ReadTempFile)?;
         if self.artifact.checksum.value != digest {
             Err(DistLayerError::ChecksumVerification)?;
