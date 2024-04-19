@@ -10,7 +10,9 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
-use sha2::Sha256;
+use sha2::{Digest, Sha256};
+use std::fs;
+use std::io::Read;
 use std::path::Path;
 use tempfile::NamedTempFile;
 use thiserror::Error;
@@ -38,6 +40,10 @@ pub(crate) enum DistLayerError {
     TarballPrefix(String),
     #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
     Installation(std::io::Error),
+    #[error("Error verifying checksum")]
+    ChecksumVerification,
+    #[error("Couldn't read tempfile for Node.js distribution: {0}")]
+    ReadTempFile(std::io::Error),
 }
 
 const LAYER_VERSION: &str = "1";
@@ -67,6 +73,12 @@ impl Layer for DistLayer {
         ));
         download_file(&self.artifact.url, node_tgz.path()).map_err(DistLayerError::Download)?;
 
+        log_info("Verifying Node.js checksum");
+        let digest = sha256(node_tgz.path()).map_err(DistLayerError::ReadTempFile)?;
+        if self.artifact.checksum.value != digest {
+            Err(DistLayerError::ChecksumVerification)?;
+        }
+
         log_info(format!("Extracting Node.js {}", self.artifact));
         decompress_tarball(&mut node_tgz.into_file(), layer_path).map_err(DistLayerError::Untar)?;
 
@@ -92,6 +104,20 @@ impl Layer for DistLayer {
             Ok(ExistingLayerStrategy::Recreate)
         }
     }
+}
+
+fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
+    let mut file = fs::File::open(path.as_ref())?;
+    let mut buffer = [0x00; 10 * 1024];
+    let mut sha256: Sha256 = sha2::Sha256::default();
+
+    let mut read = file.read(&mut buffer)?;
+    while read > 0 {
+        Digest::update(&mut sha256, &buffer[..read]);
+        read = file.read(&mut buffer)?;
+    }
+
+    Ok(sha256.finalize().to_vec())
 }
 
 fn extract_tarball_prefix(url: &str) -> Option<&str> {
