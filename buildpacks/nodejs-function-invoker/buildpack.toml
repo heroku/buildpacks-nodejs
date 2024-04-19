@@ -17,6 +17,10 @@ id = "heroku-22"
 os = "linux"
 arch = "amd64"
 
+[[targets]]
+os = "linux"
+arch = "arm64"
+
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"
 package_version = "0.14.4"
