@@ -121,14 +121,10 @@ fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
 }
 
 fn extract_tarball_prefix(url: &str) -> Option<&str> {
-    let last_slash = url.rfind('/')?;
-    let tar_gz_index = url.rfind(".tar.gz")?;
-
-    if tar_gz_index > last_slash {
-        Some(&url[last_slash + 1..tar_gz_index])
-    } else {
-        None
-    }
+    url.rfind('/').and_then(|last_slash| {
+        url.rfind(".tar.gz")
+            .map(|tar_gz_index| &url[last_slash + 1..tar_gz_index])
+    })
 }
 
 impl DistLayerMetadata {
