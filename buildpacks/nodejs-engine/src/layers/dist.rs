@@ -36,7 +36,7 @@ pub(crate) enum DistLayerError {
     Download(libherokubuildpack::download::DownloadError),
     #[error("Couldn't decompress Node.js distribution: {0}")]
     Untar(std::io::Error),
-    #[error("Couldn't extra tarball prefix from artifact URL: {0}")]
+    #[error("Couldn't extract tarball prefix from artifact URL: {0}")]
     TarballPrefix(String),
     #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
     Installation(std::io::Error),
