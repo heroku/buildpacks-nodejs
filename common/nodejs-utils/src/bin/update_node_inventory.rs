@@ -74,7 +74,7 @@ fn main() {
     });
 }
 
-pub(crate) fn list_upstream_artifacts() -> Result<Vec<Artifact<Version, Sha256>>, anyhow::Error> {
+fn list_upstream_artifacts() -> Result<Vec<Artifact<Version, Sha256>>, anyhow::Error> {
     let target_version = Version::parse("0.8.6").context("Failed to parse version")?;
 
     list_releases()?
@@ -155,12 +155,12 @@ fn parse_shasums(input: &str) -> HashMap<String, String> {
 const NODE_UPSTREAM_LIST_URL: &str = "https://nodejs.org/download/release/index.json";
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct NodeJSRelease {
+struct NodeJSRelease {
     pub(crate) version: Version,
     pub(crate) files: Vec<String>,
 }
 
-pub(crate) fn list_releases() -> Result<Vec<NodeJSRelease>> {
+fn list_releases() -> Result<Vec<NodeJSRelease>> {
     ureq::get(NODE_UPSTREAM_LIST_URL)
         .call()
         .context("Failed to fetch nodejs.org release list")?
