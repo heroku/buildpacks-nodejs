@@ -31,13 +31,13 @@ fn main() {
             .into_iter()
             .collect();
 
-    let remote_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
+    let upstream_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
         eprintln!("Failed to fetch upstream go versions: {e}");
         process::exit(4);
     });
 
     let inventory = Inventory {
-        artifacts: remote_artifacts,
+        artifacts: upstream_artifacts,
     };
 
     let toml = toml::to_string(&inventory).unwrap_or_else(|e| {
