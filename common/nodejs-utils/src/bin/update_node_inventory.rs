@@ -32,7 +32,7 @@ fn main() {
             .collect();
 
     let upstream_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
-        eprintln!("Failed to fetch upstream go versions: {e}");
+        eprintln!("Failed to fetch upstream node.js versions: {e}");
         process::exit(4);
     });
 
