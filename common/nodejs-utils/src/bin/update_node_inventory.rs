@@ -31,7 +31,6 @@ fn main() {
             .into_iter()
             .collect();
 
-    // List available upstream artifacts.
     let remote_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
         eprintln!("Failed to fetch upstream go versions: {e}");
         process::exit(4);
