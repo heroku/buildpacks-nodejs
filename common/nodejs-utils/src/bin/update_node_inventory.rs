@@ -46,7 +46,7 @@ fn main() {
     });
 
     fs::write(inventory_path, toml).unwrap_or_else(|e| {
-        eprintln!("Error writing inventory to file: {e}");
+        eprintln!("Error writing inventory file: {e}");
         process::exit(7);
     });
 
