@@ -137,15 +137,13 @@ fn parse_shasums(input: &str) -> HashMap<String, String> {
         .lines()
         .filter_map(|line| {
             let mut parts = line.split_whitespace();
-            match (parts.next(), parts.next()) {
-                (Some(checksum), Some(filename)) if parts.next().is_none() => {
-                    Some((
-                        // Some of the checksum filenames contain a leading `./` (e.g.
-                        // https://nodejs.org/download/release/v0.11.6/SHASUMS256.txt)
-                        filename.trim_start_matches("./").to_string(),
-                        checksum.to_string(),
-                    ))
-                }
+            match (parts.next(), parts.next(), parts.next()) {
+                (Some(checksum), Some(filename), None) => Some((
+                    // Some of the checksum filenames contain a leading `./` (e.g.
+                    // https://nodejs.org/download/release/v0.11.6/SHASUMS256.txt)
+                    filename.trim_start_matches("./").to_string(),
+                    checksum.to_string(),
+                )),
                 _ => None,
             }
         })
