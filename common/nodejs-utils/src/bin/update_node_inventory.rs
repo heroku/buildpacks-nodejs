@@ -25,7 +25,7 @@ fn main() {
         read_inventory_file(&inventory_path)
             .unwrap_or_else(|e| {
                 eprintln!("Error reading inventory at '{inventory_path}': {e}");
-                std::process::exit(1);
+                process::exit(1);
             })
             .artifacts
             .into_iter()
