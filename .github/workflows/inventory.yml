@@ -19,11 +19,8 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - id: install-rust-toolchain
-        name: Install Rust Toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - name: Update Rust toolchain
+        run: rustup update
 
       - name: Rebuild Inventory
         id: rebuild-inventory
