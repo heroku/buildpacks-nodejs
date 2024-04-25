@@ -77,12 +77,15 @@ fn list_upstream_artifacts() -> Result<Vec<Artifact<Version, Sha256>>, anyhow::E
     let earliest_version =
         Version::parse("0.8.6").context("Failed to parse earliest Node.js version")?;
 
-    list_releases()?
-        .into_iter()
-        .filter(|release| release.version >= earliest_version)
-        .map(|release| get_release_artifacts(&release))
-        .collect::<Result<Vec<_>>>()
-        .map(|nested| nested.into_iter().flatten().collect())
+    let mut artifacts = vec![];
+    for release in list_releases()? {
+        if release.version >= earliest_version {
+            for artifact in get_release_artifacts(&release)? {
+                artifacts.push(artifact);
+            }
+        }
+    }
+    Ok(artifacts)
 }
 
 fn get_release_artifacts(release: &NodeJSRelease) -> Result<Vec<Artifact<Version, Sha256>>> {
