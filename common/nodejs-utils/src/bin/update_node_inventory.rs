@@ -18,7 +18,7 @@ use std::{
 fn main() {
     let inventory_path = env::args().nth(1).unwrap_or_else(|| {
         eprintln!("Usage: update_inventory <path/to/inventory.toml>");
-        process::exit(2);
+        process::exit(1);
     });
 
     let inventory_artifacts: HashSet<Artifact<Version, Sha256>> =
@@ -33,7 +33,7 @@ fn main() {
 
     let upstream_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
         eprintln!("Failed to fetch upstream node.js versions: {e}");
-        process::exit(4);
+        process::exit(1);
     });
 
     let inventory = Inventory {
@@ -42,12 +42,12 @@ fn main() {
 
     let toml = toml::to_string(&inventory).unwrap_or_else(|e| {
         eprintln!("Error serializing inventory as toml: {e}");
-        process::exit(6);
+        process::exit(1);
     });
 
     fs::write(inventory_path, toml).unwrap_or_else(|e| {
         eprintln!("Error writing inventory file: {e}");
-        process::exit(7);
+        process::exit(1);
     });
 
     let remote_artifacts: HashSet<Artifact<Version, Sha256>> =
