@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.5] - 2024-04-25
+
+- No changes.
+
 ## [3.0.4] - 2024-04-10
 
 - No changes.
@@ -247,7 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.5...HEAD
+[3.0.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.3...v3.0.4
 [3.0.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.2...v3.0.3
 [3.0.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.1...v3.0.2
