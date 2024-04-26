@@ -29,8 +29,37 @@ fn main() -> Result<()> {
     let mut upstream_artifacts = vec![];
     for release in list_releases()? {
         if release.version >= Version::parse("0.8.6")? {
-            for artifact in get_release_artifacts(&release)? {
-                upstream_artifacts.push(artifact);
+            let supported_platforms = HashMap::from([
+                ("linux-arm64", (Os::Linux, Arch::Arm64)),
+                ("linux-x64", (Os::Linux, Arch::Amd64)),
+            ]);
+
+            let shasums = fetch_checksums(&release.version)?;
+
+            for file in release
+                .files
+                .iter()
+                .filter(|file| supported_platforms.contains_key(&file.as_str()))
+            {
+                let (os, arch) = supported_platforms
+                    .get(file.as_str())
+                    .ok_or_else(|| anyhow::anyhow!("Unsupported platform: {}", file))?;
+
+                let filename = format!("node-v{}-{}.tar.gz", release.version, file);
+                let checksum_hex = shasums
+                    .get(&filename)
+                    .ok_or_else(|| anyhow::anyhow!("Checksum not found for {}", filename))?;
+
+                upstream_artifacts.push(Artifact::<Version, Sha256> {
+                    url: format!(
+                        "https://nodejs.org/download/release/v{}/{filename}",
+                        release.version
+                    ),
+                    version: release.version.clone(),
+                    checksum: Checksum::try_from(checksum_hex.to_owned())?,
+                    arch: *arch,
+                    os: *os,
+                });
             }
         }
     }
@@ -65,41 +94,6 @@ fn main() -> Result<()> {
     });
 
     Ok(())
-}
-
-fn get_release_artifacts(release: &NodeJSRelease) -> Result<Vec<Artifact<Version, Sha256>>> {
-    let supported_platforms = HashMap::from([
-        ("linux-arm64", (Os::Linux, Arch::Arm64)),
-        ("linux-x64", (Os::Linux, Arch::Amd64)),
-    ]);
-
-    let shasums = fetch_checksums(&release.version)?;
-    release
-        .files
-        .iter()
-        .filter(|file| supported_platforms.contains_key(&file.as_str()))
-        .map(|file| {
-            let (os, arch) = supported_platforms
-                .get(file.as_str())
-                .ok_or_else(|| anyhow::anyhow!("Unsupported platform: {}", file))?;
-
-            let filename = format!("node-v{}-{}.tar.gz", release.version, file);
-            let checksum_hex = shasums
-                .get(&filename)
-                .ok_or_else(|| anyhow::anyhow!("Checksum not found for {}", filename))?;
-
-            Ok(Artifact::<Version, Sha256> {
-                url: format!(
-                    "https://nodejs.org/download/release/v{}/{filename}",
-                    release.version
-                ),
-                version: release.version.clone(),
-                checksum: Checksum::try_from(checksum_hex.to_owned())?,
-                arch: *arch,
-                os: *os,
-            })
-        })
-        .collect()
 }
 
 fn fetch_checksums(version: &Version) -> Result<HashMap<String, String>> {
