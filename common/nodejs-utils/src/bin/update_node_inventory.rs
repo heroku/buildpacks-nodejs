@@ -29,25 +29,20 @@ fn main() -> Result<()> {
     let mut upstream_artifacts = vec![];
     for release in list_releases()? {
         if release.version >= Version::parse("0.8.6")? {
-            let supported_platforms = HashMap::from([
-                ("linux-arm64", (Os::Linux, Arch::Arm64)),
-                ("linux-x64", (Os::Linux, Arch::Amd64)),
-            ]);
+            let supported_platforms = [
+                ("linux-arm64", Os::Linux, Arch::Arm64),
+                ("linux-x64", Os::Linux, Arch::Amd64),
+            ];
 
-            for file in release
-                .files
-                .iter()
-                .filter(|file| supported_platforms.contains_key(&file.as_str()))
-            {
-                let (os, arch) = supported_platforms
-                    .get(file.as_str())
-                    .ok_or_else(|| anyhow::anyhow!("Unsupported platform: {}", file))?;
+            for (file, os, arch) in supported_platforms {
+                if !release.files.contains(&file.to_string()) {
+                    continue;
+                }
 
-                let artifact = inventory_artifacts
+                if let Some(artifact) = inventory_artifacts
                     .iter()
-                    .find(|x| x.arch == *arch && x.os == *os && x.version == release.version);
-
-                if let Some(artifact) = artifact {
+                    .find(|x| x.arch == arch && x.os == os && x.version == release.version)
+                {
                     upstream_artifacts.push(artifact.clone());
                 } else {
                     let filename = format!("node-v{}-{}.tar.gz", release.version, file);
@@ -64,8 +59,8 @@ fn main() -> Result<()> {
                         ),
                         version: release.version.clone(),
                         checksum: Checksum::try_from(checksum_hex.to_owned())?,
-                        arch: *arch,
-                        os: *os,
+                        arch,
+                        os,
                     });
                 }
             }
