@@ -26,7 +26,15 @@ fn main() -> Result<()> {
             .into_iter()
             .collect();
 
-    let upstream_artifacts = list_upstream_artifacts()?;
+    let mut upstream_artifacts = vec![];
+    for release in list_releases()? {
+        if release.version >= Version::parse("0.8.6")? {
+            for artifact in get_release_artifacts(&release)? {
+                upstream_artifacts.push(artifact);
+            }
+        }
+    }
+
     let inventory = Inventory {
         artifacts: upstream_artifacts,
     };
@@ -57,18 +65,6 @@ fn main() -> Result<()> {
     });
 
     Ok(())
-}
-
-fn list_upstream_artifacts() -> Result<Vec<Artifact<Version, Sha256>>, anyhow::Error> {
-    let mut artifacts = vec![];
-    for release in list_releases()? {
-        if release.version >= Version::parse("0.8.6")? {
-            for artifact in get_release_artifacts(&release)? {
-                artifacts.push(artifact);
-            }
-        }
-    }
-    Ok(artifacts)
 }
 
 fn get_release_artifacts(release: &NodeJSRelease) -> Result<Vec<Artifact<Version, Sha256>>> {
