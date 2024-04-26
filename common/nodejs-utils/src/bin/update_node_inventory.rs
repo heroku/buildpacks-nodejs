@@ -11,44 +11,28 @@ use serde::Deserialize;
 use sha2::Sha256;
 use std::{
     collections::{HashMap, HashSet},
-    env, fs, process,
+    env, fs,
 };
 
 /// Updates the local node.js inventory.toml with versions published on nodejs.org.
-fn main() {
-    let inventory_path = env::args().nth(1).unwrap_or_else(|| {
-        eprintln!("Usage: update_inventory <path/to/inventory.toml>");
-        process::exit(1);
-    });
+fn main() -> Result<()> {
+    let inventory_path = env::args()
+        .nth(1)
+        .context("Usage: update_inventory <path/to/inventory.toml>")?;
 
     let inventory_artifacts: HashSet<Artifact<Version, Sha256>> =
-        read_inventory_file(&inventory_path)
-            .unwrap_or_else(|e| {
-                eprintln!("Error reading inventory at '{inventory_path}': {e}");
-                process::exit(1);
-            })
+        read_inventory_file(&inventory_path)?
             .artifacts
             .into_iter()
             .collect();
 
-    let upstream_artifacts = list_upstream_artifacts().unwrap_or_else(|e| {
-        eprintln!("Failed to fetch upstream node.js versions: {e}");
-        process::exit(1);
-    });
-
+    let upstream_artifacts = list_upstream_artifacts()?;
     let inventory = Inventory {
         artifacts: upstream_artifacts,
     };
 
-    let toml = toml::to_string(&inventory).unwrap_or_else(|e| {
-        eprintln!("Error serializing inventory as toml: {e}");
-        process::exit(1);
-    });
-
-    fs::write(inventory_path, toml).unwrap_or_else(|e| {
-        eprintln!("Error writing inventory file: {e}");
-        process::exit(1);
-    });
+    let toml = toml::to_string(&inventory).context("Error serializing inventory as toml")?;
+    fs::write(inventory_path, toml).context("Error writing inventory file")?;
 
     let remote_artifacts: HashSet<Artifact<Version, Sha256>> =
         inventory.artifacts.into_iter().collect();
@@ -71,6 +55,8 @@ fn main() {
                 .join(", ")
         );
     });
+
+    Ok(())
 }
 
 fn list_upstream_artifacts() -> Result<Vec<Artifact<Version, Sha256>>, anyhow::Error> {
