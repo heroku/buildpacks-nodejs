@@ -14,5 +14,13 @@ type = "MIT"
 [[stacks]]
 id = "*"
 
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-npm-install" }
