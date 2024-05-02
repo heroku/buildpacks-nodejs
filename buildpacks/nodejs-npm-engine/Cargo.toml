@@ -12,11 +12,11 @@ fun_run = "0.1"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = { version = "=0.19.0", features = ["trace"] }
-libherokubuildpack = { version = "=0.19.0", default-features = false, features = ["download", "tar"] }
+libherokubuildpack = { version = "=0.21.0", default-features = false, features = ["download", "tar"] }
 serde = "1"
 toml = "0.8"
 
 [dev-dependencies]
-libcnb-test = "=0.19.0"
+libcnb-test = "=0.21.0"
 serde_json = "1"
 test_support.workspace = true

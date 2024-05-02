@@ -8,6 +8,6 @@ workspace = true
 
 [dependencies]
 libcnb = "=0.19.0"
-libcnb-test = "=0.19.0"
+libcnb-test = "=0.21.0"
 serde_json = "1"
 ureq = "2"
