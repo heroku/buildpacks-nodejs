@@ -9,8 +9,8 @@ workspace = true
 [dependencies]
 commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 indoc = "2"
-libcnb = { version = "=0.19.0", features = ["trace"] }
+libcnb = { version = "=0.21.0", features = ["trace"] }
 
 [dev-dependencies]
-libcnb-test = "=0.19.0"
+libcnb-test = "=0.21.0"
 test_support.workspace = true
