@@ -8,6 +8,7 @@ workspace = true
 
 [dependencies]
 commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
+fastrand = "2"
 fun_run = "0.1"
 heroku-nodejs-utils.workspace = true
 indoc = "2"

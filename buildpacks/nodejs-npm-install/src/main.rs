@@ -4,10 +4,12 @@ mod npm;
 
 use crate::errors::NpmInstallBuildpackError;
 use crate::layers::npm_cache::NpmCacheLayer;
+use crate::layers::npm_runtime_config::NpmRuntimeConfigLayer;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
+use fastrand as _;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;
@@ -26,7 +28,6 @@ use libcnb_test as _;
 use serde_json as _;
 use std::io::{stdout, Stdout};
 use std::path::Path;
-use std::process::Command;
 #[cfg(test)]
 use test_support as _;
 
@@ -90,6 +91,8 @@ impl Buildpack for NpmInstallBuildpack {
         let build_result = configure_default_processes(&package_json, section.as_ref());
         let logger = section.end_section();
 
+        context.handle_layer(layer_name!("npm_runtime_config"), NpmRuntimeConfigLayer {})?;
+
         logger.finish_logging();
         warn_later.warn_now();
         build_result
@@ -112,7 +115,8 @@ fn log_npm_version(
     env: &Env,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
-    Command::from(npm::Version { env })
+    npm::Version { env }
+        .into_command()
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
         .map_err(npm::VersionError::Command)
@@ -143,10 +147,11 @@ fn configure_npm_cache_layer(
         },
     )?;
     log_step("Configuring npm cache directory");
-    Command::from(npm::SetCacheConfig {
+    npm::SetCacheConfig {
         env,
-        cache_dir: npm_cache_layer.path,
-    })
+        cache_dir: &npm_cache_layer.path,
+    }
+    .into_command()
     .named_output()
     .and_then(NamedOutput::nonzero_captured)
     .map_err(NpmInstallBuildpackError::NpmSetCacheDir)?;
@@ -157,7 +162,7 @@ fn run_npm_install(
     env: &Env,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
-    let mut npm_install = Command::from(npm::Install { env });
+    let mut npm_install = npm::Install { env }.into_command();
     log_step_stream(
         format!("Running {}", fmt::command(npm_install.name())),
         |stream| {
@@ -180,7 +185,7 @@ fn run_build_scripts(
         log_step("No build scripts found");
     } else {
         for script in build_scripts {
-            let mut npm_run = Command::from(npm::RunScript { env, script });
+            let mut npm_run = npm::RunScript { env, script }.into_command();
             log_step_stream(
                 &format!("Running {}", fmt::command(npm_run.name())),
                 |stream| {

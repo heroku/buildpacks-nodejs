@@ -186,6 +186,16 @@ fn detect_rejects_non_npm_project() {
     );
 }
 
+#[test]
+#[ignore]
+fn npm_runtime_settings_are_set() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        let npm_config = ctx.run_shell_command("npm config list");
+        assert_contains!(npm_config.stdout, "update-notifier = false");
+        assert_contains!(npm_config.stdout, "cache = \"/tmp/npm.");
+    });
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();
