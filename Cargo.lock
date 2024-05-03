@@ -553,7 +553,7 @@ version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
  "indoc",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "opentelemetry 0.22.0",
@@ -568,7 +568,7 @@ name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "serde",
@@ -587,7 +587,7 @@ dependencies = [
  "base64",
  "heroku-nodejs-utils",
  "hex",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "rand",
@@ -606,7 +606,7 @@ version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
  "indoc",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "serde",
@@ -643,7 +643,7 @@ name = "heroku-nodejs-yarn-buildpack"
 version = "0.0.0"
 dependencies = [
  "heroku-nodejs-utils",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "serde",
@@ -662,7 +662,7 @@ dependencies = [
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "serde",
@@ -679,7 +679,7 @@ dependencies = [
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "serde",
  "serde_json",
@@ -692,7 +692,7 @@ version = "0.0.0"
 dependencies = [
  "commons",
  "indoc",
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "test_support",
 ]
@@ -820,23 +820,6 @@ dependencies = [
 
 [[package]]
 name = "libcnb"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7db217651ab45597152c94ad849defb079fc7ced7d72de2fcc2e9c3dec6e990e"
-dependencies = [
- "libcnb-common 0.19.0",
- "libcnb-data 0.19.0",
- "libcnb-proc-macros 0.19.0",
- "opentelemetry 0.21.0",
- "opentelemetry-stdout 0.2.0",
- "opentelemetry_sdk 0.21.2",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aacc89bfeaef5f43cdee664798e3c0aa36e052a412ab1391f0750aee4df1f407"
@@ -844,6 +827,9 @@ dependencies = [
  "libcnb-common 0.21.0",
  "libcnb-data 0.21.0",
  "libcnb-proc-macros 0.21.0",
+ "opentelemetry 0.21.0",
+ "opentelemetry-stdout 0.2.0",
+ "opentelemetry_sdk 0.21.2",
  "serde",
  "thiserror",
  "toml",
@@ -854,17 +840,6 @@ name = "libcnb-common"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28fede7cd4353004ff1976ce66c34bb266fa35095be12c6d3d4c2358ef790778"
-dependencies = [
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb-common"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3abf2056162dd76ade12884e002ba88f068a26594b2eb9579ef8af40cfbca1b"
 dependencies = [
  "serde",
  "thiserror",
@@ -890,20 +865,6 @@ checksum = "20c0c825002ee57279d0c9e23309863804536f0c45687436d574dd3e8c7420fb"
 dependencies = [
  "fancy-regex 0.12.0",
  "libcnb-proc-macros 0.17.0",
- "serde",
- "thiserror",
- "toml",
- "uriparse",
-]
-
-[[package]]
-name = "libcnb-data"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "afc6b01af8b624193ca6b247667ef82f36dd85d62b90f5a7e8d047b46642ce7c"
-dependencies = [
- "fancy-regex 0.13.0",
- "libcnb-proc-macros 0.19.0",
  "serde",
  "thiserror",
  "toml",
@@ -949,18 +910,6 @@ checksum = "c0f0afde3a7327936afd743e2cb52f6de3a0d4a4894f6f13bdae1a41e6879c17"
 dependencies = [
  "cargo_metadata",
  "fancy-regex 0.12.0",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "libcnb-proc-macros"
-version = "0.19.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0308e3b554dd8b0b969ab42d19b50b02bdb712dc72652849fa1e33bd1d16709"
-dependencies = [
- "cargo_metadata",
- "fancy-regex 0.13.0",
  "quote",
  "syn",
 ]
@@ -1575,7 +1524,7 @@ dependencies = [
 name = "test_support"
 version = "0.0.0"
 dependencies = [
- "libcnb 0.19.0",
+ "libcnb 0.21.0",
  "libcnb-test",
  "serde_json",
  "ureq",

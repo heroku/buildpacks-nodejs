@@ -12,7 +12,8 @@ updates:
       # Note: The group order matters, since updates are assigned to the first matching group.
       libcnb:
         patterns:
-          - "libcnb*"
+          - "libcnb"
+          - "libcnb-*"
           - "libherokubuildpack"
       rust-dependencies:
         update-types:
