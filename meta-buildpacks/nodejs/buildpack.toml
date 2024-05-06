@@ -84,9 +84,9 @@ version = "0.0.999"
 os = "linux"
 arch = "amd64"
 
-[[ metadata.targets ]]
+[[metadata.targets]]
 os = "linux"
-arcrh = "arm64"
+arch = "arm64"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs" }
