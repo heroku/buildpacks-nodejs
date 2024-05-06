@@ -11,11 +11,11 @@ on:
 jobs:
   release:
     name: Release
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release.yml@jwl-multi-arch
+    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release.yml@jwl/composite-targets
     with:
       app_id: ${{ vars.LINGUIST_GH_APP_ID }}
       dry_run: ${{ inputs.dry_run }}
-      languages_cli_branch: jwl-multi-arch
+      languages_cli_branch: jwl/composite-targets
     secrets:
       app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
       cnb_registry_token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
