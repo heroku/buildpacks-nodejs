@@ -3,13 +3,13 @@ use libcnb::Env;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub struct SetCacheConfig<'a> {
+pub(crate) struct SetCacheConfig<'a> {
     pub(crate) env: &'a Env,
     pub(crate) cache_dir: &'a PathBuf,
 }
 
 impl<'a> SetCacheConfig<'a> {
-    pub fn into_command(self) -> Command {
+    pub(crate) fn into_command(self) -> Command {
         self.into()
     }
 }
