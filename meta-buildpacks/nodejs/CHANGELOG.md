@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.1.0] - 2024-05-09
-
 ### Added
 
 - Support for `arm64` and multi-arch images. ([#815](https://github.com/heroku/buildpacks-nodejs/pull/815))
+
+## [3.1.0] - 2024-05-09
 
 ### Changed
 
