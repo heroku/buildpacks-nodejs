@@ -548,6 +548,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "290f1a1d9242c78d09ce40a5e87e7554ee637af1351968159f4952f028f75604"
 
 [[package]]
+name = "heroku-inventory-utils"
+version = "0.0.0"
+source = "git+https://github.com/heroku/buildpacks-go/?rev=2a86fae18332b9bd495eb29422c13ac3fcb2d0dc#2a86fae18332b9bd495eb29422c13ac3fcb2d0dc"
+dependencies = [
+ "hex",
+ "semver",
+ "serde",
+ "sha2",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "heroku-nodejs-corepack-buildpack"
 version = "0.0.0"
 dependencies = [
@@ -567,12 +580,14 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "heroku-inventory-utils",
  "heroku-nodejs-utils",
  "libcnb 0.21.0",
  "libcnb-test",
  "libherokubuildpack 0.21.0",
  "serde",
  "serde_json",
+ "sha2",
  "tempfile",
  "test_support",
  "thiserror",
@@ -622,6 +637,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "commons",
+ "heroku-inventory-utils",
  "indoc",
  "node-semver",
  "opentelemetry 0.22.0",
@@ -631,6 +647,7 @@ dependencies = [
  "serde",
  "serde-xml-rs",
  "serde_json",
+ "sha2",
  "tempfile",
  "thiserror",
  "toml",
