@@ -1,9 +1,11 @@
+use std::env::consts;
+
 use crate::layers::{
     DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
 };
-use heroku_nodejs_utils::inv::Inventory;
+use heroku_inventory_utils::inv::{resolve, Arch, Inventory, Os};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -17,6 +19,7 @@ use libcnb_test as _;
 use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
 use serde_json as _;
+use sha2::Sha256;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -68,7 +71,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         log_header("Heroku Node.js Engine Buildpack");
         log_header("Checking Node.js version");
 
-        let inv: Inventory =
+        let inv: Inventory<Version, Sha256> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
         let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
@@ -85,22 +88,24 @@ impl Buildpack for NodeJsEngineBuildpack {
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
 
-        let target_release =
-            inv.resolve(&version_range)
-                .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
-                    version_range.to_string(),
-                ))?;
+        let target_artifact = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
+            (Ok(os), Ok(arch)) => resolve(&inv.artifacts, os, arch, &version_range),
+            (_, _) => None,
+        }
+        .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
+            version_range.to_string(),
+        ))?;
 
         log_info(format!(
             "Resolved Node.js version: {}",
-            target_release.version
+            target_artifact.version
         ));
 
         log_header("Installing Node.js distribution");
         context.handle_layer(
             layer_name!("dist"),
             DistLayer {
-                release: target_release.clone(),
+                artifact: target_artifact.clone(),
             },
         )?;
 
@@ -108,7 +113,7 @@ impl Buildpack for NodeJsEngineBuildpack {
 
         if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
             .expect("should be a valid version range")
-            .satisfies(&target_release.version)
+            .satisfies(&target_artifact.version)
         {
             context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
         }

@@ -1,3 +1,5 @@
+use sha2 as _;
+
 pub mod application;
 pub mod distribution;
 pub mod inv;

@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.1] - 2024-05-10
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `3.2.1`.
+- Updated `heroku/nodejs-engine` to `3.2.1`.
+- Updated `heroku/nodejs-npm-engine` to `3.2.1`.
+- Updated `heroku/nodejs-npm-install` to `3.2.1`.
+- Updated `heroku/nodejs-pnpm-engine` to `3.2.1`.
+- Updated `heroku/nodejs-pnpm-install` to `3.2.1`.
+- Updated `heroku/nodejs-yarn` to `3.2.1`.
+
+## [3.2.0] - 2024-05-09
+
+### Added
+
+- Support for `arm64` and multi-arch images. ([#815](https://github.com/heroku/buildpacks-nodejs/pull/815))
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `3.2.0`.
+- Updated `heroku/nodejs-engine` to `3.2.0`.
+- Updated `heroku/nodejs-npm-engine` to `3.2.0`.
+- Updated `heroku/nodejs-npm-install` to `3.2.0`.
+- Updated `heroku/nodejs-pnpm-engine` to `3.2.0`.
+- Updated `heroku/nodejs-pnpm-install` to `3.2.0`.
+- Updated `heroku/nodejs-yarn` to `3.2.0`.
+
+## [3.1.0] - 2024-05-09
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `3.1.0`.
+- Updated `heroku/nodejs-engine` to `3.1.0`.
+- Updated `heroku/nodejs-npm-engine` to `3.1.0`.
+- Updated `heroku/nodejs-npm-install` to `3.1.0`.
+- Updated `heroku/nodejs-pnpm-engine` to `3.1.0`.
+- Updated `heroku/nodejs-pnpm-install` to `3.1.0`.
+- Updated `heroku/nodejs-yarn` to `3.1.0`.
+
 ## [3.0.6] - 2024-05-03
 
 ### Changed
@@ -533,7 +573,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...HEAD
+[3.2.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.0...v3.2.1
+[3.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.1.0...v3.2.0
+[3.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...v3.1.0
 [3.0.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.5...v3.0.6
 [3.0.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.4...v3.0.5
 [3.0.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.3...v3.0.4
