@@ -35,11 +35,13 @@ mod layers;
 struct NodeJsInvokerBuildpack;
 
 #[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 struct NodeJsInvokerBuildpackMetadata {
     runtime: NodeJsInvokerBuildpackRuntimeMetadata,
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 struct NodeJsInvokerBuildpackRuntimeMetadata {
     package_name: String,
     package_version: String,

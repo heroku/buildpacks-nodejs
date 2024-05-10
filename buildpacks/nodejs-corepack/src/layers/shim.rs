@@ -17,6 +17,7 @@ pub(crate) struct ShimLayer {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct ShimLayerMetadata {
     corepack_version: Version,
     layer_version: String,

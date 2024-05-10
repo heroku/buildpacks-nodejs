@@ -147,6 +147,7 @@ fn changed_metadata_fields(
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct NpmEngineLayerMetadata {
     layer_version: String,
     npm_version: String,

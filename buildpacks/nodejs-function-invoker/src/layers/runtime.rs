@@ -16,6 +16,7 @@ pub(crate) struct RuntimeLayer {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct RuntimeLayerMetadata {
     layer_version: String,
     package: String,

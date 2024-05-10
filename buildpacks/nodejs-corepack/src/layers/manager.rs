@@ -19,6 +19,7 @@ pub(crate) struct ManagerLayer {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct ManagerLayerMetadata {
     manager_name: String,
     manager_version: Version,

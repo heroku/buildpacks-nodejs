@@ -13,6 +13,7 @@ use std::path::Path;
 pub(crate) struct AddressableStoreLayer;
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct AddressableStoreLayerMetadata {
     layer_version: String,
 }
