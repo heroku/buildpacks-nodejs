@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added 20.13.1 (linux-arm64), 20.13.1 (linux-amd64).
 ## [3.2.0] - 2024-05-09
 
 - No changes.
