@@ -9,7 +9,6 @@ use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
-use fastrand as _;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::package_json::PackageJson;

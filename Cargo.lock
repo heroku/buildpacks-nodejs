@@ -676,7 +676,6 @@ name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
- "fastrand",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",

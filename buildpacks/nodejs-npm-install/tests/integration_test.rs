@@ -190,9 +190,9 @@ fn detect_rejects_non_npm_project() {
 #[ignore]
 fn npm_runtime_settings_are_set() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        let npm_config = ctx.run_shell_command("npm config list");
-        assert_contains!(npm_config.stdout, "update-notifier = false");
-        assert_contains!(npm_config.stdout, "cache = \"/tmp/npm.");
+        let env_output = ctx.run_shell_command("env").stdout;
+        assert_contains!(env_output, "npm_config_cache=/tmp/npm_cache");
+        assert_contains!(env_output, "npm_config_update-notifier=false");
     });
 }
 
