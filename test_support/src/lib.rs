@@ -49,8 +49,9 @@ fn function_integration_test_with_config(
     with_config: fn(&mut BuildConfig),
     test_body: fn(TestContext),
 ) {
-    if get_integration_test_builder() == "heroku/builder:20" {
-        // builder:20 doesn't ship with functions
+    if get_integration_test_builder() != "heroku/builder:22" {
+        // only heroku/builder:22 supports functions
+        // https://github.com/heroku/cnb-builder-images/blob/main/salesforce-functions/builder.toml
         return;
     }
     integration_test_with_config(

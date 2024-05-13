@@ -22,7 +22,7 @@ pub(crate) struct DistLayer {
     pub(crate) artifact: Artifact<Version, Sha256>,
 }
 
-#[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 pub(crate) struct DistLayerMetadata {
     artifact: Artifact<Version, Sha256>,
     layer_version: String,
@@ -109,7 +109,7 @@ impl Layer for DistLayer {
 fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
     let mut file = fs::File::open(path.as_ref())?;
     let mut buffer = [0x00; 10 * 1024];
-    let mut sha256: Sha256 = sha2::Sha256::default();
+    let mut sha256: Sha256 = Sha256::default();
 
     let mut read = file.read(&mut buffer)?;
     while read > 0 {
@@ -133,5 +133,96 @@ impl DistLayerMetadata {
             artifact: layer.artifact.clone(),
             layer_version: String::from(LAYER_VERSION),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use heroku_inventory_utils::checksum::Checksum;
+    use heroku_inventory_utils::inv::{Arch, Os};
+    use std::str::FromStr;
+
+    #[test]
+    fn dist_metadata_sanity_check() {
+        let node_version_22_1_0_linux_arm = Artifact {
+            version: Version::from_str("22.1.0").unwrap(),
+            os: Os::Linux,
+            arch: Arch::Arm64,
+            url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-arm64.tar.gz"
+                .to_string(),
+            checksum: Checksum::<Sha256>::try_from(
+                "9c111af1f951e8869615bca3601ce7ab6969374933bdba6397469843b808f222".to_string(),
+            )
+            .unwrap(),
+        };
+        let node_version_22_1_0_linux_amd = Artifact {
+            version: Version::from_str("22.1.0").unwrap(),
+            os: Os::Linux,
+            arch: Arch::Amd64,
+            url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-x64.tar.gz"
+                .to_string(),
+            checksum: Checksum::<Sha256>::try_from(
+                "d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d".to_string(),
+            )
+            .unwrap(),
+        };
+
+        // this is a check to ensure that the same node.js artifact doesn't invalidate the cache
+        assert_eq!(
+            DistLayerMetadata {
+                artifact: node_version_22_1_0_linux_arm.clone(),
+                layer_version: LAYER_VERSION.to_string()
+            },
+            DistLayerMetadata {
+                artifact: node_version_22_1_0_linux_arm.clone(),
+                layer_version: LAYER_VERSION.to_string()
+            }
+        );
+
+        // this is a check to ensure that a different node.js artifact does invalidate the cache
+        assert_ne!(
+            DistLayerMetadata {
+                artifact: node_version_22_1_0_linux_arm,
+                layer_version: LAYER_VERSION.to_string()
+            },
+            DistLayerMetadata {
+                artifact: node_version_22_1_0_linux_amd,
+                layer_version: LAYER_VERSION.to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_metadata_guard() {
+        let metadata = DistLayerMetadata {
+            artifact: Artifact {
+                version: Version::from_str("22.1.0").unwrap(),
+                os: Os::Linux,
+                arch: Arch::Amd64,
+                url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-x64.tar.gz"
+                    .to_string(),
+                checksum: Checksum::<Sha256>::try_from(
+                    "d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d".to_string(),
+                )
+                .unwrap(),
+            },
+            layer_version: LAYER_VERSION.to_string(),
+        };
+        let actual = toml::to_string(&metadata).unwrap();
+        let expected = r#"
+layer_version = "1"
+
+[artifact]
+version = "22.1.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-x64.tar.gz"
+checksum = "sha256:d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d"
+"#
+        .trim();
+        assert_eq!(expected, actual.trim());
+        let from_toml: DistLayerMetadata = toml::from_str(&actual).unwrap();
+        assert_eq!(metadata, from_toml);
     }
 }
