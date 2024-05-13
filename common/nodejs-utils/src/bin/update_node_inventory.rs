@@ -111,7 +111,7 @@ fn write_changelog(
                         .insert(format!("{}-{}", artifact.os, artifact.arch));
                 }
                 let mut sorted_versions = os_arch_labels_by_version.into_iter().collect::<Vec<_>>();
-                sorted_versions.sort_by(|(version_a, _), (version_b, _)| version_b.cmp(&version_a));
+                sorted_versions.sort_by(|(version_a, _), (version_b, _)| version_b.cmp(version_a));
                 sorted_versions
             };
 
