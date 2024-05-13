@@ -1,3 +1,4 @@
+use keep_a_changelog as _;
 use sha2 as _;
 
 pub mod application;

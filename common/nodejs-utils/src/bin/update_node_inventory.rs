@@ -6,19 +6,29 @@ use heroku_inventory_utils::{
     checksum::Checksum,
     inv::{read_inventory_file, Arch, Artifact, Inventory, Os},
 };
+use keep_a_changelog::ChangeGroup;
 use node_semver::Version;
 use serde::Deserialize;
 use sha2::Sha256;
+use std::collections::BTreeSet;
+use std::path::PathBuf;
+use std::str::FromStr;
 use std::{
     collections::{HashMap, HashSet},
     env, fs,
 };
 
+const USAGE: &str = "Usage: update_inventory <path/to/inventory.toml> <path/to/CHANGELOG.md>";
+
 /// Updates the local node.js inventory.toml with versions published on nodejs.org.
 fn main() -> Result<()> {
     let inventory_path = env::args()
         .nth(1)
-        .context("Usage: update_inventory <path/to/inventory.toml>")?;
+        .context(format!("Missing path to inventory file!\n\n{USAGE}"))?;
+
+    let changelog_path = env::args()
+        .nth(2)
+        .context(format!("Missing path to changelog file!\n\n{USAGE}"))?;
 
     let inventory_artifacts: HashSet<Artifact<Version, Sha256>> =
         read_inventory_file(&inventory_path)?
@@ -26,7 +36,103 @@ fn main() -> Result<()> {
             .into_iter()
             .collect();
 
-    let mut upstream_artifacts = vec![];
+    let upstream_artifacts = fetch_upstream_artifacts(&inventory_artifacts)?;
+
+    write_inventory(inventory_path, &upstream_artifacts)?;
+
+    write_changelog(changelog_path, &upstream_artifacts, &inventory_artifacts)?;
+
+    Ok(())
+}
+
+fn write_inventory(
+    inventory_path: impl Into<PathBuf>,
+    upstream_artifacts: &HashSet<Artifact<Version, Sha256>>,
+) -> Result<()> {
+    toml::to_string(&Inventory {
+        artifacts: {
+            let mut artifacts = Vec::from_iter(upstream_artifacts.clone());
+            artifacts.sort_by(|a, b| {
+                if a.version == b.version {
+                    b.arch.to_string().cmp(&a.arch.to_string())
+                } else {
+                    b.version.cmp(&a.version)
+                }
+            });
+            artifacts
+        },
+    })
+    .context("Error serializing inventory as toml")
+    .and_then(|contents| {
+        fs::write(inventory_path.into(), contents).context("Error writing inventory file")
+    })
+}
+
+fn write_changelog(
+    changelog_path: impl Into<PathBuf>,
+    upstream_artifacts: &HashSet<Artifact<Version, Sha256>>,
+    inventory_artifacts: &HashSet<Artifact<Version, Sha256>>,
+) -> Result<()> {
+    let changelog_path = changelog_path.into();
+
+    let mut changelog = fs::read_to_string(&changelog_path)
+        .context("Reading changelog")
+        .and_then(|contents| {
+            keep_a_changelog::Changelog::from_str(&contents).context(format!(
+                "Error parsing changelog at '{}'",
+                changelog_path.display()
+            ))
+        })?;
+
+    let changes = [
+        (
+            ChangeGroup::Added,
+            Vec::from_iter(upstream_artifacts - inventory_artifacts),
+        ),
+        (
+            ChangeGroup::Removed,
+            Vec::from_iter(inventory_artifacts - upstream_artifacts),
+        ),
+    ];
+
+    changes
+        .into_iter()
+        .filter(|(_, artifact_diff)| !artifact_diff.is_empty())
+        .for_each(|(change_group, artifact_diff)| {
+            println!("### {change_group}\n");
+
+            let versions = {
+                let mut os_arch_labels_by_version: HashMap<Version, BTreeSet<String>> =
+                    HashMap::new();
+                for artifact in artifact_diff {
+                    os_arch_labels_by_version
+                        .entry(artifact.version)
+                        .or_default()
+                        .insert(format!("{}-{}", artifact.os, artifact.arch));
+                }
+                let mut sorted_versions = os_arch_labels_by_version.into_iter().collect::<Vec<_>>();
+                sorted_versions.sort_by(|(version_a, _), (version_b, _)| version_b.cmp(&version_a));
+                sorted_versions
+            };
+
+            for (version, os_arch_labels) in versions {
+                let os_arch_labels = os_arch_labels.into_iter().collect::<Vec<_>>().join(", ");
+                println!("- Node.js {version} ({os_arch_labels})");
+                changelog.unreleased.add(
+                    change_group.clone(),
+                    format!("{version} ({os_arch_labels})"),
+                );
+            }
+            println!();
+        });
+
+    fs::write(changelog_path, changelog.to_string()).context("Failed to write to changelog")
+}
+
+fn fetch_upstream_artifacts(
+    inventory_artifacts: &HashSet<Artifact<Version, Sha256>>,
+) -> Result<HashSet<Artifact<Version, Sha256>>> {
+    let mut upstream_artifacts = HashSet::new();
     for release in list_releases()? {
         if release.version >= Version::parse("0.8.6")? {
             let supported_platforms = [
@@ -43,7 +149,7 @@ fn main() -> Result<()> {
                     .iter()
                     .find(|x| x.arch == arch && x.os == os && x.version == release.version)
                 {
-                    upstream_artifacts.push(artifact.clone());
+                    upstream_artifacts.insert(artifact.clone());
                 } else {
                     let filename = format!("node-v{}-{}.tar.gz", release.version, file);
 
@@ -52,7 +158,7 @@ fn main() -> Result<()> {
                         .get(&filename)
                         .ok_or_else(|| anyhow::anyhow!("Checksum not found for {}", filename))?;
 
-                    upstream_artifacts.push(Artifact::<Version, Sha256> {
+                    upstream_artifacts.insert(Artifact::<Version, Sha256> {
                         url: format!(
                             "https://nodejs.org/download/release/v{}/{filename}",
                             release.version
@@ -66,37 +172,7 @@ fn main() -> Result<()> {
             }
         }
     }
-
-    let inventory = Inventory {
-        artifacts: upstream_artifacts,
-    };
-
-    let toml = toml::to_string(&inventory).context("Error serializing inventory as toml")?;
-    fs::write(inventory_path, toml).context("Error writing inventory file")?;
-
-    let remote_artifacts: HashSet<Artifact<Version, Sha256>> =
-        inventory.artifacts.into_iter().collect();
-
-    [
-        ("Added", &remote_artifacts - &inventory_artifacts),
-        ("Removed", &inventory_artifacts - &remote_artifacts),
-    ]
-    .iter()
-    .filter(|(_, artifact_diff)| !artifact_diff.is_empty())
-    .for_each(|(action, artifacts)| {
-        let mut list: Vec<&Artifact<Version, Sha256>> = artifacts.iter().collect();
-        list.sort_by_key(|a| &a.version);
-        println!(
-            "{} {}.",
-            action,
-            list.iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", ")
-        );
-    });
-
-    Ok(())
+    Ok(upstream_artifacts)
 }
 
 fn fetch_checksums(version: &Version) -> Result<HashMap<String, String>> {

@@ -191,8 +191,10 @@ checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
+ "js-sys",
  "num-traits",
  "serde",
+ "wasm-bindgen",
  "windows-targets",
 ]
 
@@ -639,6 +641,7 @@ dependencies = [
  "commons",
  "heroku-inventory-utils",
  "indoc",
+ "keep_a_changelog",
  "node-semver",
  "opentelemetry 0.22.0",
  "opentelemetry-stdout 0.3.0",
@@ -807,6 +810,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "406cda4b368d531c842222cf9d2600a9a4acce8d29423695379c6868a143a9ee"
 dependencies = [
  "wasm-bindgen",
+]
+
+[[package]]
+name = "keep_a_changelog"
+version = "0.1.0"
+source = "git+https://github.com/heroku/keep_a_changelog?branch=main#f92ec48c9257ff8d67df1eb8e942a2c25cf2ba91"
+dependencies = [
+ "chrono",
+ "indexmap",
+ "lazy_static",
+ "markdown",
+ "regex",
+ "semver",
+ "thiserror",
+ "uriparse",
 ]
 
 [[package]]
@@ -1005,6 +1023,15 @@ name = "log"
 version = "0.4.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
+
+[[package]]
+name = "markdown"
+version = "1.0.0-alpha.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "21e27d6220ce21f80ce5c4201f23a37c6f1ad037c72c9d1ff215c2919605a5d6"
+dependencies = [
+ "unicode-id",
+]
 
 [[package]]
 name = "memchr"
@@ -1627,6 +1654,12 @@ name = "unicode-bidi"
 version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08f95100a766bf4f8f28f90d77e0a5461bbdb219042e7679bebe79004fed8d75"
+
+[[package]]
+name = "unicode-id"
+version = "0.3.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1b6def86329695390197b82c1e244a54a131ceb66c996f2088a3876e2ae083f"
 
 [[package]]
 name = "unicode-ident"
