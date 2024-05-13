@@ -130,7 +130,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   buildpack detect and build traces are emitted to the file system.
   ([#749](https://github.com/heroku/buildpacks-nodejs/pull/749))
 
-## [2.4.1] - 2023-12-04 [No Changes]
+## [2.4.1] - 2023-12-04 [NO CHANGES]
 
 ## [2.4.0] - 2023-12-01
 
@@ -147,7 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated default node version to 20.x
 
-## [2.2.0] - 2023-10-26 [No Changes]
+## [2.2.0] - 2023-10-26 [NO CHANGES]
 
 ## [2.1.0] - 2023-10-26
 
@@ -185,7 +185,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Provides `npm` added to the build plan since a default version of `npm` is bundled with
   Node.js. ([#622](https://github.com/heroku/buildpacks-nodejs/pull/622))
 
-## [1.1.6] - 2023-09-25 [No Changes]
+## [1.1.6] - 2023-09-25 [NO CHANGES]
 
 ## [1.1.5] - 2023-09-19
 
@@ -222,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node.js 20.4.0
 
-## [1.1.0] - 2023-06-28 [No Changes]
+## [1.1.0] - 2023-06-28 [NO CHANGES]
 
 ## [0.8.24] - 2023-06-21
 
