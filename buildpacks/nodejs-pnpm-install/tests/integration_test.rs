@@ -3,7 +3,9 @@
 
 use indoc::formatdoc;
 use libcnb_test::{assert_contains, assert_empty};
-use test_support::{assert_web_response, nodejs_integration_test};
+use test_support::{
+    assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
+};
 
 #[test]
 #[ignore = "integration test"]
@@ -139,5 +141,27 @@ fn pnpm_8_nuxt() {
                 Running `build` script
             "}
         );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test("./fixtures/pnpm-project-with-native-module", |ctx| {
+        assert_contains!(
+            ctx.pack_stdout,
+            "Creating new pnpm content-addressable store"
+        );
+        assert_contains!(ctx.pack_stdout, "dtrace-provider install");
+        assert_contains!(ctx.pack_stdout, "node-gyp rebuild");
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "Restoring pnpm content-addressable store from cache"
+            );
+            assert_contains!(ctx.pack_stdout, "dtrace-provider install");
+            assert_contains!(ctx.pack_stdout, "node-gyp rebuild");
+        });
     });
 }
