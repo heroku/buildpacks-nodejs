@@ -101,7 +101,7 @@ jobs:
           curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
           echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
       - name: Install musl-tools
-        run: sudo apt-get install musl-tools --no-install-recommends
+        run: sudo apt-get install musl-tools -y --no-install-recommends
       - name: Update Rust toolchain
         run: rustup update
       - name: Install Rust linux-musl target
