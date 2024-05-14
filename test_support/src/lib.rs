@@ -77,8 +77,17 @@ fn integration_test_with_config(
     let builder = get_integration_test_builder();
     let app_dir = cargo_manifest_dir.join("tests").join(fixture);
 
+    // TODO: Once Pack build supports `--platform` and libcnb-test adjusted accordingly, change this
+    // to allow configuring the target arch independently of the builder name (eg via env var).
+    let target_triple = match builder.as_str() {
+        // Compile the buildpack for ARM64 iff the builder supports multi-arch and the host is ARM64.
+        "heroku/builder:24" if cfg!(target_arch = "aarch64") => "aarch64-unknown-linux-musl",
+        _ => "x86_64-unknown-linux-musl",
+    };
+
     let mut build_config = BuildConfig::new(builder, app_dir);
     build_config.buildpacks(buildpacks);
+    build_config.target_triple(target_triple);
     with_config(&mut build_config);
 
     TestRunner::default().build(build_config, test_body);
