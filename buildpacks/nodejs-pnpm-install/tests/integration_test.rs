@@ -3,9 +3,7 @@
 
 use indoc::formatdoc;
 use libcnb_test::{assert_contains, assert_empty};
-use test_support::{
-    assert_web_response, nodejs_integration_test, nodejs_integration_test_with_config,
-};
+use test_support::{assert_web_response, nodejs_integration_test};
 
 #[test]
 #[ignore = "integration test"]
