@@ -146,3 +146,17 @@ fn yarn_4_modules_zero() {
         assert_web_response(&ctx, "yarn-4-modules-zero");
     });
 }
+
+#[test]
+#[ignore = "integration test"]
+fn test_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test("./fixtures/yarn-project-with-native-module", |ctx| {
+        assert_not_contains!(ctx.pack_stdout, "Restoring yarn dependency cache");
+        assert_contains!(ctx.pack_stdout, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            assert_contains!(ctx.pack_stdout, "Restoring yarn dependency cache");
+            assert_contains!(ctx.pack_stdout, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
+        });
+    });
+}
