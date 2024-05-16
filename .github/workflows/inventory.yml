@@ -31,13 +31,10 @@ jobs:
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            cargo run --bin update_node_inventory buildpacks/nodejs-engine/inventory.toml
+            cargo run --bin update_node_inventory buildpacks/nodejs-engine/inventory.toml buildpacks/nodejs-engine/CHANGELOG.md
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
-
-      - name: Update Changelog
-        run: echo "${{ steps.rebuild-inventory.outputs.msg }}" | xargs -r -I '{}' perl -i -p -e 's/\[Unreleased\]\s+/[Unreleased]\n\n- {}/' buildpacks/nodejs-engine/CHANGELOG.md
-
+          
       - name: Create Pull Request
         id: pr
         uses: peter-evans/create-pull-request@v6
