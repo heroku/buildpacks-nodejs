@@ -23,7 +23,7 @@ arch = "arm64"
 
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"
-package_version = "0.14.4"
+package_version = "0.14.5"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-function-invoker" }
