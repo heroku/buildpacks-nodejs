@@ -110,8 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated buildpack display name, description and
-  keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
+- Updated buildpack display name, description and keywords. ([#692](https://github.com/heroku/buildpacks-nodejs/pull/692))
 
 ## [1.1.7] - 2023-10-17
 
@@ -165,18 +164,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.8] - 2022-11-30
 
-- Update `sf-fx-runtime-nodejs` from `0.12.0` to `0.14.0` for functions still using the implicit
-  dependency ([#401](https://github.com/heroku/buildpacks-nodejs/pull/401))
+- Update `sf-fx-runtime-nodejs` from `0.12.0` to `0.14.0` for functions still using the implicit dependency ([#401](https://github.com/heroku/buildpacks-nodejs/pull/401))
 
 ## [0.3.7] - 2022-10-28
 
-- Fix `sf-fx-runtime-nodejs` dependency installing from `npx` at application startup when implicit runtime dependency is
-  used ([#382](https://github.com/heroku/buildpacks-nodejs/pull/382))
+- Fix `sf-fx-runtime-nodejs` dependency installing from `npx` at application startup when implicit runtime dependency is used ([#382](https://github.com/heroku/buildpacks-nodejs/pull/382))
 
 ## [0.3.6] - 2022-10-26
 
-- Support explicit Functions Runtime for Node.js as dependency in
-  package.json ([#373](https://github.com/heroku/buildpacks-nodejs/pull/373))
+- Support explicit Functions Runtime for Node.js as dependency in package.json ([#373](https://github.com/heroku/buildpacks-nodejs/pull/373))
 
 ## [0.3.5] - 2022-09-28
 
@@ -186,8 +182,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.4] - 2022-09-12
 
 - Upgrade `libcnb` and `libherokubuildpack` to `0.10.0`. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
-- Buildpack now implements buildpack API version `0.8` and so requires lifecycle version `0.14.x` or
-  newer. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
+- Buildpack now implements buildpack API version `0.8` and so requires lifecycle version `0.14.x` or newer. ([#335](https://github.com/heroku/buildpacks-nodejs/pull/335))
 
 ## [0.3.3] - 2022-07-05
 
@@ -259,118 +254,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.6] - 2021-06-21
 
 ### Changed
-
 - Bump sf-fx-runtime-nodejs to 0.1.1.-ea
 
 ## [0.1.5] - 2021-05-18
 
 ### Fixed
-
 - Use correct path for referencing `lib/utils/download.sh` ([#70](https://github.com/heroku/buildpacks-nodejs/pull/70))
 
 ## [0.1.4] - 2021-05-18
 
 ### Changed
-
 - Detect for `type=function` in `project.toml` ([#58](https://github.com/heroku/buildpacks-nodejs/pull/58))
 - Install `yj` before `bin/detect` ([#66](https://github.com/heroku/buildpacks-nodejs/pull/66))
 
 ## [0.1.3] - 2021-05-12
 
 ### Changed
-
-- Fixed `NODE_OPTIONS` unbound variable error when
-  using `DEBUG_PORT` ([#63](https://github.com/heroku/buildpacks-nodejs/pull/63))
+- Fixed `NODE_OPTIONS` unbound variable error when using `DEBUG_PORT` ([#63](https://github.com/heroku/buildpacks-nodejs/pull/63))
 
 ## [0.1.2] - 2021-05-11
 
 ### Added
-
-- Remote debugging is now enabled when the `DEBUG_PORT` environment variable is
-  set ([#59](https://github.com/heroku/buildpacks-nodejs/pull/59))
+- Remote debugging is now enabled when the `DEBUG_PORT` environment variable is set ([#59](https://github.com/heroku/buildpacks-nodejs/pull/59))
 
 ### Changed
-
-- The `web` process is now marked as the default process
-  type ([#60](https://github.com/heroku/buildpacks-nodejs/pull/60))
-- The function runtime download is now cleaned up after
-  installation ([#57](https://github.com/heroku/buildpacks-nodejs/pull/57))
+- The `web` process is now marked as the default process type ([#60](https://github.com/heroku/buildpacks-nodejs/pull/60))
+- The function runtime download is now cleaned up after installation ([#57](https://github.com/heroku/buildpacks-nodejs/pull/57))
 
 ## [0.1.1] - 2021-05-10
 
 ### Added
-
 - Run check for "main" key and file in package.json ([#52](https://github.com/heroku/buildpacks-nodejs/pull/52))
 - Support for newer versions of the function runtime
 
 ## [0.1.0] - 2021-05-06
 
 ### Added
-
 - Initial implementation ([#47](https://github.com/heroku/buildpacks-node/pull/47))
 
 [unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...HEAD
-
 [3.2.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.0...v3.2.1
-
 [3.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.1.0...v3.2.0
-
 [3.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...v3.1.0
-
 [3.0.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.5...v3.0.6
-
 [3.0.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.4...v3.0.5
-
 [3.0.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.3...v3.0.4
-
 [3.0.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.2...v3.0.3
-
 [3.0.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.1...v3.0.2
-
 [3.0.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.0...v3.0.1
-
 [3.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.6...v3.0.0
-
 [2.6.6]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.5...v2.6.6
-
 [2.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.4...v2.6.5
-
 [2.6.4]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.3...v2.6.4
-
 [2.6.3]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.2...v2.6.3
-
 [2.6.2]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.1...v2.6.2
-
 [2.6.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.0...v2.6.1
-
 [2.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...v2.6.0
-
 [2.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...v2.5.0
-
 [2.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...v2.4.1
-
 [2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
-
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
-
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
-
 [2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0
-
 [2.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.7...v2.0.0
-
 [1.1.7]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.6...v1.1.7
-
 [1.1.6]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.5...v1.1.6
-
 [1.1.5]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.4...v1.1.5
-
 [1.1.4]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.3...v1.1.4
-
 [1.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...v1.1.3
-
 [1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
-
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
-
 [1.1.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.1.0
