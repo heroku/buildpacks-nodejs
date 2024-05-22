@@ -21,6 +21,7 @@ pub(crate) struct CliLayer {
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct CliLayerMetadata {
     layer_version: String,
     yarn_version: String,

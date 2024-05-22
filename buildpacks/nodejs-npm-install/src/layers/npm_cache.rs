@@ -51,6 +51,7 @@ impl<'a> Layer for NpmCacheLayer<'a> {
 const LAYER_VERSION: &str = "1";
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct NpmCacheLayerMetadata {
     layer_version: String,
 }

@@ -23,6 +23,7 @@ pub(crate) struct DistLayer {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub(crate) struct DistLayerMetadata {
     artifact: Artifact<Version, Sha256>,
     layer_version: String,

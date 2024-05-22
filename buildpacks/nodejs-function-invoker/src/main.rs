@@ -40,6 +40,7 @@ struct NodeJsInvokerBuildpackMetadata {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 struct NodeJsInvokerBuildpackRuntimeMetadata {
     package_name: String,
     package_version: String,
