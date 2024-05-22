@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
-version = "3.2.1"
+version = "3.2.2"
 name = "Salesforce Node.js Function Invoker"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Salesforce's Node.js function invoker buildpack. A component of the 'heroku/nodejs-function' buildpack."
@@ -23,7 +23,7 @@ arch = "arm64"
 
 [metadata.runtime]
 package_name = "@heroku/sf-fx-runtime-nodejs"
-package_version = "0.14.4"
+package_version = "0.14.5"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-function-invoker" }
