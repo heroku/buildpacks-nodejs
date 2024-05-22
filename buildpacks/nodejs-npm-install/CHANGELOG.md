@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix for npm permission error when executing without root
   permissions ([#830](https://github.com/heroku/buildpacks-nodejs/pull/830))
 
+## [3.2.2] - 2024-05-22
+
+- No changes.
+
 ## [3.2.1] - 2024-05-10
 
 - No changes.
@@ -97,8 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Detection will report a failure instead of throwing an error when there is no `package.json` file in the application
-  directory. ([#733](https://github.com/heroku/buildpacks-nodejs/pull/733))
+- Detection will report a failure instead of throwing an error when there is no `package.json` file in the application directory. ([#733](https://github.com/heroku/buildpacks-nodejs/pull/733))
 
 ## [2.3.0] - 2023-11-09
 
@@ -118,7 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.2...HEAD
+[3.2.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...v3.1.0

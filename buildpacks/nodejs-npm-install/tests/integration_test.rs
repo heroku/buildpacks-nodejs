@@ -196,6 +196,28 @@ fn npm_runtime_settings_are_set() {
     });
 }
 
+#[test]
+#[ignore = "integration test"]
+fn test_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project-with-native-module",
+        |config| {
+            config.env("npm_config_foreground-scripts", "true");
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "- Creating npm cache");
+            assert_contains!(ctx.pack_stdout, "> dtrace-provider@0.8.8 install");
+            assert_contains!(ctx.pack_stdout, "> node-gyp rebuild");
+            let config = ctx.config.clone();
+            ctx.rebuild(config, |ctx| {
+                assert_contains!(ctx.pack_stdout, "- Restoring npm cache");
+                assert_contains!(ctx.pack_stdout, "> dtrace-provider@0.8.8 install");
+                assert_contains!(ctx.pack_stdout, "> node-gyp rebuild");
+            });
+        },
+    );
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();
