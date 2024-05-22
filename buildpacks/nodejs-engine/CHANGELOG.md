@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.2] - 2024-05-22
+
 ### Added
 
 - 22.2.0 (linux-amd64, linux-arm64)
@@ -18,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node.js 20.13.1 (linux-amd64, linux-arm64)
 
-## [3.2.0] - 2024-05-09 [NO CHANGES]
+## [3.2.0] - 2024-05-09
 
 ## [3.1.0] - 2024-05-09
 
@@ -124,7 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Collect Node.js Runtime Metrics if the application has
   opted-in. ([#742](https://github.com/heroku/buildpacks-nodejs/pull/742))
 
-## [2.6.0] - 2023-12-14 [NO CHANGES]
+## [2.6.0] - 2023-12-14
 
 ## [2.5.0] - 2023-12-07
 
@@ -135,7 +137,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   buildpack detect and build traces are emitted to the file system.
   ([#749](https://github.com/heroku/buildpacks-nodejs/pull/749))
 
-## [2.4.1] - 2023-12-04 [NO CHANGES]
+## [2.4.1] - 2023-12-04
 
 ## [2.4.0] - 2023-12-01
 
@@ -152,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated default node version to 20.x
 
-## [2.2.0] - 2023-10-26 [NO CHANGES]
+## [2.2.0] - 2023-10-26
 
 ## [2.1.0] - 2023-10-26
 
@@ -190,7 +192,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Provides `npm` added to the build plan since a default version of `npm` is bundled with
   Node.js. ([#622](https://github.com/heroku/buildpacks-nodejs/pull/622))
 
-## [1.1.6] - 2023-09-25 [NO CHANGES]
+## [1.1.6] - 2023-09-25
 
 ## [1.1.5] - 2023-09-19
 
@@ -227,7 +229,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Node.js 20.4.0
 
-## [1.1.0] - 2023-06-28 [NO CHANGES]
+## [1.1.0] - 2023-06-28
 
 ## [0.8.24] - 2023-06-21
 
@@ -583,7 +585,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.2...HEAD
+[3.2.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...v3.2.2
 [3.2.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.0...v3.2.1
 [3.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...v3.1.0
