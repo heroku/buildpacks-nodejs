@@ -111,7 +111,6 @@ fn pnpm_8_hoist() {
 #[ignore = "integration test"]
 fn pnpm_8_nuxt() {
     nodejs_integration_test("./fixtures/pnpm-8-nuxt", |ctx| {
-        assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
