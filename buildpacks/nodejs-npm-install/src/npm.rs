@@ -5,7 +5,13 @@ use std::process::Command;
 
 pub(crate) struct SetCacheConfig<'a> {
     pub(crate) env: &'a Env,
-    pub(crate) cache_dir: PathBuf,
+    pub(crate) cache_dir: &'a PathBuf,
+}
+
+impl<'a> SetCacheConfig<'a> {
+    pub(crate) fn into_command(self) -> Command {
+        self.into()
+    }
 }
 
 impl<'a> From<SetCacheConfig<'a>> for Command {
@@ -28,8 +34,15 @@ pub(crate) enum VersionError {
     Command(CmdError),
     Parse(String, heroku_nodejs_utils::vrs::VersionError),
 }
+
 pub(crate) struct Version<'a> {
     pub(crate) env: &'a Env,
+}
+
+impl<'a> Version<'a> {
+    pub(crate) fn into_command(self) -> Command {
+        self.into()
+    }
 }
 
 impl<'a> From<Version<'a>> for Command {
@@ -45,6 +58,12 @@ pub(crate) struct Install<'a> {
     pub(crate) env: &'a Env,
 }
 
+impl<'a> Install<'a> {
+    pub(crate) fn into_command(self) -> Command {
+        self.into()
+    }
+}
+
 impl<'a> From<Install<'a>> for Command {
     fn from(value: Install<'a>) -> Self {
         let mut cmd = Command::new("npm");
@@ -58,6 +77,12 @@ impl<'a> From<Install<'a>> for Command {
 pub(crate) struct RunScript<'a> {
     pub(crate) env: &'a Env,
     pub(crate) script: String,
+}
+
+impl<'a> RunScript<'a> {
+    pub(crate) fn into_command(self) -> Command {
+        self.into()
+    }
 }
 
 impl<'a> From<RunScript<'a>> for Command {

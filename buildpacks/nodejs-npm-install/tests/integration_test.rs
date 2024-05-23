@@ -187,6 +187,16 @@ fn detect_rejects_non_npm_project() {
 }
 
 #[test]
+#[ignore]
+fn npm_runtime_settings_are_set() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        let env_output = ctx.run_shell_command("env").stdout;
+        assert_contains!(env_output, "npm_config_cache=/tmp/npm_cache");
+        assert_contains!(env_output, "npm_config_update-notifier=false");
+    });
+}
+
+#[test]
 #[ignore = "integration test"]
 fn test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test_with_config(
