@@ -79,7 +79,7 @@ jobs:
 
   rust-integration-test:
     name: ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-22.04-arm-large' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-22.04-arm-small' || 'ubuntu-latest' }}
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
     needs: find-libcnb-buildpacks
@@ -90,14 +90,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # The beta ARM64 runners don't yet ship with the normal installed tools.
-      - name: Install Docker, Rust and missing development libs (ARM64 only)
+      - name: Install Rust and missing development libs (ARM64 only)
         if: matrix.arch == 'arm64'
         run: |
           sudo apt-get update --error-on=any
-          sudo apt-get install -y --no-install-recommends acl docker.io docker-buildx libc6-dev
-          sudo usermod -aG docker $USER
-          sudo setfacl --modify user:$USER:rw /var/run/docker.sock
+          sudo apt-get install -y --no-install-recommends libc6-dev
           curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
           echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
       - name: Install musl-tools
