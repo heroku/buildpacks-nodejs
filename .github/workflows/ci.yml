@@ -90,13 +90,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Rust and missing development libs (ARM64 only)
-        if: matrix.arch == 'arm64'
-        run: |
-          sudo apt-get update --error-on=any
-          sudo apt-get install -y --no-install-recommends libc6-dev
-          curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
-          echo "${HOME}/.cargo/bin" >> "${GITHUB_PATH}"
       - name: Install musl-tools
         run: sudo apt-get install musl-tools -y --no-install-recommends
       - name: Update Rust toolchain
