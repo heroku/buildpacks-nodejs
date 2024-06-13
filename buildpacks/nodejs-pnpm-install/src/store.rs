@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn test_set_cache_use_count() {
-        let margin = std::f64::EPSILON;
+        let margin = f64::EPSILON;
         let mut md = toml::Table::default();
         set_cache_use_count(&mut md, 3);
         let expected = 3f64;
