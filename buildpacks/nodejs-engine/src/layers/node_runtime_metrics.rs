@@ -2,6 +2,7 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
+#[allow(deprecated)]
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use std::fs;
@@ -10,6 +11,7 @@ use thiserror::Error;
 
 pub(crate) struct NodeRuntimeMetricsLayer;
 
+#[allow(deprecated)]
 impl Layer for NodeRuntimeMetricsLayer {
     type Buildpack = NodeJsEngineBuildpack;
     type Metadata = GenericMetadata;
@@ -22,6 +24,7 @@ impl Layer for NodeRuntimeMetricsLayer {
         }
     }
 
+    #[allow(deprecated)]
     fn create(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,

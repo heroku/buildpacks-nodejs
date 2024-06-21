@@ -1,6 +1,7 @@
 use crate::{PnpmInstallBuildpack, PnpmInstallBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::log::log_info;
@@ -20,6 +21,7 @@ pub(crate) struct AddressableStoreLayerMetadata {
 
 const LAYER_VERSION: &str = "1";
 
+#[allow(deprecated)]
 impl Layer for AddressableStoreLayer {
     type Buildpack = PnpmInstallBuildpack;
     type Metadata = AddressableStoreLayerMetadata;

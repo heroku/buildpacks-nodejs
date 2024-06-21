@@ -2,6 +2,7 @@ use crate::{PnpmInstallBuildpack, PnpmInstallBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
+#[allow(deprecated)]
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 use libherokubuildpack::log::log_info;
 use std::fs::create_dir;
@@ -14,6 +15,7 @@ use std::path::Path;
 /// in `AddressableStoreLayer`.
 pub(crate) struct VirtualStoreLayer;
 
+#[allow(deprecated)]
 impl Layer for VirtualStoreLayer {
     type Buildpack = PnpmInstallBuildpack;
     type Metadata = GenericMetadata;

@@ -2,6 +2,7 @@ use crate::NpmInstallBuildpack;
 use commons::output::section_log::{log_step, SectionLogger};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use serde::{Deserialize, Serialize};
@@ -12,6 +13,7 @@ pub(crate) struct NpmCacheLayer<'a> {
     pub(crate) _section_logger: &'a dyn SectionLogger,
 }
 
+#[allow(deprecated)]
 impl<'a> Layer for NpmCacheLayer<'a> {
     type Buildpack = NpmInstallBuildpack;
     type Metadata = NpmCacheLayerMetadata;

@@ -66,6 +66,7 @@ impl Buildpack for NpmInstallBuildpack {
         }
     }
 
+    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let logger = BuildLog::new(stdout()).buildpack_name(BUILDPACK_NAME);
         let warn_later = WarnGuard::new(stdout());
@@ -134,6 +135,7 @@ fn log_npm_version(
         })
 }
 
+#[allow(deprecated)]
 fn configure_npm_cache_layer(
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,

@@ -102,6 +102,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         ));
 
         log_header("Installing Node.js distribution");
+        #[allow(deprecated)]
         context.handle_layer(
             layer_name!("dist"),
             DistLayer {
@@ -109,12 +110,14 @@ impl Buildpack for NodeJsEngineBuildpack {
             },
         )?;
 
+        #[allow(deprecated)]
         context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
 
         if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
             .expect("should be a valid version range")
             .satisfies(&target_artifact.version)
         {
+            #[allow(deprecated)]
             context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
         }
 

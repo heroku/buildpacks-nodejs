@@ -7,6 +7,7 @@ use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::download::{download_file, DownloadError};
@@ -26,6 +27,7 @@ pub(crate) struct NpmEngineLayer<'a> {
 
 const LAYER_VERSION: &str = "1";
 
+#[allow(deprecated)]
 impl<'a> Layer for NpmEngineLayer<'a> {
     type Buildpack = NpmEngineBuildpack;
     type Metadata = NpmEngineLayerMetadata;

@@ -4,6 +4,7 @@ use std::path::Path;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
+#[allow(deprecated)]
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Buildpack;
@@ -12,6 +13,7 @@ use crate::NpmInstallBuildpack;
 
 pub(crate) struct NpmRuntimeConfigLayer;
 
+#[allow(deprecated)]
 impl Layer for NpmRuntimeConfigLayer {
     type Buildpack = NpmInstallBuildpack;
     type Metadata = GenericMetadata;

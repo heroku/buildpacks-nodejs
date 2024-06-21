@@ -2,6 +2,7 @@ use crate::{YarnBuildpack, YarnBuildpackError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::download::{download_file, DownloadError};
@@ -45,6 +46,7 @@ pub(crate) enum CliLayerError {
 
 const LAYER_VERSION: &str = "1";
 
+#[allow(deprecated)]
 impl Layer for CliLayer {
     type Buildpack = YarnBuildpack;
     type Metadata = CliLayerMetadata;

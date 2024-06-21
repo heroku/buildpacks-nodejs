@@ -2,6 +2,7 @@ use crate::yarn::Yarn;
 use crate::{YarnBuildpack, YarnBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::log::log_info;
@@ -36,6 +37,7 @@ const LAYER_VERSION: &str = "1";
 const MAX_CACHE_USAGE_COUNT: f32 = 150.0;
 const CACHE_DIR: &str = "cache";
 
+#[allow(deprecated)]
 impl Layer for DepsLayer {
     type Buildpack = YarnBuildpack;
     type Metadata = DepsLayerMetadata;
@@ -48,6 +50,7 @@ impl Layer for DepsLayer {
         }
     }
 
+    #[allow(deprecated)]
     fn create(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,
@@ -57,6 +60,7 @@ impl Layer for DepsLayer {
         LayerResultBuilder::new(DepsLayerMetadata::new(self)).build()
     }
 
+    #[allow(deprecated)]
     fn update(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,
@@ -69,6 +73,7 @@ impl Layer for DepsLayer {
         .build()
     }
 
+    #[allow(deprecated)]
     fn existing_layer_strategy(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,

@@ -3,6 +3,7 @@ use crate::NodeJsInvokerBuildpackError;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
 use libcnb::generic::GenericMetadata;
+#[allow(deprecated)]
 use libcnb::layer::{Layer, LayerResult, LayerResultBuilder};
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
@@ -14,6 +15,7 @@ pub(crate) const NODEJS_RUNTIME_SCRIPT: &str = "nodejs-runtime.sh";
 /// on to sf-fx-runtime-nodejs as arguments.
 pub(crate) struct ScriptLayer;
 
+#[allow(deprecated)]
 impl Layer for ScriptLayer {
     type Buildpack = NodeJsInvokerBuildpack;
     type Metadata = GenericMetadata;

@@ -13,6 +13,7 @@ updates:
       libcnb:
         patterns:
           - "libcnb"
+          - "libcnb-test"
           - "libcnb-*"
           - "libherokubuildpack"
       rust-dependencies:
