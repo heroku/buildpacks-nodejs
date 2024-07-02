@@ -14,15 +14,15 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.2.5"
+version = "0.0.9999"
 
 [[order.group]]
 id = "heroku/nodejs-npm"
-version = "3.2.5"
+version = "0.0.9999"
 
 [[order.group]]
 id = "heroku/nodejs-function-invoker"
-version = "3.2.5"
+version = "0.0.9999"
 
 [metadata.release]
 image = { repository = "docker.io/heroku/buildpack-nodejs-function" }
