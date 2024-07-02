@@ -1,20 +1,24 @@
-use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
+use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError, PackageManager};
 use heroku_nodejs_utils::telemetry::init_tracer;
-use layers::{ManagerLayer, ShimLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
-use libcnb::layer_env::Scope;
+use libcnb::layer::{
+    CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
+};
+use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::log_header;
+use libherokubuildpack::log::{log_header, log_info};
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
 
+use heroku_nodejs_utils::vrs::Version;
 #[cfg(test)]
 use libcnb_test as _;
+use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use test_support as _;
 #[cfg(test)]
@@ -23,7 +27,8 @@ use ureq as _;
 mod cfg;
 mod cmd;
 mod errors;
-mod layers;
+
+buildpack_main!(CorepackBuildpack);
 
 struct CorepackBuildpack;
 
@@ -61,7 +66,6 @@ impl Buildpack for CorepackBuildpack {
         })
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
         tracer.in_span("nodejs-corepack-build", |cx| {
@@ -90,19 +94,8 @@ impl Buildpack for CorepackBuildpack {
                 pkg_mgr.name, pkg_mgr.version
             ));
 
-            let shims_layer =
-                context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
-            cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
-                .map_err(CorepackBuildpackError::CorepackEnable)?;
-
-            let mgr_layer = context.handle_layer(
-                layer_name!("mgr"),
-                ManagerLayer {
-                    package_manager: pkg_mgr,
-                },
-            )?;
-            let mgr_env = mgr_layer.env.apply(Scope::Build, env);
-            cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+            enable_corepack(&context, &corepack_version, &pkg_mgr, &env)?;
+            prepare_corepack(&context, &pkg_mgr, &env)?;
 
             BuildResultBuilder::new().build()
         })
@@ -130,4 +123,120 @@ impl From<CorepackBuildpackError> for libcnb::Error<CorepackBuildpackError> {
     }
 }
 
-buildpack_main!(CorepackBuildpack);
+fn enable_corepack(
+    context: &BuildContext<CorepackBuildpack>,
+    corepack_version: &Version,
+    package_manager: &PackageManager,
+    env: &Env,
+) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+    let new_metadata = ShimLayerMetadata {
+        corepack_version: corepack_version.clone(),
+        layer_version: SHIM_LAYER_VERSION.to_string(),
+    };
+
+    let shim_layer = context.cached_layer(
+        layer_name!("shim"),
+        CachedLayerDefinition {
+            launch: true,
+            build: true,
+            invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
+            restored_layer_action: &|old_metadata: &ShimLayerMetadata, _| {
+                if old_metadata == &new_metadata {
+                    RestoredLayerAction::KeepLayer
+                } else {
+                    RestoredLayerAction::DeleteLayer
+                }
+            },
+        },
+    )?;
+
+    match shim_layer.state {
+        LayerState::Restored { .. } => {
+            log_info("Restoring corepack shim cache");
+        }
+        LayerState::Empty { .. } => {
+            log_info("Corepack change detected. Clearing corepack shim cache");
+            shim_layer.write_metadata(new_metadata)?;
+            std::fs::create_dir(shim_layer.path().join("bin"))
+                .map_err(CorepackBuildpackError::ShimLayer)?;
+        }
+    }
+
+    cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), env)
+        .map_err(CorepackBuildpackError::CorepackEnable)?;
+
+    Ok(())
+}
+
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ShimLayerMetadata {
+    corepack_version: Version,
+    layer_version: String,
+}
+
+const SHIM_LAYER_VERSION: &str = "1";
+
+fn prepare_corepack(
+    context: &BuildContext<CorepackBuildpack>,
+    package_manager: &PackageManager,
+    env: &Env,
+) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+    let new_metadata = ManagerLayerMetadata {
+        manager_name: package_manager.name.clone(),
+        manager_version: package_manager.version.clone(),
+        layer_version: MANAGER_LAYER_VERSION.to_string(),
+    };
+
+    let manager_layer = context.cached_layer(
+        layer_name!("mgr"),
+        CachedLayerDefinition {
+            build: true,
+            launch: true,
+            invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
+            restored_layer_action: &|old_metadata: &ManagerLayerMetadata, _| {
+                if old_metadata == &new_metadata {
+                    RestoredLayerAction::KeepLayer
+                } else {
+                    RestoredLayerAction::DeleteLayer
+                }
+            },
+        },
+    )?;
+
+    match manager_layer.state {
+        LayerState::Restored { .. } => {
+            log_info("Restoring corepack package manager cache");
+        }
+        LayerState::Empty { .. } => {
+            log_info("Package manager change detected. Clearing corepack package manager cache");
+            manager_layer.write_metadata(new_metadata)?;
+            let cache_path = manager_layer.path().join("cache");
+            std::fs::create_dir(&cache_path).map_err(CorepackBuildpackError::ManagerLayer)?;
+            manager_layer.write_env(LayerEnv::new().chainable_insert(
+                Scope::All,
+                ModificationBehavior::Override,
+                "COREPACK_HOME",
+                cache_path,
+            ))?
+        }
+    }
+
+    let mgr_env = manager_layer
+        .read_env()
+        .map(|layer_env| layer_env.apply(Scope::Build, env))?;
+
+    cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+
+    Ok(())
+}
+
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct ManagerLayerMetadata {
+    manager_name: String,
+    manager_version: Version,
+    layer_version: String,
+}
+
+const MANAGER_LAYER_VERSION: &str = "1";
