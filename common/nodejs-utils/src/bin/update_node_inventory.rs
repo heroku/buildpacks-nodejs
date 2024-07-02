@@ -6,7 +6,7 @@ use heroku_inventory_utils::{
     checksum::Checksum,
     inv::{read_inventory_file, Arch, Artifact, Inventory, Os},
 };
-use keep_a_changelog::ChangeGroup;
+use keep_a_changelog_file::{ChangeGroup, Changelog};
 use node_semver::Version;
 use serde::Deserialize;
 use sha2::Sha256;
@@ -78,7 +78,7 @@ fn write_changelog(
     let mut changelog = fs::read_to_string(&changelog_path)
         .context("Reading changelog")
         .and_then(|contents| {
-            keep_a_changelog::Changelog::from_str(&contents).context(format!(
+            Changelog::from_str(&contents).context(format!(
                 "Error parsing changelog at '{}'",
                 changelog_path.display()
             ))
