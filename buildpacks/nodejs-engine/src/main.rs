@@ -1,15 +1,15 @@
 use std::env::consts;
 
-use crate::layers::{
-    DistLayer, DistLayerError, NodeRuntimeMetricsError, NodeRuntimeMetricsLayer, WebEnvLayer,
-};
+use crate::attach_runtime_metrics::{configure_web_env, NodeRuntimeMetricsError};
+use crate::configure_web_env::attach_runtime_metrics;
+use crate::install_node::{install_node, DistLayerError};
 use heroku_inventory_utils::inv::{resolve, Arch, Inventory, Os};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::{layer_name, process_type};
+use libcnb::data::process_type;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
@@ -26,7 +26,9 @@ use thiserror::Error;
 #[cfg(test)]
 use ureq as _;
 
-mod layers;
+mod attach_runtime_metrics;
+mod configure_web_env;
+mod install_node;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
@@ -102,23 +104,15 @@ impl Buildpack for NodeJsEngineBuildpack {
         ));
 
         log_header("Installing Node.js distribution");
-        #[allow(deprecated)]
-        context.handle_layer(
-            layer_name!("dist"),
-            DistLayer {
-                artifact: target_artifact.clone(),
-            },
-        )?;
+        install_node(&context, target_artifact)?;
 
-        #[allow(deprecated)]
-        context.handle_layer(layer_name!("web_env"), WebEnvLayer)?;
+        configure_web_env(&context)?;
 
         if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
             .expect("should be a valid version range")
             .satisfies(&target_artifact.version)
         {
-            #[allow(deprecated)]
-            context.handle_layer(layer_name!("node_runtime_metrics"), NodeRuntimeMetricsLayer)?;
+            attach_runtime_metrics(&context)?;
         }
 
         let launchjs = ["server.js", "index.js"]
