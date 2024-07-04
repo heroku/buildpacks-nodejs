@@ -1,10 +1,11 @@
+mod configure_npm_cache_directory;
+mod configure_npm_runtime_env;
 mod errors;
-mod layers;
 mod npm;
 
+use crate::configure_npm_cache_directory::configure_npm_cache_directory;
+use crate::configure_npm_runtime_env::configure_npm_runtime_env;
 use crate::errors::NpmInstallBuildpackError;
-use crate::layers::npm_cache::NpmCacheLayer;
-use crate::layers::npm_runtime_config::NpmRuntimeConfigLayer;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::{log_step, log_step_stream};
@@ -17,7 +18,7 @@ use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::{layer_name, process_type};
+use libcnb::data::process_type;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
@@ -66,7 +67,6 @@ impl Buildpack for NpmInstallBuildpack {
         }
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let logger = BuildLog::new(stdout()).buildpack_name(BUILDPACK_NAME);
         let warn_later = WarnGuard::new(stdout());
@@ -79,7 +79,7 @@ impl Buildpack for NpmInstallBuildpack {
 
         let section = logger.section("Installing node modules");
         log_npm_version(&env, section.as_ref())?;
-        configure_npm_cache_layer(&context, &env, section.as_ref())?;
+        configure_npm_cache_directory(&context, &env, section.as_ref())?;
         run_npm_install(&env, section.as_ref())?;
         let logger = section.end_section();
 
@@ -91,7 +91,7 @@ impl Buildpack for NpmInstallBuildpack {
         let build_result = configure_default_processes(&package_json, section.as_ref());
         let logger = section.end_section();
 
-        context.handle_layer(layer_name!("npm_runtime_config"), NpmRuntimeConfigLayer {})?;
+        configure_npm_runtime_env(&context)?;
 
         logger.finish_logging();
         warn_later.warn_now();
@@ -133,30 +133,6 @@ fn log_npm_version(
                 fmt::value(version.to_string())
             ));
         })
-}
-
-#[allow(deprecated)]
-fn configure_npm_cache_layer(
-    context: &BuildContext<NpmInstallBuildpack>,
-    env: &Env,
-    section_logger: &dyn SectionLogger,
-) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
-    let npm_cache_layer = context.handle_layer(
-        layer_name!("npm_cache"),
-        NpmCacheLayer {
-            _section_logger: section_logger,
-        },
-    )?;
-    log_step("Configuring npm cache directory");
-    npm::SetCacheConfig {
-        env,
-        cache_dir: &npm_cache_layer.path,
-    }
-    .into_command()
-    .named_output()
-    .and_then(NamedOutput::nonzero_captured)
-    .map_err(NpmInstallBuildpackError::NpmSetCacheDir)?;
-    Ok(())
 }
 
 fn run_npm_install(
