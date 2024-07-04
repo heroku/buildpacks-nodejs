@@ -1,20 +1,19 @@
 mod errors;
-mod layers;
+mod install_npm;
 mod node;
 mod npm;
 
 use crate::errors::NpmEngineBuildpackError;
-use crate::layers::npm_engine::NpmEngineLayer;
+use crate::install_npm::install_npm;
 use commons::output::build_log::{BuildLog, Logger, SectionLogger};
 use commons::output::fmt;
 use commons::output::section_log::log_step;
-use fun_run::{CommandWithName, NamedOutput};
+use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::{Inventory, Release};
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
@@ -23,6 +22,7 @@ use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
 use std::io::stdout;
+use std::path::Path;
 use std::process::Command;
 #[cfg(test)]
 use test_support as _;
@@ -67,19 +67,14 @@ impl Buildpack for NpmEngineBuildpack {
         let env = Env::from_current();
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
-        let requested_npm_version = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NpmEngineBuildpackError::PackageJson)
-            .and_then(|package_json| {
-                package_json
-                    .engines
-                    .and_then(|engines| engines.npm)
-                    .ok_or(NpmEngineBuildpackError::MissingNpmEngineRequirement)
-            })?;
+        let requested_npm_version =
+            read_requested_npm_version(&context.app_dir.join("package.json"))?;
+        let node_version = get_node_version(&env)?;
 
         let section = logger.section("Installing npm");
         let npm_release =
             resolve_requested_npm_version(&requested_npm_version, &inventory, section.as_ref())?;
-        install_npm_release(npm_release, &context, &env, section.as_ref())?;
+        install_npm(&context, &npm_release, &node_version, section.as_ref())?;
         log_installed_npm_version(&env, section.as_ref())?;
         logger = section.end_section();
 
@@ -90,6 +85,19 @@ impl Buildpack for NpmEngineBuildpack {
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
         errors::on_error(error);
     }
+}
+
+fn read_requested_npm_version(
+    package_json_path: &Path,
+) -> Result<Requirement, NpmEngineBuildpackError> {
+    PackageJson::read(package_json_path)
+        .map_err(NpmEngineBuildpackError::PackageJson)
+        .and_then(|package_json| {
+            package_json
+                .engines
+                .and_then(|engines| engines.npm)
+                .ok_or(NpmEngineBuildpackError::MissingNpmEngineRequirement)
+        })
 }
 
 fn resolve_requested_npm_version(
@@ -120,16 +128,9 @@ fn resolve_requested_npm_version(
     Ok(npm_release)
 }
 
-#[allow(deprecated)]
-fn install_npm_release(
-    npm_release: Release,
-    context: &BuildContext<NpmEngineBuildpack>,
-    env: &Env,
-    section_logger: &dyn SectionLogger,
-) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
-    let node_version = Command::from(node::Version { env })
+fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
+    Command::from(node::Version { env })
         .named_output()
-        .and_then(NamedOutput::nonzero_captured)
         .map_err(node::VersionError::Command)
         .and_then(|output| {
             let stdout = output.stdout_lossy();
@@ -137,18 +138,7 @@ fn install_npm_release(
                 .parse::<Version>()
                 .map_err(|e| node::VersionError::Parse(stdout, e))
         })
-        .map_err(NpmEngineBuildpackError::NodeVersion)?;
-
-    context.handle_layer(
-        layer_name!("npm_engine"),
-        NpmEngineLayer {
-            npm_release,
-            node_version,
-            _section_logger: section_logger,
-        },
-    )?;
-
-    Ok(())
+        .map_err(NpmEngineBuildpackError::NodeVersion)
 }
 
 fn log_installed_npm_version(
@@ -157,7 +147,6 @@ fn log_installed_npm_version(
 ) -> Result<(), NpmEngineBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
-        .and_then(NamedOutput::nonzero_captured)
         .map_err(npm::VersionError::Command)
         .and_then(|output| {
             let stdout = output.stdout_lossy();

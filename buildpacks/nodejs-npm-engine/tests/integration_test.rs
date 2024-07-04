@@ -19,7 +19,7 @@ fn npm_engine_install() {
         );
         assert_contains!(ctx.pack_stdout, "Resolved version `9.6.6` to `9.6.6`");
         assert_contains!(ctx.pack_stdout, "Downloading");
-        assert_contains!(ctx.pack_stdout, "Removing existing npm");
+        assert_contains!(ctx.pack_stdout, "Removing npm bundled with Node.js");
         assert_contains!(ctx.pack_stdout, "Installing requested npm");
         assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
     });
