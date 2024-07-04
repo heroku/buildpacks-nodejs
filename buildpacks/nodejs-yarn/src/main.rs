@@ -1,4 +1,3 @@
-use crate::layers::{CliLayer, CliLayerError, DepsLayer, DepsLayerError};
 use crate::yarn::Yarn;
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -6,7 +5,7 @@ use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::{layer_name, process_type};
+use libcnb::data::process_type;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
@@ -15,6 +14,8 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_error, log_header, log_info};
 use thiserror::Error;
 
+use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
+use crate::install_yarn::{install_yarn, CliLayerError};
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -24,7 +25,8 @@ use ureq as _;
 
 mod cfg;
 mod cmd;
-mod layers;
+mod configure_yarn_cache;
+mod install_yarn;
 mod yarn;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
@@ -58,7 +60,6 @@ impl Buildpack for YarnBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let mut env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
@@ -96,13 +97,8 @@ impl Buildpack for YarnBuildpack {
                 ));
 
                 log_header("Installing yarn CLI");
-                let dist_layer = context.handle_layer(
-                    layer_name!("dist"),
-                    CliLayer {
-                        release: yarn_cli_release.clone(),
-                    },
-                )?;
-                env = dist_layer.env.apply(Scope::Build, &env);
+                let yarn_env = install_yarn(&context, yarn_cli_release)?;
+                env = yarn_env.apply(Scope::Build, &env);
 
                 cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
             }
@@ -125,10 +121,7 @@ impl Buildpack for YarnBuildpack {
         if zero_install {
             log_info("Yarn zero-install detected. Skipping dependency cache.");
         } else {
-            let deps_layer =
-                context.handle_layer(layer_name!("deps"), DepsLayer { yarn: yarn.clone() })?;
-            cmd::yarn_set_cache(&yarn, &deps_layer.path.join("cache"), &env)
-                .map_err(YarnBuildpackError::YarnCacheSet)?;
+            configure_yarn_cache(&context, &yarn, &env)?;
         }
 
         log_header("Installing dependencies");
@@ -182,8 +175,7 @@ impl Buildpack for YarnBuildpack {
                     YarnBuildpackError::PackageJson(_) => {
                         log_error("Yarn package.json error", err_string);
                     }
-                    YarnBuildpackError::YarnCacheSet(_)
-                    | YarnBuildpackError::YarnCacheGet(_)
+                    YarnBuildpackError::YarnCacheGet(_)
                     | YarnBuildpackError::YarnDisableGlobalCache(_) => {
                         log_error("Yarn cache error", err_string);
                     }
@@ -219,8 +211,6 @@ enum YarnBuildpackError {
     PackageJson(PackageJsonError),
     #[error("Couldn't read yarn cache folder: {0}")]
     YarnCacheGet(cmd::Error),
-    #[error("Couldn't set yarn cache folder: {0}")]
-    YarnCacheSet(cmd::Error),
     #[error("Couldn't disable yarn global cache: {0}")]
     YarnDisableGlobalCache(cmd::Error),
     #[error("Yarn install error: {0}")]
