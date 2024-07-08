@@ -1,10 +1,11 @@
+use crate::attach_startup_script::{
+    attach_startup_script, ScriptLayerError, NODEJS_RUNTIME_SCRIPT,
+};
 use crate::function::{
     get_declared_runtime_package_version, get_main, is_function, ExplicitRuntimeDependencyError,
     MainError,
 };
-use crate::layers::{
-    RuntimeLayer, RuntimeLayerError, ScriptLayer, ScriptLayerError, NODEJS_RUNTIME_SCRIPT,
-};
+use crate::install_nodejs_function_runtime::{install_nodejs_function_runtime, RuntimeLayerError};
 #[cfg(test)]
 use base64 as _;
 #[cfg(test)]
@@ -12,7 +13,7 @@ use hex as _;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::{layer_name, process_type};
+use libcnb::data::process_type;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
@@ -29,8 +30,9 @@ use thiserror::Error;
 #[cfg(test)]
 use ureq as _;
 
+mod attach_startup_script;
 mod function;
-mod layers;
+mod install_nodejs_function_runtime;
 
 struct NodeJsInvokerBuildpack;
 
@@ -67,7 +69,6 @@ impl Buildpack for NodeJsInvokerBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Function Invoker Buildpack");
 
@@ -95,11 +96,9 @@ impl Buildpack for NodeJsInvokerBuildpack {
                 format!("Future versions of the Functions Runtime for Node.js ({package_name}) will not be auto-detected \
                 and must be added as a dependency in package.json.")
             );
-            context.handle_layer(
-                layer_name!("runtime"),
-                RuntimeLayer {
-                    package: format!("{package_name}@{package_version}"),
-                },
+            install_nodejs_function_runtime(
+                &context,
+                &format!("{package_name}@{package_version}"),
             )?;
         }
 
@@ -108,7 +107,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             None => "sf-fx-runtime-nodejs",                      // global (implicit)
         };
 
-        context.handle_layer(layer_name!("script"), ScriptLayer {})?;
+        attach_startup_script(&context)?;
 
         BuildResultBuilder::new()
             .launch(
