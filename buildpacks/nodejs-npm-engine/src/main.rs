@@ -120,6 +120,7 @@ fn resolve_requested_npm_version(
     Ok(npm_release)
 }
 
+#[allow(deprecated)]
 fn install_npm_release(
     npm_release: Release,
     context: &BuildContext<NpmEngineBuildpack>,

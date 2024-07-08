@@ -3,6 +3,7 @@ use heroku_inventory_utils::inv::Artifact;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::Buildpack;
 use libherokubuildpack::download::download_file;
@@ -49,6 +50,7 @@ pub(crate) enum DistLayerError {
 
 const LAYER_VERSION: &str = "1";
 
+#[allow(deprecated)]
 impl Layer for DistLayer {
     type Buildpack = NodeJsEngineBuildpack;
     type Metadata = DistLayerMetadata;
@@ -61,6 +63,7 @@ impl Layer for DistLayer {
         }
     }
 
+    #[allow(deprecated)]
     fn create(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,
@@ -93,6 +96,7 @@ impl Layer for DistLayer {
         LayerResultBuilder::new(DistLayerMetadata::current(self)).build()
     }
 
+    #[allow(deprecated)]
     fn existing_layer_strategy(
         &mut self,
         _context: &BuildContext<Self::Buildpack>,

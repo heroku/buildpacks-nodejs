@@ -2,6 +2,7 @@ use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_content_metadata::LayerTypes;
+#[allow(deprecated)]
 use libcnb::layer::{ExistingLayerStrategy, Layer, LayerData, LayerResult, LayerResultBuilder};
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Buildpack;
@@ -29,6 +30,7 @@ pub(crate) struct ManagerLayerMetadata {
 const LAYER_VERSION: &str = "1";
 const CACHE_DIR: &str = "cache";
 
+#[allow(deprecated)]
 impl Layer for ManagerLayer {
     type Buildpack = CorepackBuildpack;
     type Metadata = ManagerLayerMetadata;

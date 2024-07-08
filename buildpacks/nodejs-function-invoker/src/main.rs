@@ -67,6 +67,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
+    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         log_header("Heroku Node.js Function Invoker Buildpack");
 

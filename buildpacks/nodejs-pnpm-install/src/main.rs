@@ -49,6 +49,7 @@ impl Buildpack for PnpmInstallBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
+    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
