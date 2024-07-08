@@ -1,18 +1,17 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::telemetry::init_tracer;
-use layers::{ManagerLayer, ShimLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::data::layer_name;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
-use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::log_header;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
 
+use crate::enable_corepack::enable_corepack;
+use crate::prepare_corepack::prepare_corepack;
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -22,8 +21,11 @@ use ureq as _;
 
 mod cfg;
 mod cmd;
+mod enable_corepack;
 mod errors;
-mod layers;
+mod prepare_corepack;
+
+buildpack_main!(CorepackBuildpack);
 
 struct CorepackBuildpack;
 
@@ -61,7 +63,6 @@ impl Buildpack for CorepackBuildpack {
         })
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
         tracer.in_span("nodejs-corepack-build", |cx| {
@@ -90,19 +91,8 @@ impl Buildpack for CorepackBuildpack {
                 pkg_mgr.name, pkg_mgr.version
             ));
 
-            let shims_layer =
-                context.handle_layer(layer_name!("shim"), ShimLayer { corepack_version })?;
-            cmd::corepack_enable(&pkg_mgr.name, &shims_layer.path.join("bin"), env)
-                .map_err(CorepackBuildpackError::CorepackEnable)?;
-
-            let mgr_layer = context.handle_layer(
-                layer_name!("mgr"),
-                ManagerLayer {
-                    package_manager: pkg_mgr,
-                },
-            )?;
-            let mgr_env = mgr_layer.env.apply(Scope::Build, env);
-            cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+            enable_corepack(&context, &corepack_version, &pkg_mgr, env)?;
+            prepare_corepack(&context, &pkg_mgr, env)?;
 
             BuildResultBuilder::new().build()
         })
@@ -129,5 +119,3 @@ impl From<CorepackBuildpackError> for libcnb::Error<CorepackBuildpackError> {
         libcnb::Error::BuildpackError(e)
     }
 }
-
-buildpack_main!(CorepackBuildpack);
