@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 permissions:
@@ -79,7 +79,7 @@ jobs:
 
   rust-integration-test:
     name: ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-22.04-arm-small' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-small-arm-small-noip' || 'ubuntu-latest' }}
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
     needs: find-libcnb-buildpacks
@@ -134,7 +134,7 @@ jobs:
       matrix:
         # check the minimum node version supported by the metrics script and the latest node version
         # (assumes the versions between have backwards-compatible APIs)
-        version: [ 14.10.0, latest ]
+        version: [14.10.0, latest]
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-latest
     steps:
