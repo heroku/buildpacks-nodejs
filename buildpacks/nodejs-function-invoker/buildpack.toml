@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-function-invoker"
-version = "3.2.6"
+version = "3.2.7"
 name = "Salesforce Node.js Function Invoker"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Salesforce's Node.js function invoker buildpack. A component of the 'heroku/nodejs-function' buildpack."
