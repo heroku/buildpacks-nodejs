@@ -1,15 +1,16 @@
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use layers::{AddressableStoreLayer, VirtualStoreLayer};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::process_type;
 use libcnb::data::store::Store;
-use libcnb::data::{layer_name, process_type};
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
 use libherokubuildpack::log::{log_header, log_info};
 
+use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
+use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -18,8 +19,9 @@ use test_support as _;
 use ureq as _;
 
 mod cmd;
+mod configure_pnpm_store_directory;
+mod configure_pnpm_virtual_store_directory;
 mod errors;
-mod layers;
 mod store;
 
 struct PnpmInstallBuildpack;
@@ -49,21 +51,14 @@ impl Buildpack for PnpmInstallBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(PnpmInstallBuildpackError::PackageJson)?;
 
         log_header("Setting up pnpm dependency store");
-        let addressable_layer =
-            context.handle_layer(layer_name!("addressable"), AddressableStoreLayer {})?;
-        let virtual_layer = context.handle_layer(layer_name!("virtual"), VirtualStoreLayer {})?;
-
-        cmd::pnpm_set_store_dir(&env, &addressable_layer.path)
-            .map_err(PnpmInstallBuildpackError::PnpmDir)?;
-        cmd::pnpm_set_virtual_dir(&env, &virtual_layer.path.join("store"))
-            .map_err(PnpmInstallBuildpackError::PnpmDir)?;
+        configure_pnpm_store_directory(&context, &env)?;
+        configure_pnpm_virtual_store_directory(&context, &env)?;
 
         log_header("Installing dependencies");
         cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
