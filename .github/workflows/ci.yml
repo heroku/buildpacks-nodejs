@@ -102,7 +102,11 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v5.7.2
       - name: Pull builder image
         run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+      - name: Check for tests that start the container
+        id: needs-run-image
+        run: echo "result=$(grep --quiet --recursive "start_container" ${{ matrix.dir }}/tests && echo "true" || echo "false")" >> $GITHUB_OUTPUT
       - name: Pull run image
+        if: steps.needs-run-image.outputs.result == 'true'
         run: docker pull $(pack builder inspect ${{ env.INTEGRATION_TEST_CNB_BUILDER }} -o json | jq -r '.remote_info.run_images[0].name')
       - name: Run integration tests
         working-directory: ${{ matrix.dir }}
