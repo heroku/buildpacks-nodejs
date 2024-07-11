@@ -29,10 +29,10 @@ jobs:
             | jq -nRc '[inputs] 
                 | map({ dir: ., name: split("/") | last | split("nodejs-") | last } 
                 | [
-                  . + { builder_tag: 24, arch: "arm64", group: "1" } 
-                  . + { builder_tag: 24, arch: "arm64", group: "2" } 
-                  . + { builder_tag: 24, arch: "arm64", group: "3" } 
-                  . + { builder_tag: 24, arch: "arm64", group: "4" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "1" }, 
+                  . + { builder_tag: 24, arch: "arm64", group: "2" }, 
+                  . + { builder_tag: 24, arch: "arm64", group: "3" },
+                  . + { builder_tag: 24, arch: "arm64", group: "4" }, 
                   . + { builder_tag: 24, arch: "arm64", group: "5" } 
                 ]) 
                 | flatten' \
