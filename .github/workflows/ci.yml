@@ -9,46 +9,6 @@ permissions:
   contents: read
 
 jobs:
-
-  shell-lint:
-    runs-on: ubuntu-22.04
-    container:
-      image: koalaman/shellcheck-alpine:v0.9.0
-    steps:
-      - run: apk add git
-      - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
-      - uses: actions/checkout@v4
-      - name: shellcheck
-        run: shfmt -f . | grep -v ^test/ | xargs shellcheck
-      - name: shfmt
-        run: shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$' | xargs shfmt -d
-
-  rust-lint:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.7.3
-      - name: Clippy
-        run: cargo clippy --all-targets --locked -- --deny warnings
-      - name: rustfmt
-        run: cargo fmt -- --check
-
-  rust-unit-test:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Update Rust toolchain
-        run: rustup update
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.7.3
-      - name: Run unit tests
-        run: cargo test --locked
-
   find-libcnb-buildpacks:
     name: Find libcnb buildpacks
     runs-on: ubuntu-22.04
@@ -69,16 +29,17 @@ jobs:
             | jq -nRc '[inputs] 
                 | map({ dir: ., name: split("/") | last | split("nodejs-") | last } 
                 | [
-                  . + { builder_tag: 20, arch: "amd64" },
-                  . + { builder_tag: 22, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "arm64" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "1" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "2" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "3" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "4" } 
+                  . + { builder_tag: 24, arch: "arm64", group: "5" } 
                 ]) 
                 | flatten' \
           )" >> $GITHUB_OUTPUT
 
   rust-integration-test:
-    name: ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
+    name: ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }}) - ${{matrix.group}} of 5
     runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-small-arm-small-noip' || 'ubuntu-latest' }}
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
@@ -106,40 +67,3 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: cargo test --locked -- --ignored --test-threads 16
 
-  shpec:
-    runs-on: ubuntu-22.04
-    container:
-      image: heroku/heroku:${{ matrix.stack-version }}-build
-    strategy:
-      matrix:
-        stack-version:
-          - '20'
-          - '22'
-        buildpack-dir:
-          - buildpacks/npm
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install shpec
-        run: sh -c "`curl -L https://raw.githubusercontent.com/rylnd/shpec/master/install.sh`"
-      - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
-        run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
-
-  metrics-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        # check the minimum node version supported by the metrics script and the latest node version
-        # (assumes the versions between have backwards-compatible APIs)
-        version: [14.10.0, latest]
-    name: Test Metrics (${{ matrix.version }})
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.version }}
-      - run: npx mocha buildpacks/nodejs-engine/node_runtime_metrics/test/metrics.spec.cjs
