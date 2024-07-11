@@ -1,4 +1,4 @@
-use crate::layers::npm_engine::NpmEngineLayerError;
+use crate::install_npm::NpmEngineLayerError;
 use crate::BUILDPACK_NAME;
 use crate::{node, npm};
 use commons::output::build_log::{BuildLog, Logger, StartedLogger};
