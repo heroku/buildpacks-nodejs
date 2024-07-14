@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
 
 permissions:
@@ -102,6 +102,13 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@v5.7.2
       - name: Pull builder image
         run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+      - name: Pull run image
+        run: |
+          RUN_IMAGE=$(
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
+            | jq --exit-status --raw-output '.stack.runImage.image'
+          )
+          docker pull "${RUN_IMAGE}"
       - name: Run integration tests
         working-directory: ${{ matrix.dir }}
         run: cargo test --locked -- --ignored --test-threads 16
@@ -134,7 +141,7 @@ jobs:
       matrix:
         # check the minimum node version supported by the metrics script and the latest node version
         # (assumes the versions between have backwards-compatible APIs)
-        version: [ 14.10.0, latest ]
+        version: [14.10.0, latest]
     name: Test Metrics (${{ matrix.version }})
     runs-on: ubuntu-latest
     steps:
