@@ -20,7 +20,7 @@ on:
 jobs:
   get-unmirrored-versions:
     name: Get Unmirrored Versions
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       versions: ${{ steps.get-unmirrored-versions.outputs.versions }}
     steps:
@@ -42,7 +42,7 @@ jobs:
   mirror-distribution:
     name: Mirror v${{ matrix.version }} ${{ matrix.platform && format('({0})', matrix.platform) || '' }}
     needs: [get-unmirrored-versions]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: needs.get-unmirrored-versions.outputs.versions != '[]'
     strategy:
       fail-fast: false
