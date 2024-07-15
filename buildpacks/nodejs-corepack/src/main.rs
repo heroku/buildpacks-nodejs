@@ -63,7 +63,6 @@ impl Buildpack for CorepackBuildpack {
         })
     }
 
-    #[allow(deprecated)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         let tracer = init_tracer(context.buildpack_descriptor.buildpack.id.to_string());
         tracer.in_span("nodejs-corepack-build", |cx| {
