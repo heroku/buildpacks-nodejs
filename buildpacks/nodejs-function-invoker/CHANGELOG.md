@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.9] - 2024-07-19
+
+- No changes.
+
 ## [3.2.8] - 2024-07-18
 
 - No changes.
@@ -320,7 +324,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial implementation ([#47](https://github.com/heroku/buildpacks-node/pull/47))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.8...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.9...HEAD
+[3.2.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.8...v3.2.9
 [3.2.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.7...v3.2.8
 [3.2.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.6...v3.2.7
 [3.2.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.5...v3.2.6
