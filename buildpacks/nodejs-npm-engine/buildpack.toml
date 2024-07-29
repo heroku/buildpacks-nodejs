@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-npm-engine"
-version = "3.2.9"
+version = "3.2.10"
 name = "Heroku Node.js npm Engine"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's Node.js npm engine buildpack. A component of the 'heroku/nodejs' buildpack."
