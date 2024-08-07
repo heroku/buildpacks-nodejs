@@ -1,4 +1,18 @@
 [[artifacts]]
+version = "22.6.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v22.6.0/node-v22.6.0-linux-arm64.tar.gz"
+checksum = "sha256:c6c7ee62de3637401c15df9a022afaa248d236d59ceca8c188944cf97d0be372"
+
+[[artifacts]]
+version = "22.6.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v22.6.0/node-v22.6.0-linux-x64.tar.gz"
+checksum = "sha256:f2f4ccbcbc0a443e5fadebd1149a22f96087ec09cef52ff343a15ee835206d96"
+
+[[artifacts]]
 version = "22.5.1"
 os = "linux"
 arch = "arm64"
