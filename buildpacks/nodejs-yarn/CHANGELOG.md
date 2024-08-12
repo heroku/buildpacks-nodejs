@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added Yarn version 4.4.0.
+- Added Yarn version 3.8.4.
 ## [3.2.10] - 2024-07-29
 
 - No changes.
