@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.12] - 2024-08-27
+
 - Added Yarn version 4.4.1.
 - Added Yarn version 3.8.5.
+
 ## [3.2.11] - 2024-08-12
 
 - Added Yarn version 4.4.0.
@@ -315,7 +318,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.11...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.12...HEAD
+[3.2.12]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.11...v3.2.12
 [3.2.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.10...v3.2.11
 [3.2.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.9...v3.2.10
 [3.2.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.8...v3.2.9
