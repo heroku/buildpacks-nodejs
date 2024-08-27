@@ -2,7 +2,7 @@ api = "0.7"
 
 [buildpack]
 id = "heroku/nodejs-npm"
-version = "3.2.11"
+version = "3.2.12"
 name = "Heroku Node.js npm (DEPRECATED)"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "[DEPRECATED] Heroku's Node.js npm buildpack. Replaced by the 'heroku/nodejs-npm-engine' and 'heroku/nodejs-npm-install' buildpacks."
