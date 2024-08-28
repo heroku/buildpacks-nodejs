@@ -9,8 +9,8 @@ workspace = true
 [dependencies]
 heroku-inventory-utils = { git = "https://github.com/heroku/buildpacks-go/", rev = "2a86fae18332b9bd495eb29422c13ac3fcb2d0dc" }
 heroku-nodejs-utils.workspace = true
-libcnb = { version = "=0.22.0", features = ["trace"] }
-libherokubuildpack = { version = "=0.22.0", default-features = false, features = ["download", "fs", "log", "tar"] }
+libcnb = { version = "=0.23.0", features = ["trace"] }
+libherokubuildpack = { version = "=0.23.0", default-features = false, features = ["download", "fs", "log", "tar"] }
 serde = "1"
 sha2 = "0.10.8"
 tempfile = "3"
@@ -18,7 +18,7 @@ thiserror = "1"
 toml = "0.8"
 
 [dev-dependencies]
-libcnb-test = "=0.22.0"
+libcnb-test = "=0.23.0"
 serde_json = "1"
 test_support.workspace = true
 ureq = "2"
