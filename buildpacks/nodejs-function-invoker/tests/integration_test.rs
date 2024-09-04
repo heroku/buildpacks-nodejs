@@ -7,9 +7,13 @@ use base64::Engine;
 use libcnb_test::{assert_contains, assert_not_contains, TestContext};
 use rand::RngCore;
 use std::net::SocketAddr;
+use std::time::Duration;
 use test_support::{
-    function_integration_test, retry, start_container, DEFAULT_RETRIES, DEFAULT_RETRY_DELAY,
+    function_integration_test, retry, start_container, wait_for, DEFAULT_RETRIES,
+    DEFAULT_RETRY_DELAY,
 };
+
+const FUNCTION_LOGGING_TIMEOUT: Duration = Duration::from_secs(5);
 
 #[test]
 #[ignore]
@@ -21,8 +25,13 @@ fn simple_javascript_function() {
             let payload = serde_json::json!({});
             let result = invoke_function(socket_addr, &payload);
             assert_eq!(result, serde_json::Value::String("hello world".to_string()));
-            let container_logs = container.logs_now();
-            assert_contains!(container_logs.stdout, "logging info is a fun 1");
+            wait_for(
+                || {
+                    let container_logs = container.logs_now();
+                    assert_contains!(container_logs.stdout, "logging info is a fun 1");
+                },
+                FUNCTION_LOGGING_TIMEOUT,
+            );
         });
     });
 }
@@ -107,8 +116,13 @@ fn function_with_no_lockfile() {
             let payload = serde_json::json!({});
             let result = invoke_function(socket_addr, &payload);
             assert_eq!(result, serde_json::Value::String("hello world".to_string()));
-            let container_logs = container.logs_now();
-            assert_contains!(container_logs.stdout, "logging info is a fun 1");
+            wait_for(
+                || {
+                    let container_logs = container.logs_now();
+                    assert_contains!(container_logs.stdout, "logging info is a fun 1");
+                },
+                FUNCTION_LOGGING_TIMEOUT,
+            );
         });
     });
 }
