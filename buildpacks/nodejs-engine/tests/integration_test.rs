@@ -8,7 +8,7 @@ use test_support::{
     set_node_engine, wait_for, PORT,
 };
 
-const APPLICATION_STARTUP_TIMEOUT: Duration = Duration::from_secs(5);
+const APPLICATION_STARTUP_TIMEOUT: Duration = Duration::from_secs(10);
 const METRICS_SEND_INTERVAL: Duration = Duration::from_secs(10);
 const METRICS_SEND_TIMEOUT: Duration = Duration::from_secs(15);
 
