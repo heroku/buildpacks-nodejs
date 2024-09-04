@@ -166,7 +166,7 @@ fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> ser
             .set("ce-sffncontext", &ssfn_context)
             .send_json(payload.clone())
     })
-        .unwrap();
+    .unwrap();
 
     response.into_json().expect("expected response to be json")
 }
@@ -177,7 +177,7 @@ fn assert_health_check_responds(socket_addr: &SocketAddr) {
             .set("x-health-check", "true")
             .call()
     })
-        .unwrap();
+    .unwrap();
     let response_body = response.into_string().unwrap();
     assert_contains!(response_body, "OK");
 }
