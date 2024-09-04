@@ -204,7 +204,7 @@ dependencies = [
 [[package]]
 name = "commons"
 version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#47d81dddbdc060e31ddc613e920357141e4facf1"
+source = "git+https://github.com/heroku/buildpacks-ruby?branch=main#83d9da9de8db20c04a685726b89d71284a292dd6"
 dependencies = [
  "ascii_table",
  "byte-unit",
@@ -212,7 +212,7 @@ dependencies = [
  "fancy-regex",
  "fs-err",
  "fs_extra",
- "fun_run 0.1.3",
+ "fun_run",
  "glob",
  "indoc",
  "lazy_static",
@@ -421,16 +421,6 @@ name = "fs_extra"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42703706b716c37f96a77aea830392ad231f44c9e9a67872fa5548707e11b11c"
-
-[[package]]
-name = "fun_run"
-version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3956d5ff6785847f995e30ecafe96db6d566087bc550269e917f8eebd8d0b99f"
-dependencies = [
- "lazy_static",
- "regex",
-]
 
 [[package]]
 name = "fun_run"
@@ -682,7 +672,7 @@ name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
- "fun_run 0.2.0",
+ "fun_run",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb 0.23.0",
@@ -699,7 +689,7 @@ name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
  "commons",
- "fun_run 0.2.0",
+ "fun_run",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb 0.23.0",
