@@ -1,7 +1,7 @@
 use std::env::consts;
 
-use crate::attach_runtime_metrics::{configure_web_env, NodeRuntimeMetricsError};
-use crate::configure_web_env::attach_runtime_metrics;
+use crate::attach_runtime_metrics::{attach_runtime_metrics, NodeRuntimeMetricsError};
+use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
 use heroku_inventory_utils::inv::{resolve, Arch, Inventory, Os};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -112,7 +112,13 @@ impl Buildpack for NodeJsEngineBuildpack {
             .expect("should be a valid version range")
             .satisfies(&target_artifact.version)
         {
+            log_info("Installing application metrics scripts");
             attach_runtime_metrics(&context)?;
+        } else {
+            log_info(format!(
+                "Not installing application metrics scripts, it is unsupported for Node.js {}",
+                &target_artifact.version
+            ));
         }
 
         let launchjs = ["server.js", "index.js"]
