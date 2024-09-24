@@ -5,7 +5,7 @@ use libcnb::layer::UncachedLayerDefinition;
 
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
-pub(crate) fn attach_runtime_metrics(
+pub(crate) fn configure_web_env(
     context: &BuildContext<NodeJsEngineBuildpack>,
 ) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
     let web_env_layer = context.uncached_layer(

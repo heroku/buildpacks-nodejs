@@ -164,7 +164,7 @@ fn run_build_scripts(
         for script in build_scripts {
             let mut npm_run = npm::RunScript { env, script }.into_command();
             log_step_stream(
-                &format!("Running {}", fmt::command(npm_run.name())),
+                format!("Running {}", fmt::command(npm_run.name())),
                 |stream| {
                     npm_run
                         .stream_output(stream.io(), stream.io())
