@@ -82,22 +82,24 @@ fn runtime_metrics_script_is_activated_when_heroku_metrics_url_is_set() {
         ctx.start_container(container_config, |container| {
             wait_for(
                 || {
-                    let output = container.logs_now();
-                    assert_contains!(output.stderr, "Registering metrics instrumentation");
-                    assert_contains!(
-                        output.stderr,
-                        "HEROKU_METRICS_URL set to \"http://localhost:3000\""
-                    );
-                    assert_contains!(
-                        output.stderr,
-                        &format!("METRICS_INTERVAL_OVERRIDE set to \"{metrics_send_interval}\"")
-                    );
-                    assert_contains!(
-                        output.stderr,
-                        &format!("Using interval of {metrics_send_interval}ms")
-                    );
+                    assert_contains!(container.logs_now().stdout, "App started");
                 },
                 APPLICATION_STARTUP_TIMEOUT,
+            );
+
+            let stderr = container.logs_now().stderr;
+            assert_contains!(stderr, "Registering metrics instrumentation");
+            assert_contains!(
+                stderr,
+                "HEROKU_METRICS_URL set to \"http://localhost:3000\""
+            );
+            assert_contains!(
+                stderr,
+                &format!("METRICS_INTERVAL_OVERRIDE set to \"{metrics_send_interval}\"")
+            );
+            assert_contains!(
+                stderr,
+                &format!("Using interval of {metrics_send_interval}ms")
             );
 
             wait_for(
@@ -125,19 +127,14 @@ fn runtime_metrics_script_is_not_activated_when_heroku_metrics_url_is_not_set() 
         ctx.start_container(container_config, |container| {
             wait_for(
                 || {
-                    let output = container.logs_now();
-                    assert_contains!(output.stderr, "Registering metrics instrumentation");
-                    assert_contains!(
-                        output.stderr,
-                        "HEROKU_METRICS_URL was not set in the environment"
-                    );
-                    assert_contains!(
-                        output.stderr,
-                        "Metrics will not be collected for this application"
-                    );
+                    assert_contains!(container.logs_now().stdout, "App started");
                 },
                 APPLICATION_STARTUP_TIMEOUT,
             );
+            let stderr = container.logs_now().stderr;
+            assert_contains!(stderr, "Registering metrics instrumentation");
+            assert_contains!(stderr, "HEROKU_METRICS_URL was not set in the environment");
+            assert_contains!(stderr, "Metrics will not be collected for this application");
         });
     });
 }
@@ -153,6 +150,9 @@ fn runtime_metrics_script_is_activated_when_node_version_is_at_least_v14_10_0() 
             });
         },
         |ctx| {
+            assert_contains!(ctx.pack_stdout, "Downloading Node.js 14.10.0");
+            assert_contains!(ctx.pack_stdout, "Installing application metrics scripts");
+
             let mut container_config = ContainerConfig::new();
             container_config
                 .expose_port(PORT)
@@ -162,12 +162,13 @@ fn runtime_metrics_script_is_activated_when_node_version_is_at_least_v14_10_0() 
             ctx.start_container(container_config, |container| {
                 wait_for(
                     || {
-                        assert_contains!(
-                            container.logs_now().stderr,
-                            "Registering metrics instrumentation"
-                        );
+                        assert_contains!(container.logs_now().stdout, "App started");
                     },
                     APPLICATION_STARTUP_TIMEOUT,
+                );
+                assert_contains!(
+                    container.logs_now().stderr,
+                    "Registering metrics instrumentation"
                 );
             });
         },
@@ -185,6 +186,12 @@ fn runtime_metrics_script_is_not_activated_when_node_version_is_less_than_v14_10
             });
         },
         |ctx| {
+            assert_contains!(ctx.pack_stdout, "Downloading Node.js 14.9.0");
+            assert_contains!(
+                ctx.pack_stdout,
+                "Not installing application metrics scripts"
+            );
+
             let mut container_config = ContainerConfig::new();
             container_config
                 .expose_port(PORT)
@@ -193,12 +200,13 @@ fn runtime_metrics_script_is_not_activated_when_node_version_is_less_than_v14_10
             ctx.start_container(container_config, |container| {
                 wait_for(
                     || {
-                        assert_not_contains!(
-                            container.logs_now().stderr,
-                            "Registering metrics instrumentation"
-                        );
+                        assert_contains!(container.logs_now().stdout, "App started");
                     },
                     APPLICATION_STARTUP_TIMEOUT,
+                );
+                assert_not_contains!(
+                    container.logs_now().stderr,
+                    "Registering metrics instrumentation"
                 );
             });
         },
