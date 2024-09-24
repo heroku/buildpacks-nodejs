@@ -543,19 +543,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e5274423e17b7c9fc20b6e7e208532f9b19825d82dfd615708b70edd83df41f1"
 
 [[package]]
-name = "heroku-inventory-utils"
-version = "0.0.0"
-source = "git+https://github.com/heroku/buildpacks-go/?rev=2a86fae18332b9bd495eb29422c13ac3fcb2d0dc#2a86fae18332b9bd495eb29422c13ac3fcb2d0dc"
-dependencies = [
- "hex",
- "semver",
- "serde",
- "sha2",
- "thiserror",
- "toml",
-]
-
-[[package]]
 name = "heroku-nodejs-corepack-buildpack"
 version = "0.0.0"
 dependencies = [
@@ -563,7 +550,7 @@ dependencies = [
  "indoc",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "opentelemetry 0.24.0",
  "serde",
  "test_support",
@@ -575,11 +562,10 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "heroku-inventory-utils",
  "heroku-nodejs-utils",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (git+https://github.com/heroku/libcnb.rs?branch=migrate-inventory-code)",
  "serde",
  "serde_json",
  "sha2",
@@ -599,7 +585,7 @@ dependencies = [
  "hex",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand",
  "serde",
  "serde_json",
@@ -618,7 +604,7 @@ dependencies = [
  "indoc",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "test_support",
  "toml",
@@ -632,9 +618,9 @@ dependencies = [
  "anyhow",
  "chrono",
  "commons",
- "heroku-inventory-utils",
  "indoc",
  "keep_a_changelog_file",
+ "libherokubuildpack 0.23.0 (git+https://github.com/heroku/libcnb.rs?branch=migrate-inventory-code)",
  "node-semver",
  "opentelemetry 0.24.0",
  "opentelemetry-stdout 0.5.0",
@@ -658,7 +644,7 @@ dependencies = [
  "heroku-nodejs-utils",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "tempfile",
  "test_support",
@@ -677,7 +663,7 @@ dependencies = [
  "indoc",
  "libcnb 0.23.0",
  "libcnb-test",
- "libherokubuildpack 0.23.0",
+ "libherokubuildpack 0.23.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "test_support",
@@ -989,6 +975,23 @@ dependencies = [
  "flate2",
  "libcnb 0.23.0",
  "pathdiff",
+ "tar",
+ "termcolor",
+ "thiserror",
+ "toml",
+ "ureq",
+]
+
+[[package]]
+name = "libherokubuildpack"
+version = "0.23.0"
+source = "git+https://github.com/heroku/libcnb.rs?branch=migrate-inventory-code#369a70f8a1e801e365863dffabe48289e53ff93c"
+dependencies = [
+ "flate2",
+ "hex",
+ "pathdiff",
+ "serde",
+ "sha2",
  "tar",
  "termcolor",
  "thiserror",
