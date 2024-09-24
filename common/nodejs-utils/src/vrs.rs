@@ -1,6 +1,6 @@
 use crate::{distribution::Distribution, s3};
 use anyhow::anyhow;
-use heroku_inventory_utils::inv::VersionRequirement;
+use libherokubuildpack::inventory::version::VersionRequirement;
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
