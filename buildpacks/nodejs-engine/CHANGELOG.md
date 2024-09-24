@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- 22.9.0 (linux-amd64, linux-arm64)
+
 ### Fixed
 
 - Fix `heroku/nodejs-engine` layer misconfiguration for `web_env` and
