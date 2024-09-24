@@ -43,23 +43,24 @@ fn write_inventory(
     inventory_path: impl Into<PathBuf>,
     upstream_artifacts: &[Artifact<Version, Sha256, Option<()>>],
 ) -> Result<()> {
-    toml::to_string(&Inventory {
-        artifacts: {
-            let mut artifacts = Vec::from_iter(upstream_artifacts.to_owned());
-            artifacts.sort_by(|a, b| {
-                if a.version == b.version {
-                    b.arch.to_string().cmp(&a.arch.to_string())
-                } else {
-                    b.version.cmp(&a.version)
-                }
-            });
-            artifacts
-        },
-    })
-    .context("Error serializing inventory as toml")
-    .and_then(|contents| {
-        fs::write(inventory_path.into(), contents).context("Error writing inventory file")
-    })
+    fs::write(
+        inventory_path.into(),
+        Inventory {
+            artifacts: {
+                let mut artifacts = upstream_artifacts.to_vec();
+                artifacts.sort_by(|a, b| {
+                    if a.version == b.version {
+                        b.arch.to_string().cmp(&a.arch.to_string())
+                    } else {
+                        b.version.cmp(&a.version)
+                    }
+                });
+                artifacts
+            },
+        }
+        .to_string(),
+    )
+    .context("Error writing inventory file")
 }
 
 fn write_changelog(
