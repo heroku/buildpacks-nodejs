@@ -46,9 +46,13 @@ pub(crate) fn install_node(
         },
     )?;
 
+    let version_tag = format!(
+        "{} ({}-{})",
+        distribution_artifact.version, distribution_artifact.os, distribution_artifact.arch
+    );
     match distribution_layer.state {
         LayerState::Restored { .. } => {
-            log_info(format!("Reusing Node.js {distribution_artifact}"));
+            log_info(format!("Reusing Node.js {version_tag}"));
         }
         LayerState::Empty { .. } => {
             distribution_layer.write_metadata(new_metadata)?;
@@ -57,7 +61,7 @@ pub(crate) fn install_node(
 
             log_info(format!(
                 "Downloading Node.js {} from {}",
-                distribution_artifact, distribution_artifact.url
+                version_tag, distribution_artifact.url
             ));
             download_file(&distribution_artifact.url, node_tgz.path())
                 .map_err(DistLayerError::Download)?;
@@ -68,11 +72,11 @@ pub(crate) fn install_node(
                 Err(DistLayerError::ChecksumVerification)?;
             }
 
-            log_info(format!("Extracting Node.js {distribution_artifact}"));
+            log_info(format!("Extracting Node.js {version_tag}"));
             decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path())
                 .map_err(DistLayerError::Untar)?;
 
-            log_info(format!("Installing Node.js {distribution_artifact}"));
+            log_info(format!("Installing Node.js {version_tag}"));
 
             let dist_name = extract_tarball_prefix(&distribution_artifact.url)
                 .ok_or_else(|| DistLayerError::TarballPrefix(distribution_artifact.url.clone()))?;
