@@ -3,7 +3,6 @@ use std::env::consts;
 use crate::attach_runtime_metrics::{attach_runtime_metrics, NodeRuntimeMetricsError};
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
-use heroku_inventory_utils::inv::{resolve, Arch, Inventory, Os};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -16,6 +15,8 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack};
 #[cfg(test)]
 use libcnb_test as _;
+use libherokubuildpack::inventory::artifact::{Arch, Os};
+use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
 use serde_json as _;
@@ -73,7 +74,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         log_header("Heroku Node.js Engine Buildpack");
         log_header("Checking Node.js version");
 
-        let inv: Inventory<Version, Sha256> =
+        let inv: Inventory<Version, Sha256, Option<()>> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
 
         let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
@@ -91,7 +92,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         };
 
         let target_artifact = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
-            (Ok(os), Ok(arch)) => resolve(&inv.artifacts, os, arch, &version_range),
+            (Ok(os), Ok(arch)) => inv.resolve(os, arch, &version_range),
             (_, _) => None,
         }
         .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(

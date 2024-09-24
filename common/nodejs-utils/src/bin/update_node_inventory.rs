@@ -2,11 +2,10 @@
 #![allow(unused_crate_dependencies)]
 
 use anyhow::{Context, Result};
-use heroku_inventory_utils::{
-    checksum::Checksum,
-    inv::{read_inventory_file, Arch, Artifact, Inventory, Os},
-};
 use keep_a_changelog_file::{ChangeGroup, Changelog};
+use libherokubuildpack::inventory::artifact::{Arch, Artifact, Os};
+use libherokubuildpack::inventory::checksum::Checksum;
+use libherokubuildpack::inventory::Inventory;
 use node_semver::Version;
 use serde::Deserialize;
 use sha2::Sha256;
@@ -27,8 +26,9 @@ fn main() -> Result<()> {
         .nth(2)
         .context(format!("Missing path to changelog file!\n\n{USAGE}"))?;
 
-    let inventory_artifacts: Vec<Artifact<Version, Sha256>> =
-        read_inventory_file(&inventory_path)?.artifacts;
+    let inventory_artifacts = fs::read_to_string(&inventory_path)?
+        .parse::<Inventory<Version, Sha256, Option<()>>>()?
+        .artifacts;
 
     let upstream_artifacts = fetch_upstream_artifacts(&inventory_artifacts)?;
 
@@ -41,7 +41,7 @@ fn main() -> Result<()> {
 
 fn write_inventory(
     inventory_path: impl Into<PathBuf>,
-    upstream_artifacts: &[Artifact<Version, Sha256>],
+    upstream_artifacts: &[Artifact<Version, Sha256, Option<()>>],
 ) -> Result<()> {
     toml::to_string(&Inventory {
         artifacts: {
@@ -64,8 +64,8 @@ fn write_inventory(
 
 fn write_changelog(
     changelog_path: impl Into<PathBuf>,
-    upstream_artifacts: &[Artifact<Version, Sha256>],
-    inventory_artifacts: &[Artifact<Version, Sha256>],
+    upstream_artifacts: &[Artifact<Version, Sha256, Option<()>>],
+    inventory_artifacts: &[Artifact<Version, Sha256, Option<()>>],
 ) -> Result<()> {
     let changelog_path = changelog_path.into();
 
@@ -129,8 +129,8 @@ fn difference<'a, T: Eq>(a: &'a [T], b: &'a [T]) -> Vec<&'a T> {
 }
 
 fn fetch_upstream_artifacts(
-    inventory_artifacts: &[Artifact<Version, Sha256>],
-) -> Result<Vec<Artifact<Version, Sha256>>> {
+    inventory_artifacts: &[Artifact<Version, Sha256, Option<()>>],
+) -> Result<Vec<Artifact<Version, Sha256, Option<()>>>> {
     let mut upstream_artifacts = vec![];
     for release in list_releases()? {
         if release.version >= Version::parse("0.8.6")? {
@@ -157,15 +157,16 @@ fn fetch_upstream_artifacts(
                         .get(&filename)
                         .ok_or_else(|| anyhow::anyhow!("Checksum not found for {}", filename))?;
 
-                    upstream_artifacts.push(Artifact::<Version, Sha256> {
+                    upstream_artifacts.push(Artifact::<Version, Sha256, Option<()>> {
                         url: format!(
                             "https://nodejs.org/download/release/v{}/{filename}",
                             release.version
                         ),
                         version: release.version.clone(),
-                        checksum: Checksum::try_from(checksum_hex.to_owned())?,
+                        checksum: format!("sha256:{checksum_hex}").parse::<Checksum<Sha256>>()?,
                         arch,
                         os,
+                        metadata: None,
                     });
                 }
             }

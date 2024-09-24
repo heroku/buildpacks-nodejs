@@ -2,7 +2,6 @@ use std::fs;
 use std::io::Read;
 use std::path::Path;
 
-use heroku_inventory_utils::inv::Artifact;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -10,6 +9,7 @@ use libcnb::layer::{
 };
 use libherokubuildpack::download::download_file;
 use libherokubuildpack::fs::move_directory_contents;
+use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsEngineBuildpack>,
-    distribution_artifact: &Artifact<Version, Sha256>,
+    distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
 ) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
     let new_metadata = DistLayerMetadata {
         artifact: distribution_artifact.clone(),
@@ -115,7 +115,7 @@ const LAYER_VERSION: &str = "1";
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct DistLayerMetadata {
-    artifact: Artifact<Version, Sha256>,
+    artifact: Artifact<Version, Sha256, Option<()>>,
     layer_version: String,
 }
 
@@ -147,8 +147,10 @@ impl From<DistLayerError> for libcnb::Error<NodeJsEngineBuildpackError> {
 mod tests {
     use std::str::FromStr;
 
-    use heroku_inventory_utils::checksum::Checksum;
-    use heroku_inventory_utils::inv::{Arch, Os};
+    use libherokubuildpack::inventory::{
+        artifact::{Arch, Os},
+        checksum::Checksum,
+    };
 
     use super::*;
 
@@ -160,10 +162,10 @@ mod tests {
             arch: Arch::Arm64,
             url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-arm64.tar.gz"
                 .to_string(),
-            checksum: Checksum::<Sha256>::try_from(
-                "9c111af1f951e8869615bca3601ce7ab6969374933bdba6397469843b808f222".to_string(),
-            )
-            .unwrap(),
+            checksum: "sha256:9c111af1f951e8869615bca3601ce7ab6969374933bdba6397469843b808f222"
+                .parse::<Checksum<Sha256>>()
+                .unwrap(),
+            metadata: None,
         };
         let node_version_22_1_0_linux_amd = Artifact {
             version: Version::from_str("22.1.0").unwrap(),
@@ -171,10 +173,10 @@ mod tests {
             arch: Arch::Amd64,
             url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-x64.tar.gz"
                 .to_string(),
-            checksum: Checksum::<Sha256>::try_from(
-                "d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d".to_string(),
-            )
-            .unwrap(),
+            checksum: "sha256:d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d"
+                .parse::<Checksum<Sha256>>()
+                .unwrap(),
+            metadata: None,
         };
 
         // this is a check to ensure that the same node.js artifact doesn't invalidate the cache
@@ -211,10 +213,10 @@ mod tests {
                 arch: Arch::Amd64,
                 url: "https://nodejs.org/download/release/v22.1.0/node-v22.1.0-linux-x64.tar.gz"
                     .to_string(),
-                checksum: Checksum::<Sha256>::try_from(
-                    "d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d".to_string(),
-                )
-                .unwrap(),
+                checksum: "sha256:d8ae35a9e2bb0c0c0611ee9bacf564ea51cc8291ace1447f95ee6aeaf4f1d61d"
+                    .parse::<Checksum<Sha256>>()
+                    .unwrap(),
+                metadata: None,
             },
             layer_version: LAYER_VERSION.to_string(),
         };
