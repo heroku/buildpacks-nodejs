@@ -1,5 +1,8 @@
 use crate::cmd;
 use crate::PnpmInstallBuildpackError;
+use heroku_nodejs_utils::buildplan::{
+    NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 use indoc::formatdoc;
 use libherokubuildpack::log::log_error;
 
@@ -49,7 +52,7 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
         PnpmInstallBuildpackError::PnpmInstall(err) => {
             let (context, details) = get_cmd_error_context(err);
             log_error(
-                "heroku/nodejs-pnpm pnpm install error",
+                "pnpm install error",
                 formatdoc! {"
                     There was an error while attempting to install dependencies
                     with pnpm. {context}
@@ -61,7 +64,7 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
         PnpmInstallBuildpackError::PnpmDir(err) => {
             let (context, details) = get_cmd_error_context(err);
             log_error(
-                "heroku/nodejs-pnpm directory error",
+                "directory error",
                 formatdoc! {"
                     There was an error while attempting to configure a pnpm
                     store to a buildpack layer directory. {context}
@@ -73,7 +76,7 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
         PnpmInstallBuildpackError::PnpmStorePrune(err) => {
             let (context, details) = get_cmd_error_context(err);
             log_error(
-                "heroku/nodejs-pnpm store error",
+                "store error",
                 formatdoc! {"
                     There was an error while attempting to prune the pnpm
                     content-addressable store. {context}
@@ -84,12 +87,31 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError) {
         }
         PnpmInstallBuildpackError::VirtualLayer(err) => {
             log_error(
-                "heroku/nodejs-pnpm-install virtual store layer error",
+                "virtual store layer error",
                 formatdoc! {"
                     There was an error while attempting to create the virtual
                     store layer for pnpm's installed dependencies.
 
                     Details: {err:?}
+                "},
+            );
+        }
+        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(err) => {
+            let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = err;
+            let value_type = value.type_str();
+            log_error(
+                format!("metadata error in {NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME} build plan"),
+                formatdoc! {"
+                    A participating buildpack has set invalid `[requires.metadata]` for the 
+                    build plan named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
+                    
+                    Expected metadata format:
+                    [requires.metadata]
+                    enabled = <bool>
+                    
+                    But was:
+                    [requires.metadata]
+                    enabled = <{value_type}> 
                 "},
             );
         }

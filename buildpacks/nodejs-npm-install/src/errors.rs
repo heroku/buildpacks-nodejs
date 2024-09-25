@@ -5,6 +5,9 @@ use commons::output::fmt;
 use commons::output::fmt::DEBUG_INFO;
 use fun_run::CmdError;
 use heroku_nodejs_utils::application;
+use heroku_nodejs_utils::buildplan::{
+    NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use std::fmt::Display;
@@ -27,6 +30,7 @@ pub(crate) enum NpmInstallBuildpackError {
     NpmSetCacheDir(CmdError),
     NpmVersion(npm::VersionError),
     PackageJson(PackageJsonError),
+    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
 pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
@@ -44,11 +48,34 @@ fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLo
         NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),
         NpmInstallBuildpackError::Detect(e) => on_detect_error(&e, logger),
+        NpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
+            on_node_build_scripts_metadata_error(e, logger);
+        }
         NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e, logger),
         NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e, logger),
         NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
     }
+}
+
+fn on_node_build_scripts_metadata_error(
+    error: NodeBuildScriptsMetadataError,
+    logger: Box<dyn StartedLogger>,
+) {
+    let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
+    let value_type = value.type_str();
+    logger.announce().error(&formatdoc! { "
+        A participating buildpack has set invalid `[requires.metadata]` for the build plan \
+        named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
+        
+        Expected metadata format:
+        [requires.metadata]
+        enabled = <bool>
+        
+        But was:
+        [requires.metadata]
+        enabled = <{value_type}>     
+    "});
 }
 
 fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>) {

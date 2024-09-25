@@ -12,6 +12,9 @@ use commons::output::section_log::{log_step, log_step_stream};
 use commons::output::warn_later::WarnGuard;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
+use heroku_nodejs_utils::buildplan::{
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 use heroku_nodejs_utils::package_json::PackageJson;
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
@@ -53,9 +56,11 @@ impl Buildpack for NpmInstallBuildpack {
                     .build_plan(
                         BuildPlanBuilder::new()
                             .provides("node_modules")
+                            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
+                            .requires("node")
                             .requires("npm")
                             .requires("node_modules")
-                            .requires("node")
+                            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
                             .build(),
                     )
                     .build()
@@ -74,6 +79,8 @@ impl Buildpack for NpmInstallBuildpack {
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
             .map_err(NpmInstallBuildpackError::PackageJson)?;
+        let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
+            .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
 
         run_application_checks(app_dir, &warn_later)?;
 
@@ -84,7 +91,12 @@ impl Buildpack for NpmInstallBuildpack {
         let logger = section.end_section();
 
         let section = logger.section("Running scripts");
-        run_build_scripts(&package_json, &env, section.as_ref())?;
+        run_build_scripts(
+            &package_json,
+            &node_build_scripts_metadata,
+            &env,
+            section.as_ref(),
+        )?;
         let logger = section.end_section();
 
         let section = logger.section("Configuring default processes");
@@ -154,6 +166,7 @@ fn run_npm_install(
 
 fn run_build_scripts(
     package_json: &PackageJson,
+    node_build_scripts_metadata: &NodeBuildScriptsMetadata,
     env: &Env,
     _section_logger: &dyn SectionLogger,
 ) -> Result<(), NpmInstallBuildpackError> {
@@ -162,16 +175,23 @@ fn run_build_scripts(
         log_step("No build scripts found");
     } else {
         for script in build_scripts {
-            let mut npm_run = npm::RunScript { env, script }.into_command();
-            log_step_stream(
-                format!("Running {}", fmt::command(npm_run.name())),
-                |stream| {
-                    npm_run
-                        .stream_output(stream.io(), stream.io())
-                        .and_then(NamedOutput::nonzero_captured)
-                        .map_err(NpmInstallBuildpackError::BuildScript)
-                },
-            )?;
+            if let Some(false) = node_build_scripts_metadata.enabled {
+                log_step(format!(
+                    "Not running {} as it was disabled by a participating buildpack",
+                    fmt::value(script)
+                ));
+            } else {
+                let mut npm_run = npm::RunScript { env, script }.into_command();
+                log_step_stream(
+                    format!("Running {}", fmt::command(npm_run.name())),
+                    |stream| {
+                        npm_run
+                            .stream_output(stream.io(), stream.io())
+                            .and_then(NamedOutput::nonzero_captured)
+                            .map_err(NpmInstallBuildpackError::BuildScript)
+                    },
+                )?;
+            }
         }
     };
     Ok(())
