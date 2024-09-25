@@ -46,6 +46,7 @@ impl Buildpack for PnpmInstallBuildpack {
                         BuildPlanBuilder::new()
                             .provides("node_modules")
                             .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
+                            .requires("node")
                             .requires("pnpm")
                             .requires("node_modules")
                             .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
