@@ -39,11 +39,6 @@ This buildpack's `bin/detect` will only pass if a `yarn.lock` exists in the
 project root. This is done to prevent the buildpack from providing indeterminate
 and unpredictable dependency trees.
 
-### Build Plan
-
-This buildpack `requires` `node` (from the [heroku/nodejs-engine](../nodejs-engine) buildpack).
-It also `provides` and `requires` `yarn` and `node_modules`.
-
 ### Environment Variables
 
 #### PATH
@@ -86,7 +81,7 @@ line. There are two ways to select a different yarn version:
 Use the `heroku/nodejs-corepack` buildpack to install yarn. It will install
 yarn according to the `packageManager` key in `package.json`. For example:
 
-```js
+```json5
 // package.json
 {
   "packageManager": "yarn@3.1.2"
@@ -95,10 +90,10 @@ yarn according to the `packageManager` key in `package.json`. For example:
 
 #### `engines.yarn`
 
-Alternatively, define `engines.yarn` using a semver range in `package.json`. 
+Alternatively, define `engines.yarn` using a semver range in `package.json`.
 For example:
 
-```js
+```json5
 // package.json
 {
   "engines": {
@@ -117,7 +112,52 @@ command from Cloud Native Buildpacks using both the
 pack build example-app-image --buildpack heroku/nodejs-engine --buildpack heroku/nodejs-yarn --path /some/example-app
 ```
 
+## Build Plan
+
+### Provides
+
+| Name                 | Description                                                                                                      |
+|----------------------|------------------------------------------------------------------------------------------------------------------|
+| `yarn`               | Allows other buildpacks that require [Yarn][yarn] tooling to depend on this buildpack.                           |
+| `node_modules`       | Allows other buildpacks to depend on the Node modules provided by this buildpack.                                |
+| `node_build_scripts` | Allows other buildpacks to depend on the [build script execution](#scripts) behavior provided by this buildpack. |
+
+### Requires
+
+| Name                 | Description                                                                                                                                                                                                               |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `node`               | To execute `pnpm` a [Node.js][Node.js] runtime is required. It can be provided by the [`heroku/nodejs-engine`][heroku/nodejs-engine] buildpack.                                                                           |
+| `yarn`               | To install node modules, the [Yarn][yarn] package manager is required. It can be provided by either the [`heroku/nodejs-corepack`][heroku/nodejs-corepack] buildpack or this one.                                         |
+| `node_modules`       | This is not a strict requirement of the buildpack. Requiring `node_modules` ensures that this buildpack can be used even when no other buildpack requires `node_modules`.                                                 |
+| `node_build_scripts` | This is not a strict requirement of the buildpack. Requiring `node_build_scripts` ensures that this buildpack will perform [build script execution](#scripts) even when no other buildpack requires `node_build_scripts`. |          | 
+
+#### Build Plan Metadata Schemas
+
+##### `node_build_scripts`
+
+* `enabled` ([boolean][toml_type_boolean], optional)
+
+###### Example
+
+```toml
+[[requires]]
+name = "node_build_scripts"
+
+[requires.metadata]
+enabled = false # this will prevent build scripts from running
+```
+
 ## Additional Info
 
 For development, dependencies, contribution, license and other info, please
 refer to the [root README.md](../../README.md).
+
+[Node.js]: https://nodejs.org/
+
+[yarn]: https://yarnpkg.com/
+
+[heroku/nodejs-engine]: ../nodejs-engine/README.md
+
+[heroku/nodejs-corepack]: ../nodejs-corepack/README.md
+
+[toml_type_boolean]: https://toml.io/en/v1.0.0#boolean

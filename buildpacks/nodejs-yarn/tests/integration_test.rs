@@ -1,8 +1,13 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use libcnb_test::{assert_contains, assert_not_contains};
-use test_support::{assert_web_response, nodejs_integration_test};
+use indoc::indoc;
+use libcnb::data::buildpack_id;
+use libcnb_test::{assert_contains, assert_not_contains, BuildpackReference};
+use test_support::{
+    add_build_script, assert_web_response, custom_buildpack, integration_test_with_config,
+    nodejs_integration_test,
+};
 
 #[test]
 #[ignore = "integration test"]
@@ -159,4 +164,53 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
             assert_contains!(ctx.pack_stdout, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
         });
     });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_skip_build_scripts_from_buildplan() {
+    integration_test_with_config(
+        "./fixtures/yarn-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                add_build_script(&app_dir, "heroku-prebuild");
+                add_build_script(&app_dir, "build");
+                add_build_script(&app_dir, "heroku-postbuild");
+            });
+        },
+        |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "! Not running `heroku-prebuild` as it was disabled by a participating buildpack"
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "! Not running `build` as it was disabled by a participating buildpack"
+            );
+            assert_contains!(
+                ctx.pack_stdout,
+                "! Not running `heroku-postbuild` as it was disabled by a participating buildpack"
+            );
+        },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            BuildpackReference::Other(
+                custom_buildpack()
+                    .id("test/skip-build-scripts")
+                    .detect(indoc! { r#"
+                        #!/usr/bin/env bash
+                        
+                        build_plan="$2"
+                        
+                        cat <<EOF >"$build_plan"
+                            [[requires]]
+                            name = "node_build_scripts"
+                            [requires.metadata]
+                            enabled = false
+                        EOF
+                    "# })
+                    .call(),
+            ),
+        ],
+    );
 }

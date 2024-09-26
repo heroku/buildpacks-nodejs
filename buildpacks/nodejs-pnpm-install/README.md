@@ -52,12 +52,6 @@ This buildpack's `bin/detect` will only pass if a `pnpm-lock.json` exists in the
 project root. This is done to prevent the buildpack from providing indeterminate
 and unpredictable dependency trees.
 
-### Build Plan
-
-This buildpack `requires` `node` (from the [heroku/nodejs-engine](../nodejs-engine) buildpack)
-and `pnpm` (from the [heroku/nodejs-corepack](../nodejs-corepack) buildpack).
-It also `provides` and `requires` and `node_modules`.
-
 ### Hoist Modes
 
 The `hoist = true`, `hoist = false`, `shamefully-hoist = false`,
@@ -106,7 +100,51 @@ buildpacks:
 pack build example-app-image --builder heroku/builder:22 --path /some/example-app
 ```
 
+## Build Plan
+
+### Provides
+
+| Name                 | Description                                                                                                      |
+|----------------------|------------------------------------------------------------------------------------------------------------------|
+| `node_modules`       | Allows other buildpacks to depend on the Node modules provided by this buildpack.                                |
+| `node_build_scripts` | Allows other buildpacks to depend on the [build script execution](#scripts) behavior provided by this buildpack. |
+
+### Requires
+
+| Name                 | Description                                                                                                                                                                                                               |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `node`               | To execute `pnpm` a [Node.js][Node.js] runtime is required. It can be provided by the [`heroku/nodejs-engine`][heroku/nodejs-engine] buildpack.                                                                           |
+| `pnpm`               | To install node modules, the [pnpm][pnpm] package manager is required. It can be provided by the [`heroku/nodejs-corepack`][heroku/nodejs-corepack] buildpack.                                                            |
+| `node_modules`       | This is not a strict requirement of the buildpack. Requiring `node_modules` ensures that this buildpack can be used even when no other buildpack requires `node_modules`.                                                 |
+| `node_build_scripts` | This is not a strict requirement of the buildpack. Requiring `node_build_scripts` ensures that this buildpack will perform [build script execution](#scripts) even when no other buildpack requires `node_build_scripts`. |          | 
+
+#### Build Plan Metadata Schemas
+
+##### `node_build_scripts`
+
+* `enabled` ([boolean][toml_type_boolean], optional)
+
+###### Example
+
+```toml
+[[requires]]
+name = "node_build_scripts"
+
+[requires.metadata]
+enabled = false # this will prevent build scripts from running
+```
+
 ## Additional Info
 
 For development, dependencies, contribution, license and other info, please
 refer to the [root README.md](../../README.md).
+
+[Node.js]: https://nodejs.org/
+
+[pnpm]: https://pnpm.io/
+
+[heroku/nodejs-engine]: ../nodejs-engine/README.md
+
+[heroku/nodejs-corepack]: ../nodejs-corepack/README.md
+
+[toml_type_boolean]: https://toml.io/en/v1.0.0#boolean

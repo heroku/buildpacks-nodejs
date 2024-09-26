@@ -1,0 +1,5 @@
+{
+  "name": "yarn-project",
+  "packageManager": "yarn@4.2.2",
+  "scripts": {}
+}

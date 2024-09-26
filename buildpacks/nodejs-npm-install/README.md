@@ -36,20 +36,37 @@ added that executes `npm start`.
 
 ## Build Plan
 
-### Requires
-
-| Name           | Description                                                                                                                                                                                                                |
-|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `node`         | To execute `npm` a [Node.js][Node.js] runtime is required. It can be provided by the [`heroku/nodejs-engine`][heroku/nodejs-engine] buildpack.                                                                             |
-| `npm`          | To install node modules, the [npm][npm] package manager is required. It can be provided by either the [`heroku/nodejs-engine`][heroku/nodejs-engine] or [`heroku/nodejs-npm-engine`][heroku/nodejs-npm-engine] buildpacks. |
-| `node_modules` | This is not a strict requirement of the buildpack. Requiring `node_modules` ensures that this buildpack can be used even when no other buildpack requires `node_modules`.                                                  |
-
-
 ### Provides
 
-| Name           | Description                                                                       |
-|----------------|-----------------------------------------------------------------------------------|
-| `node_modules` | Allows other buildpacks to depend on the Node modules provided by this buildpack. |
+| Name                 | Description                                                                                                                           |
+|----------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| `node_modules`       | Allows other buildpacks to depend on the Node modules provided by this buildpack.                                                     |
+| `node_build_scripts` | Allows other buildpacks to depend on the [build script execution](#step-3-execute-build-scripts) behavior provided by this buildpack. |
+
+### Requires
+
+| Name                 | Description                                                                                                                                                                                                                                    |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `node`               | To execute `npm` a [Node.js][Node.js] runtime is required. It can be provided by the [`heroku/nodejs-engine`][heroku/nodejs-engine] buildpack.                                                                                                 |
+| `npm`                | To install node modules, the [npm][npm] package manager is required. It can be provided by either the [`heroku/nodejs-engine`][heroku/nodejs-engine] or [`heroku/nodejs-npm-engine`][heroku/nodejs-npm-engine] buildpacks.                     |
+| `node_modules`       | This is not a strict requirement of the buildpack. Requiring `node_modules` ensures that this buildpack can be used even when no other buildpack requires `node_modules`.                                                                      |
+| `node_build_scripts` | This is not a strict requirement of the buildpack. Requiring `node_build_scripts` ensures that this buildpack will perform [build script execution](#step-3-execute-build-scripts) even when no other buildpack requires `node_build_scripts`. |          | 
+
+#### Build Plan Metadata Schemas
+
+##### `node_build_scripts`
+
+* `enabled` ([boolean][toml_type_boolean], optional)
+
+###### Example
+
+```toml
+[[requires]]
+name = "node_build_scripts"
+
+[requires.metadata]
+enabled = false # this will prevent build scripts from running
+```
 
 ## License
 
@@ -63,3 +80,4 @@ See [LICENSE](../../LICENSE) file.
 [npm]: https://docs.npmjs.com/
 [heroku/nodejs-engine]: ../nodejs-engine/README.md
 [heroku/nodejs-npm-engine]: ../nodejs-npm-engine/README.md
+[toml_type_boolean]: https://toml.io/en/v1.0.0#boolean
