@@ -11,6 +11,10 @@ use libherokubuildpack::log::{log_header, log_info};
 
 use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
+use heroku_nodejs_utils::buildplan::{
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -40,10 +44,12 @@ impl Buildpack for PnpmInstallBuildpack {
                 DetectResultBuilder::pass()
                     .build_plan(
                         BuildPlanBuilder::new()
-                            .requires("pnpm")
                             .provides("node_modules")
-                            .requires("node_modules")
+                            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
                             .requires("node")
+                            .requires("pnpm")
+                            .requires("node_modules")
+                            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
                             .build(),
                     )
                     .build()
@@ -55,6 +61,8 @@ impl Buildpack for PnpmInstallBuildpack {
         let env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(PnpmInstallBuildpackError::PackageJson)?;
+        let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
+            .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
 
         log_header("Setting up pnpm dependency store");
         configure_pnpm_store_directory(&context, &env)?;
@@ -77,8 +85,14 @@ impl Buildpack for PnpmInstallBuildpack {
             log_info("No build scripts found");
         } else {
             for script in scripts {
-                log_info(format!("Running `{script}` script"));
-                cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
+                if let Some(false) = node_build_scripts_metadata.enabled {
+                    log_info(format!(
+                        "! Not running `{script}` as it was disabled by a participating buildpack",
+                    ));
+                } else {
+                    log_info(format!("Running `{script}` script"));
+                    cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
+                }
             }
         }
 
@@ -113,6 +127,7 @@ enum PnpmInstallBuildpackError {
     PnpmInstall(cmd::Error),
     PnpmStorePrune(cmd::Error),
     VirtualLayer(std::io::Error),
+    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
 impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError> {

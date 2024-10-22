@@ -7,9 +7,9 @@ use libcnb_test::{
     TestContext, TestRunner,
 };
 use std::net::SocketAddr;
-use std::panic;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime};
+use std::{fs, panic};
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
 pub const PORT: u16 = 8080;
@@ -64,7 +64,7 @@ fn function_integration_test_with_config(
     );
 }
 
-fn integration_test_with_config(
+pub fn integration_test_with_config(
     fixture: &str,
     with_config: fn(&mut BuildConfig),
     test_body: fn(TestContext),
@@ -214,4 +214,40 @@ pub fn update_json_file(path: &Path, update: impl FnOnce(&mut serde_json::Value)
     update(&mut json);
     let new_contents = serde_json::to_string(&json).unwrap();
     std::fs::write(path, new_contents).unwrap();
+}
+
+#[bon::builder(on(String, into))]
+pub fn custom_buildpack(id: &str, detect: Option<String>, build: Option<String>) -> String {
+    let buildpack_dir = tempfile::tempdir().unwrap().into_path();
+    let bin_dir = buildpack_dir.join("bin");
+
+    fs::create_dir(&bin_dir).unwrap();
+
+    fs::write(
+        buildpack_dir.join("buildpack.toml"),
+        format!(
+            "
+api = \"0.10\"
+
+[buildpack]
+id = \"{id}\"
+version = \"0.0.0\"
+    "
+        ),
+    )
+    .unwrap();
+
+    fs::write(
+        bin_dir.join("detect"),
+        detect.unwrap_or("#!/usr/bin/env bash".to_string()),
+    )
+    .unwrap();
+
+    fs::write(
+        bin_dir.join("build"),
+        build.unwrap_or("#!/usr/bin/env bash".to_string()),
+    )
+    .unwrap();
+
+    buildpack_dir.to_string_lossy().to_string()
 }

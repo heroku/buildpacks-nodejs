@@ -16,6 +16,7 @@ thiserror = "1"
 toml = "0.8"
 
 [dev-dependencies]
+indoc = "2"
 libcnb-test = "=0.23.0"
 test_support.workspace = true
 ureq = "2"

@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Allow configuration of build script behavior through the `node_build_scripts` build plan. ([#928](https://github.com/heroku/buildpacks-nodejs/pull/928))
 - Added Yarn version 4.5.1.
 - Added Yarn version 3.8.6.
+
 ## [3.2.15] - 2024-10-04
 
 - No changes.

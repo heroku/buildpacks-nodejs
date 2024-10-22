@@ -16,6 +16,12 @@ use thiserror::Error;
 
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
 use crate::install_yarn::{install_yarn, CliLayerError};
+use heroku_nodejs_utils::buildplan::{
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
+#[cfg(test)]
+use indoc as _;
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -49,10 +55,12 @@ impl Buildpack for YarnBuildpack {
                     .build_plan(
                         BuildPlanBuilder::new()
                             .provides("yarn")
-                            .requires("yarn")
                             .provides("node_modules")
-                            .requires("node_modules")
+                            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
                             .requires("node")
+                            .requires("yarn")
+                            .requires("node_modules")
+                            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
                             .build(),
                     )
                     .build()
@@ -64,6 +72,8 @@ impl Buildpack for YarnBuildpack {
         let mut env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(YarnBuildpackError::PackageJson)?;
+        let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
+            .map_err(YarnBuildpackError::NodeBuildScriptsMetadata)?;
 
         let yarn_version = match cmd::yarn_version(&env) {
             // Install yarn if it's not present.
@@ -133,8 +143,14 @@ impl Buildpack for YarnBuildpack {
             log_info("No build scripts found");
         } else {
             for script in scripts {
-                log_info(format!("Running `{script}` script"));
-                cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
+                if let Some(false) = node_build_scripts_metadata.enabled {
+                    log_info(format!(
+                        "! Not running `{script}` as it was disabled by a participating buildpack",
+                    ));
+                } else {
+                    log_info(format!("Running `{script}` script"));
+                    cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
+                }
             }
         }
 
@@ -188,6 +204,9 @@ impl Buildpack for YarnBuildpack {
                     | YarnBuildpackError::YarnDefaultParse(_) => {
                         log_error("Yarn version error", err_string);
                     }
+                    YarnBuildpackError::NodeBuildScriptsMetadata(_) => {
+                        log_error("Yarn buildplan error", err_string);
+                    }
                 }
             }
             err => {
@@ -223,6 +242,8 @@ enum YarnBuildpackError {
     YarnVersionResolve(Requirement),
     #[error("Couldn't parse yarn default version range: {0}")]
     YarnDefaultParse(VersionError),
+    #[error("Couldn't parse metadata for the buildplan named {NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}: {0:?}")]
+    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
 impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
