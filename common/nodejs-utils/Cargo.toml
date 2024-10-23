@@ -10,10 +10,10 @@ workspace = true
 anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
-heroku-inventory-utils = { git = "https://github.com/heroku/buildpacks-go/", rev = "2a86fae18332b9bd495eb29422c13ac3fcb2d0dc" }
 indoc = "2"
 keep_a_changelog_file = "0.1.0"
 libcnb-data = "=0.23.0"
+libherokubuildpack = { version = "=0.24.0", default-features = false, features = ["inventory", "inventory-sha2"] }
 node-semver = "2"
 opentelemetry = "0.24"
 opentelemetry_sdk = { version = "0.24", features = ["trace"] }

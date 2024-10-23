@@ -2,21 +2,17 @@
 #![allow(unused_crate_dependencies)]
 
 use anyhow::{Context, Result};
-use heroku_inventory_utils::{
-    checksum::Checksum,
-    inv::{read_inventory_file, Arch, Artifact, Inventory, Os},
-};
 use keep_a_changelog_file::{ChangeGroup, Changelog};
+use libherokubuildpack::inventory::artifact::{Arch, Artifact, Os};
+use libherokubuildpack::inventory::checksum::Checksum;
+use libherokubuildpack::inventory::Inventory;
 use node_semver::Version;
 use serde::Deserialize;
 use sha2::Sha256;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::{
-    collections::{HashMap, HashSet},
-    env, fs,
-};
+use std::{collections::HashMap, env, fs};
 
 const USAGE: &str = "Usage: update_inventory <path/to/inventory.toml> <path/to/CHANGELOG.md>";
 
@@ -30,11 +26,9 @@ fn main() -> Result<()> {
         .nth(2)
         .context(format!("Missing path to changelog file!\n\n{USAGE}"))?;
 
-    let inventory_artifacts: HashSet<Artifact<Version, Sha256>> =
-        read_inventory_file(&inventory_path)?
-            .artifacts
-            .into_iter()
-            .collect();
+    let inventory_artifacts = fs::read_to_string(&inventory_path)?
+        .parse::<Inventory<Version, Sha256, Option<()>>>()?
+        .artifacts;
 
     let upstream_artifacts = fetch_upstream_artifacts(&inventory_artifacts)?;
 
@@ -47,31 +41,32 @@ fn main() -> Result<()> {
 
 fn write_inventory(
     inventory_path: impl Into<PathBuf>,
-    upstream_artifacts: &HashSet<Artifact<Version, Sha256>>,
+    upstream_artifacts: &[Artifact<Version, Sha256, Option<()>>],
 ) -> Result<()> {
-    toml::to_string(&Inventory {
-        artifacts: {
-            let mut artifacts = Vec::from_iter(upstream_artifacts.clone());
-            artifacts.sort_by(|a, b| {
-                if a.version == b.version {
-                    b.arch.to_string().cmp(&a.arch.to_string())
-                } else {
-                    b.version.cmp(&a.version)
-                }
-            });
-            artifacts
-        },
-    })
-    .context("Error serializing inventory as toml")
-    .and_then(|contents| {
-        fs::write(inventory_path.into(), contents).context("Error writing inventory file")
-    })
+    fs::write(
+        inventory_path.into(),
+        Inventory {
+            artifacts: {
+                let mut artifacts = upstream_artifacts.to_vec();
+                artifacts.sort_by(|a, b| {
+                    if a.version == b.version {
+                        b.arch.to_string().cmp(&a.arch.to_string())
+                    } else {
+                        b.version.cmp(&a.version)
+                    }
+                });
+                artifacts
+            },
+        }
+        .to_string(),
+    )
+    .context("Error writing inventory file")
 }
 
 fn write_changelog(
     changelog_path: impl Into<PathBuf>,
-    upstream_artifacts: &HashSet<Artifact<Version, Sha256>>,
-    inventory_artifacts: &HashSet<Artifact<Version, Sha256>>,
+    upstream_artifacts: &[Artifact<Version, Sha256, Option<()>>],
+    inventory_artifacts: &[Artifact<Version, Sha256, Option<()>>],
 ) -> Result<()> {
     let changelog_path = changelog_path.into();
 
@@ -87,11 +82,11 @@ fn write_changelog(
     let changes = [
         (
             ChangeGroup::Added,
-            Vec::from_iter(upstream_artifacts - inventory_artifacts),
+            Vec::from_iter(difference(upstream_artifacts, inventory_artifacts)),
         ),
         (
             ChangeGroup::Removed,
-            Vec::from_iter(inventory_artifacts - upstream_artifacts),
+            Vec::from_iter(difference(inventory_artifacts, upstream_artifacts)),
         ),
     ];
 
@@ -106,7 +101,7 @@ fn write_changelog(
                     HashMap::new();
                 for artifact in artifact_diff {
                     os_arch_labels_by_version
-                        .entry(artifact.version)
+                        .entry(artifact.version.clone())
                         .or_default()
                         .insert(format!("{}-{}", artifact.os, artifact.arch));
                 }
@@ -129,10 +124,15 @@ fn write_changelog(
     fs::write(changelog_path, changelog.to_string()).context("Failed to write to changelog")
 }
 
+/// Finds the difference between two slices.
+fn difference<'a, T: Eq>(a: &'a [T], b: &'a [T]) -> Vec<&'a T> {
+    a.iter().filter(|&artifact| !b.contains(artifact)).collect()
+}
+
 fn fetch_upstream_artifacts(
-    inventory_artifacts: &HashSet<Artifact<Version, Sha256>>,
-) -> Result<HashSet<Artifact<Version, Sha256>>> {
-    let mut upstream_artifacts = HashSet::new();
+    inventory_artifacts: &[Artifact<Version, Sha256, Option<()>>],
+) -> Result<Vec<Artifact<Version, Sha256, Option<()>>>> {
+    let mut upstream_artifacts = vec![];
     for release in list_releases()? {
         if release.version >= Version::parse("0.8.6")? {
             let supported_platforms = [
@@ -149,7 +149,7 @@ fn fetch_upstream_artifacts(
                     .iter()
                     .find(|x| x.arch == arch && x.os == os && x.version == release.version)
                 {
-                    upstream_artifacts.insert(artifact.clone());
+                    upstream_artifacts.push(artifact.clone());
                 } else {
                     let filename = format!("node-v{}-{}.tar.gz", release.version, file);
 
@@ -158,15 +158,16 @@ fn fetch_upstream_artifacts(
                         .get(&filename)
                         .ok_or_else(|| anyhow::anyhow!("Checksum not found for {}", filename))?;
 
-                    upstream_artifacts.insert(Artifact::<Version, Sha256> {
+                    upstream_artifacts.push(Artifact::<Version, Sha256, Option<()>> {
                         url: format!(
                             "https://nodejs.org/download/release/v{}/{filename}",
                             release.version
                         ),
                         version: release.version.clone(),
-                        checksum: Checksum::try_from(checksum_hex.to_owned())?,
+                        checksum: format!("sha256:{checksum_hex}").parse::<Checksum<Sha256>>()?,
                         arch,
                         os,
+                        metadata: None,
                     });
                 }
             }
