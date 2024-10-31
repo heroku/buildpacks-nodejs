@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2024-10-31
+
+### Changed
+
+- Updated `heroku/nodejs-engine` to `3.3.0`.
+- Updated `heroku/nodejs-function-invoker` to `3.3.0`.
+- Updated `heroku/nodejs-npm` to `3.3.0`.
+
 ## [3.2.18] - 2024-10-31
 
 ### Changed
@@ -633,7 +641,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Switch from the Riff based invoker buildpacks to `heroku/nodejs-function` ([#48](https://github.com/heroku/buildpacks-node/pull/48))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.18...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.18...v3.3.0
 [3.2.18]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.17...v3.2.18
 [3.2.17]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.16...v3.2.17
 [3.2.16]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.15...v3.2.16
