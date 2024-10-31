@@ -33,7 +33,7 @@ mod install_node;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
-const LTS_VERSION: &str = "20.x";
+const LTS_VERSION: &str = "22.x";
 
 const MINIMUM_NODE_VERSION_FOR_METRICS: &str = ">=14.10";
 
