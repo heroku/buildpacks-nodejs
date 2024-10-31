@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated default Node.js version to 22.x.
+  ([#950](https://github.com/heroku/buildpacks-nodejs/pull/950))
+
 ## [3.2.18] - 2024-10-31
 
 ### Added
