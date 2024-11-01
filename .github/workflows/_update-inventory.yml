@@ -42,7 +42,7 @@ jobs:
         run: rustup update
 
       - name: Rust cache
-        uses: Swatinem/rust-cache@v2.7.3
+        uses: Swatinem/rust-cache@v2.7.5
 
       - name: Set Diff Message
         id: set-diff-msg
