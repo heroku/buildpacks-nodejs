@@ -16,7 +16,7 @@ const METRICS_SEND_TIMEOUT: Duration = Duration::from_secs(15);
 #[ignore]
 fn simple_indexjs() {
     nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Node.js version not specified, using 20.x");
+        assert_contains!(ctx.pack_stdout, "Node.js version not specified, using 22.x");
         assert_contains!(ctx.pack_stdout, "Installing Node.js");
         assert_web_response(&ctx, "node-with-indexjs");
     });
