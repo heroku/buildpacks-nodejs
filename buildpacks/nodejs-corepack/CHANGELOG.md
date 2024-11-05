@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changes
+
+- Use tracing features provided by `libcnb.rs` ([#954](https://github.com/heroku/buildpacks-nodejs/pull/954))
+
 ## [3.2.17] - 2024-10-25
 
 - No changes.
