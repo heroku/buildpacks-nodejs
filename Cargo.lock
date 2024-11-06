@@ -619,7 +619,7 @@ dependencies = [
  "indoc",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "opentelemetry 0.26.0",
  "serde",
  "test_support",
@@ -634,7 +634,7 @@ dependencies = [
  "heroku-nodejs-utils",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "serde",
  "serde_json",
  "sha2",
@@ -654,7 +654,7 @@ dependencies = [
  "hex",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "rand",
  "serde",
  "serde_json",
@@ -673,7 +673,7 @@ dependencies = [
  "indoc",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "serde",
  "test_support",
  "toml",
@@ -690,7 +690,7 @@ dependencies = [
  "indoc",
  "keep_a_changelog_file",
  "libcnb-data 0.25.0",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "node-semver",
  "regex",
  "serde",
@@ -712,7 +712,7 @@ dependencies = [
  "indoc",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "serde",
  "tempfile",
  "test_support",
@@ -731,7 +731,7 @@ dependencies = [
  "indoc",
  "libcnb 0.25.0",
  "libcnb-test",
- "libherokubuildpack 0.24.0",
+ "libherokubuildpack 0.25.0",
  "serde",
  "serde_json",
  "test_support",
@@ -1038,20 +1038,6 @@ dependencies = [
 
 [[package]]
 name = "libcnb"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ce789ba7117d22c9f0046e7b8e37b771e799081687875d3728511249d6dced4"
-dependencies = [
- "libcnb-common 0.24.0",
- "libcnb-data 0.24.0",
- "libcnb-proc-macros 0.24.0",
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "545de2d94471f534c49a2e8c7baaf1e0a3a2ba3e61632e7e367a1b6b37453df6"
@@ -1080,17 +1066,6 @@ dependencies = [
 
 [[package]]
 name = "libcnb-common"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "613d7e5a3aeeb367bfb2a96c25290c6b596e6b15fcd2c729a26dc8e3e1bc67ab"
-dependencies = [
- "serde",
- "thiserror",
- "toml",
-]
-
-[[package]]
-name = "libcnb-common"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2ffd438b74436cda55c229df0a3cbf1161643d6d572aa49614702fab11b7c3f"
@@ -1108,20 +1083,6 @@ checksum = "aab235141d51d47ecffd1fc7a8efc2851063048ba9d4498963f1ad963c275eee"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros 0.23.0",
- "serde",
- "thiserror",
- "toml",
- "uriparse",
-]
-
-[[package]]
-name = "libcnb-data"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "29345e474049598160f678e07ea217e2d481f6a5048c90493d192b9edfdf146d"
-dependencies = [
- "fancy-regex",
- "libcnb-proc-macros 0.24.0",
  "serde",
  "thiserror",
  "toml",
@@ -1173,18 +1134,6 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.24.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bef14d35d3a45cdfcfe79f64ffa685275c0624b48054e01cd2ca09aba2d3714"
-dependencies = [
- "cargo_metadata",
- "fancy-regex",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "libcnb-proc-macros"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25e64d8020861920c69802d712684d900393b50a5605c92eb21fc8e4580368bb"
@@ -1222,13 +1171,13 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.24.0"
+version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bec33ef08ce0508ced826f7bdfcd0538bdfc2270632915e447d1ea72bce5645d"
+checksum = "5a806c455b7c8dd231b62aa43f51b35ed74b3814a14e81e3a14a5bfd7260e1e1"
 dependencies = [
  "flate2",
  "hex",
- "libcnb 0.24.0",
+ "libcnb 0.25.0",
  "pathdiff",
  "serde",
  "sha2",

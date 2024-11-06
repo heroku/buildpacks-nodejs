@@ -9,7 +9,7 @@ workspace = true
 [dependencies]
 heroku-nodejs-utils.workspace = true
 libcnb = "=0.25.0"
-libherokubuildpack = { version = "=0.24.0", default-features = false, features = ["error", "log", "toml"] }
+libherokubuildpack = { version = "=0.25.0", default-features = false, features = ["error", "log", "toml"] }
 serde = "1"
 thiserror = "1"
 toml = "0.8"
