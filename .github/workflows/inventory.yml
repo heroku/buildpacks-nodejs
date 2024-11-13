@@ -41,11 +41,11 @@ jobs:
         with:
           token: ${{ steps.generate-token.outputs.token }}
           title: "Update Node.js Inventory"
-          commit-message: "Update Inventory for heroku/nodejs\n\n${{ steps.rebuild-inventory.outputs.msg }}"
+          commit-message: "Update Inventory for heroku/nodejs-engine\n\n${{ steps.rebuild-inventory.outputs.msg }}"
           committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           branch: update-nodejs-inventory
-          body: "Automated pull-request to update heroku/nodejs inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
+          body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
 
       - name: Configure PR
         if: steps.pr.outputs.pull-request-operation == 'created'
