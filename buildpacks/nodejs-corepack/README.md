@@ -59,7 +59,7 @@ For most users, it's simplest to build an app using [`pack`](https://buildpacks.
 and Heroku's [builder](https://github.com/heroku/cnb-builder-images), which includes this buildpack.
 
 ```
-pack build example-app-image --builder heroku/builder:22 --path /my/example-app
+pack build example-app-image --builder heroku/builder:24 --path /my/example-app
 ```
 
 For users desiring more control, this buildpack can be used as part of a

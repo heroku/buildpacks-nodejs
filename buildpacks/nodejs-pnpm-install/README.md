@@ -93,11 +93,11 @@ command from Cloud Native Buildpacks using
 pack build example-app-image --buildpack heroku/nodejs-engine --buildpack heroku/nodejs-corepack --buildpack heroku/nodejs-pnpm-install --path /some/example-app
 ```
 
-Alternatively, use the `heroku/builder:22` builder, which includes the above
+Alternatively, use the `heroku/builder:24` builder, which includes the above
 buildpacks:
 
 ```
-pack build example-app-image --builder heroku/builder:22 --path /some/example-app
+pack build example-app-image --builder heroku/builder:24 --path /some/example-app
 ```
 
 ## Build Plan
