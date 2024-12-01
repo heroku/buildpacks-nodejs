@@ -9,12 +9,12 @@ workspace = true
 [dependencies]
 heroku-nodejs-utils.workspace = true
 indoc = "2"
-libcnb = { version = "=0.25.0", features = ["trace"] }
-libherokubuildpack = { version = "=0.25.0", default-features = false, features = ["log"] }
+libcnb = { version = "=0.26.0", features = ["trace"] }
+libherokubuildpack = { version = "=0.26.0", default-features = false, features = ["log"] }
 serde = "1"
 toml = "0.8"
 
 [dev-dependencies]
-libcnb-test = "=0.25.0"
+libcnb-test = "=0.26.0"
 test_support.workspace = true
 ureq = "2"
