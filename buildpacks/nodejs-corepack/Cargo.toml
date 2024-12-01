@@ -13,7 +13,7 @@ libcnb = { version = "=0.25.0", features = ["trace"] }
 libherokubuildpack = { version = "=0.25.0", default-features = false, features = ["log"] }
 opentelemetry = "0.26"
 serde = "1"
-thiserror = "1"
+thiserror = "2"
 
 [dev-dependencies]
 libcnb-test = "=0.25.0"
