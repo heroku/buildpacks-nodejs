@@ -12,7 +12,7 @@ chrono = { version = "0.4", default-features = false, features = ["serde"] }
 commons = { git = "https://github.com/heroku/buildpacks-ruby", branch = "main" }
 indoc = "2"
 keep_a_changelog_file = "0.1.0"
-libcnb-data = "=0.25.0"
+libcnb-data = "=0.26.0"
 libherokubuildpack = { version = "=0.25.0", default-features = false, features = ["inventory", "inventory-sha2"] }
 node-semver = "2"
 regex = "1"
