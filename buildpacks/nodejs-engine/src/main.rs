@@ -1,10 +1,13 @@
 use std::env::consts;
 
 use crate::attach_runtime_metrics::{attach_runtime_metrics, NodeRuntimeMetricsError};
+use crate::configure_available_parallelism::configure_available_parallelism;
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
+#[cfg(test)]
+use indoc as _;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -19,6 +22,8 @@ use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
+use regex as _;
+#[cfg(test)]
 use serde_json as _;
 use sha2::Sha256;
 #[cfg(test)]
@@ -28,6 +33,7 @@ use thiserror::Error;
 use ureq as _;
 
 mod attach_runtime_metrics;
+mod configure_available_parallelism;
 mod configure_web_env;
 mod install_node;
 
@@ -108,6 +114,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         install_node(&context, target_artifact)?;
 
         configure_web_env(&context)?;
+        configure_available_parallelism(&context)?;
 
         if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
             .expect("should be a valid version range")

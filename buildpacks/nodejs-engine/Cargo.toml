@@ -17,7 +17,9 @@ thiserror = "2"
 toml = "0.8"
 
 [dev-dependencies]
+indoc = "2"
 libcnb-test = "=0.26.0"
+regex = "1"
 serde_json = "1"
 test_support.workspace = true
 ureq = "2"

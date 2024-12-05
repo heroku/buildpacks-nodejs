@@ -2,6 +2,7 @@ use keep_a_changelog_file as _;
 use sha2 as _;
 
 pub mod application;
+pub mod available_parallelism;
 pub mod buildplan;
 pub mod distribution;
 pub mod inv;
