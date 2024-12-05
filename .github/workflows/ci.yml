@@ -149,4 +149,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.version }}
-      - run: npx mocha buildpacks/nodejs-engine/node_runtime_metrics/test/metrics.spec.cjs
+      - run: npx mocha@10.x buildpacks/nodejs-engine/node_runtime_metrics/test/metrics.spec.cjs
