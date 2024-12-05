@@ -8,7 +8,7 @@ pub(crate) struct SetCacheConfig<'a> {
     pub(crate) cache_dir: &'a PathBuf,
 }
 
-impl<'a> SetCacheConfig<'a> {
+impl SetCacheConfig<'_> {
     pub(crate) fn into_command(self) -> Command {
         self.into()
     }
@@ -39,7 +39,7 @@ pub(crate) struct Version<'a> {
     pub(crate) env: &'a Env,
 }
 
-impl<'a> Version<'a> {
+impl Version<'_> {
     pub(crate) fn into_command(self) -> Command {
         self.into()
     }
@@ -58,7 +58,7 @@ pub(crate) struct Install<'a> {
     pub(crate) env: &'a Env,
 }
 
-impl<'a> Install<'a> {
+impl Install<'_> {
     pub(crate) fn into_command(self) -> Command {
         self.into()
     }
@@ -79,7 +79,7 @@ pub(crate) struct RunScript<'a> {
     pub(crate) script: String,
 }
 
-impl<'a> RunScript<'a> {
+impl RunScript<'_> {
     pub(crate) fn into_command(self) -> Command {
         self.into()
     }
