@@ -13,7 +13,7 @@ libherokubuildpack = { version = "=0.25.0", default-features = false, features =
 serde = "1"
 sha2 = "0.10.8"
 tempfile = "3"
-thiserror = "1"
+thiserror = "2"
 toml = "0.8"
 
 [dev-dependencies]
