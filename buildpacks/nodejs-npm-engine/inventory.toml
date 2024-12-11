@@ -564,3 +564,9 @@ channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.9.3.tar.gz"
 etag = "593b08cbb00bd0ddbd22fa87b3e199fc"
 
+[[releases]]
+version = "9.9.4"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.9.4.tar.gz"
+etag = "ea6a0a035d0d1b9d6e9d6798d2081211"
+
