@@ -118,9 +118,9 @@ dependencies = [
 
 [[package]]
 name = "bon"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9276fe602371cd8a7f70fe68c4db55b2d3e92c570627d6ed0427646edfa5cf47"
+checksum = "f265cdb2e8501f1c952749e78babe8f1937be92c98120e5f78fc72d634682bad"
 dependencies = [
  "bon-macros",
  "rustversion",
@@ -128,9 +128,9 @@ dependencies = [
 
 [[package]]
 name = "bon-macros"
-version = "3.2.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94828b84b32b4f3ac3865f692fcdbc46c7d0dd87b29658a391d58a244e1ce45a"
+checksum = "38aa5c627cd7706490e5b003d685f8b9d69bc343b1a00b9fdd01e75fdf6827cf"
 dependencies = [
  "darling",
  "ident_case",
@@ -228,9 +228,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.38"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a21f936df1771bf62b77f047b726c4625ff2e8aa607c01ec06e5a05bd8463401"
+checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -651,7 +651,7 @@ dependencies = [
  "opentelemetry 0.27.1",
  "serde",
  "test_support",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "ureq",
 ]
 
@@ -668,7 +668,7 @@ dependencies = [
  "sha2",
  "tempfile",
  "test_support",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "ureq",
 ]
@@ -688,7 +688,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "test_support",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "ureq",
 ]
@@ -726,7 +726,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "ureq",
  "url",
@@ -744,7 +744,7 @@ dependencies = [
  "serde",
  "tempfile",
  "test_support",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "ureq",
 ]
@@ -1077,7 +1077,7 @@ dependencies = [
  "opentelemetry-stdout",
  "opentelemetry_sdk",
  "serde",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
 ]
 
@@ -1099,7 +1099,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19256408316a00c350f6babf3a6ae974264e9440e5ac7bfe9649431bce97aaf4"
 dependencies = [
  "serde",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
 ]
 
@@ -1126,7 +1126,7 @@ dependencies = [
  "fancy-regex 0.14.0",
  "libcnb-proc-macros 0.26.0",
  "serde",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "uriparse",
 ]
@@ -1143,7 +1143,7 @@ dependencies = [
  "libcnb-common 0.26.0",
  "libcnb-data 0.26.0",
  "petgraph",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "uriparse",
  "which",
 ]
@@ -1185,7 +1185,7 @@ dependencies = [
  "libcnb-package",
  "regex",
  "tempfile",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
 ]
 
 [[package]]
@@ -1211,7 +1211,7 @@ dependencies = [
  "sha2",
  "tar",
  "termcolor",
- "thiserror 2.0.4",
+ "thiserror 2.0.6",
  "toml",
  "ureq",
 ]
@@ -1841,11 +1841,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.4"
+version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f49a1853cf82743e3b7950f77e0f4d622ca36cf4317cba00c767838bac8d490"
+checksum = "8fec2a1820ebd077e2b90c4df007bebf344cd394098a13c563957d0afc83ea47"
 dependencies = [
- "thiserror-impl 2.0.4",
+ "thiserror-impl 2.0.6",
 ]
 
 [[package]]
@@ -1861,9 +1861,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.4"
+version = "2.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8381894bb3efe0c4acac3ded651301ceee58a15d47c2e34885ed1908ad667061"
+checksum = "d65750cab40f4ff1929fb1ba509e9914eb756131cef4210da8d5d700d26f6312"
 dependencies = [
  "proc-macro2",
  "quote",
