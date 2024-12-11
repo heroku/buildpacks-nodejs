@@ -1,4 +1,18 @@
 [[artifacts]]
+version = "23.4.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v23.4.0/node-v23.4.0-linux-arm64.tar.gz"
+checksum = "sha256:69b3cfd03a9dee46254f3308f5a74fd282f29854a604a88a4bbedc2f83b0b8e3"
+
+[[artifacts]]
+version = "23.4.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v23.4.0/node-v23.4.0-linux-x64.tar.gz"
+checksum = "sha256:2d5ae1dfa7f67e96b23d1d1ff51b8c76c7ec51fbfb7c4c1f010101b9557a2a86"
+
+[[artifacts]]
 version = "23.3.0"
 os = "linux"
 arch = "arm64"
