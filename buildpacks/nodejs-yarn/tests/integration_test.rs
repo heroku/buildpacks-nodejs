@@ -6,7 +6,7 @@ use libcnb::data::buildpack_id;
 use libcnb_test::{assert_contains, assert_not_contains, BuildpackReference};
 use test_support::{
     add_build_script, assert_web_response, custom_buildpack, integration_test_with_config,
-    nodejs_integration_test,
+    nodejs_integration_test, nodejs_integration_test_with_config,
 };
 
 #[test]
@@ -212,5 +212,24 @@ fn test_skip_build_scripts_from_buildplan() {
                     .call(),
             ),
         ],
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::File::create(app_dir.join("Procfile")).unwrap();
+            });
+        },
+        |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "Skipping default web process (Procfile detected)"
+            );
+        },
     );
 }

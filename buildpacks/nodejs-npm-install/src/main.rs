@@ -100,7 +100,7 @@ impl Buildpack for NpmInstallBuildpack {
         let logger = section.end_section();
 
         let section = logger.section("Configuring default processes");
-        let build_result = configure_default_processes(&package_json, section.as_ref());
+        let build_result = configure_default_processes(&context, &package_json, section.as_ref());
         let logger = section.end_section();
 
         configure_npm_runtime_env(&context)?;
@@ -198,10 +198,14 @@ fn run_build_scripts(
 }
 
 fn configure_default_processes(
+    context: &BuildContext<NpmInstallBuildpack>,
     package_json: &PackageJson,
     _section_logger: &dyn SectionLogger,
 ) -> Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>> {
-    if package_json.has_start_script() {
+    if context.app_dir.join("Procfile").exists() {
+        log_step("Skipping default web process (Procfile detected)");
+        BuildResultBuilder::new().build()
+    } else if package_json.has_start_script() {
         log_step(format!(
             "Adding default web process for {}",
             fmt::value("npm start")

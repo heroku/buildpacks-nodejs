@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Default processes will no longer be registered if a Procfile is present. ([#985](https://github.com/heroku/buildpacks-nodejs/pull/985))
+
 ## [3.3.5] - 2024-12-11
 
 - No changes.

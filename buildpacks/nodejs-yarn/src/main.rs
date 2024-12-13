@@ -154,7 +154,10 @@ impl Buildpack for YarnBuildpack {
             }
         }
 
-        if pkg_json.has_start_script() {
+        if context.app_dir.join("Procfile").exists() {
+            log_info("Skipping default web process (Procfile detected)");
+            BuildResultBuilder::new().build()
+        } else if pkg_json.has_start_script() {
             BuildResultBuilder::new()
                 .launch(
                     LaunchBuilder::new()

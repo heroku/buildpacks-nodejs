@@ -269,6 +269,25 @@ fn test_skip_build_scripts_from_buildplan() {
     );
 }
 
+#[test]
+#[ignore]
+fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::File::create(app_dir.join("Procfile")).unwrap();
+            });
+        },
+        |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "Skipping default web process (Procfile detected)"
+            );
+        },
+    );
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();

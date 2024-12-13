@@ -97,7 +97,11 @@ impl Buildpack for PnpmInstallBuildpack {
         }
 
         let result_builder = BuildResultBuilder::new().store(Store { metadata });
-        if pkg_json.has_start_script() {
+
+        if context.app_dir.join("Procfile").exists() {
+            log_info("Skipping default web process (Procfile detected)");
+            result_builder.build()
+        } else if pkg_json.has_start_script() {
             result_builder
                 .launch(
                     LaunchBuilder::new()
