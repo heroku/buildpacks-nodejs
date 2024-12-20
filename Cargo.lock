@@ -651,7 +651,7 @@ dependencies = [
  "opentelemetry 0.27.1",
  "serde",
  "test_support",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "ureq",
 ]
 
@@ -668,7 +668,7 @@ dependencies = [
  "sha2",
  "tempfile",
  "test_support",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "ureq",
 ]
@@ -688,7 +688,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "test_support",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "ureq",
 ]
@@ -726,7 +726,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "ureq",
  "url",
@@ -744,7 +744,7 @@ dependencies = [
  "serde",
  "tempfile",
  "test_support",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "ureq",
 ]
@@ -1077,7 +1077,7 @@ dependencies = [
  "opentelemetry-stdout",
  "opentelemetry_sdk",
  "serde",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
 ]
 
@@ -1099,7 +1099,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19256408316a00c350f6babf3a6ae974264e9440e5ac7bfe9649431bce97aaf4"
 dependencies = [
  "serde",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
 ]
 
@@ -1126,7 +1126,7 @@ dependencies = [
  "fancy-regex 0.14.0",
  "libcnb-proc-macros 0.26.0",
  "serde",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "uriparse",
 ]
@@ -1143,7 +1143,7 @@ dependencies = [
  "libcnb-common 0.26.0",
  "libcnb-data 0.26.0",
  "petgraph",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "uriparse",
  "which",
 ]
@@ -1185,7 +1185,7 @@ dependencies = [
  "libcnb-package",
  "regex",
  "tempfile",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
 ]
 
 [[package]]
@@ -1211,7 +1211,7 @@ dependencies = [
  "sha2",
  "tar",
  "termcolor",
- "thiserror 2.0.6",
+ "thiserror 2.0.8",
  "toml",
  "ureq",
 ]
@@ -1657,9 +1657,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.215"
+version = "1.0.216"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6513c1ad0b11a9376da888e3e0baa0077f1aed55c17f50e7b2397136129fb88f"
+checksum = "0b9781016e935a97e8beecf0c933758c97a5520d32930e460142b4cd80c6338e"
 dependencies = [
  "serde_derive",
 ]
@@ -1678,9 +1678,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.215"
+version = "1.0.216"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad1e866f866923f252f05c889987993144fb74e722403468a4ebd70c3cd756c0"
+checksum = "46f859dbbf73865c6627ed570e78961cd3ac92407a2d117204c49232485da55e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1841,11 +1841,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.6"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fec2a1820ebd077e2b90c4df007bebf344cd394098a13c563957d0afc83ea47"
+checksum = "08f5383f3e0071702bf93ab5ee99b52d26936be9dedd9413067cbdcddcb6141a"
 dependencies = [
- "thiserror-impl 2.0.6",
+ "thiserror-impl 2.0.8",
 ]
 
 [[package]]
@@ -1861,9 +1861,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.6"
+version = "2.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d65750cab40f4ff1929fb1ba509e9914eb756131cef4210da8d5d700d26f6312"
+checksum = "f2f357fcec90b3caef6623a099691be676d033b40a058ac95d2a6ade6fa0c943"
 dependencies = [
  "proc-macro2",
  "quote",
