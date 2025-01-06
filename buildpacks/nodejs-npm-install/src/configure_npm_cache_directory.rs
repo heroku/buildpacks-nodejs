@@ -1,5 +1,5 @@
-use commons::output::build_log::SectionLogger;
-use commons::output::section_log::log_step;
+use bullet_stream::state::SubBullet;
+use bullet_stream::Print;
 use fun_run::CommandWithName;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -8,6 +8,7 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
+use std::io::Stdout;
 
 use crate::errors::NpmInstallBuildpackError;
 use crate::{npm, NpmInstallBuildpack};
@@ -15,8 +16,8 @@ use crate::{npm, NpmInstallBuildpack};
 pub(crate) fn configure_npm_cache_directory(
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,
-    _section_logger: &dyn SectionLogger,
-) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
+    mut section_logger: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<NpmInstallBuildpackError>> {
     let new_metadata = NpmCacheLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
@@ -39,18 +40,18 @@ pub(crate) fn configure_npm_cache_directory(
 
     match npm_cache_layer.state {
         LayerState::Restored { .. } => {
-            log_step("Restoring npm cache");
+            section_logger = section_logger.sub_bullet("Restoring npm cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                log_step("Restoring npm cache");
+                section_logger = section_logger.sub_bullet("Restoring npm cache");
             }
-            log_step("Creating npm cache");
+            section_logger = section_logger.sub_bullet("Creating npm cache");
             npm_cache_layer.write_metadata(new_metadata)?;
         }
     }
 
-    log_step("Configuring npm cache directory");
+    section_logger = section_logger.sub_bullet("Configuring npm cache directory");
     npm::SetCacheConfig {
         env,
         cache_dir: &npm_cache_layer.path(),
@@ -59,7 +60,7 @@ pub(crate) fn configure_npm_cache_directory(
     .named_output()
     .map_err(NpmInstallBuildpackError::NpmSetCacheDir)?;
 
-    Ok(())
+    Ok(section_logger)
 }
 
 const LAYER_VERSION: &str = "1";

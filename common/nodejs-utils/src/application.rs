@@ -1,10 +1,7 @@
 use crate::package_manager::PackageManager;
-use commons::output::fmt;
-use commons::output::section_log::log_warning_later;
-use commons::output::warn_later::WarnGuard;
+use bullet_stream::style;
 use indoc::{formatdoc, writedoc};
 use std::fmt::{Display, Formatter};
-use std::io::Stdout;
 use std::path::Path;
 
 /// Checks for npm, Yarn, pnpm, and shrink-wrap lockfiles and raises an error if multiple are detected.
@@ -33,16 +30,18 @@ pub fn check_for_singular_lockfile(app_dir: &Path) -> Result<(), Error> {
 
 /// Checks if the `node_modules` folder is present in the given directory which indicates that
 /// the application contains files that it shouldn't in its git repository. If this is the case,
-/// a delayed warning will be published to the logger. To ensure the delayed warning is properly
-/// displayed it should be used in conjunction with a [`WarnGuard`].
-pub fn warn_prebuilt_modules(app_dir: &Path, _warn_later: &WarnGuard<Stdout>) {
+/// a warning message will be returned.
+#[must_use]
+pub fn warn_prebuilt_modules(app_dir: &Path) -> Option<String> {
     if app_dir.join("node_modules").exists() {
-        log_warning_later(formatdoc! {"
+        Some(formatdoc! {"
             Warning: {node_modules} checked into source control
 
             Add these files and directories to {gitignore}. See the Dev Center for more info:
             https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
-        ", node_modules = fmt::value("node_modules"), gitignore = fmt::value(".gitignore") });
+        ", node_modules = style::value("node_modules"), gitignore = style::value(".gitignore") })
+    } else {
+        None
     }
 }
 
@@ -78,12 +77,12 @@ impl Display for Error {
 
                         Ensure the resulting lockfile is committed to the repository, then try again.
                     ",
-                    npm_install = fmt::value("npm install"),
-                    npm_lockfile = fmt::value(PackageManager::Npm.lockfile().to_string_lossy()),
-                    yarn_install = fmt::value("yarn install"),
-                    yarn_lockfile = fmt::value(PackageManager::Yarn.lockfile().to_string_lossy()),
-                    pnpm_install = fmt::value("pnpm install"),
-                    pnpm_lockfile = fmt::value(PackageManager::Pnpm.lockfile().to_string_lossy()),
+                    npm_install = style::value("npm install"),
+                    npm_lockfile = style::value(PackageManager::Npm.lockfile().to_string_lossy()),
+                    yarn_install = style::value("yarn install"),
+                    yarn_lockfile = style::value(PackageManager::Yarn.lockfile().to_string_lossy()),
+                    pnpm_install = style::value("pnpm install"),
+                    pnpm_lockfile = style::value(PackageManager::Pnpm.lockfile().to_string_lossy()),
                 )?;
                 Ok(())
             }
@@ -104,7 +103,7 @@ impl Display for Error {
                 ")?;
 
                 for package_manager in PackageManager::iterator() {
-                    writedoc!(f, "- To use {} to install your application's dependencies please delete the following lockfiles:\n\n", fmt::value(package_manager.to_string()))?;
+                    writedoc!(f, "- To use {} to install your application's dependencies please delete the following lockfiles:\n\n", style::value(package_manager.to_string()))?;
                     for other_package_manager in PackageManager::iterator() {
                         if package_manager != other_package_manager {
                             let other_lockfile = other_package_manager
@@ -132,10 +131,7 @@ impl Display for Error {
 
 #[cfg(test)]
 mod tests {
-    use crate::application::Error;
-    use crate::package_manager::PackageManager;
-    use commons::output::fmt;
-    use indoc::formatdoc;
+    use super::*;
 
     #[test]
     fn test_error_output_for_multiple_lockfiles() {
@@ -169,7 +165,7 @@ mod tests {
                 See the Knowledge Base for more info: https://help.heroku.com/0KU2EM53
 
                 Once your application has only one lockfile, commit the results to git and retry your build.
-            ", npm = fmt::value("npm"), pnpm = fmt::value("pnpm"), yarn = fmt::value("Yarn") }
+            ", npm = style::value("npm"), pnpm = style::value("pnpm"), yarn = style::value("Yarn") }
         );
     }
 }

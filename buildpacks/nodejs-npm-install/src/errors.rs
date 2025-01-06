@@ -1,8 +1,7 @@
 use crate::npm;
 use crate::BUILDPACK_NAME;
-use commons::output::build_log::{BuildLog, Logger, StartedLogger};
-use commons::output::fmt;
-use commons::output::fmt::DEBUG_INFO;
+use bullet_stream::state::Bullet;
+use bullet_stream::{style, Print};
 use fun_run::CmdError;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
@@ -12,7 +11,7 @@ use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use std::fmt::Display;
 use std::io;
-use std::io::stdout;
+use std::io::{stdout, Stdout};
 
 const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
@@ -34,7 +33,7 @@ pub(crate) enum NpmInstallBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
-    let logger = BuildLog::new(stdout()).without_buildpack_name();
+    let logger = Print::new(stdout()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -43,7 +42,7 @@ pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLogger>) {
+fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Print<Bullet<Stdout>>) {
     match error {
         NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),
@@ -60,11 +59,11 @@ fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Box<dyn StartedLo
 
 fn on_node_build_scripts_metadata_error(
     error: NodeBuildScriptsMetadataError,
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stdout>>,
 ) {
     let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
     let value_type = value.type_str();
-    logger.announce().error(&formatdoc! { "
+    logger.error(formatdoc! { "
         A participating buildpack has set invalid `[requires.metadata]` for the build plan \
         named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
         
@@ -78,12 +77,11 @@ fn on_node_build_scripts_metadata_error(
     "});
 }
 
-fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>) {
+fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>) {
     match error {
         PackageJsonError::AccessError(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     Error reading {package_json}.
 
                     This buildpack requires {package_json} to complete the build but the file can’t be read. 
@@ -91,12 +89,11 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json") });
+                ", package_json = style::value("package.json") });
         }
         PackageJsonError::ParseError(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     Error reading {package_json}.
 
                     This buildpack requires {package_json} to complete the build but the file \
@@ -105,15 +102,13 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json"), npm_install = fmt::value("npm install") });
+                ", package_json = style::value("package.json"), npm_install = style::value("npm install") });
         }
     }
 }
 
-fn on_set_cache_dir_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
-    print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+fn on_set_cache_dir_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
+    print_error_details(logger, &error).error(formatdoc! {"
             Failed to set the {npm} cache directory.
 
             An unexpected error occurred while setting the {npm} cache directory. 
@@ -121,40 +116,35 @@ fn on_set_cache_dir_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
             {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
             {SUBMIT_AN_ISSUE}
-        ", npm = fmt::value("npm") });
+        ", npm = style::value("npm") });
 }
 
-fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>) {
+fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>) {
     match error {
         npm::VersionError::Command(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to determine {npm} version information.
 
                     An unexpected error occurred while executing {npm_version}.  
                     
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm"), npm_version = fmt::value(e.name()) });
+                ", npm = style::value("npm"), npm_version = style::value(e.name()) });
         }
         npm::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to parse {npm} version information.
         
                     An unexpected error occurred while parsing version information from {output}. 
                     
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm"), output = fmt::value(stdout) });
+                ", npm = style::value("npm"), output = style::value(stdout) });
         }
     }
 }
 
-fn on_npm_install_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
+fn on_npm_install_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
     print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+        .error(formatdoc! {"
             Failed to install Node modules.
 
             The {buildpack_name} uses the command {npm_install} to install your Node modules. This command \
@@ -164,13 +154,12 @@ fn on_npm_install_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
             without error (exit status = 0) and retry your build.
             
             If that doesn’t help, check the status of the upstream Node module repository service at https://status.npmjs.org/.
-        ", npm_install = fmt::value(error.name()), buildpack_name = fmt::value(BUILDPACK_NAME) });
+        ", npm_install = style::value(error.name()), buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
-fn on_build_script_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
+fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
     print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+        .error(formatdoc! {"
             Failed to execute build script.
 
             The {buildpack_name} allows customization of the build process by executing the following scripts \
@@ -183,38 +172,35 @@ fn on_build_script_error(error: &CmdError, logger: Box<dyn StartedLogger>) {
 
             Ensure that this command runs locally without error and retry your build.
         ",
-            build_script = fmt::value(error.name()),
-            buildpack_name = fmt::value(BUILDPACK_NAME),
-            package_json = fmt::value("package.json"),
-            heroku_prebuild = fmt::value("heroku-prebuild"),
-            heroku_build = fmt::value("heroku-build"),
-            build = fmt::value("build"),
-            heroku_postbuild = fmt::value("heroku-postbuild"),
+            build_script = style::value(error.name()),
+            buildpack_name = style::value(BUILDPACK_NAME),
+            package_json = style::value("package.json"),
+            heroku_prebuild = style::value("heroku-prebuild"),
+            heroku_build = style::value("heroku-build"),
+            build = style::value("build"),
+            heroku_postbuild = style::value("heroku-postbuild"),
         });
 }
 
-fn on_application_error(error: &application::Error, logger: Box<dyn StartedLogger>) {
-    logger.announce().error(&error.to_string());
+fn on_application_error(error: &application::Error, logger: Print<Bullet<Stdout>>) {
+    logger.error(error.to_string());
 }
 
-fn on_detect_error(error: &io::Error, logger: Box<dyn StartedLogger>) {
-    print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+fn on_detect_error(error: &io::Error, logger: Print<Bullet<Stdout>>) {
+    print_error_details(logger, &error).error(formatdoc! {"
             Unable to complete buildpack detection.
 
             An unexpected error occurred while determining if the {buildpack_name} should be \
             run for this application. See the log output above for more information. 
-        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
+        ", buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
 fn on_framework_error(
     error: &libcnb::Error<NpmInstallBuildpackError>,
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stdout>>,
 ) {
     print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+        .error(formatdoc! {"
             {buildpack_name} internal error.
 
             The framework used by this buildpack encountered an unexpected error.
@@ -223,15 +209,15 @@ fn on_framework_error(
             status.heroku.com for any ongoing incidents. After all incidents resolve, retry your build.
 
             {SUBMIT_AN_ISSUE}
-        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
+        ", buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
 fn print_error_details(
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stdout>>,
     error: &impl Display,
-) -> Box<dyn StartedLogger> {
+) -> Print<Bullet<Stdout>> {
     logger
-        .section(DEBUG_INFO)
-        .step(&error.to_string())
-        .end_section()
+        .bullet(style::important("DEBUG INFO:"))
+        .sub_bullet(error.to_string())
+        .done()
 }
