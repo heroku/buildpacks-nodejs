@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replaced `commons` output module with `bullet_stream` ([#993](https://github.com/heroku/buildpacks-nodejs/pull/993))
+
 ## [3.4.0] - 2024-12-13
 
 - No changes.
