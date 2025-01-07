@@ -1,10 +1,5 @@
-use std::fs::File;
-use std::path::Path;
-use std::process::Command;
-
-use commons::output::fmt;
-use commons::output::interface::SectionLogger;
-use commons::output::section_log::{log_step, log_step_timed};
+use bullet_stream::state::SubBullet;
+use bullet_stream::{style, Print};
 use fun_run::{CommandWithName, NamedOutput};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -14,6 +9,10 @@ use libcnb::layer::{
 use libherokubuildpack::download::{download_file, DownloadError};
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::io::Stdout;
+use std::path::Path;
+use std::process::Command;
 
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
@@ -25,8 +24,8 @@ pub(crate) fn install_npm(
     context: &BuildContext<NpmEngineBuildpack>,
     npm_release: &Release,
     node_version: &Version,
-    _logger: &dyn SectionLogger,
-) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
+    mut logger: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<NpmEngineBuildpackError>> {
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
         npm_version: npm_release.version.to_string(),
@@ -56,13 +55,13 @@ pub(crate) fn install_npm(
 
     match npm_engine_layer.state {
         LayerState::Restored { .. } => {
-            log_step("Using cached npm");
+            logger = logger.sub_bullet("Using cached npm");
         }
         LayerState::Empty { ref cause } => {
             npm_engine_layer.write_metadata(new_metadata)?;
 
             if let EmptyLayerCause::RestoredLayerAction { cause } = cause {
-                log_step(format!(
+                logger = logger.sub_bullet(format!(
                     "Invalidating cached npm ({} changed)",
                     cause.join(", ")
                 ));
@@ -73,37 +72,42 @@ pub(crate) fn install_npm(
 
             // this install process is generalized from the npm install script at:
             // https://www.npmjs.com/install.sh
-            download_and_unpack_release(
+            logger = download_and_unpack_release(
                 &npm_release.url,
                 &downloaded_package_path,
                 &npm_engine_layer.path(),
+                logger,
             )?;
-            remove_existing_npm_installation(&npm_cli_script)?;
-            install_npm_package(&npm_cli_script, &downloaded_package_path)?;
+            logger = remove_existing_npm_installation(&npm_cli_script, logger)?;
+            logger = install_npm_package(&npm_cli_script, &downloaded_package_path, logger)?;
         }
     }
 
-    Ok(())
+    Ok(logger)
 }
 
 fn download_and_unpack_release(
     download_from: &String,
     download_to: &Path,
     unpack_into: &Path,
-) -> Result<(), NpmEngineLayerError> {
-    log_step_timed(format!("Downloading {}", fmt::value(download_from)), || {
-        download_file(download_from, download_to)
-            .map_err(NpmEngineLayerError::Download)
-            .and_then(|()| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
-            .and_then(|mut npm_tgz_file| {
-                decompress_tarball(&mut npm_tgz_file, unpack_into)
-                    .map_err(NpmEngineLayerError::DecompressTarball)
-            })
-    })
+    logger: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    let timer = logger.start_timer(format!("Downloading {}", style::value(download_from)));
+    download_file(download_from, download_to)
+        .map_err(NpmEngineLayerError::Download)
+        .and_then(|()| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
+        .and_then(|mut npm_tgz_file| {
+            decompress_tarball(&mut npm_tgz_file, unpack_into)
+                .map_err(NpmEngineLayerError::DecompressTarball)
+        })?;
+    Ok(timer.done())
 }
 
-fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmEngineLayerError> {
-    log_step("Removing npm bundled with Node.js");
+fn remove_existing_npm_installation(
+    npm_cli_script: &Path,
+    mut logger: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    logger = logger.sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
             &npm_cli_script.to_string_lossy(),
@@ -114,11 +118,15 @@ fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmEngi
         ])
         .named_output()
         .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)
-        .map(|_| ())
+        .map(|_| logger)
 }
 
-fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmEngineLayerError> {
-    log_step("Installing requested npm");
+fn install_npm_package(
+    npm_cli_script: &Path,
+    package: &Path,
+    mut logger: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    logger = logger.sub_bullet("Installing requested npm");
     Command::new("node")
         .args([
             &npm_cli_script.to_string_lossy(),
@@ -129,7 +137,7 @@ fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmE
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmEngineLayerError::InstallNpm)
-        .map(|_| ())
+        .map(|_| logger)
 }
 
 fn changed_metadata_fields(

@@ -1,14 +1,13 @@
 use crate::install_npm::NpmEngineLayerError;
 use crate::BUILDPACK_NAME;
 use crate::{node, npm};
-use commons::output::build_log::{BuildLog, Logger, StartedLogger};
-use commons::output::fmt;
-use commons::output::fmt::DEBUG_INFO;
+use bullet_stream::state::Bullet;
+use bullet_stream::{style, Print};
 use heroku_nodejs_utils::package_json::PackageJsonError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
 use std::fmt::Display;
-use std::io::stdout;
+use std::io::{stdout, Stdout};
 
 const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
@@ -29,7 +28,7 @@ pub(crate) enum NpmEngineBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
-    let logger = BuildLog::new(stdout()).without_buildpack_name();
+    let logger = Print::new(stdout()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -38,7 +37,7 @@ pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Box<dyn StartedLogger>) {
+fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Print<Bullet<Stdout>>) {
     match error {
         NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
@@ -54,12 +53,11 @@ fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Box<dyn StartedLog
     }
 }
 
-fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>) {
+fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>) {
     match error {
         PackageJsonError::AccessError(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     Error reading {package_json}.
 
                     This buildpack requires {package_json} to complete the build but the file can’t be read. 
@@ -67,12 +65,11 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json")});
+                ", package_json = style::value("package.json")});
         }
         PackageJsonError::ParseError(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     Error reading {package_json}.
 
                     This buildpack requires {package_json} to complete the build but the file \
@@ -81,13 +78,13 @@ fn on_package_json_error(error: PackageJsonError, logger: Box<dyn StartedLogger>
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", package_json = fmt::value("package.json"), npm_install = fmt::value("npm install") });
+                ", package_json = style::value("package.json"), npm_install = style::value("npm install") });
         }
     }
 }
 
-fn on_missing_npm_engine_requirement_error(logger: Box<dyn StartedLogger>) {
-    logger.announce().error(&formatdoc! {"
+fn on_missing_npm_engine_requirement_error(logger: Print<Bullet<Stdout>>) {
+    logger.error(formatdoc! {"
         Missing {engines_key} key in {package_json}.
         
         This buildpack requires the `engines.npm` key to determine which engine versions to install.
@@ -95,13 +92,11 @@ fn on_missing_npm_engine_requirement_error(logger: Box<dyn StartedLogger>) {
         Retry your build. 
 
         {SUBMIT_AN_ISSUE}
-    ", engines_key = fmt::value("engines.npm"), package_json = fmt::value("package.json") });
+    ", engines_key = style::value("engines.npm"), package_json = style::value("package.json") });
 }
 
-fn on_inventory_parse_error(error: &toml::de::Error, logger: Box<dyn StartedLogger>) {
-    print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+fn on_inventory_parse_error(error: &toml::de::Error, logger: Print<Bullet<Stdout>>) {
+    print_error_details(logger, &error).error(formatdoc! {"
             Failed to load available {npm} versions.
 
             An unexpected error occurred while loading the available {npm} versions.
@@ -109,11 +104,11 @@ fn on_inventory_parse_error(error: &toml::de::Error, logger: Box<dyn StartedLogg
             {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
             {SUBMIT_AN_ISSUE}
-        ", npm = fmt::value("npm") });
+        ", npm = style::value("npm") });
 }
 
-fn on_npm_version_resolve_error(requirement: &Requirement, logger: Box<dyn StartedLogger>) {
-    logger.announce().error(&formatdoc! {"
+fn on_npm_version_resolve_error(requirement: &Requirement, logger: Print<Bullet<Stdout>>) {
+    logger.error(formatdoc! {"
             Error resolving requested {npm} version {requested_version}.
             
             Can’t find the `npm` version that matches the requested version declared in {package_json} ({requested_version}).
@@ -128,19 +123,18 @@ fn on_npm_version_resolve_error(requirement: &Requirement, logger: Box<dyn Start
     
             {SUBMIT_AN_ISSUE}
         ",
-        npm = fmt::value("npm"),
-        requested_version = fmt::value(requirement.to_string()),
-        package_json = fmt::value("package.json"),
-        engines_key = fmt::value("engines.npm")
+        npm = style::value("npm"),
+        requested_version = style::value(requirement.to_string()),
+        package_json = style::value("package.json"),
+        engines_key = style::value("engines.npm")
     });
 }
 
-fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn StartedLogger>) {
+fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Print<Bullet<Stdout>>) {
     match error {
         NpmEngineLayerError::Download(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     Failed to download {npm}.
 
                     An unexpected error occurred while downloading the {npm} package. This error can occur due to an unstable network connection.
@@ -148,61 +142,52 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Box<dyn Started
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm") });
+                ", npm = style::value("npm") });
         }
         NpmEngineLayerError::OpenTarball(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     An unexpected error occurred while opening the downloaded {npm} package file. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm") });
+                ", npm = style::value("npm") });
         }
         NpmEngineLayerError::DecompressTarball(e) => {
             print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+                .error(formatdoc! {"
                     An unexpected error occurred while extracting the contents of the downloaded {npm} package file.
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm") });
+                ", npm = style::value("npm") });
         }
         NpmEngineLayerError::RemoveExistingNpmInstall(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     An unexpected error occurred while removing the existing {npm} installation. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm") });
+                ", npm = style::value("npm") });
         }
         NpmEngineLayerError::InstallNpm(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     An unexpected error occurred while installing the downloaded {npm} package. 
 
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-            ", npm = fmt::value("npm") });
+            ", npm = style::value("npm") });
         }
     }
 }
 
-fn on_node_version_error(error: node::VersionError, logger: Box<dyn StartedLogger>) {
+fn on_node_version_error(error: node::VersionError, logger: Print<Bullet<Stdout>>) {
     match error {
         node::VersionError::Command(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to determine {node} version information.
     
                     An unexpected error occurred while executing {node_version}. 
@@ -210,28 +195,24 @@ fn on_node_version_error(error: node::VersionError, logger: Box<dyn StartedLogge
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
 
                     {SUBMIT_AN_ISSUE}
-                ", node = fmt::value("Node"), node_version = fmt::value(e.name()) });
+                ", node = style::value("Node"), node_version = style::value(e.name()) });
         }
         node::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to parse {node} version information.
         
                     An unexpected error occurred while parsing version information from {output}. 
                     
                     {SUBMIT_AN_ISSUE}
-                ", node = fmt::value("Node"), output = fmt::value(stdout) });
+                ", node = style::value("Node"), output = style::value(stdout) });
         }
     }
 }
 
-fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>) {
+fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>) {
     match error {
         npm::VersionError::Command(e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to determine {npm} version information.
 
                     An unexpected error occurred while executing {npm_version}.  
@@ -239,29 +220,26 @@ fn on_npm_version_error(error: npm::VersionError, logger: Box<dyn StartedLogger>
                     {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
         
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm"), npm_version = fmt::value(e.name())});
+                ", npm = style::value("npm"), npm_version = style::value(e.name())});
         }
         npm::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e)
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &e).error(formatdoc! {"
                     Failed to parse {npm} version information.
         
                     An unexpected error occurred while parsing version information from {output}. 
                     
                     {SUBMIT_AN_ISSUE}
-                ", npm = fmt::value("npm"), output = fmt::value(stdout) });
+                ", npm = style::value("npm"), output = style::value(stdout) });
         }
     }
 }
 
 fn on_framework_error(
     error: &libcnb::Error<NpmEngineBuildpackError>,
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stdout>>,
 ) {
     print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+        .error(formatdoc! {"
             {buildpack_name} internal error.
     
             The framework used by this buildpack encountered an unexpected error.
@@ -273,15 +251,15 @@ fn on_framework_error(
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
 
-        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
+        ", buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
 fn print_error_details(
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stdout>>,
     error: &impl Display,
-) -> Box<dyn StartedLogger> {
+) -> Print<Bullet<Stdout>> {
     logger
-        .section(DEBUG_INFO)
-        .step(&error.to_string())
-        .end_section()
+        .bullet(style::important("DEBUG INFO:"))
+        .sub_bullet(error.to_string())
+        .done()
 }

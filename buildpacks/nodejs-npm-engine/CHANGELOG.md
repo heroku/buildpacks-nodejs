@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
 - Added npm version 11.0.0.
+- Replaced `commons` output module with `bullet_stream`. ([#993](https://github.com/heroku/buildpacks-nodejs/pull/993))
+ 
 ## [3.4.0] - 2024-12-13
 
 - No changes.
