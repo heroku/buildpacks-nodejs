@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Warning for checked in `node_modules` di
+- Performs check for detecting `node_modules` directory at build start and outputs warning at build end. ([#997](https://github.com/heroku/buildpacks-nodejs/pull/997))
 
 ## [3.4.2] - 2025-01-08
 
