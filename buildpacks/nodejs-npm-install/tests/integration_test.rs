@@ -288,6 +288,29 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
     );
 }
 
+#[test]
+#[ignore]
+fn npm_modules_checked_in_warning() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        assert_not_contains!(
+            ctx.pack_stdout,
+            "Warning: `node_modules` checked into source control"
+        );
+
+        let mut config = ctx.config.clone();
+        config.app_dir_preprocessor(|app_dir| {
+            std::fs::create_dir(app_dir.join("node_modules")).unwrap();
+        });
+
+        ctx.rebuild(config, |ctx| {
+            assert_contains!(
+                ctx.pack_stdout,
+                "Warning: `node_modules` checked into source control"
+            );
+        });
+    });
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let dependencies = json["dependencies"].as_object_mut().unwrap();

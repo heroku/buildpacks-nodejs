@@ -78,6 +78,8 @@ impl Buildpack for NpmInstallBuildpack {
         let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
             .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
 
+        let prebuild_modules_warning = application::warn_prebuilt_modules(app_dir);
+
         application::check_for_singular_lockfile(app_dir)
             .map_err(NpmInstallBuildpackError::Application)?;
 
@@ -98,12 +100,11 @@ impl Buildpack for NpmInstallBuildpack {
 
         configure_npm_runtime_env(&context)?;
 
-        let logger =
-            if let Some(prebuilt_modules_warning) = application::warn_prebuilt_modules(app_dir) {
-                logger.warning(prebuilt_modules_warning)
-            } else {
-                logger
-            };
+        let logger = if let Some(warning_message) = prebuild_modules_warning {
+            logger.warning(warning_message)
+        } else {
+            logger
+        };
 
         logger.done();
         build_result
