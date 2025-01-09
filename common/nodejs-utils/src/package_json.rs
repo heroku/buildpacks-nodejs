@@ -107,7 +107,7 @@ impl PackageJson {
     pub fn has_start_script(&self) -> bool {
         self.scripts
             .as_ref()
-            .map_or(false, |scripts| scripts.start.is_some())
+            .is_some_and(|scripts| scripts.start.is_some())
     }
 }
 

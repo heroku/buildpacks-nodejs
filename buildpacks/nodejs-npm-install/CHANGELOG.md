@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Check and warning for `node_modules` directory is unnecessary since
+  `npm ci` will remove it before installing dependencies. ([#998]https://github.com/heroku/buildpacks-nodejs/pull/998))
+
 ## [3.4.2] - 2025-01-08
 
 - No changes.
