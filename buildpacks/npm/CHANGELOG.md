@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.4.3] - 2025-01-10
+
+- No changes.
+
 ## [3.4.2] - 2025-01-08
 
 - No changes.
@@ -347,7 +351,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix broken builds when a `package-lock.json` is missing ([#9](https://github.com/heroku/nodejs-npm-buildpack/pull/9))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.2...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.3...HEAD
+[3.4.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.2...v3.4.3
 [3.4.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.5...v3.4.0
