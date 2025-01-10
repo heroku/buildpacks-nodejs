@@ -1,6 +1,6 @@
 use crate::package_manager::PackageManager;
 use bullet_stream::style;
-use indoc::{formatdoc, writedoc};
+use indoc::writedoc;
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
@@ -25,23 +25,6 @@ pub fn check_for_singular_lockfile(app_dir: &Path) -> Result<(), Error> {
         0 => Err(Error::MissingLockfile),
         1 => Ok(()),
         _ => Err(Error::MultipleLockfiles(detected_lockfiles)),
-    }
-}
-
-/// Checks if the `node_modules` folder is present in the given directory which indicates that
-/// the application contains files that it shouldn't in its git repository. If this is the case,
-/// a warning message will be returned.
-#[must_use]
-pub fn warn_prebuilt_modules(app_dir: &Path) -> Option<String> {
-    if app_dir.join("node_modules").exists() {
-        Some(formatdoc! {"
-            Warning: {node_modules} checked into source control
-
-            Add these files and directories to {gitignore}. See the Dev Center for more info:
-            https://devcenter.heroku.com/articles/node-best-practices#only-git-the-important-bits
-        ", node_modules = style::value("node_modules"), gitignore = style::value(".gitignore") })
-    } else {
-        None
     }
 }
 
@@ -132,6 +115,7 @@ impl Display for Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use indoc::formatdoc;
 
     #[test]
     fn test_error_output_for_multiple_lockfiles() {

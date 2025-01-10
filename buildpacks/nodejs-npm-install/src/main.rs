@@ -98,13 +98,6 @@ impl Buildpack for NpmInstallBuildpack {
 
         configure_npm_runtime_env(&context)?;
 
-        let logger =
-            if let Some(prebuilt_modules_warning) = application::warn_prebuilt_modules(app_dir) {
-                logger.warning(prebuilt_modules_warning)
-            } else {
-                logger
-            };
-
         logger.done();
         build_result
     }
