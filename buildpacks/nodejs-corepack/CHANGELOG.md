@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated npm keys for Corepack versions `0.27`, `0.28`, `0.29`, `0.30`. ([#1010](https://github.com/heroku/buildpacks-nodejs/pull/1010))
+
 ## [3.4.4] - 2025-01-22
 
 - No changes.
