@@ -92,7 +92,7 @@ impl Buildpack for CorepackBuildpack {
                     pkg_mgr.name, pkg_mgr.version
                 ));
 
-                install_integrity_keys(&context)?;
+                install_integrity_keys(&context, &corepack_version)?;
                 enable_corepack(&context, &corepack_version, &pkg_mgr, env)?;
                 prepare_corepack(&context, &pkg_mgr, env)?;
 

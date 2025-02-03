@@ -1,4 +1,5 @@
 use crate::{CorepackBuildpack, CorepackBuildpackError};
+use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::indoc;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -7,9 +8,21 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 
 pub(super) fn install_integrity_keys(
     context: &BuildContext<CorepackBuildpack>,
+    corepack_version: &Version,
 ) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
-    let corepack_env_layer = context.uncached_layer(
-        layer_name!("corepack-env"),
+    // This is a workaround for Node versions that bundle a version of Corepack that is affected by
+    // recent changes to npm's public signing keys:
+    // * Corepack versions before 0.27.0 don't verify the integrity signatures from npm
+    // * Corepack versions after 0.31.0 have the correct npm keys
+    let patchable_corepack_versions =
+        Requirement::parse(">= 0.27.0 || < 0.31.0").expect("This should be a valid range");
+
+    if !patchable_corepack_versions.satisfies(corepack_version) {
+        return Ok(());
+    }
+
+    let corepack_integrity_keys_layer = context.uncached_layer(
+        layer_name!("corepack-integrity-keys"),
         UncachedLayerDefinition {
             build: true,
             launch: false,
@@ -40,7 +53,7 @@ pub(super) fn install_integrity_keys(
         }
     "#};
 
-    corepack_env_layer.write_env(LayerEnv::new().chainable_insert(
+    corepack_integrity_keys_layer.write_env(LayerEnv::new().chainable_insert(
         Scope::Build,
         ModificationBehavior::Override,
         "COREPACK_INTEGRITY_KEYS",
