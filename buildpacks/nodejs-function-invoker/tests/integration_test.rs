@@ -190,7 +190,7 @@ fn start_container_and_assert_health_check_responds(ctx: &TestContext) {
 
 fn random_hex_string(length: usize) -> String {
     let mut bytes = Vec::with_capacity(length);
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::rng().fill_bytes(&mut bytes);
     hex::encode(&bytes)
 }
 
