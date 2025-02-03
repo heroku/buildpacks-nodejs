@@ -10,6 +10,7 @@ use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
 
 use crate::enable_corepack::enable_corepack;
+use crate::install_integrity_keys::install_integrity_keys;
 use crate::prepare_corepack::prepare_corepack;
 #[cfg(test)]
 use libcnb_test as _;
@@ -22,6 +23,7 @@ mod cfg;
 mod cmd;
 mod enable_corepack;
 mod errors;
+mod install_integrity_keys;
 mod prepare_corepack;
 
 buildpack_main!(CorepackBuildpack);
@@ -90,6 +92,7 @@ impl Buildpack for CorepackBuildpack {
                     pkg_mgr.name, pkg_mgr.version
                 ));
 
+                install_integrity_keys(&context, &corepack_version)?;
                 enable_corepack(&context, &corepack_version, &pkg_mgr, env)?;
                 prepare_corepack(&context, &pkg_mgr, env)?;
 
