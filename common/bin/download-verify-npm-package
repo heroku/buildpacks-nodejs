@@ -50,20 +50,27 @@ if [ "$actual_integrity" != "$published_integrity" ]; then
 	exit 1
 fi
 
-# Build the npm signing key from published npm key data. This section assumes there
-# is only one published public key. That was true at the time of
-# writing, but if npmjs.com starts using multiple keys for signatures, this
-# section will need to change. The public key(s) may be obtained from
-# https://registry.npmjs.com/-/npm/v1/keys.
+# Build the npm signing key from published npm key data.
+# The public key(s) may be obtained from https://registry.npmjs.com/-/npm/v1/keys.
+npm_pubkeys=(
+  "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg=="
+  "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g=="
+)
+
 echo "Verifying npmjs.com signature..." >&2
-npm_pubkey="MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1Olb3zMAFFxXKHiIkQO5cJ3Yhl5i6UPp+IhuteBJbuHcA5UogKo0EWtlWwW6KSaKoTNEYL7JlCQiVnkhBktUgg=="
-printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" >npm-pubkey.pem
+for i in "${!npm_pubkeys[@]}"; do
+  npm_pubkey="${npm_pubkeys[$i]}"
+  echo "- Trying key #${(i + 1)}"
+  printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" >npm-pubkey.pem
 
-# Fetch the signature from the published package data
-curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.signatures[0].sig' | base64 -d >npm-signature.bin
+  # Fetch the signature from the published package data
+  curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${npm_url}" | jq -r '.dist.signatures[0].sig' | base64 -d >npm-signature.bin
 
-# Build the signing message
-echo -n "${package_name}@${package_version}:${published_integrity}" >message.txt
+  # Build the signing message
+  echo -n "${package_name}@${package_version}:${published_integrity}" >message.txt
 
-# Verify the signature
-openssl dgst -sha256 -verify npm-pubkey.pem -signature npm-signature.bin message.txt
+  # Verify the signature
+  if openssl dgst -sha256 -verify npm-pubkey.pem -signature npm-signature.bin message.txt; then
+    break
+  fi
+done
