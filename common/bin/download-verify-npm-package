@@ -60,7 +60,7 @@ npm_pubkeys=(
 echo "Verifying npmjs.com signature..." >&2
 for i in "${!npm_pubkeys[@]}"; do
   npm_pubkey="${npm_pubkeys[$i]}"
-  echo "- Trying key #${(i + 1)}"
+  echo "- Trying key #$((i + 1))"
   printf -- '-----BEGIN PUBLIC KEY-----\n%s\n-----END PUBLIC KEY-----\n' "$npm_pubkey" >npm-pubkey.pem
 
   # Fetch the signature from the published package data
