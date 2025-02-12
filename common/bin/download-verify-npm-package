@@ -58,6 +58,7 @@ npm_pubkeys=(
 )
 
 echo "Verifying npmjs.com signature..." >&2
+exit_code=1
 for i in "${!npm_pubkeys[@]}"; do
 	npm_pubkey="${npm_pubkeys[$i]}"
 	echo "- Trying key #$((i + 1))"
@@ -71,6 +72,8 @@ for i in "${!npm_pubkeys[@]}"; do
 
 	# Verify the signature
 	if openssl dgst -sha256 -verify npm-pubkey.pem -signature npm-signature.bin message.txt; then
+		exit_code=0
 		break
 	fi
 done
+exit $exit_code
