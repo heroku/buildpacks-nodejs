@@ -1,6 +1,5 @@
 use std::env::consts;
 
-use crate::attach_runtime_metrics::{attach_runtime_metrics, NodeRuntimeMetricsError};
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -27,15 +26,12 @@ use thiserror::Error;
 #[cfg(test)]
 use ureq as _;
 
-mod attach_runtime_metrics;
 mod configure_web_env;
 mod install_node;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "22.x";
-
-const MINIMUM_NODE_VERSION_FOR_METRICS: &str = ">=14.10";
 
 struct NodeJsEngineBuildpack;
 
@@ -109,19 +105,6 @@ impl Buildpack for NodeJsEngineBuildpack {
 
         configure_web_env(&context)?;
 
-        if Requirement::parse(MINIMUM_NODE_VERSION_FOR_METRICS)
-            .expect("should be a valid version range")
-            .satisfies(&target_artifact.version)
-        {
-            log_info("Installing application metrics scripts");
-            attach_runtime_metrics(&context)?;
-        } else {
-            log_info(format!(
-                "Not installing application metrics scripts, it is unsupported for Node.js {}",
-                &target_artifact.version
-            ));
-        }
-
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
             .iter()
@@ -163,9 +146,6 @@ impl Buildpack for NodeJsEngineBuildpack {
                     NodeJsEngineBuildpackError::UnknownVersionError(_) => {
                         log_error("Node.js engine version error", err_string);
                     }
-                    NodeJsEngineBuildpackError::NodeRuntimeMetricsError(_) => {
-                        log_error("Node.js engine runtime metric error", err_string);
-                    }
                 }
             }
             err => {
@@ -185,8 +165,6 @@ enum NodeJsEngineBuildpackError {
     UnknownVersionError(String),
     #[error(transparent)]
     DistLayerError(#[from] DistLayerError),
-    #[error(transparent)]
-    NodeRuntimeMetricsError(#[from] NodeRuntimeMetricsError),
 }
 
 impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackError> {

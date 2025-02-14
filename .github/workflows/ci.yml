@@ -134,19 +134,3 @@ jobs:
         run: sh -c "`curl -L https://raw.githubusercontent.com/rylnd/shpec/master/install.sh`"
       - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
         run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
-
-  metrics-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        # check the minimum node version supported by the metrics script and the latest node version
-        # (assumes the versions between have backwards-compatible APIs)
-        version: [14.10.0, latest]
-    name: Test Metrics (${{ matrix.version }})
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.version }}
-      - run: npx mocha@10.x buildpacks/nodejs-engine/node_runtime_metrics/test/metrics.spec.cjs
