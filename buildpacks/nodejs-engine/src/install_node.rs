@@ -1,7 +1,5 @@
-use std::fs;
-use std::io::Read;
-use std::path::Path;
-
+use bullet_stream::state::Bullet;
+use bullet_stream::{style, Print};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -10,10 +8,12 @@ use libcnb::layer::{
 use libherokubuildpack::download::download_file;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
-use libherokubuildpack::log::log_info;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::fs;
+use std::io::{Read, Stdout};
+use std::path::Path;
 use tempfile::NamedTempFile;
 use thiserror::Error;
 
@@ -24,7 +24,10 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsEngineBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+    log: Print<Bullet<Stdout>>,
+) -> Result<Print<Bullet<Stdout>>, libcnb::Error<NodeJsEngineBuildpackError>> {
+    let mut bullet = log.bullet("Installing Node.js distribution");
+
     let new_metadata = DistLayerMetadata {
         artifact: distribution_artifact.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -52,41 +55,45 @@ pub(crate) fn install_node(
     );
     match distribution_layer.state {
         LayerState::Restored { .. } => {
-            log_info(format!("Reusing Node.js {version_tag}"));
+            bullet = bullet.sub_bullet(format!("Reusing Node.js {version_tag}"));
         }
         LayerState::Empty { .. } => {
             distribution_layer.write_metadata(new_metadata)?;
 
             let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-            log_info(format!(
+            let timer = bullet.start_timer(format!(
                 "Downloading Node.js {} from {}",
-                version_tag, distribution_artifact.url
+                style::value(&version_tag),
+                style::url(&distribution_artifact.url)
             ));
             download_file(&distribution_artifact.url, node_tgz.path())
                 .map_err(DistLayerError::Download)?;
+            bullet = timer.done();
 
-            log_info("Verifying checksum");
+            bullet = bullet.sub_bullet("Verifying checksum");
             let digest = sha256(node_tgz.path()).map_err(DistLayerError::ReadTempFile)?;
             if distribution_artifact.checksum.value != digest {
                 Err(DistLayerError::ChecksumVerification)?;
             }
 
-            log_info(format!("Extracting Node.js {version_tag}"));
+            bullet =
+                bullet.sub_bullet(format!("Extracting Node.js {}", style::value(&version_tag)));
             decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path())
                 .map_err(DistLayerError::Untar)?;
 
-            log_info(format!("Installing Node.js {version_tag}"));
-
+            let timer =
+                bullet.start_timer(format!("Installing Node.js {}", style::value(&version_tag)));
             let dist_name = extract_tarball_prefix(&distribution_artifact.url)
                 .ok_or_else(|| DistLayerError::TarballPrefix(distribution_artifact.url.clone()))?;
             let dist_path = distribution_layer.path().join(dist_name);
             move_directory_contents(dist_path, distribution_layer.path())
                 .map_err(DistLayerError::Installation)?;
+            bullet = timer.done();
         }
     };
 
-    Ok(())
+    Ok(bullet.done())
 }
 
 fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
