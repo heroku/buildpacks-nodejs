@@ -26,7 +26,7 @@ pub(crate) fn enable_corepack(
         layer_version: LAYER_VERSION.to_string(),
     };
 
-    let mut log = log.bullet("Enabling");
+    let mut log = log.bullet("Enabling Corepack");
 
     let shim_layer = context.cached_layer(
         layer_name!("shim"),
