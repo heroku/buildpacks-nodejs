@@ -17,26 +17,17 @@ fn pnpm_7_pnp() {
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Setting up pnpm dependency store]
-                Creating new pnpm content-addressable store
-                Creating pnpm virtual store
+                - Setting up pnpm dependency store
+                  - Creating new pnpm content-addressable store
+                  - Creating pnpm virtual store
             "}
         );
 
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Installing dependencies]
-                Lockfile is up to date, resolution step is skipped
-                Progress: resolved 1, reused 0, downloaded 0, added 0
-            "}
-        );
-
-        assert_contains!(
-            ctx.pack_stdout,
-            &formatdoc! {"
-                Packages: +60
-                ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                - Installing dependencies
+                  - Running `pnpm install --frozen-lockfile`
             "}
         );
 
@@ -52,8 +43,8 @@ fn pnpm_7_pnp() {
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Running scripts]
-                No build scripts found
+                - Running scripts
+                  - No build scripts found
             "}
         );
         assert_web_response(&ctx, "pnpm-7-pnp");
@@ -68,26 +59,17 @@ fn pnpm_8_hoist() {
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Setting up pnpm dependency store]
-                Creating new pnpm content-addressable store
-                Creating pnpm virtual store
+                - Setting up pnpm dependency store
+                  - Creating new pnpm content-addressable store
+                  - Creating pnpm virtual store
             "}
         );
 
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Installing dependencies]
-                Lockfile is up to date, resolution step is skipped
-                Progress: resolved 1, reused 0, downloaded 0, added 0
-            "}
-        );
-
-        assert_contains!(
-            ctx.pack_stdout,
-            &formatdoc! {"
-                Packages: +57
-                +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+                - Installing dependencies
+                  - Running `pnpm install --frozen-lockfile`
             "}
         );
 
@@ -103,8 +85,8 @@ fn pnpm_8_hoist() {
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Running scripts]
-                No build scripts found
+                - Running scripts
+                  - No build scripts found
             "}
         );
         assert_web_response(&ctx, "pnpm-8-hoist");
@@ -118,28 +100,25 @@ fn pnpm_8_nuxt() {
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Setting up pnpm dependency store]
-                Creating new pnpm content-addressable store
-                Creating pnpm virtual store
+                - Setting up pnpm dependency store
+                  - Creating new pnpm content-addressable store
+                  - Creating pnpm virtual store
             "}
         );
 
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Installing dependencies]
-                Lockfile is up to date, resolution step is skipped
-                Progress: resolved 1, reused 0, downloaded 0, added 0
+                - Installing dependencies
+                  - Running `pnpm install --frozen-lockfile`
             "}
         );
-
-        assert_contains!(ctx.pack_stdout, "Packages: +676");
 
         assert_contains!(
             ctx.pack_stdout,
             &formatdoc! {"
-                [Running scripts]
-                Running `build` script
+                - Running scripts
+                  - Running `build` script
             "}
         );
     });

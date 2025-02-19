@@ -1,18 +1,21 @@
+use bullet_stream::state::SubBullet;
+use bullet_stream::Print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::Env;
-use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
+use std::io::Stdout;
 
 use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 
 pub(crate) fn configure_pnpm_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+    mut log: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<PnpmInstallBuildpackError>> {
     let new_metadata = AddressableStoreLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
@@ -35,13 +38,13 @@ pub(crate) fn configure_pnpm_store_directory(
 
     match addressable_layer.state {
         LayerState::Restored { .. } => {
-            log_info("Restoring pnpm content-addressable store from cache");
+            log = log.sub_bullet("Restoring pnpm content-addressable store from cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                log_info("Cached pnpm content-addressable store has expired");
+                log = log.sub_bullet("Cached pnpm content-addressable store has expired");
             }
-            log_info("Creating new pnpm content-addressable store");
+            log = log.sub_bullet("Creating new pnpm content-addressable store");
             addressable_layer.write_metadata(new_metadata)?;
         }
     }
@@ -49,7 +52,7 @@ pub(crate) fn configure_pnpm_store_directory(
     cmd::pnpm_set_store_dir(env, &addressable_layer.path())
         .map_err(PnpmInstallBuildpackError::PnpmDir)?;
 
-    Ok(())
+    Ok(log)
 }
 
 const LAYER_VERSION: &str = "1";
