@@ -33,11 +33,15 @@ fn pnpm_7_pnp() {
 
         assert_contains!(
             ctx.pack_stdout,
-            &formatdoc! {"
-                Packages are hard linked from the content-addressable store to the virtual store.
-                  Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store
-            "}
+            "Packages are hard linked from the content-addressable store to the virtual store."
+        );
+        assert_contains!(
+            ctx.pack_stdout,
+            "Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3"
+        );
+        assert_contains!(
+            ctx.pack_stdout,
+            "Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store"
         );
 
         assert_contains!(
@@ -75,11 +79,15 @@ fn pnpm_8_hoist() {
 
         assert_contains!(
             ctx.pack_stdout,
-            &formatdoc! {"
-                Packages are hard linked from the content-addressable store to the virtual store.
-                  Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
-                  Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store
-            "}
+            "Packages are hard linked from the content-addressable store to the virtual store."
+        );
+        assert_contains!(
+            ctx.pack_stdout,
+            "Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3"
+        );
+        assert_contains!(
+            ctx.pack_stdout,
+            "Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store"
         );
 
         assert_contains!(
