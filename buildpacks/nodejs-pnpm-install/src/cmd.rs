@@ -1,5 +1,5 @@
 use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use bullet_stream::{style, Print};
 use fun_run::{CmdError, CommandWithName};
 use libcnb::Env;
 use std::io::Stdout;
@@ -24,13 +24,16 @@ pub(crate) fn pnpm_run(
     script: &str,
     mut log: Print<SubBullet<Stdout>>,
 ) -> Result<Print<SubBullet<Stdout>>, CmdError> {
-    log.stream_with("Running {script} script", |stdout, stderr| {
-        Command::new("pnpm")
-            .arg("run")
-            .arg(script)
-            .envs(pnpm_env)
-            .stream_output(stdout, stderr)
-    })?;
+    log.stream_with(
+        format!("Running {script} script", script = style::value(script)),
+        |stdout, stderr| {
+            Command::new("pnpm")
+                .arg("run")
+                .arg(script)
+                .envs(pnpm_env)
+                .stream_output(stdout, stderr)
+        },
+    )?;
     Ok(log)
 }
 
