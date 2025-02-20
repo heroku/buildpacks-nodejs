@@ -133,6 +133,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "921deeb7be278ed3819b35191dcb33784acfaed6ce11f75fb658b4e94627af22"
 
 [[package]]
+name = "bullet_stream"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02a257795d84e5eb8b6eff8b2655ef4fe043d006888788bfc9905611d15b187a"
+dependencies = [
+ "fun_run 0.5.0",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -435,6 +444,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "fun_run"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60475c9540e62902b2b2e292be87f61df540c7e0f0bdb92416fd5ae792450049"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "futures-channel"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -624,7 +642,7 @@ name = "heroku-nodejs-utils"
 version = "0.0.0"
 dependencies = [
  "anyhow",
- "bullet_stream",
+ "bullet_stream 0.4.0",
  "chrono",
  "indoc",
  "keep_a_changelog_file",
@@ -647,6 +665,8 @@ dependencies = [
 name = "heroku-nodejs-yarn-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream 0.7.0",
+ "fun_run 0.5.0",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb",
@@ -664,8 +684,8 @@ dependencies = [
 name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
- "fun_run",
+ "bullet_stream 0.4.0",
+ "fun_run 0.4.0",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb",
@@ -681,8 +701,8 @@ dependencies = [
 name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
- "fun_run",
+ "bullet_stream 0.4.0",
+ "fun_run 0.4.0",
  "heroku-nodejs-utils",
  "indoc",
  "libcnb",
@@ -696,7 +716,7 @@ dependencies = [
 name = "heroku-pnpm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.4.0",
  "indoc",
  "libcnb",
  "libcnb-test",
