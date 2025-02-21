@@ -1189,6 +1189,20 @@ url = "https://nodejs.org/download/release/v19.0.0/node-v19.0.0-linux-x64.tar.gz
 checksum = "sha256:857f4dde358a8b23afab47ebdc685ae736bcfeac1258c2dddae3648f6a03a77a"
 
 [[artifacts]]
+version = "18.20.7"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v18.20.7/node-v18.20.7-linux-arm64.tar.gz"
+checksum = "sha256:fc1f0e0c1022c5486da4726c58dc678c076ac2d7ad30b1b47b9071f043adce1e"
+
+[[artifacts]]
+version = "18.20.7"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v18.20.7/node-v18.20.7-linux-x64.tar.gz"
+checksum = "sha256:ca593cc143875d33b257ab45ae629a02485333e8096221c44ef62c99678aa7fc"
+
+[[artifacts]]
 version = "18.20.6"
 os = "linux"
 arch = "arm64"
