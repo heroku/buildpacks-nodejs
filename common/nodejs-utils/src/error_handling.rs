@@ -27,6 +27,7 @@ where
 }
 
 #[bon::builder(finish_fn = create, on(String, into), state_mod(vis = "pub"))]
+#[allow(clippy::needless_pass_by_value)]
 pub fn error_message(
     header: String,
     body: String,

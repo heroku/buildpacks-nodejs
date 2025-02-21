@@ -252,6 +252,7 @@ version = \"0.0.0\"
     buildpack_dir.to_string_lossy().to_string()
 }
 
+#[must_use]
 pub fn test_name() -> String {
     std::thread::current()
         .name()

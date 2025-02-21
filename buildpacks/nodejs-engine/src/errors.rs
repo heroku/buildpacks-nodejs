@@ -103,6 +103,7 @@ fn on_unknown_version_error(version: String) -> ErrorMessage {
         .create()
 }
 
+#[allow(clippy::too_many_lines)]
 fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
     match error {
         DistLayerError::TempFile(e) => error_message()
