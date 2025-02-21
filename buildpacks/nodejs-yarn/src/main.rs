@@ -161,7 +161,7 @@ impl Buildpack for YarnBuildpack {
             for script in scripts {
                 if let Some(false) = node_build_scripts_metadata.enabled {
                     bullet = bullet.sub_bullet(format!(
-                        "! Not running `{script}` as it was disabled by a participating buildpack",
+                        "! Not running {script} as it was disabled by a participating buildpack",
                         script = style::value(script)
                     ));
                 } else {
