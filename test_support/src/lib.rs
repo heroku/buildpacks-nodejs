@@ -251,3 +251,10 @@ version = \"0.0.0\"
 
     buildpack_dir.to_string_lossy().to_string()
 }
+
+pub fn test_name() -> String {
+    std::thread::current()
+        .name()
+        .expect("Test name should be available as the current thread name")
+        .to_string()
+}

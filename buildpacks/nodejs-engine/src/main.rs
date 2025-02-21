@@ -22,11 +22,11 @@ use std::env::consts;
 use std::io::stdout;
 #[cfg(test)]
 use test_support as _;
-use thiserror::Error;
 #[cfg(test)]
 use ureq as _;
 
 mod configure_web_env;
+mod errors;
 mod install_node;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
@@ -77,10 +77,10 @@ impl Buildpack for NodeJsEngineBuildpack {
         let mut bullet = log.bullet("Checking Node.js version");
 
         let inv: Inventory<Version, Sha256, Option<()>> =
-            toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
+            toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParse)?;
 
         let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsEngineBuildpackError::PackageJsonError)
+            .map_err(NodeJsEngineBuildpackError::PackageJson)
             .map(|package_json| package_json.engines.and_then(|e| e.node))?;
 
         let version_range = if let Some(value) = requested_version_range {
@@ -101,7 +101,7 @@ impl Buildpack for NodeJsEngineBuildpack {
             (Ok(os), Ok(arch)) => inv.resolve(os, arch, &version_range),
             (_, _) => None,
         }
-        .ok_or(NodeJsEngineBuildpackError::UnknownVersionError(
+        .ok_or(NodeJsEngineBuildpackError::UnknownVersion(
             version_range.to_string(),
         ))?;
 
@@ -143,39 +143,17 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let log = Print::new(stdout()).without_header();
-        match error {
-            libcnb::Error::BuildpackError(bp_err) => match bp_err {
-                NodeJsEngineBuildpackError::DistLayerError(_) => {
-                    log.error(format!("Node.js engine distribution error:\n{bp_err}"));
-                }
-                NodeJsEngineBuildpackError::InventoryParseError(_) => {
-                    log.error(format!("Node.js engine inventory parse error:\n{bp_err}"));
-                }
-                NodeJsEngineBuildpackError::PackageJsonError(_) => {
-                    log.error(format!("Node.js engine package.json error:\n{bp_err}"));
-                }
-                NodeJsEngineBuildpackError::UnknownVersionError(_) => {
-                    log.error(format!("Node.js engine version error:\n{bp_err}"));
-                }
-            },
-            err => {
-                log.error(format!("Internal Buildpack Error:\n{err}"));
-            }
-        };
+        let error_message = errors::on_error(error);
+        println!("{error_message}");
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 enum NodeJsEngineBuildpackError {
-    #[error("Couldn't parse Node.js inventory: {0}")]
-    InventoryParseError(toml::de::Error),
-    #[error("Couldn't parse package.json: {0}")]
-    PackageJsonError(PackageJsonError),
-    #[error("Couldn't resolve Node.js version: {0}")]
-    UnknownVersionError(String),
-    #[error(transparent)]
-    DistLayerError(#[from] DistLayerError),
+    InventoryParse(toml::de::Error),
+    PackageJson(PackageJsonError),
+    UnknownVersion(String),
+    DistLayer(DistLayerError),
 }
 
 impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackError> {

@@ -10,12 +10,12 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
+use sha2::digest::Output;
 use sha2::{Digest, Sha256};
 use std::fs;
 use std::io::{Read, Stdout};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
-use thiserror::Error;
 
 use heroku_nodejs_utils::vrs::Version;
 
@@ -67,28 +67,54 @@ pub(crate) fn install_node(
                 style::value(&version_tag),
                 style::url(&distribution_artifact.url)
             ));
-            download_file(&distribution_artifact.url, node_tgz.path())
-                .map_err(DistLayerError::Download)?;
+            download_file(&distribution_artifact.url, node_tgz.path()).map_err(|e| {
+                DistLayerError::Download {
+                    src_url: distribution_artifact.url.clone(),
+                    dst_path: node_tgz.path().to_path_buf(),
+                    source: e,
+                }
+            })?;
             bullet = timer.done();
 
             bullet = bullet.sub_bullet("Verifying checksum");
-            let digest = sha256(node_tgz.path()).map_err(DistLayerError::ReadTempFile)?;
-            if distribution_artifact.checksum.value != digest {
-                Err(DistLayerError::ChecksumVerification)?;
+            let digest = sha256(node_tgz.path()).map_err(|e| DistLayerError::ReadTempFile {
+                path: node_tgz.path().to_path_buf(),
+                source: e,
+            })?;
+            if distribution_artifact.checksum.value != digest.to_vec() {
+                Err(DistLayerError::ChecksumVerification {
+                    url: distribution_artifact.url.clone(),
+                    expected: format!(
+                        "{:x}",
+                        Sha256::digest(&distribution_artifact.checksum.value)
+                    ),
+                    actual: format!("{digest:x}"),
+                })?;
             }
 
             bullet =
                 bullet.sub_bullet(format!("Extracting Node.js {}", style::value(&version_tag)));
-            decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path())
-                .map_err(DistLayerError::Untar)?;
+            let node_tgz_path = node_tgz.path().to_path_buf();
+            decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path()).map_err(
+                |e| DistLayerError::Untar {
+                    src_path: node_tgz_path,
+                    dst_path: distribution_layer.path().clone(),
+                    source: e,
+                },
+            )?;
 
             let timer =
                 bullet.start_timer(format!("Installing Node.js {}", style::value(&version_tag)));
             let dist_name = extract_tarball_prefix(&distribution_artifact.url)
                 .ok_or_else(|| DistLayerError::TarballPrefix(distribution_artifact.url.clone()))?;
             let dist_path = distribution_layer.path().join(dist_name);
-            move_directory_contents(dist_path, distribution_layer.path())
-                .map_err(DistLayerError::Installation)?;
+            move_directory_contents(&dist_path, distribution_layer.path()).map_err(|e| {
+                DistLayerError::Installation {
+                    src_path: dist_path,
+                    dst_path: distribution_layer.path(),
+                    source: e,
+                }
+            })?;
             bullet = timer.done();
         }
     };
@@ -96,7 +122,7 @@ pub(crate) fn install_node(
     Ok(bullet.done())
 }
 
-fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
+fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {
     let mut file = fs::File::open(path.as_ref())?;
     let mut buffer = [0x00; 10 * 1024];
     let mut sha256: Sha256 = Sha256::default();
@@ -107,7 +133,7 @@ fn sha256(path: impl AsRef<Path>) -> Result<Vec<u8>, std::io::Error> {
         read = file.read(&mut buffer)?;
     }
 
-    Ok(sha256.finalize().to_vec())
+    Ok(sha256.finalize())
 }
 
 fn extract_tarball_prefix(url: &str) -> Option<&str> {
@@ -126,27 +152,39 @@ pub(crate) struct DistLayerMetadata {
     layer_version: String,
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum DistLayerError {
-    #[error("Couldn't create tempfile for Node.js distribution: {0}")]
     TempFile(std::io::Error),
-    #[error("Couldn't download Node.js distribution: {0}")]
-    Download(libherokubuildpack::download::DownloadError),
-    #[error("Couldn't decompress Node.js distribution: {0}")]
-    Untar(std::io::Error),
-    #[error("Couldn't extract tarball prefix from artifact URL: {0}")]
+    Download {
+        src_url: String,
+        dst_path: PathBuf,
+        source: libherokubuildpack::download::DownloadError,
+    },
+    Untar {
+        src_path: PathBuf,
+        dst_path: PathBuf,
+        source: std::io::Error,
+    },
     TarballPrefix(String),
-    #[error("Couldn't move Node.js distribution artifacts to the correct location: {0}")]
-    Installation(std::io::Error),
-    #[error("Error verifying checksum")]
-    ChecksumVerification,
-    #[error("Couldn't read tempfile for Node.js distribution: {0}")]
-    ReadTempFile(std::io::Error),
+    Installation {
+        src_path: PathBuf,
+        dst_path: PathBuf,
+        source: std::io::Error,
+    },
+    ChecksumVerification {
+        url: String,
+        expected: String,
+        actual: String,
+    },
+    ReadTempFile {
+        path: PathBuf,
+        source: std::io::Error,
+    },
 }
 
 impl From<DistLayerError> for libcnb::Error<NodeJsEngineBuildpackError> {
     fn from(value: DistLayerError) -> Self {
-        libcnb::Error::BuildpackError(NodeJsEngineBuildpackError::DistLayerError(value))
+        libcnb::Error::BuildpackError(NodeJsEngineBuildpackError::DistLayer(value))
     }
 }
 

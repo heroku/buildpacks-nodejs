@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-engine/src/errors.rs
+---
+- Debug Info:
+  - unexpected end of file
+
+! Failed to copy Node.js distribution contents
+!
+! An unexpected I/O error occurred while copying the contents of the Node.js distribution from `/tmp/path-to-src` to the installation directory at `/layers/buildpack/path-to-dst`.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

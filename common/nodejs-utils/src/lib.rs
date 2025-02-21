@@ -4,6 +4,7 @@ use sha2 as _;
 pub mod application;
 pub mod buildplan;
 pub mod distribution;
+pub mod error_handling;
 pub mod inv;
 mod nodejs_org;
 mod npmjs_org;
