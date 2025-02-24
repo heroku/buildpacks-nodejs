@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Removing the layer responsible for registering the Node.js Runtime Metrics collector. ([#1021](https://github.com/heroku/buildpacks-nodejs/pull/1021))
+
 ## [3.4.8] - 2025-02-14
 
 ### Added
