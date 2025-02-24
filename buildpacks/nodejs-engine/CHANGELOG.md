@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removing the layer responsible for registering the Node.js Runtime Metrics collector. ([#1021](https://github.com/heroku/buildpacks-nodejs/pull/1021))
 
+## [3.4.9] - 2025-02-21
+
+### Added
+
+- 18.20.7 (linux-amd64, linux-arm64)
+
 ## [3.4.8] - 2025-02-14
 
 ### Added
@@ -776,7 +782,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.8...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.9...HEAD
+[3.4.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.8...v3.4.9
 [3.4.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.7...v3.4.8
 [3.4.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.6...v3.4.7
 [3.4.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.5...v3.4.6
