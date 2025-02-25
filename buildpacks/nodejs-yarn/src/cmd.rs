@@ -1,6 +1,10 @@
 use crate::yarn::Yarn;
+use bullet_stream::state::SubBullet;
+use bullet_stream::{style, Print};
+use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
+use std::io::Stdout;
 use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -105,7 +109,8 @@ pub(crate) fn yarn_install(
     yarn_line: &Yarn,
     zero_install: bool,
     yarn_env: &Env,
-) -> Result<(), Error> {
+    mut log: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, CmdError> {
     let mut args = vec!["install"];
     if yarn_line == &Yarn::Yarn1 {
         args.push("--production=false");
@@ -118,27 +123,26 @@ pub(crate) fn yarn_install(
         }
     }
 
-    let mut process = Command::new("yarn")
-        .args(args)
-        .envs(yarn_env)
-        .spawn()
-        .map_err(Error::Spawn)?;
+    log.stream_cmd(Command::new("yarn").args(args).envs(yarn_env))?;
 
-    let status = process.wait().map_err(Error::Wait)?;
-
-    status.success().then_some(()).ok_or(Error::Exit(status))
+    Ok(log)
 }
 
 /// Execute `yarn run` commands like `build`.
-pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), Error> {
-    let status = Command::new("yarn")
-        .arg("run")
-        .arg(script)
-        .envs(yarn_env)
-        .spawn()
-        .map_err(Error::Spawn)?
-        .wait()
-        .map_err(Error::Wait)?;
-
-    status.success().then_some(()).ok_or(Error::Exit(status))
+pub(crate) fn yarn_run(
+    yarn_env: &Env,
+    script: &str,
+    mut log: Print<SubBullet<Stdout>>,
+) -> Result<Print<SubBullet<Stdout>>, CmdError> {
+    log.stream_with(
+        format!("Running {script} script", script = style::value(script)),
+        |stdout, stderr| {
+            Command::new("yarn")
+                .arg("run")
+                .arg(script)
+                .envs(yarn_env)
+                .stream_output(stdout, stderr)
+        },
+    )?;
+    Ok(log)
 }
