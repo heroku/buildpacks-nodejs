@@ -1,7 +1,6 @@
-use std::env::consts;
-
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
+use bullet_stream::{style, Print};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -16,10 +15,11 @@ use libcnb::{buildpack_main, Buildpack};
 use libcnb_test as _;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
-use libherokubuildpack::log::{log_error, log_header, log_info};
 #[cfg(test)]
 use serde_json as _;
 use sha2::Sha256;
+use std::env::consts;
+use std::io::stdout;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -67,8 +67,14 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        log_header("Heroku Node.js Engine Buildpack");
-        log_header("Checking Node.js version");
+        let mut log = Print::new(stdout()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack.toml should have a 'name' field set"));
+
+        let mut bullet = log.bullet("Checking Node.js version");
 
         let inv: Inventory<Version, Sha256, Option<()>> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParseError)?;
@@ -78,11 +84,15 @@ impl Buildpack for NodeJsEngineBuildpack {
             .map(|package_json| package_json.engines.and_then(|e| e.node))?;
 
         let version_range = if let Some(value) = requested_version_range {
-            log_info(format!("Detected Node.js version range: {value}"));
+            bullet = bullet.sub_bullet(format!(
+                "Detected Node.js version range: {}",
+                style::value(value.to_string())
+            ));
             value
         } else {
-            log_info(format!(
-                "Node.js version not specified, using {LTS_VERSION}"
+            bullet = bullet.sub_bullet(format!(
+                "Node.js version not specified, using {}",
+                style::value(LTS_VERSION)
             ));
             Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
         };
@@ -95,13 +105,14 @@ impl Buildpack for NodeJsEngineBuildpack {
             version_range.to_string(),
         ))?;
 
-        log_info(format!(
-            "Resolved Node.js version: {}",
-            target_artifact.version
-        ));
+        log = bullet
+            .sub_bullet(format!(
+                "Resolved Node.js version: {}",
+                style::value(target_artifact.version.to_string())
+            ))
+            .done();
 
-        log_header("Installing Node.js distribution");
-        install_node(&context, target_artifact)?;
+        log = install_node(&context, target_artifact, log)?;
 
         configure_web_env(&context)?;
 
@@ -122,6 +133,8 @@ impl Buildpack for NodeJsEngineBuildpack {
                     .build()
             });
 
+        log.done();
+
         let resulter = BuildResultBuilder::new();
         match launchjs {
             Some(l) => resulter.launch(l).build(),
@@ -130,26 +143,24 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
+        let log = Print::new(stdout()).without_header();
         match error {
-            libcnb::Error::BuildpackError(bp_err) => {
-                let err_string = bp_err.to_string();
-                match bp_err {
-                    NodeJsEngineBuildpackError::DistLayerError(_) => {
-                        log_error("Node.js engine distribution error", err_string);
-                    }
-                    NodeJsEngineBuildpackError::InventoryParseError(_) => {
-                        log_error("Node.js engine inventory parse error", err_string);
-                    }
-                    NodeJsEngineBuildpackError::PackageJsonError(_) => {
-                        log_error("Node.js engine package.json error", err_string);
-                    }
-                    NodeJsEngineBuildpackError::UnknownVersionError(_) => {
-                        log_error("Node.js engine version error", err_string);
-                    }
+            libcnb::Error::BuildpackError(bp_err) => match bp_err {
+                NodeJsEngineBuildpackError::DistLayerError(_) => {
+                    log.error(format!("Node.js engine distribution error:\n{bp_err}"));
                 }
-            }
+                NodeJsEngineBuildpackError::InventoryParseError(_) => {
+                    log.error(format!("Node.js engine inventory parse error:\n{bp_err}"));
+                }
+                NodeJsEngineBuildpackError::PackageJsonError(_) => {
+                    log.error(format!("Node.js engine package.json error:\n{bp_err}"));
+                }
+                NodeJsEngineBuildpackError::UnknownVersionError(_) => {
+                    log.error(format!("Node.js engine version error:\n{bp_err}"));
+                }
+            },
             err => {
-                log_error("Internal Buildpack Error", err.to_string());
+                log.error(format!("Internal Buildpack Error:\n{err}"));
             }
         };
     }
