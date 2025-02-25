@@ -1,111 +1,103 @@
-use indoc::formatdoc;
-use libherokubuildpack::log::log_error;
-
+use crate::cmd::CorepackVersionError;
 use crate::CorepackBuildpackError;
+use bullet_stream::state::Bullet;
+use bullet_stream::Print;
+use fun_run::CmdError;
+use indoc::formatdoc;
+use std::io::{stdout, Stdout};
 
 pub(crate) fn on_error(err: libcnb::Error<CorepackBuildpackError>) {
+    let log = Print::new(stdout()).without_header();
     match err {
-        libcnb::Error::BuildpackError(bp_err) => on_buildpack_error(bp_err),
-        libcnb_err => log_error(
-            "heroku/nodejs-corepack internal buildpack error",
-            formatdoc! {"
-                An unexpected internal error was reported by the framework used
+        libcnb::Error::BuildpackError(bp_err) => {
+            on_buildpack_error(bp_err, log);
+        }
+        libcnb_err => {
+            log.error(formatdoc! {"
+                heroku/nodejs-corepack internal buildpack error
+                
+                An unexpected internal error was reported by the framework used \
                 by this buildpack.
-
-                If the issue persists, consider opening an issue on the GitHub
-                repository. If you are unable to deploy to Heroku as a result
+    
+                If the issue persists, consider opening an issue on the GitHub \
+                repository. If you are unable to deploy to Heroku as a result \
                 of this issue, consider opening a ticket for additional support.
-
+    
                 Details: {libcnb_err}
-            "},
-        ),
+            "});
+        }
     };
 }
 
-fn on_buildpack_error(bp_err: CorepackBuildpackError) {
+fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stdout>>) {
     match bp_err {
         CorepackBuildpackError::CorepackEnable(err) => on_corepack_cmd_error(
             "Unable to install corepack shims via `corepack enable`",
-            err,
-        ),
-        CorepackBuildpackError::CorepackVersion(err) => on_corepack_cmd_error(
-            "Unable to check corepack version via `corepack --version`",
-            err,
+            &err,
+            log,
         ),
         CorepackBuildpackError::CorepackPrepare(err) => on_corepack_cmd_error(
             "Unable to download package manager via `corepack prepare`",
-            err,
+            &err,
+            log,
         ),
-        CorepackBuildpackError::ShimLayer(err) => on_layer_error("shim", &err),
-        CorepackBuildpackError::ManagerLayer(err) => on_layer_error("manager", &err),
-        CorepackBuildpackError::PackageJson(err) => log_error(
-            "heroku/nodejs-corepack package.json error",
-            formatdoc! {"
-                There was an error while attempting to parse this project's
-                package.json file. Please make sure it is present and properly
-                formatted.
+        CorepackBuildpackError::CorepackVersion(corepack_version_error) => {
+            match corepack_version_error {
+                CorepackVersionError::Parse(err) => {
+                    log.error(formatdoc! { "
+                        Unable to check corepack version via `corepack --version`
 
+                        Corepack output couldn't be parsed: {err}
+                    " });
+                }
+                CorepackVersionError::Command(err) => on_corepack_cmd_error(
+                    "Unable to check corepack version via `corepack --version`",
+                    &err,
+                    log,
+                ),
+            }
+        }
+        CorepackBuildpackError::ShimLayer(err) => on_layer_error("shim", &err, log),
+        CorepackBuildpackError::ManagerLayer(err) => on_layer_error("manager", &err, log),
+        CorepackBuildpackError::PackageJson(err) => {
+            log.error(formatdoc! {"
+                heroku/nodejs-corepack package.json error
+                
+                There was an error while attempting to parse this project's \
+                package.json file. Please make sure it is present and properly \
+                formatted.
+    
                 Details: {err}
-            "},
-        ),
-        CorepackBuildpackError::PackageManagerMissing => log_error(
-            "heroku/nodejs-corepack packageManager error",
-            formatdoc! {"
-                There was an error decoding the `packageManager` key from
-                this project's package.json. Please make sure it is present
+            "});
+        }
+        CorepackBuildpackError::PackageManagerMissing => {
+            log.error(formatdoc! {"
+                heroku/nodejs-corepack packageManager error
+
+                There was an error decoding the `packageManager` key from \
+                this project's package.json. Please make sure it is present \
                 and properly formatted (for example: \"yarn@3.1.2\").
-            "},
-        ),
+            "});
+        }
     };
 }
 
-fn on_corepack_cmd_error(err_context: &str, cmd_err: crate::cmd::Error) {
-    let header = "heroku/nodejs-corepack corepack command error";
-    match cmd_err {
-        crate::cmd::Error::Exit(exit_err) => log_error(
-            header,
-            formatdoc! {"
-                {err_context}. The command did not exit successfully.
+fn on_corepack_cmd_error(err_context: &str, cmd_err: &CmdError, log: Print<Bullet<Stdout>>) {
+    log.error(formatdoc! { "
+        heroku/nodejs-corepack corepack command error
 
-                Details: {exit_err}
-            "},
-        ),
-        crate::cmd::Error::Parse(output) => log_error(
-            header,
-            formatdoc! {"
-                {err_context}. Error parsing the command output.
+        {err_context}. The command did not exit successfully.
 
-                Output: {output}
-            "},
-        ),
-        crate::cmd::Error::Spawn(spawn_err) => log_error(
-            header,
-            formatdoc! {"
-                {err_context}. Error spawning the command. Please ensure corepack
-                was installed by another buildpack, such as heroku/nodejs-engine.
-
-                Details: {spawn_err}
-            "},
-        ),
-        crate::cmd::Error::Wait(wait_err) => log_error(
-            header,
-            formatdoc! {"
-                {err_context}. Error waiting for the command to exit.
-
-                Details: {wait_err}
-            "},
-        ),
-    }
+        Details: {cmd_err}
+    " });
 }
 
-fn on_layer_error(layer_name: &str, io_err: &std::io::Error) {
-    log_error(
-        "heroku/nodejs-corepack layer creation error",
-        formatdoc! {"
-            Couldn't create the {layer_name} layer. An unexpected I/O error
-            occurred.
+fn on_layer_error(layer_name: &str, io_err: &std::io::Error, log: Print<Bullet<Stdout>>) {
+    log.error(formatdoc! { "
+        heroku/nodejs-corepack layer creation error
 
-            Details: {io_err}
-        "},
-    );
+        Couldn't create the {layer_name} layer. An unexpected I/O error occurred.
+    
+        Details: {io_err}
+    "});
 }

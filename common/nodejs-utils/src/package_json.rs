@@ -1,6 +1,7 @@
 use crate::vrs::{Requirement, Version};
 use serde::{de, Deserialize, Deserializer};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -58,6 +59,12 @@ pub struct Scripts {
 pub struct PackageManager {
     pub name: String,
     pub version: Version,
+}
+
+impl Display for PackageManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}@{}", self.name, self.version)
+    }
 }
 
 #[derive(Error, Debug)]

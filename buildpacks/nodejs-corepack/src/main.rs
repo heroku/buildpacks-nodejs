@@ -1,3 +1,4 @@
+use bullet_stream::{style, Print};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -5,10 +6,11 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::log_header;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
+use std::io::stdout;
 
+use crate::cmd::CorepackVersionError;
 use crate::enable_corepack::enable_corepack;
 use crate::install_integrity_keys::install_integrity_keys;
 use crate::prepare_corepack::prepare_corepack;
@@ -67,6 +69,13 @@ impl Buildpack for CorepackBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         opentelemetry::global::tracer(context.buildpack_descriptor.buildpack.id.to_string())
             .in_span("build", |cx| {
+                let mut log = Print::new(stdout()).h1(context
+                    .buildpack_descriptor
+                    .buildpack
+                    .name
+                    .as_ref()
+                    .expect("The buildpack should have a name"));
+
                 let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
                     .map_err(CorepackBuildpackError::PackageJson)?
                     .package_manager
@@ -82,19 +91,32 @@ impl Buildpack for CorepackBuildpack {
                 let corepack_version =
                     cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
 
+                log = log
+                    .bullet(format!(
+                        "Using Corepack version {}",
+                        style::value(corepack_version.to_string()),
+                    ))
+                    .done();
+
                 cx.span().set_attribute(KeyValue::new(
                     "corepack.version",
                     corepack_version.to_string(),
                 ));
 
-                log_header(format!(
-                    "Installing {} {} via corepack {corepack_version}",
-                    pkg_mgr.name, pkg_mgr.version
-                ));
+                log = log
+                    .bullet(format!(
+                        "Found {package_manager_field} set to {package_manager} in {package_json}",
+                        package_manager_field = style::value("packageManager"),
+                        package_json = style::value("package.json"),
+                        package_manager = style::value(pkg_mgr.to_string()),
+                    ))
+                    .done();
 
+                log = enable_corepack(&context, &corepack_version, &pkg_mgr, env, log)?;
                 install_integrity_keys(&context, &corepack_version)?;
-                enable_corepack(&context, &corepack_version, &pkg_mgr, env)?;
-                prepare_corepack(&context, &pkg_mgr, env)?;
+                log = prepare_corepack(&context, &pkg_mgr, env, log)?;
+
+                log.done();
 
                 BuildResultBuilder::new().build()
             })
@@ -111,9 +133,9 @@ enum CorepackBuildpackError {
     PackageJson(PackageJsonError),
     ShimLayer(std::io::Error),
     ManagerLayer(std::io::Error),
-    CorepackVersion(cmd::Error),
-    CorepackEnable(cmd::Error),
-    CorepackPrepare(cmd::Error),
+    CorepackVersion(CorepackVersionError),
+    CorepackEnable(fun_run::CmdError),
+    CorepackPrepare(fun_run::CmdError),
 }
 
 impl From<CorepackBuildpackError> for libcnb::Error<CorepackBuildpackError> {
