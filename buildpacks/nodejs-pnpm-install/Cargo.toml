@@ -7,10 +7,11 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+bullet_stream = "0.7"
+fun_run = "0.5"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = { version = "=0.26.0", features = ["trace"] }
-libherokubuildpack = { version = "=0.26.0", default-features = false, features = ["log"] }
 serde = "1"
 toml = "0.8"
 
