@@ -7,7 +7,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-bullet_stream = "0.4"
+bullet_stream = "0.7"
 indoc = "2"
 libcnb = { version = "=0.26.0", features = ["trace"] }
 
