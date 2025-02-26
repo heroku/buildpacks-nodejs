@@ -588,7 +588,7 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.4.0",
  "heroku-nodejs-utils",
  "libcnb",
  "libcnb-test",
