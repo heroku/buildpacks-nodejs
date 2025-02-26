@@ -24,4 +24,4 @@ rand = "0.9"
 serde_json = "1"
 tempfile = "3"
 test_support.workspace = true
-ureq = "2"
+ureq = "3"
