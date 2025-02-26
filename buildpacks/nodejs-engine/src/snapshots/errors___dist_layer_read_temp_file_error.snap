@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-engine/src/errors.rs
+---
+- Debug Info:
+  - read-only filesystem or storage medium
+
+! Failed to read downloaded Node.js distribution
+!
+! An unexpected I/O error occurred while trying to read the downloaded Node.js distribution from `/tmp/path-to-src`.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

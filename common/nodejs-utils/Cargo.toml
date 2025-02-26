@@ -8,8 +8,9 @@ workspace = true
 
 [dependencies]
 anyhow = "1"
+bon = "3"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
-bullet_stream = "0.4"
+bullet_stream = "0.7"
 indoc = "2"
 keep_a_changelog_file = "0.1.0"
 libcnb-data = "=0.26.0"
