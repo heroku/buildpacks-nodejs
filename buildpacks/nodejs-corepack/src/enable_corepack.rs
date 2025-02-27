@@ -7,7 +7,7 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stdout;
+use std::io::Stderr;
 
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
@@ -19,8 +19,8 @@ pub(crate) fn enable_corepack(
     corepack_version: &Version,
     package_manager: &PackageManager,
     env: &Env,
-    log: Print<Bullet<Stdout>>,
-) -> Result<Print<Bullet<Stdout>>, libcnb::Error<CorepackBuildpackError>> {
+    log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<CorepackBuildpackError>> {
     let new_metadata = ShimLayerMetadata {
         corepack_version: corepack_version.clone(),
         layer_version: LAYER_VERSION.to_string(),

@@ -11,7 +11,7 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Stdout;
+use std::io::Stderr;
 use std::os::unix::fs::PermissionsExt;
 use tempfile::NamedTempFile;
 use thiserror::Error;
@@ -23,8 +23,8 @@ use crate::{YarnBuildpack, YarnBuildpackError};
 pub(crate) fn install_yarn(
     context: &BuildContext<YarnBuildpack>,
     release: &Release,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<(LayerEnv, Print<SubBullet<Stdout>>), libcnb::Error<YarnBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<(LayerEnv, Print<SubBullet<Stderr>>), libcnb::Error<YarnBuildpackError>> {
     let new_metadata = CliLayerMetadata {
         yarn_version: release.version.to_string(),
         layer_version: LAYER_VERSION.to_string(),

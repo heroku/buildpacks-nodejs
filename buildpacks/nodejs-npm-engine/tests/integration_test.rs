@@ -12,16 +12,16 @@ use test_support::nodejs_integration_test;
 #[ignore = "integration test"]
 fn npm_engine_install() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "# Heroku Node.js npm Engine Buildpack");
+        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Engine Buildpack");
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Found `engines.npm` version `9.6.6` declared in `package.json`"
         );
-        assert_contains!(ctx.pack_stdout, "Resolved version `9.6.6` to `9.6.6`");
-        assert_contains!(ctx.pack_stdout, "Downloading");
-        assert_contains!(ctx.pack_stdout, "Removing npm bundled with Node.js");
-        assert_contains!(ctx.pack_stdout, "Installing requested npm");
-        assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+        assert_contains!(ctx.pack_stderr, "Resolved version `9.6.6` to `9.6.6`");
+        assert_contains!(ctx.pack_stderr, "Downloading");
+        assert_contains!(ctx.pack_stderr, "Removing npm bundled with Node.js");
+        assert_contains!(ctx.pack_stderr, "Installing requested npm");
+        assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
     });
 }
 
@@ -29,12 +29,12 @@ fn npm_engine_install() {
 #[ignore = "integration test"]
 fn test_npm_engine_caching() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Downloading");
-        assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+        assert_contains!(ctx.pack_stderr, "Downloading");
+        assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            assert_contains!(ctx.pack_stdout, "Using cached npm");
-            assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+            assert_contains!(ctx.pack_stderr, "Using cached npm");
+            assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
         });
     });
 }
@@ -43,19 +43,19 @@ fn test_npm_engine_caching() {
 #[ignore = "integration test"]
 fn test_npm_version_change_invalidates_npm_engine_cache() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Downloading");
-        assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+        assert_contains!(ctx.pack_stderr, "Downloading");
+        assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
             update_engine_entry(&app_dir, "npm", "9.6.5");
         });
         ctx.rebuild(config, |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "Invalidating cached npm (npm version changed)"
             );
-            assert_contains!(ctx.pack_stdout, "Downloading");
-            assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.5`");
+            assert_contains!(ctx.pack_stderr, "Downloading");
+            assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.5`");
         });
     });
 }
@@ -64,19 +64,19 @@ fn test_npm_version_change_invalidates_npm_engine_cache() {
 #[ignore = "integration test"]
 fn test_node_version_change_invalidates_npm_engine_cache() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Downloading");
-        assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+        assert_contains!(ctx.pack_stderr, "Downloading");
+        assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
             update_engine_entry(&app_dir, "node", "16.20.1");
         });
         ctx.rebuild(config, |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "Invalidating cached npm (node version changed)"
             );
-            assert_contains!(ctx.pack_stdout, "Downloading");
-            assert_contains!(ctx.pack_stdout, "Successfully installed `npm@9.6.6`");
+            assert_contains!(ctx.pack_stderr, "Downloading");
+            assert_contains!(ctx.pack_stderr, "Successfully installed `npm@9.6.6`");
         });
     });
 }

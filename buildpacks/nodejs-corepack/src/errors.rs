@@ -4,10 +4,10 @@ use bullet_stream::state::Bullet;
 use bullet_stream::Print;
 use fun_run::CmdError;
 use indoc::formatdoc;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 
 pub(crate) fn on_error(err: libcnb::Error<CorepackBuildpackError>) {
-    let log = Print::new(stdout()).without_header();
+    let log = Print::new(stderr()).without_header();
     match err {
         libcnb::Error::BuildpackError(bp_err) => {
             on_buildpack_error(bp_err, log);
@@ -29,7 +29,7 @@ pub(crate) fn on_error(err: libcnb::Error<CorepackBuildpackError>) {
     };
 }
 
-fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stdout>>) {
+fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stderr>>) {
     match bp_err {
         CorepackBuildpackError::CorepackEnable(err) => on_corepack_cmd_error(
             "Unable to install corepack shims via `corepack enable`",
@@ -82,7 +82,7 @@ fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stdout>>
     };
 }
 
-fn on_corepack_cmd_error(err_context: &str, cmd_err: &CmdError, log: Print<Bullet<Stdout>>) {
+fn on_corepack_cmd_error(err_context: &str, cmd_err: &CmdError, log: Print<Bullet<Stderr>>) {
     log.error(formatdoc! { "
         heroku/nodejs-corepack corepack command error
 
@@ -92,7 +92,7 @@ fn on_corepack_cmd_error(err_context: &str, cmd_err: &CmdError, log: Print<Bulle
     " });
 }
 
-fn on_layer_error(layer_name: &str, io_err: &std::io::Error, log: Print<Bullet<Stdout>>) {
+fn on_layer_error(layer_name: &str, io_err: &std::io::Error, log: Print<Bullet<Stderr>>) {
     log.error(formatdoc! { "
         heroku/nodejs-corepack layer creation error
 

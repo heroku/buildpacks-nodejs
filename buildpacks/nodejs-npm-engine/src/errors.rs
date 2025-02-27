@@ -7,7 +7,7 @@ use heroku_nodejs_utils::package_json::PackageJsonError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
 use std::fmt::Display;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 
 const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
@@ -28,7 +28,7 @@ pub(crate) enum NpmEngineBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
-    let logger = Print::new(stdout()).without_header();
+    let logger = Print::new(stderr()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -37,7 +37,7 @@ pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Print<Bullet<Stdout>>) {
+fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Print<Bullet<Stderr>>) {
     match error {
         NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
@@ -53,7 +53,7 @@ fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Print<Bullet<Stdou
     }
 }
 
-fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>) {
+fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stderr>>) {
     match error {
         PackageJsonError::AccessError(e) => {
             print_error_details(logger, &e)
@@ -83,7 +83,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>)
     }
 }
 
-fn on_missing_npm_engine_requirement_error(logger: Print<Bullet<Stdout>>) {
+fn on_missing_npm_engine_requirement_error(logger: Print<Bullet<Stderr>>) {
     logger.error(formatdoc! {"
         Missing {engines_key} key in {package_json}.
         
@@ -95,7 +95,7 @@ fn on_missing_npm_engine_requirement_error(logger: Print<Bullet<Stdout>>) {
     ", engines_key = style::value("engines.npm"), package_json = style::value("package.json") });
 }
 
-fn on_inventory_parse_error(error: &toml::de::Error, logger: Print<Bullet<Stdout>>) {
+fn on_inventory_parse_error(error: &toml::de::Error, logger: Print<Bullet<Stderr>>) {
     print_error_details(logger, &error).error(formatdoc! {"
             Failed to load available {npm} versions.
 
@@ -107,7 +107,7 @@ fn on_inventory_parse_error(error: &toml::de::Error, logger: Print<Bullet<Stdout
         ", npm = style::value("npm") });
 }
 
-fn on_npm_version_resolve_error(requirement: &Requirement, logger: Print<Bullet<Stdout>>) {
+fn on_npm_version_resolve_error(requirement: &Requirement, logger: Print<Bullet<Stderr>>) {
     logger.error(formatdoc! {"
             Error resolving requested {npm} version {requested_version}.
             
@@ -130,7 +130,7 @@ fn on_npm_version_resolve_error(requirement: &Requirement, logger: Print<Bullet<
     });
 }
 
-fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Print<Bullet<Stdout>>) {
+fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Print<Bullet<Stderr>>) {
     match error {
         NpmEngineLayerError::Download(e) => {
             print_error_details(logger, &e)
@@ -184,7 +184,7 @@ fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Print<Bullet<St
     }
 }
 
-fn on_node_version_error(error: node::VersionError, logger: Print<Bullet<Stdout>>) {
+fn on_node_version_error(error: node::VersionError, logger: Print<Bullet<Stderr>>) {
     match error {
         node::VersionError::Command(e) => {
             print_error_details(logger, &e).error(formatdoc! {"
@@ -209,7 +209,7 @@ fn on_node_version_error(error: node::VersionError, logger: Print<Bullet<Stdout>
     }
 }
 
-fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>) {
+fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stderr>>) {
     match error {
         npm::VersionError::Command(e) => {
             print_error_details(logger, &e).error(formatdoc! {"
@@ -236,7 +236,7 @@ fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>)
 
 fn on_framework_error(
     error: &libcnb::Error<NpmEngineBuildpackError>,
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
 ) {
     print_error_details(logger, &error)
         .error(formatdoc! {"
@@ -255,9 +255,9 @@ fn on_framework_error(
 }
 
 fn print_error_details(
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
     error: &impl Display,
-) -> Print<Bullet<Stdout>> {
+) -> Print<Bullet<Stderr>> {
     logger
         .bullet(style::important("DEBUG INFO:"))
         .sub_bullet(error.to_string())

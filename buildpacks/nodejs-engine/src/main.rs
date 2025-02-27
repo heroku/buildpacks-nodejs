@@ -19,7 +19,7 @@ use libherokubuildpack::inventory::Inventory;
 use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
-use std::io::stdout;
+use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 #[cfg(test)]
@@ -67,7 +67,7 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stdout()).h1(context
+        let mut log = Print::new(stderr()).h1(context
             .buildpack_descriptor
             .buildpack
             .name

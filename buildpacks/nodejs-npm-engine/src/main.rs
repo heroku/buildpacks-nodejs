@@ -20,7 +20,7 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 use std::path::Path;
 use std::process::Command;
 #[cfg(test)]
@@ -62,7 +62,7 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut logger = Print::new(stdout()).h1(BUILDPACK_NAME);
+        let mut logger = Print::new(stderr()).h1(BUILDPACK_NAME);
         let env = Env::from_current();
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
@@ -102,8 +102,8 @@ fn read_requested_npm_version(
 fn resolve_requested_npm_version(
     requested_version: &Requirement,
     inventory: &Inventory,
-    mut section_logger: Print<SubBullet<Stdout>>,
-) -> Result<(Release, Print<SubBullet<Stdout>>), NpmEngineBuildpackError> {
+    mut section_logger: Print<SubBullet<Stderr>>,
+) -> Result<(Release, Print<SubBullet<Stderr>>), NpmEngineBuildpackError> {
     section_logger = section_logger.sub_bullet(format!(
         "Found {} version {} declared in {}",
         style::value("engines.npm"),
@@ -142,8 +142,8 @@ fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
 
 fn log_installed_npm_version(
     env: &Env,
-    section_logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmEngineBuildpackError> {
+    section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmEngineBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
         .map_err(npm::VersionError::Command)

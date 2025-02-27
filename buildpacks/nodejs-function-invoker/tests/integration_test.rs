@@ -19,7 +19,7 @@ const FUNCTION_LOGGING_TIMEOUT: Duration = Duration::from_secs(5);
 #[ignore]
 fn simple_javascript_function() {
     function_integration_test("./fixtures/simple-function", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
         start_container(&ctx, |container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});
@@ -40,7 +40,7 @@ fn simple_javascript_function() {
 #[ignore]
 fn simple_typescript_function() {
     function_integration_test("./fixtures/simple-typescript-function", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
         start_container(&ctx, |_container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});
@@ -58,7 +58,7 @@ fn simple_typescript_function() {
 fn test_function_with_explicit_runtime_dependency_js() {
     function_integration_test("./fixtures/with-explicit-runtime-dependency-js", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
@@ -71,7 +71,7 @@ fn test_function_with_explicit_runtime_dependency_js() {
 fn test_function_with_explicit_runtime_dependency_ts() {
     function_integration_test("./fixtures/with-explicit-runtime-dependency-ts", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
@@ -83,9 +83,9 @@ fn test_function_with_explicit_runtime_dependency_ts() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_js() {
     function_integration_test("./fixtures/with-implicit-runtime-dependency-js", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         start_container_and_assert_health_check_responds(&ctx);
@@ -96,9 +96,9 @@ fn test_function_with_implicit_runtime_dependency_js() {
 #[ignore]
 fn test_function_with_implicit_runtime_dependency_ts() {
     function_integration_test("./fixtures/with-implicit-runtime-dependency-ts", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
+        assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         start_container_and_assert_health_check_responds(&ctx);
@@ -109,8 +109,8 @@ fn test_function_with_implicit_runtime_dependency_ts() {
 #[ignore]
 fn function_with_no_lockfile() {
     function_integration_test("./fixtures/function-with-no-lockfile", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
-        assert_contains!(ctx.pack_stdout, "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git.");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git.");
         start_container(&ctx, |container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});

@@ -1,45 +1,47 @@
 #!/usr/bin/env bash
 
-set -e
-set -o pipefail
+{
+  set -e
+  set -o pipefail
 
-bp_dir=$(
-	cd "$(dirname "$0")"/..
-	pwd
-)
-build_dir=$(pwd)
-layers_dir=$1
-platform_dir=$2
+  bp_dir=$(
+    cd "$(dirname "$0")"/..
+    pwd
+  )
+  build_dir=$(pwd)
+  layers_dir=$1
+  platform_dir=$2
 
-# shellcheck source=/dev/null
-source "$bp_dir/lib/build.sh"
-rm -rf "$build_dir/node_modules"
+  # shellcheck source=/dev/null
+  source "$bp_dir/lib/build.sh"
+  rm -rf "$build_dir/node_modules"
 
-#Failures that are caught immediately
-fail_multiple_lockfiles "$build_dir"
+  #Failures that are caught immediately
+  fail_multiple_lockfiles "$build_dir"
 
-clear_cache_on_stack_change "$layers_dir"
+  clear_cache_on_stack_change "$layers_dir"
 
-export_env "$platform_dir/env" "" ""
+  export_env "$platform_dir/env" "" ""
 
-install_or_reuse_toolbox "$layers_dir/toolbox"
-export PATH=$layers_dir/toolbox/bin:$PATH
+  install_or_reuse_toolbox "$layers_dir/toolbox"
+  export PATH=$layers_dir/toolbox/bin:$PATH
 
-export PATH=$layers_dir/npm/bin:$PATH
-install_or_reuse_npm "$build_dir" "$layers_dir/npm"
+  export PATH=$layers_dir/npm/bin:$PATH
+  install_or_reuse_npm "$build_dir" "$layers_dir/npm"
 
-warn_prebuilt_modules "$build_dir"
+  warn_prebuilt_modules "$build_dir"
 
-run_prebuild "$build_dir"
+  run_prebuild "$build_dir"
 
-clear_cache_on_node_version_change "$layers_dir"
+  clear_cache_on_node_version_change "$layers_dir"
 
-write_to_store_toml "$layers_dir"
+  write_to_store_toml "$layers_dir"
 
-install_or_reuse_node_modules "$build_dir" "$layers_dir/node_modules"
+  install_or_reuse_node_modules "$build_dir" "$layers_dir/node_modules"
 
-run_build "$build_dir"
+  run_build "$build_dir"
 
-write_launch_toml "$build_dir/package.json" "$layers_dir/launch.toml"
+  write_launch_toml "$build_dir/package.json" "$layers_dir/launch.toml"
 
-prune_devdependencies "$build_dir"
+  prune_devdependencies "$build_dir"
+} >&2

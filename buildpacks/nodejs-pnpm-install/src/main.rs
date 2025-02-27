@@ -8,7 +8,7 @@ use libcnb::data::store::Store;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::stdout;
+use std::io::stderr;
 
 use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
@@ -59,7 +59,7 @@ impl Buildpack for PnpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stdout()).h1(context
+        let mut log = Print::new(stderr()).h1(context
             .buildpack_descriptor
             .buildpack
             .name

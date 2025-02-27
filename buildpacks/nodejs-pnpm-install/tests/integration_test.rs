@@ -15,7 +15,7 @@ fn pnpm_7_pnp() {
     nodejs_integration_test("./fixtures/pnpm-7-pnp", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Setting up pnpm dependency store
                   - Creating new pnpm content-addressable store
@@ -24,7 +24,7 @@ fn pnpm_7_pnp() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Installing dependencies
                   - Running `pnpm install --frozen-lockfile`
@@ -32,20 +32,20 @@ fn pnpm_7_pnp() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Packages are hard linked from the content-addressable store to the virtual store."
         );
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3"
         );
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store"
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Running scripts
                   - No build scripts found
@@ -61,7 +61,7 @@ fn pnpm_8_hoist() {
     nodejs_integration_test("./fixtures/pnpm-8-hoist", |ctx| {
         assert_empty!(ctx.pack_stderr);
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Setting up pnpm dependency store
                   - Creating new pnpm content-addressable store
@@ -70,7 +70,7 @@ fn pnpm_8_hoist() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Installing dependencies
                   - Running `pnpm install --frozen-lockfile`
@@ -78,20 +78,20 @@ fn pnpm_8_hoist() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Packages are hard linked from the content-addressable store to the virtual store."
         );
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3"
         );
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store"
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Running scripts
                   - No build scripts found
@@ -106,7 +106,7 @@ fn pnpm_8_hoist() {
 fn pnpm_8_nuxt() {
     nodejs_integration_test("./fixtures/pnpm-8-nuxt", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Setting up pnpm dependency store
                   - Creating new pnpm content-addressable store
@@ -115,7 +115,7 @@ fn pnpm_8_nuxt() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Installing dependencies
                   - Running `pnpm install --frozen-lockfile`
@@ -123,7 +123,7 @@ fn pnpm_8_nuxt() {
         );
 
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             &formatdoc! {"
                 - Running scripts
                   - Running `build` script
@@ -137,19 +137,19 @@ fn pnpm_8_nuxt() {
 fn test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/pnpm-project-with-native-module", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Creating new pnpm content-addressable store"
         );
-        assert_contains!(ctx.pack_stdout, "dtrace-provider install");
-        assert_contains!(ctx.pack_stdout, "node-gyp rebuild");
+        assert_contains!(ctx.pack_stderr, "dtrace-provider install");
+        assert_contains!(ctx.pack_stderr, "node-gyp rebuild");
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "Restoring pnpm content-addressable store from cache"
             );
-            assert_contains!(ctx.pack_stdout, "dtrace-provider install");
-            assert_contains!(ctx.pack_stdout, "node-gyp rebuild");
+            assert_contains!(ctx.pack_stderr, "dtrace-provider install");
+            assert_contains!(ctx.pack_stderr, "node-gyp rebuild");
         });
     });
 }
@@ -168,15 +168,15 @@ fn test_skip_build_scripts_from_buildplan() {
         },
         |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `heroku-prebuild` as it was disabled by a participating buildpack"
             );
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `build` as it was disabled by a participating buildpack"
             );
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `heroku-postbuild` as it was disabled by a participating buildpack"
             );
         },
@@ -215,7 +215,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
         },
         |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "Skipping default web process (Procfile detected)"
             );
         },

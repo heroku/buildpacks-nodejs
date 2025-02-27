@@ -5,10 +5,10 @@ use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use indoc::formatdoc;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 
 pub(crate) fn on_error(err: libcnb::Error<PnpmInstallBuildpackError>) {
-    let log = Print::new(stdout()).without_header();
+    let log = Print::new(stderr()).without_header();
     match err {
         libcnb::Error::BuildpackError(bp_err) => on_buildpack_error(bp_err, log),
         libcnb_err => {
@@ -28,7 +28,7 @@ pub(crate) fn on_error(err: libcnb::Error<PnpmInstallBuildpackError>) {
     };
 }
 
-fn on_buildpack_error(bp_err: PnpmInstallBuildpackError, log: Print<Bullet<Stdout>>) {
+fn on_buildpack_error(bp_err: PnpmInstallBuildpackError, log: Print<Bullet<Stderr>>) {
     match bp_err {
         PnpmInstallBuildpackError::BuildScript(err) => {
             log.error(formatdoc! {"

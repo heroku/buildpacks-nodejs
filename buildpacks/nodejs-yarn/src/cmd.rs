@@ -4,7 +4,7 @@ use bullet_stream::{style, Print};
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
-use std::io::Stdout;
+use std::io::Stderr;
 use std::{
     path::{Path, PathBuf},
     process::{Command, Stdio},
@@ -109,8 +109,8 @@ pub(crate) fn yarn_install(
     yarn_line: &Yarn,
     zero_install: bool,
     yarn_env: &Env,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, CmdError> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, CmdError> {
     let mut args = vec!["install"];
     if yarn_line == &Yarn::Yarn1 {
         args.push("--production=false");
@@ -132,8 +132,8 @@ pub(crate) fn yarn_install(
 pub(crate) fn yarn_run(
     yarn_env: &Env,
     script: &str,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, CmdError> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, CmdError> {
     log.stream_with(
         format!("Running {script} script", script = style::value(script)),
         |stdout, stderr| {

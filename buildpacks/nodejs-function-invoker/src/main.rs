@@ -24,7 +24,7 @@ use libcnb_test as _;
 #[cfg(test)]
 use rand as _;
 use serde::Deserialize;
-use std::io::stdout;
+use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -71,7 +71,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stdout()).h1(context
+        let mut log = Print::new(stderr()).h1(context
             .buildpack_descriptor
             .buildpack
             .name
@@ -142,7 +142,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let log = Print::new(stdout()).without_header();
+        let log = Print::new(stderr()).without_header();
         match error {
             Error::BuildpackError(buildpack_error) => match buildpack_error {
                 NodeJsInvokerBuildpackError::MainFunction(e) => {

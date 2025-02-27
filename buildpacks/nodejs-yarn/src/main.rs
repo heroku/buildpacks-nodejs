@@ -12,7 +12,7 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::stdout;
+use std::io::{stderr, stdout};
 use thiserror::Error;
 
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
@@ -71,7 +71,7 @@ impl Buildpack for YarnBuildpack {
 
     #[allow(clippy::too_many_lines)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stdout()).h1(context
+        let mut log = Print::new(stderr()).h1(context
             .buildpack_descriptor
             .buildpack
             .name

@@ -6,7 +6,7 @@ use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use serde::{Deserialize, Serialize};
-use std::io::{stderr, stdout, Stdout, Write};
+use std::io::{stderr, stdout, Stderr, Write};
 use std::process::Command;
 use thiserror::Error;
 
@@ -15,8 +15,8 @@ use crate::{NodeJsInvokerBuildpack, NodeJsInvokerBuildpackError};
 pub(crate) fn install_nodejs_function_runtime(
     context: &BuildContext<NodeJsInvokerBuildpack>,
     package: &str,
-    mut log: Print<Bullet<Stdout>>,
-) -> Result<Print<Bullet<Stdout>>, libcnb::Error<NodeJsInvokerBuildpackError>> {
+    mut log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<NodeJsInvokerBuildpackError>> {
     let new_metadata = RuntimeLayerMetadata {
         package: package.to_string(),
         layer_version: LAYER_VERSION.to_string(),
