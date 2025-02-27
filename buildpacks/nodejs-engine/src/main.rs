@@ -144,7 +144,7 @@ impl Buildpack for NodeJsEngineBuildpack {
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
         let error_message = errors::on_error(error);
-        println!("\n{error_message}");
+        eprintln!("\n{error_message}");
     }
 }
 
