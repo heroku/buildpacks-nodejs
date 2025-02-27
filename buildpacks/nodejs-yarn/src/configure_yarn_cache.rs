@@ -67,7 +67,7 @@ pub(crate) fn configure_yarn_cache(
         }
     }
 
-    cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env)
+    log = cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env, log)
         .map_err(DepsLayerError::YarnCacheSet)?;
 
     Ok(log)
@@ -91,7 +91,7 @@ pub(crate) enum DepsLayerError {
     #[error("Couldn't create yarn dependency cache: {0}")]
     CreateCacheDir(std::io::Error),
     #[error("Couldn't set yarn cache folder: {0}")]
-    YarnCacheSet(cmd::Error),
+    YarnCacheSet(fun_run::CmdError),
 }
 
 impl From<DepsLayerError> for libcnb::Error<YarnBuildpackError> {

@@ -136,7 +136,7 @@ impl Buildpack for YarnBuildpack {
             .done();
 
         let mut bullet = log.bullet("Setting up yarn dependency cache");
-        cmd::yarn_disable_global_cache(&yarn, &env)
+        bullet = cmd::yarn_disable_global_cache(&yarn, &env, bullet)
             .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
@@ -251,7 +251,7 @@ enum YarnBuildpackError {
     #[error("Couldn't read yarn cache folder: {0}")]
     YarnCacheGet(cmd::Error),
     #[error("Couldn't disable yarn global cache: {0}")]
-    YarnDisableGlobalCache(cmd::Error),
+    YarnDisableGlobalCache(fun_run::CmdError),
     #[error("Yarn install error: {0}")]
     YarnInstall(fun_run::CmdError),
     #[error("Couldn't determine yarn version: {0}")]

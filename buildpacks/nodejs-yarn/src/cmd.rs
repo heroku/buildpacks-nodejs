@@ -67,7 +67,12 @@ pub(crate) fn yarn_get_cache(yarn_line: &Yarn, env: &Env) -> Result<PathBuf, Err
 }
 
 /// Execute `yarn config set` to set the yarn cache to a specfic location.
-pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> Result<(), Error> {
+pub(crate) fn yarn_set_cache(
+    yarn_line: &Yarn,
+    cache_path: &Path,
+    env: &Env,
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, CmdError> {
     let cache_path_string = cache_path.to_string_lossy();
     let mut args = vec!["config", "set"];
     if yarn_line == &Yarn::Yarn1 {
@@ -75,14 +80,8 @@ pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> 
     } else {
         args.append(&mut vec!["cacheFolder", &cache_path_string]);
     }
-
-    let mut process = Command::new("yarn")
-        .args(args)
-        .envs(env)
-        .spawn()
-        .map_err(Error::Spawn)?;
-    let status = process.wait().map_err(Error::Wait)?;
-    status.success().then_some(()).ok_or(Error::Exit(status))
+    log.stream_cmd(Command::new("yarn").args(args).envs(env))?;
+    Ok(log)
 }
 
 /// Execute `yarn config set enableGlobalCache false`. This setting is
@@ -91,17 +90,20 @@ pub(crate) fn yarn_set_cache(yarn_line: &Yarn, cache_path: &Path, env: &Env) -> 
 /// Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
 /// persisted into the build cache or the final image. Yarn 2.x and 3.x have
 /// a default value to `false`. Yarn 4.x has a default value of `true`.
-pub(crate) fn yarn_disable_global_cache(yarn_line: &Yarn, env: &Env) -> Result<(), Error> {
+pub(crate) fn yarn_disable_global_cache(
+    yarn_line: &Yarn,
+    env: &Env,
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, CmdError> {
     if yarn_line == &Yarn::Yarn1 {
-        return Ok(());
+        return Ok(log);
     }
-    let mut process = Command::new("yarn")
-        .args(["config", "set", "enableGlobalCache", "false"])
-        .envs(env)
-        .spawn()
-        .map_err(Error::Spawn)?;
-    let status = process.wait().map_err(Error::Wait)?;
-    status.success().then_some(()).ok_or(Error::Exit(status))
+    log.stream_cmd(
+        Command::new("yarn")
+            .args(["config", "set", "enableGlobalCache", "false"])
+            .envs(env),
+    )?;
+    Ok(log)
 }
 
 /// Execute `yarn install` to install dependencies for a yarn project.
