@@ -3,7 +3,7 @@
 
 use indoc::{formatdoc, indoc};
 use libcnb::data::buildpack_id;
-use libcnb_test::{assert_contains, assert_empty, BuildpackReference};
+use libcnb_test::{assert_contains, BuildpackReference};
 use test_support::{
     add_build_script, assert_web_response, custom_buildpack, integration_test_with_config,
     nodejs_integration_test, nodejs_integration_test_with_config,
@@ -13,7 +13,6 @@ use test_support::{
 #[ignore = "integration test"]
 fn pnpm_7_pnp() {
     nodejs_integration_test("./fixtures/pnpm-7-pnp", |ctx| {
-        assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stderr,
             &formatdoc! {"
@@ -59,7 +58,6 @@ fn pnpm_7_pnp() {
 #[ignore = "integration test"]
 fn pnpm_8_hoist() {
     nodejs_integration_test("./fixtures/pnpm-8-hoist", |ctx| {
-        assert_empty!(ctx.pack_stderr);
         assert_contains!(
             ctx.pack_stderr,
             &formatdoc! {"
