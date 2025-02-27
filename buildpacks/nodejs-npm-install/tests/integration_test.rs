@@ -183,7 +183,7 @@ fn detect_rejects_non_npm_project() {
             config.expected_pack_result(PackResult::Failure);
         },
         |ctx| {
-            assert_contains!(ctx.pack_stderr, "fail: heroku/nodejs-npm-install");
+            assert_contains!(ctx.pack_stdout, "fail: heroku/nodejs-npm-install");
         },
     );
 }
