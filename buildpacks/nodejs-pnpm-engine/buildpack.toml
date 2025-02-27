@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-pnpm-engine"
-version = "3.4.10"
+version = "3.4.11"
 name = "Heroku Node.js pnpm Engine"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's Node.js pnpm Engine buildpack. A component of the 'heroku/nodejs' buildpack."
