@@ -80,9 +80,7 @@ jobs:
       - name: Run integration tests
         run: |
           cargo insta test \
-            --force-update-snapshots \
             --accept \
-            --accept-unseen \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
             -- --locked --ignored --test-threads 16
