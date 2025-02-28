@@ -301,7 +301,7 @@ pub fn create_build_snapshot(
         omit_expression => true,
         prepend_module_to_snapshot => false,
         snapshot_path => snapshots_dir(),
-        snapshot_suffix => format!("{}__{arch}", builder.to_string().replace('/', "-")),
+        snapshot_suffix => format!("{}__{arch}", builder.to_string().replace(['/', ':'], "-")),
         filters => filters.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }, {
         assert_snapshot!(test_name(), snapshot_output);
