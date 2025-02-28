@@ -7,15 +7,15 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stdout;
+use std::io::Stderr;
 
 use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 
 pub(crate) fn configure_pnpm_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<PnpmInstallBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<PnpmInstallBuildpackError>> {
     let new_metadata = AddressableStoreLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };

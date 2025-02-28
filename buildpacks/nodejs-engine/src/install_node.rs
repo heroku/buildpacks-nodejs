@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 use sha2::digest::Output;
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::io::{Read, Stdout};
+use std::io::{Read, Stderr};
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 
@@ -24,8 +24,8 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsEngineBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-    log: Print<Bullet<Stdout>>,
-) -> Result<Print<Bullet<Stdout>>, libcnb::Error<NodeJsEngineBuildpackError>> {
+    log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<NodeJsEngineBuildpackError>> {
     let mut bullet = log.bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {

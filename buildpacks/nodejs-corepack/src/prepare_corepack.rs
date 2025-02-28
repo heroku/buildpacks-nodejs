@@ -8,7 +8,7 @@ use libcnb::layer::{
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stdout;
+use std::io::Stderr;
 
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
@@ -19,8 +19,8 @@ pub(crate) fn prepare_corepack(
     context: &BuildContext<CorepackBuildpack>,
     package_manager: &PackageManager,
     env: &Env,
-    log: Print<Bullet<Stdout>>,
-) -> Result<Print<Bullet<Stdout>>, libcnb::Error<CorepackBuildpackError>> {
+    log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<CorepackBuildpackError>> {
     let new_metadata = ManagerLayerMetadata {
         manager_name: package_manager.name.clone(),
         manager_version: package_manager.version.clone(),

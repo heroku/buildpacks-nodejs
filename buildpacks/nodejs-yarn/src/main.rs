@@ -12,7 +12,7 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::stdout;
+use std::io::{stderr, stdout};
 use thiserror::Error;
 
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
@@ -71,7 +71,7 @@ impl Buildpack for YarnBuildpack {
 
     #[allow(clippy::too_many_lines)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stdout()).h1(context
+        let mut log = Print::new(stderr()).h1(context
             .buildpack_descriptor
             .buildpack
             .name
@@ -136,7 +136,7 @@ impl Buildpack for YarnBuildpack {
             .done();
 
         let mut bullet = log.bullet("Setting up yarn dependency cache");
-        cmd::yarn_disable_global_cache(&yarn, &env)
+        bullet = cmd::yarn_disable_global_cache(&yarn, &env, bullet)
             .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
@@ -251,7 +251,7 @@ enum YarnBuildpackError {
     #[error("Couldn't read yarn cache folder: {0}")]
     YarnCacheGet(cmd::Error),
     #[error("Couldn't disable yarn global cache: {0}")]
-    YarnDisableGlobalCache(cmd::Error),
+    YarnDisableGlobalCache(fun_run::CmdError),
     #[error("Yarn install error: {0}")]
     YarnInstall(fun_run::CmdError),
     #[error("Couldn't determine yarn version: {0}")]

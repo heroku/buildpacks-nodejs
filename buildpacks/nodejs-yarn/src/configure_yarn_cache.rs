@@ -8,7 +8,7 @@ use libcnb::layer::{
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Stdout;
+use std::io::Stderr;
 use thiserror::Error;
 
 use crate::yarn::Yarn;
@@ -23,8 +23,8 @@ pub(crate) fn configure_yarn_cache(
     context: &BuildContext<YarnBuildpack>,
     yarn: &Yarn,
     env: &Env,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<YarnBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<YarnBuildpackError>> {
     let new_metadata = DepsLayerMetadata {
         yarn: yarn.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -67,7 +67,7 @@ pub(crate) fn configure_yarn_cache(
         }
     }
 
-    cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env)
+    log = cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env, log)
         .map_err(DepsLayerError::YarnCacheSet)?;
 
     Ok(log)
@@ -91,7 +91,7 @@ pub(crate) enum DepsLayerError {
     #[error("Couldn't create yarn dependency cache: {0}")]
     CreateCacheDir(std::io::Error),
     #[error("Couldn't set yarn cache folder: {0}")]
-    YarnCacheSet(cmd::Error),
+    YarnCacheSet(fun_run::CmdError),
 }
 
 impl From<DepsLayerError> for libcnb::Error<YarnBuildpackError> {

@@ -8,7 +8,7 @@ use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack, Env};
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
-use std::io::stdout;
+use std::io::stderr;
 
 use crate::cmd::CorepackVersionError;
 use crate::enable_corepack::enable_corepack;
@@ -69,7 +69,7 @@ impl Buildpack for CorepackBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         opentelemetry::global::tracer(context.buildpack_descriptor.buildpack.id.to_string())
             .in_span("build", |cx| {
-                let mut log = Print::new(stdout()).h1(context
+                let mut log = Print::new(stderr()).h1(context
                     .buildpack_descriptor
                     .buildpack
                     .name

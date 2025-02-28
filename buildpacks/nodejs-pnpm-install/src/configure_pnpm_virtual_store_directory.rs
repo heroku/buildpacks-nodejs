@@ -5,7 +5,7 @@ use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::Env;
 use std::fs::create_dir;
-use std::io::Stdout;
+use std::io::Stderr;
 use std::os::unix::fs::symlink;
 
 use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
@@ -13,8 +13,8 @@ use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 pub(crate) fn configure_pnpm_virtual_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-    mut log: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<PnpmInstallBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<PnpmInstallBuildpackError>> {
     let virtual_layer = context.uncached_layer(
         layer_name!("virtual"),
         UncachedLayerDefinition {

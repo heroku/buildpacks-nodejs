@@ -10,7 +10,7 @@ use libherokubuildpack::download::{download_file, DownloadError};
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::Stdout;
+use std::io::Stderr;
 use std::path::Path;
 use std::process::Command;
 
@@ -24,8 +24,8 @@ pub(crate) fn install_npm(
     context: &BuildContext<NpmEngineBuildpack>,
     npm_release: &Release,
     node_version: &Version,
-    mut logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<NpmEngineBuildpackError>> {
+    mut logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<NpmEngineBuildpackError>> {
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
         npm_version: npm_release.version.to_string(),
@@ -90,8 +90,8 @@ fn download_and_unpack_release(
     download_from: &String,
     download_to: &Path,
     unpack_into: &Path,
-    logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
     let timer = logger.start_timer(format!("Downloading {}", style::value(download_from)));
     download_file(download_from, download_to)
         .map_err(NpmEngineLayerError::Download)
@@ -105,8 +105,8 @@ fn download_and_unpack_release(
 
 fn remove_existing_npm_installation(
     npm_cli_script: &Path,
-    mut logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    mut logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
     logger = logger.sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
@@ -124,8 +124,8 @@ fn remove_existing_npm_installation(
 fn install_npm_package(
     npm_cli_script: &Path,
     package: &Path,
-    mut logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmEngineLayerError> {
+    mut logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
     logger = logger.sub_bullet("Installing requested npm");
     Command::new("node")
         .args([

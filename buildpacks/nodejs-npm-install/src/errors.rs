@@ -11,7 +11,7 @@ use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use std::fmt::Display;
 use std::io;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 
 const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
 Use the debug information above to troubleshoot and retry your build.";
@@ -33,7 +33,7 @@ pub(crate) enum NpmInstallBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
-    let logger = Print::new(stdout()).without_header();
+    let logger = Print::new(stderr()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -42,7 +42,7 @@ pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Print<Bullet<Stdout>>) {
+fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Print<Bullet<Stderr>>) {
     match error {
         NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),
@@ -59,7 +59,7 @@ fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Print<Bullet<Stdo
 
 fn on_node_build_scripts_metadata_error(
     error: NodeBuildScriptsMetadataError,
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
 ) {
     let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
     let value_type = value.type_str();
@@ -77,7 +77,7 @@ fn on_node_build_scripts_metadata_error(
     "});
 }
 
-fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>) {
+fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stderr>>) {
     match error {
         PackageJsonError::AccessError(e) => {
             print_error_details(logger, &e)
@@ -107,7 +107,7 @@ fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stdout>>)
     }
 }
 
-fn on_set_cache_dir_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
+fn on_set_cache_dir_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
     print_error_details(logger, &error).error(formatdoc! {"
             Failed to set the {npm} cache directory.
 
@@ -119,7 +119,7 @@ fn on_set_cache_dir_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
         ", npm = style::value("npm") });
 }
 
-fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>) {
+fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stderr>>) {
     match error {
         npm::VersionError::Command(e) => {
             print_error_details(logger, &e).error(formatdoc! {"
@@ -142,7 +142,7 @@ fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stdout>>)
     }
 }
 
-fn on_npm_install_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
+fn on_npm_install_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
     print_error_details(logger, &error)
         .error(formatdoc! {"
             Failed to install Node modules.
@@ -157,7 +157,7 @@ fn on_npm_install_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
         ", npm_install = style::value(error.name()), buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
-fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
+fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
     print_error_details(logger, &error)
         .error(formatdoc! {"
             Failed to execute build script.
@@ -182,11 +182,11 @@ fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stdout>>) {
         });
 }
 
-fn on_application_error(error: &application::Error, logger: Print<Bullet<Stdout>>) {
+fn on_application_error(error: &application::Error, logger: Print<Bullet<Stderr>>) {
     logger.error(error.to_string());
 }
 
-fn on_detect_error(error: &io::Error, logger: Print<Bullet<Stdout>>) {
+fn on_detect_error(error: &io::Error, logger: Print<Bullet<Stderr>>) {
     print_error_details(logger, &error).error(formatdoc! {"
             Unable to complete buildpack detection.
 
@@ -197,7 +197,7 @@ fn on_detect_error(error: &io::Error, logger: Print<Bullet<Stdout>>) {
 
 fn on_framework_error(
     error: &libcnb::Error<NpmInstallBuildpackError>,
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
 ) {
     print_error_details(logger, &error)
         .error(formatdoc! {"
@@ -213,9 +213,9 @@ fn on_framework_error(
 }
 
 fn print_error_details(
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
     error: &impl Display,
-) -> Print<Bullet<Stdout>> {
+) -> Print<Bullet<Stderr>> {
     logger
         .bullet(style::important("DEBUG INFO:"))
         .sub_bullet(error.to_string())

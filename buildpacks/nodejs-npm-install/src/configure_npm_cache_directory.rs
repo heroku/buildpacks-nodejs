@@ -8,7 +8,7 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stdout;
+use std::io::Stderr;
 
 use crate::errors::NpmInstallBuildpackError;
 use crate::{npm, NpmInstallBuildpack};
@@ -16,8 +16,8 @@ use crate::{npm, NpmInstallBuildpack};
 pub(crate) fn configure_npm_cache_directory(
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,
-    mut section_logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, libcnb::Error<NpmInstallBuildpackError>> {
+    mut section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<NpmInstallBuildpackError>> {
     let new_metadata = NpmCacheLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };

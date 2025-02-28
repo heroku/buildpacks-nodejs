@@ -3,7 +3,7 @@ use bullet_stream::state::Bullet;
 use bullet_stream::{style, Print};
 use indoc::formatdoc;
 use std::fmt::Display;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum PnpmEngineBuildpackError {
@@ -11,7 +11,7 @@ pub(crate) enum PnpmEngineBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<PnpmEngineBuildpackError>) {
-    let logger = Print::new(stdout()).without_header();
+    let logger = Print::new(stderr()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -20,7 +20,7 @@ pub(crate) fn on_error(error: libcnb::Error<PnpmEngineBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Print<Bullet<Stdout>>) {
+fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Print<Bullet<Stderr>>) {
     match error {
         PnpmEngineBuildpackError::CorepackRequired => {
             print_error_details(logger, &"Corepack Requirement Error").error(formatdoc! {"
@@ -52,7 +52,7 @@ fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Print<Bullet<Stdo
 
 fn on_framework_error(
     error: &libcnb::Error<PnpmEngineBuildpackError>,
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
 ) {
     print_error_details(logger, &error)
         .error(formatdoc! {"
@@ -71,9 +71,9 @@ fn on_framework_error(
 }
 
 fn print_error_details(
-    logger: Print<Bullet<Stdout>>,
+    logger: Print<Bullet<Stderr>>,
     error: &impl Display,
-) -> Print<Bullet<Stdout>> {
+) -> Print<Bullet<Stderr>> {
     logger
         .bullet(style::important("DEBUG INFO:"))
         .sub_bullet(error.to_string())

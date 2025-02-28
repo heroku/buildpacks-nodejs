@@ -13,14 +13,14 @@ use test_support::{
 #[ignore = "integration test"]
 fn yarn_1_typescript() {
     nodejs_integration_test("./fixtures/yarn-1-typescript", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node");
-        assert_contains!(ctx.pack_stdout, "Installing yarn CLI");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Running `build` script");
+        assert_contains!(ctx.pack_stderr, "Installing Node");
+        assert_contains!(ctx.pack_stderr, "Installing yarn CLI");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Running `build` script");
 
-        assert_not_contains!(ctx.pack_stdout, "corepack");
+        assert_not_contains!(ctx.pack_stderr, "corepack");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Installing node modules from ./package-lock.json"
         );
 
@@ -32,22 +32,22 @@ fn yarn_1_typescript() {
 #[ignore = "integration test"]
 fn yarn_2_pnp_zero() {
     nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node");
-        assert_contains!(ctx.pack_stdout, "Installing `yarn@2.4.1`");
-        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Installing Node");
+        assert_contains!(ctx.pack_stderr, "Installing `yarn@2.4.1`");
+        assert_contains!(ctx.pack_stderr, "Yarn zero-install detected");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
 
-        assert_not_contains!(ctx.pack_stdout, "Installing yarn CLI");
+        assert_not_contains!(ctx.pack_stderr, "Installing yarn CLI");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Installing node modules from ./package-lock.json"
         );
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "can't be found in the cache and will be fetched from the remote registry"
         );
 
@@ -59,17 +59,17 @@ fn yarn_2_pnp_zero() {
 #[ignore = "integration test"]
 fn yarn_2_modules_nonzero() {
     nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing yarn");
-        assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Installing yarn");
+        assert_contains!(ctx.pack_stderr, "Successfully set cacheFolder");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "can't be found in the cache and will be fetched from the remote registry"
         );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
         assert_web_response(&ctx, "yarn-2-modules-nonzero");
     });
 }
@@ -78,17 +78,17 @@ fn yarn_2_modules_nonzero() {
 #[ignore = "integration test"]
 fn yarn_3_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing `yarn@3");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
+        assert_contains!(ctx.pack_stderr, "Installing `yarn@3");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Successfully set cacheFolder");
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "can't be found in the cache and will be fetched from the remote registry"
         );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
         assert_web_response(&ctx, "yarn-3-pnp-nonzero");
     });
 }
@@ -97,17 +97,17 @@ fn yarn_3_pnp_nonzero() {
 #[ignore = "integration test"]
 fn yarn_3_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-3-modules-zero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing `yarn@3");
-        assert_contains!(ctx.pack_stdout, "Yarn zero-install detected");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Installing `yarn@3");
+        assert_contains!(ctx.pack_stderr, "Yarn zero-install detected");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "can't be found in the cache and will be fetched from the remote registry"
         );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
         assert_web_response(&ctx, "yarn-3-modules-zero");
     });
 }
@@ -116,18 +116,18 @@ fn yarn_3_modules_zero() {
 #[ignore = "integration test"]
 fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing `yarn@4");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
+        assert_contains!(ctx.pack_stderr, "Installing `yarn@4");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Successfully set enableGlobalCache to false"
         );
-        assert_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_contains!(ctx.pack_stdout, "62 packages were added to the project");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Successfully set cacheFolder");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_contains!(ctx.pack_stderr, "62 packages were added to the project");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
     });
 }
@@ -136,18 +136,18 @@ fn yarn_4_pnp_nonzero() {
 #[ignore = "integration test"]
 fn yarn_4_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-4-modules-zero", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing `yarn@4");
-        assert_contains!(ctx.pack_stdout, "Installing dependencies");
-        assert_not_contains!(ctx.pack_stdout, "Successfully set cacheFolder");
+        assert_contains!(ctx.pack_stderr, "Installing `yarn@4");
+        assert_contains!(ctx.pack_stderr, "Installing dependencies");
+        assert_not_contains!(ctx.pack_stderr, "Successfully set cacheFolder");
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Successfully set enableGlobalCache to false"
         );
-        assert_contains!(ctx.pack_stdout, "Resolution step");
-        assert_contains!(ctx.pack_stdout, "Fetch step");
-        assert_not_contains!(ctx.pack_stdout, "packages were added to the project");
-        assert_contains!(ctx.pack_stdout, "Link step");
-        assert_contains!(ctx.pack_stdout, "Completed");
+        assert_contains!(ctx.pack_stderr, "Resolution step");
+        assert_contains!(ctx.pack_stderr, "Fetch step");
+        assert_not_contains!(ctx.pack_stderr, "packages were added to the project");
+        assert_contains!(ctx.pack_stderr, "Link step");
+        assert_contains!(ctx.pack_stderr, "Completed");
         assert_web_response(&ctx, "yarn-4-modules-zero");
     });
 }
@@ -156,12 +156,12 @@ fn yarn_4_modules_zero() {
 #[ignore = "integration test"]
 fn test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/yarn-project-with-native-module", |ctx| {
-        assert_not_contains!(ctx.pack_stdout, "Restoring yarn dependency cache");
-        assert_contains!(ctx.pack_stdout, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
+        assert_not_contains!(ctx.pack_stderr, "Restoring yarn dependency cache");
+        assert_contains!(ctx.pack_stderr, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            assert_contains!(ctx.pack_stdout, "Restoring yarn dependency cache");
-            assert_contains!(ctx.pack_stdout, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
+            assert_contains!(ctx.pack_stderr, "Restoring yarn dependency cache");
+            assert_contains!(ctx.pack_stderr, "dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed");
         });
     });
 }
@@ -180,15 +180,15 @@ fn test_skip_build_scripts_from_buildplan() {
         },
         |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `heroku-prebuild` as it was disabled by a participating buildpack"
             );
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `build` as it was disabled by a participating buildpack"
             );
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "! Not running `heroku-postbuild` as it was disabled by a participating buildpack"
             );
         },
@@ -227,7 +227,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
         },
         |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 "Skipping default web process (Procfile detected)"
             );
         },

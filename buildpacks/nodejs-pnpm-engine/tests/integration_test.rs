@@ -15,7 +15,7 @@ fn pnpm_unknown_version() {
         },
         |ctx| {
             assert_contains!(
-                ctx.pack_stdout,
+                ctx.pack_stderr,
                 &formatdoc! {"
                 ! A pnpm lockfile (`pnpm-lock.yaml`) was detected, but the
                 ! version of `pnpm` to install could not be determined.

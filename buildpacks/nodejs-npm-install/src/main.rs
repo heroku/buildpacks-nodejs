@@ -27,7 +27,7 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
-use std::io::{stdout, Stdout};
+use std::io::{stderr, Stderr};
 #[cfg(test)]
 use test_support as _;
 
@@ -70,7 +70,7 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let logger = Print::new(stdout()).h1(BUILDPACK_NAME);
+        let logger = Print::new(stderr()).h1(BUILDPACK_NAME);
         let env = Env::from_current();
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
@@ -109,8 +109,8 @@ impl Buildpack for NpmInstallBuildpack {
 
 fn log_npm_version(
     env: &Env,
-    section_logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmInstallBuildpackError> {
+    section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
     npm::Version { env }
         .into_command()
         .named_output()
@@ -133,8 +133,8 @@ fn log_npm_version(
 
 fn run_npm_install(
     env: &Env,
-    mut section_logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmInstallBuildpackError> {
+    mut section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
     let mut npm_install = npm::Install { env }.into_command();
     section_logger
         .stream_with(
@@ -153,8 +153,8 @@ fn run_build_scripts(
     package_json: &PackageJson,
     node_build_scripts_metadata: &NodeBuildScriptsMetadata,
     env: &Env,
-    mut section_logger: Print<SubBullet<Stdout>>,
-) -> Result<Print<SubBullet<Stdout>>, NpmInstallBuildpackError> {
+    mut section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
     let build_scripts = package_json.build_scripts();
     if build_scripts.is_empty() {
         section_logger = section_logger.sub_bullet("No build scripts found");
@@ -185,10 +185,10 @@ fn run_build_scripts(
 fn configure_default_processes(
     context: &BuildContext<NpmInstallBuildpack>,
     package_json: &PackageJson,
-    section_logger: Print<SubBullet<Stdout>>,
+    section_logger: Print<SubBullet<Stderr>>,
 ) -> (
     Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>>,
-    Print<SubBullet<Stdout>>,
+    Print<SubBullet<Stderr>>,
 ) {
     if context.app_dir.join("Procfile").exists() {
         (
