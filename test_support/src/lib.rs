@@ -1,6 +1,14 @@
 // This module is only used for testing, where using unwrap() is acceptable.
 #![allow(clippy::unwrap_used)]
 
+mod snapshot_filters;
+mod test_arch;
+mod test_builder;
+
+use crate::snapshot_filters::create_snapshot_filters;
+use crate::test_arch::{get_test_arch, TestArch};
+use crate::test_builder::get_test_builder;
+use insta::{assert_snapshot, with_settings};
 use libcnb::data::buildpack_id;
 use libcnb_test::{
     assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext,
@@ -70,19 +78,13 @@ pub fn integration_test_with_config(
     test_body: fn(TestContext),
     buildpacks: &[BuildpackReference],
 ) {
-    let cargo_manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .map(PathBuf::from)
-        .expect("The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests but it was not");
+    let builder = get_test_builder();
+    let arch = get_test_arch();
+    let app_dir = test_dir().join(fixture);
 
-    let builder = get_integration_test_builder();
-    let app_dir = cargo_manifest_dir.join("tests").join(fixture);
-
-    // TODO: Once Pack build supports `--platform` and libcnb-test adjusted accordingly, change this
-    // to allow configuring the target arch independently of the builder name (eg via env var).
-    let target_triple = match builder.as_str() {
-        // Compile the buildpack for ARM64 iff the builder supports multi-arch and the host is ARM64.
-        "heroku/builder:24" if cfg!(target_arch = "aarch64") => "aarch64-unknown-linux-musl",
-        _ => "x86_64-unknown-linux-musl",
+    let target_triple = match arch {
+        TestArch::Arm64 => "aarch64-unknown-linux-musl",
+        TestArch::Amd64 => "x86_64-unknown-linux-musl",
     };
 
     let mut build_config = BuildConfig::new(builder, app_dir);
@@ -252,10 +254,56 @@ version = \"0.0.0\"
     buildpack_dir.to_string_lossy().to_string()
 }
 
+fn workspace_package_dir() -> PathBuf {
+    std::env::var("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .expect("The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests but it was not")
+}
+
+fn test_dir() -> PathBuf {
+    workspace_package_dir().join("tests")
+}
+
+fn snapshots_dir() -> PathBuf {
+    test_dir().join("snapshots")
+}
+
 #[must_use]
 pub fn test_name() -> String {
     std::thread::current()
         .name()
         .expect("Test name should be available as the current thread name")
         .to_string()
+}
+
+const REBUILD_SEPARATOR: &str = "\
+--------------------------------------------- REBUILD ---------------------------------------------";
+
+#[bon::builder(finish_fn = assert)]
+#[allow(clippy::needless_pass_by_value)]
+pub fn create_build_snapshot(
+    #[builder(start_fn, into)] //
+    build_output: String,
+    #[builder(into)] //
+    rebuild_output: Option<String>,
+) {
+    let arch = get_test_arch();
+    let builder = get_test_builder();
+    let filters = create_snapshot_filters(vec![]);
+
+    let snapshot_output = if let Some(rebuild_output) = rebuild_output {
+        format!("{build_output}\n\n{REBUILD_SEPARATOR}\n\n{rebuild_output}")
+    } else {
+        build_output
+    };
+
+    with_settings!({
+        omit_expression => true,
+        prepend_module_to_snapshot => false,
+        snapshot_path => snapshots_dir(),
+        snapshot_suffix => format!("{}__{arch}", builder.to_string().replace('/', "-")),
+        filters => filters.iter().map(|(k, v)| (k.as_str(), v.as_str()))
+    }, {
+        assert_snapshot!(test_name(), snapshot_output);
+    });
 }
