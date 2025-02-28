@@ -75,6 +75,7 @@ jobs:
           docker pull "${RUN_IMAGE}"
       - name: Get package name
         id: get-package-name
+        working-directory: ${{ matrix.dir }}
         run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
       - name: Run integration tests
         run: |
