@@ -83,5 +83,4 @@ jobs:
             --accept \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
-            --locked \
-            -- --ignored --test-threads 16
+            -- --locked --ignored --test-threads 16
