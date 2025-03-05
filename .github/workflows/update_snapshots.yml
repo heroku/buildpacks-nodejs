@@ -77,10 +77,14 @@ jobs:
         id: get-package-name
         working-directory: ${{ matrix.dir }}
         run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
-      - name: Run integration tests
+      - name: Rebuild integration test snapshots
         run: |
           cargo insta test \
             --accept \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
-            -- --ignored --test-threads 16
+            -- --ignored --test-threads 16 \
+            || true
+      - name: Git status
+        run: |
+          git status
