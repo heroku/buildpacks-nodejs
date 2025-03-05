@@ -52,12 +52,6 @@ jobs:
         include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
 
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: generate-token
-        with:
-          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
-
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -127,6 +121,7 @@ jobs:
           retention-days: 1
 
   create-pr:
+    name: Create Snapshots PR
     needs: [update-snapshots]
     runs-on: pub-hk-ubuntu-24.04-ip
     steps:
