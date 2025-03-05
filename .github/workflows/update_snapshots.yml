@@ -110,10 +110,17 @@ jobs:
         id: changed-snapshots
         run: |
           git add .
-          echo "files=$(git diff --staged --name-only)" >> $GITHUB_OUTPUT
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "files<<${delimiter}"
+            git diff --staged --name-only
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+          cat $GITHUB_OUTPUT
 
       - name: Upload Changed Snapshots
         uses: actions/upload-artifact@v4
+        if: steps.changed-snapshots.outputs.files != ''
         with:
           name: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}
           path: ${{ steps.changed-snapshots.outputs.files }}
