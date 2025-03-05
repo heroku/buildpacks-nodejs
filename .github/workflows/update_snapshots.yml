@@ -4,20 +4,20 @@ on:
   workflow_dispatch:
   pull_request:
 
-permissions:
-  contents: read
-
 jobs:
   find-libcnb-buildpacks:
     name: Find libcnb buildpacks
     runs-on: ubuntu-24.04
+
     outputs:
       libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+
       - id: find-buildpack-dirs
         name: Find libcnb buildpack directories
         run: |
@@ -36,36 +36,55 @@ jobs:
                 | flatten' \
           )" >> $GITHUB_OUTPUT
 
-  generate-snapshots:
-    name: Snapshot ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'ubuntu-24.04' }}
+  update-snapshots:
+    name: Update Snapshot ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'pub-hk-ubuntu-24.04-ip' }}
+
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
       INTEGRATION_TEST_CNB_ARCH: ${{ matrix.arch }}
+
     needs: find-libcnb-buildpacks
+
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
+
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install musl-tools
         run: sudo apt-get install musl-tools -y --no-install-recommends
+
       - name: Update Rust toolchain
         run: rustup update
+
       - name: Install Rust linux-musl target
         run: rustup target add ${{ matrix.arch == 'arm64' && 'aarch64-unknown-linux-musl' || 'x86_64-unknown-linux-musl' }}
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.7.7
+
       - name: Install cargo-insta
         run: cargo install cargo-insta
+
       - name: Install cargo-get
         run: cargo install cargo-get
+
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.8.8
+
       - name: Pull builder image
         run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
       - name: Pull run image
         run: |
           RUN_IMAGE=$(
@@ -73,10 +92,12 @@ jobs:
             | jq --exit-status --raw-output '.stack.runImage.image'
           )
           docker pull "${RUN_IMAGE}"
+
       - name: Get package name
         id: get-package-name
         working-directory: ${{ matrix.dir }}
         run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
+
       - name: Rebuild integration test snapshots
         env:
           # This seems to be required because CI=true changes the behavior of how `cargo insta` treats various flags
@@ -90,6 +111,21 @@ jobs:
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
             -- --ignored --test-threads 16
-      - name: Git status
-        run: |
-          git status
+
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          title: "Update Snapshots"
+          commit-message: "Update Node.js CNB snapshots for ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }}"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          branch: update-snapshots
+          body: "Automated pull-request to update Node.js CNB snapshots"
+
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
