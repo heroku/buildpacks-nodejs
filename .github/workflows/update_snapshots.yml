@@ -78,13 +78,18 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
       - name: Rebuild integration test snapshots
+        env:
+          # This seems to be required because CI=true changes the behavior of how `cargo insta` treats various flags
+          # and setting CI=false allows the tests to run without fail in GHA to update the necessary snapshots.
+          CI: false
         run: |
           cargo insta test \
             --accept \
+            --accept-unseen \
+            --force-update-snaphots \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
-            -- --ignored --test-threads 16 \
-            || true
+            -- --ignored --test-threads 16
       - name: Git status
         run: |
           git status
