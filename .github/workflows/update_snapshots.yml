@@ -86,7 +86,7 @@ jobs:
           cargo insta test \
             --accept \
             --accept-unseen \
-            --force-update-snaphots \
+            --force-update-snapshots \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
             -- --ignored --test-threads 16
