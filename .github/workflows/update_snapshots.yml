@@ -38,7 +38,7 @@ jobs:
 
   update-snapshots:
     name: Snapshot ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-ip' || 'pub-hk-ubuntu-24.04-ip' }}
+    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'ubuntu-24.04' }}
 
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
@@ -112,23 +112,57 @@ jobs:
             --package ${{ steps.get-package-name.outputs.package }} \
             -- --ignored --test-threads 16
 
-      - name: Create Pull Request
-        id: pr
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          title: "Update Snapshots"
-          commit-message: "Update Node.js CNB snapshots for ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }}"
-          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
-          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
-          branch: update-snapshots
-          body: "Automated pull-request to update Node.js CNB snapshots"
-          branch-suffix: random
-          base: main # TODO: remove after testing
-          draft: true # TODO: remove after testing
+      - name: Get list of changed snapshots
+        id: changed-snapshots
+        run: |
+          git add .
+          echo "files=$(git diff --staged --name-only)" >> $GITHUB_OUTPUT
 
-      - name: Configure PR
-        if: steps.pr.outputs.pull-request-operation == 'created'
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
+      - name: Upload Changed Snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}
+          path: ${{ steps.changed-snapshots.outputs.files }}
+          if-no-files-found: ignore
+          retention-days: 1
+
+  create-pr:
+    needs: [update-snapshots]
+    runs-on: pub-hk-ubuntu-24.04-ip
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Snapshots
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Test
+        run: git status
+#      - name: Create Pull Request
+#        id: pr
+#        uses: peter-evans/create-pull-request@v7
+#        with:
+#          token: ${{ steps.generate-token.outputs.token }}
+#          title: "Update Snapshots"
+#          commit-message: "Update Node.js CNB snapshots for ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }}"
+#          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+#          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+#          branch: update-snapshots
+#          body: "Automated pull-request to update Node.js CNB snapshots"
+#          branch-suffix: random
+#          base: main # TODO: remove after testing
+#          draft: true # TODO: remove after testing
+#
+#      - name: Configure PR
+#        if: steps.pr.outputs.pull-request-operation == 'created'
+#        env:
+#          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+#        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
