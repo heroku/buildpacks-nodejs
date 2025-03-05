@@ -10,7 +10,7 @@ members = [
     "buildpacks/nodejs-pnpm-install",
     "buildpacks/nodejs-yarn",
     "common/nodejs-utils",
-    "test_support"
+    "test_support",
 ]
 
 [workspace.package]
