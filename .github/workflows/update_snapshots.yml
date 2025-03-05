@@ -4,20 +4,20 @@ on:
   workflow_dispatch:
   pull_request:
 
-permissions:
-  contents: read
-
 jobs:
   find-libcnb-buildpacks:
     name: Find libcnb buildpacks
     runs-on: ubuntu-24.04
+
     outputs:
       libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: true
+
       - id: find-buildpack-dirs
         name: Find libcnb buildpack directories
         run: |
@@ -36,36 +36,49 @@ jobs:
                 | flatten' \
           )" >> $GITHUB_OUTPUT
 
-  generate-snapshots:
+  update-snapshots:
     name: Snapshot ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'ubuntu-24.04' }}
+
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
       INTEGRATION_TEST_CNB_ARCH: ${{ matrix.arch }}
+
     needs: find-libcnb-buildpacks
+
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install musl-tools
         run: sudo apt-get install musl-tools -y --no-install-recommends
+
       - name: Update Rust toolchain
         run: rustup update
+
       - name: Install Rust linux-musl target
         run: rustup target add ${{ matrix.arch == 'arm64' && 'aarch64-unknown-linux-musl' || 'x86_64-unknown-linux-musl' }}
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2.7.7
+
       - name: Install cargo-insta
         run: cargo install cargo-insta
+
       - name: Install cargo-get
         run: cargo install cargo-get
+
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@v5.8.8
+
       - name: Pull builder image
         run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
       - name: Pull run image
         run: |
           RUN_IMAGE=$(
@@ -73,18 +86,79 @@ jobs:
             | jq --exit-status --raw-output '.stack.runImage.image'
           )
           docker pull "${RUN_IMAGE}"
+
       - name: Get package name
         id: get-package-name
         working-directory: ${{ matrix.dir }}
         run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
+
       - name: Rebuild integration test snapshots
+        env:
+          # This seems to be required because CI=true changes the behavior of how `cargo insta` treats various flags
+          # and setting CI=false allows the tests to run without fail in GHA to update the necessary snapshots.
+          CI: false
         run: |
           cargo insta test \
             --accept \
+            --force-update-snapshots \
             --test integration_test \
             --package ${{ steps.get-package-name.outputs.package }} \
-            -- --ignored --test-threads 16 \
-            || true
-      - name: Git status
+            -- --ignored --test-threads 16
+
+      - name: Create Snapshot Patch
         run: |
-          git status
+          git add .
+          git diff --cached > ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}.patch
+
+      - name: Upload Snapshot Patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}
+          path: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}.patch
+          if-no-files-found: error
+          retention-days: 1
+
+  create-pr:
+    name: Create Snapshots PR
+    needs: [update-snapshots]
+    runs-on: pub-hk-ubuntu-24.04-ip
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Snapshot Patches
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: ${{ runner.temp }}/patches
+
+      - name: Apply Snapshot Patches
+        run: |
+          git apply --allow-empty "${{ runner.temp }}/patches"/*.patch
+          git add -A
+
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          title: "Update Snapshots"
+          commit-message: "Update Node.js CNB snapshots"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          branch: update-snapshots
+          body: "Automated pull-request to update Node.js CNB snapshots"
+          base: main # TODO: remove after testing
+          draft: true # TODO: remove after testing
+
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
