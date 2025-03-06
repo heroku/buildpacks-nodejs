@@ -1,0 +1,14 @@
+---
+source: test_support/src/lib.rs
+---
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.14.0`
+- Installing Node.js distribution
+  - Downloading Node.js `22.14.0 (linux-amd64)` from https://nodejs.org/download/release/v22.14.0/node-v22.14.0-linux-x64.tar.gz ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.14.0 (linux-amd64)`
+  - Installing Node.js `22.14.0 (linux-amd64)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
