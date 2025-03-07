@@ -292,7 +292,7 @@ pub fn create_build_snapshot(
     let filters = create_snapshot_filters(vec![]);
 
     let snapshot_output = if let Some(rebuild_output) = rebuild_output {
-        format!("{build_output}\n\n{REBUILD_SEPARATOR}\n\n{rebuild_output}")
+        format!("{build_output}\n{REBUILD_SEPARATOR}\n{rebuild_output}")
     } else {
         build_output
     };

@@ -13,9 +13,7 @@ source: test_support/src/lib.rs
   - Installing Node.js `14.21.3 (linux-amd64)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-
 --------------------------------------------- REBUILD ---------------------------------------------
-
 
 # Heroku Node.js Engine
 
