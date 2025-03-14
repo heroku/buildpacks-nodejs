@@ -82,6 +82,7 @@ jobs:
     runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'ubuntu-24.04' }}
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
+      INTEGRATION_TEST_CNB_ARCH: ${{ matrix.arch }}
     needs: find-libcnb-buildpacks
     strategy:
       fail-fast: false
