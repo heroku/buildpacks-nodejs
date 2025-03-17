@@ -17,6 +17,9 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   get-unmirrored-versions:
     name: Get Unmirrored Versions

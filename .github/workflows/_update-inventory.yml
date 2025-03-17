@@ -22,6 +22,9 @@ on:
       LINGUIST_GH_PRIVATE_KEY:
         required: true
 
+# Disable all GITHUB_TOKEN permissions, since the GitHub App token is used instead.
+permissions: {}
+
 jobs:
   update-inventory:
     name: Update Inventory
