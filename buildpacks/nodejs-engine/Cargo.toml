@@ -10,8 +10,8 @@ workspace = true
 bullet_stream = "0.7"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
-libcnb = { version = "=0.27.0", features = ["trace"] }
-libherokubuildpack = { version = "=0.27.0", default-features = false, features = [
+libcnb = { version = "=0.28.0", features = ["trace"] }
+libherokubuildpack = { version = "=0.28.0", default-features = false, features = [
     "download",
     "fs",
     "inventory",
@@ -24,7 +24,7 @@ toml = "0.8"
 
 [dev-dependencies]
 insta = "1"
-libcnb-test = "=0.27.0"
+libcnb-test = "=0.28.0"
 serde_json = "1"
 test_support.workspace = true
 ureq = "2"
