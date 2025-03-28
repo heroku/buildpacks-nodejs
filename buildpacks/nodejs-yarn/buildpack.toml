@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-yarn"
-version = "3.5.1"
+version = "3.5.2"
 name = "Heroku Node.js Yarn"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's Node.js Yarn buildpack. A component of the 'heroku/nodejs' buildpack."
