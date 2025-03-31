@@ -1,0 +1,12 @@
+[package]
+name = "test_support"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bon = "3"
+libcnb = "=0.28.0"
+libcnb-test = "=0.28.0"
+serde_json = "1"
+tempfile = "3"
+ureq = "2"

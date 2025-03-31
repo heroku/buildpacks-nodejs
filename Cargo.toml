@@ -1,39 +1,51 @@
-[workspace]
-resolver = "2"
-members = [
-    "buildpacks/nodejs-engine",
-    "buildpacks/nodejs-corepack",
-    "buildpacks/nodejs-function-invoker",
-    "buildpacks/nodejs-npm-engine",
-    "buildpacks/nodejs-npm-install",
-    "buildpacks/nodejs-pnpm-engine",
-    "buildpacks/nodejs-pnpm-install",
-    "buildpacks/nodejs-yarn",
-    "common/nodejs-utils",
-    "test_support",
-]
-
-[workspace.package]
+[package]
+name = "heroku-nodejs-buildpack"
 rust-version = "1.80"
 edition = "2021"
 
-[workspace.lints.rust]
+[lints.rust]
 unreachable_pub = "warn"
 unsafe_code = "warn"
 unused_crate_dependencies = "warn"
 
-[workspace.lints.clippy]
+[lints.clippy]
 panic_in_result_fn = "warn"
 pedantic = { level = "warn", priority = -1 }
 unwrap_used = "warn"
-enum_variant_names = "allow"
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"
-module_name_repetitions = "allow"
-
-[workspace.dependencies]
-heroku-nodejs-utils = { path = "./common/nodejs-utils" }
-test_support = { path = "./test_support" }
 
 [profile.release]
 strip = true
+
+[dependencies]
+anyhow = "1"
+bon = "3"
+bullet_stream = "0.7"
+chrono = { version = "0.4", default-features = false, features = ["serde", "now"] }
+fun_run = "0.5"
+indoc = "2"
+libcnb = { version = "=0.28.0", features = ["trace"] }
+libherokubuildpack = { version = "=0.27.0", default-features = false, features = ["download", "fs", "tar", "inventory", "inventory-sha2"] }
+node-semver = "2"
+opentelemetry = "0.28"
+serde = { version = "1", features = ['derive'] }
+sha2 = "0.10.8"
+tempfile = "3"
+thiserror = "2"
+toml = "0.8"
+regex = "1"
+serde_json = "1"
+serde-xml-rs = "0.6"
+ureq = { version = "2", features = ["json"] }
+url = "2"
+
+[dev-dependencies]
+libcnb = "=0.28.0"
+libcnb-test = "=0.28.0"
+test_support = { path = "./crates/test_support" }
+
+[workspace]
+resolver = "3"
+members = [
+    "crates/test_support",
+    "crates/xtask"
+]
