@@ -1,10 +1,11 @@
 use crate::support::create_http_client::create_http_client;
 use reqwest::IntoUrl;
 use std::io;
-use std::io::BufReader;
 use std::path::PathBuf;
 
 pub(crate) async fn download_file(url: impl IntoUrl + std::fmt::Display + Clone) -> PathBuf {
+    eprintln!("GET {url}");
+
     let client = create_http_client();
 
     let response = client
