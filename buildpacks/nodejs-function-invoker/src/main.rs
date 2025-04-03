@@ -188,7 +188,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
                     Details: {framework_error}
                 "});
             }
-        };
+        }
     }
 }
 

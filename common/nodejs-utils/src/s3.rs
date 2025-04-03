@@ -86,7 +86,10 @@ pub(crate) fn list_objects<B: AsRef<str>, R: AsRef<str>, P: AsRef<str>>(
             &format!("https://{bucket}.s3.{region}.amazonaws.com/"),
             params,
         )?;
-        let res = ureq::get(url.as_ref()).call()?.into_string()?;
+        let res = ureq::get(url.as_ref())
+            .call()?
+            .body_mut()
+            .read_to_string()?;
         let page: ListBucketResult = serde_xml_rs::from_str(&res)?;
         if let Some(mut contents) = page.contents {
             bucket_content.contents.append(&mut contents);

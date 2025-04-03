@@ -20,8 +20,6 @@ use heroku_nodejs_utils::buildplan::{
 use libcnb_test as _;
 #[cfg(test)]
 use test_support as _;
-#[cfg(test)]
-use ureq as _;
 
 mod cmd;
 mod configure_pnpm_store_directory;

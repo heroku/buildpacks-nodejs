@@ -26,7 +26,7 @@ pub(crate) fn on_error(err: libcnb::Error<CorepackBuildpackError>) {
                 Details: {libcnb_err}
             "});
         }
-    };
+    }
 }
 
 fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stderr>>) {
@@ -79,7 +79,7 @@ fn on_buildpack_error(bp_err: CorepackBuildpackError, log: Print<Bullet<Stderr>>
                 and properly formatted (for example: \"yarn@3.1.2\").
             "});
         }
-    };
+    }
 }
 
 fn on_corepack_cmd_error(err_context: &str, cmd_err: &CmdError, log: Print<Bullet<Stderr>>) {

@@ -121,11 +121,11 @@ pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContex
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
     start_container(ctx, |_container, socket_addr| {
-        let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+        let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             ureq::get(&format!("http://{socket_addr}/")).call()
         })
         .unwrap();
-        let response_body = response.into_string().unwrap();
+        let response_body = response.body_mut().read_to_string().unwrap();
         assert_contains!(response_body, expected_response_body);
     });
 }

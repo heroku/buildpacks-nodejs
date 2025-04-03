@@ -18,8 +18,6 @@ use crate::prepare_corepack::prepare_corepack;
 use libcnb_test as _;
 #[cfg(test)]
 use test_support as _;
-#[cfg(test)]
-use ureq as _;
 
 mod cfg;
 mod cmd;
