@@ -25,7 +25,7 @@ pub(crate) fn on_error(err: libcnb::Error<PnpmInstallBuildpackError>) {
                 Details: {libcnb_err}
             "});
         }
-    };
+    }
 }
 
 fn on_buildpack_error(bp_err: PnpmInstallBuildpackError, log: Print<Bullet<Stderr>>) {
@@ -111,5 +111,5 @@ fn on_buildpack_error(bp_err: PnpmInstallBuildpackError, log: Print<Bullet<Stder
                 enabled = <{value_type}>
             "});
         }
-    };
+    }
 }
