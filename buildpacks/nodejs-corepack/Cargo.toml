@@ -12,7 +12,7 @@ fun_run = "0.5"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = { version = "=0.28.1", features = ["trace"] }
-opentelemetry = "0.29"
+opentelemetry = "0.28"
 serde = "1"
 
 [dev-dependencies]
