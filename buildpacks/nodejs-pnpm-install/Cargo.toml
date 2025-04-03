@@ -18,4 +18,3 @@ toml = "0.8"
 [dev-dependencies]
 libcnb-test = "=0.28.1"
 test_support.workspace = true
-ureq = "2"

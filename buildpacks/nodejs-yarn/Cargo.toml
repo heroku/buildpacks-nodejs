@@ -25,4 +25,3 @@ toml = "0.8"
 indoc = "2"
 libcnb-test = "=0.28.1"
 test_support.workspace = true
-ureq = "2"

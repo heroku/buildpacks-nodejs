@@ -617,7 +617,6 @@ dependencies = [
  "opentelemetry",
  "serde",
  "test_support",
- "ureq 2.12.1",
 ]
 
 [[package]]
@@ -675,7 +674,6 @@ dependencies = [
  "serde",
  "test_support",
  "toml",
- "ureq 2.12.1",
 ]
 
 [[package]]
@@ -719,7 +717,6 @@ dependencies = [
  "test_support",
  "thiserror 2.0.12",
  "toml",
- "ureq 2.12.1",
 ]
 
 [[package]]
