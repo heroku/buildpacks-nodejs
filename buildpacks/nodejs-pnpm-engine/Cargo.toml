@@ -9,8 +9,8 @@ workspace = true
 [dependencies]
 bullet_stream = "0.7"
 indoc = "2"
-libcnb = { version = "=0.28.0", features = ["trace"] }
+libcnb = { version = "=0.28.1", features = ["trace"] }
 
 [dev-dependencies]
-libcnb-test = "=0.28.0"
+libcnb-test = "=0.28.1"
 test_support.workspace = true
