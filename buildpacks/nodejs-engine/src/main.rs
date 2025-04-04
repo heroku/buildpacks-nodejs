@@ -1,3 +1,8 @@
+// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
+// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
+// to be able selectively opt out of coverage for functions/lines/modules.
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
 use bullet_stream::{style, Print};

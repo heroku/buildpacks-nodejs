@@ -49,6 +49,33 @@ jobs:
       - name: Run unit tests
         run: cargo test --locked
 
+  # Currently a separate job since the #coverage(off) attribute requires nightly Rust. As soon as we can use llvm-cov
+  # without Rust nightly, we should merge this job with the regular unit tests.
+  unit-test-coverage:
+    name: Generate test coverage report
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install nightly Rust toolchain
+        run: rustup install nightly
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@575f713d0233afba556737a7b85080563be14186 # v2.49.43
+        with:
+          tool: cargo-llvm-cov
+      - name: Run unit tests and generate coverage report
+        run: cargo +nightly llvm-cov --locked --html
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: "llvm-cov-html-${{github.event.repository.name}}-${{github.sha}}"
+          path: "target/llvm-cov/html"
+          if-no-files-found: "error"
+
   find-libcnb-buildpacks:
     name: Find libcnb buildpacks
     runs-on: ubuntu-24.04
