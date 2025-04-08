@@ -16,5 +16,7 @@ opentelemetry = "0.28"
 serde = "1"
 
 [dev-dependencies]
+insta = "1"
 libcnb-test = "=0.28.1"
+serde_json = "1"
 test_support.workspace = true

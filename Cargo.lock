@@ -659,10 +659,12 @@ dependencies = [
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
+ "insta",
  "libcnb",
  "libcnb-test",
  "opentelemetry",
  "serde",
+ "serde_json",
  "test_support",
 ]
 

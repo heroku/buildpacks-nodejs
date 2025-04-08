@@ -56,8 +56,9 @@ pub(crate) fn enable_corepack(
                 _ => log = log.sub_bullet("Recreating Corepack shims (Corepack version changed)"),
             }
             shim_layer.write_metadata(new_metadata)?;
-            std::fs::create_dir(shim_layer.path().join("bin"))
-                .map_err(CorepackBuildpackError::ShimLayer)?;
+            let bin_dir = shim_layer.path().join("bin");
+            std::fs::create_dir(&bin_dir)
+                .map_err(|e| CorepackBuildpackError::CreateBinDirectory(bin_dir, e))?;
         }
     }
 

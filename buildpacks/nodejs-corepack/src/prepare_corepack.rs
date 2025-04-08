@@ -62,8 +62,11 @@ pub(crate) fn prepare_corepack(
                 }
             }
             manager_layer.write_metadata(new_metadata)?;
+
             let cache_path = manager_layer.path().join("cache");
-            std::fs::create_dir(&cache_path).map_err(CorepackBuildpackError::ManagerLayer)?;
+            std::fs::create_dir(&cache_path)
+                .map_err(|e| CorepackBuildpackError::CreateCacheDirectory(cache_path.clone(), e))?;
+
             manager_layer.write_env(LayerEnv::new().chainable_insert(
                 Scope::All,
                 ModificationBehavior::Override,
