@@ -4,10 +4,9 @@ use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, ErrorMessage, ErrorMessageBuilder, SuggestRetryBuild,
-    SuggestSubmitIssue,
+    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
+    SuggestRetryBuild, SuggestSubmitIssue,
 };
-use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use libcnb::Error;
 use libherokubuildpack::download::DownloadError;
@@ -31,7 +30,9 @@ fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
 fn on_buildpack_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
     match error {
         NodeJsEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
-        NodeJsEngineBuildpackError::PackageJson(e) => on_package_json_error(e),
+        NodeJsEngineBuildpackError::PackageJson(e) => {
+            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
+        }
         NodeJsEngineBuildpackError::UnknownVersion(e) => on_unknown_version_error(e),
         NodeJsEngineBuildpackError::DistLayer(e) => on_dist_layer_error(e),
     }
@@ -49,38 +50,6 @@ fn on_inventory_parse_error(error: &toml::de::Error) -> ErrorMessage {
         "})
         .debug_info(error.to_string())
         .create()
-}
-
-fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
-    let package_json = file_value("./package.json");
-    let json_spec_url = style::url("https://www.json.org/");
-    match error {
-        PackageJsonError::AccessError(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-            .header(format!("Error reading {package_json}"))
-            .body(formatdoc! { "
-                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
-                the file can't be read.
-
-                Suggestions:
-                - Ensure the file has read permissions.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        PackageJsonError::ParseError(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-            .header(format!("Error parsing {package_json}"))
-            .body(formatdoc! { "
-                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
-                the file isn't valid JSON.
-
-                Suggestions:
-                - Ensure the file follows the JSON format described at {json_spec_url}
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
 }
 
 fn on_unknown_version_error(version: String) -> ErrorMessage {
@@ -240,6 +209,7 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
 mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
+    use heroku_nodejs_utils::package_json::PackageJsonError;
     use insta::{assert_snapshot, with_settings};
     use libherokubuildpack::download::DownloadError;
     use test_support::test_name;
