@@ -28,6 +28,7 @@ where
         .create()
 }
 
+#[must_use]
 pub fn on_package_json_error(
     buildpack_name: &str,
     issues_url: &str,

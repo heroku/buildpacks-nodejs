@@ -7,7 +7,6 @@ use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
     SuggestRetryBuild, SuggestSubmitIssue,
 };
-use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use libcnb::Error;
 use libherokubuildpack::download::DownloadError;
@@ -210,6 +209,7 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
 mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
+    use heroku_nodejs_utils::package_json::PackageJsonError;
     use insta::{assert_snapshot, with_settings};
     use libherokubuildpack::download::DownloadError;
     use test_support::test_name;

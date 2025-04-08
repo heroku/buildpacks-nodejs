@@ -7,7 +7,6 @@ use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
     ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
 };
-use heroku_nodejs_utils::package_json::PackageJsonError;
 use indoc::formatdoc;
 use libcnb::Error;
 use std::path::Path;
@@ -143,6 +142,7 @@ mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
     use fun_run::CommandWithName;
+    use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::{Version, VersionError};
     use insta::{assert_snapshot, with_settings};
     use std::path::PathBuf;
