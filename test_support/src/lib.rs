@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime};
 use std::{fs, panic};
 
 const DEFAULT_BUILDER: &str = "heroku/builder:22";
-pub const PORT: u16 = 8080;
+const PORT: u16 = 8080;
 pub const DEFAULT_RETRIES: u32 = 10;
 pub const DEFAULT_RETRY_DELAY: Duration = Duration::from_secs(1);
 
@@ -121,11 +121,11 @@ pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContex
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
     start_container(ctx, |_container, socket_addr| {
-        let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+        let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             ureq::get(&format!("http://{socket_addr}/")).call()
         })
         .unwrap();
-        let response_body = response.into_string().unwrap();
+        let response_body = response.body_mut().read_to_string().unwrap();
         assert_contains!(response_body, expected_response_body);
     });
 }
@@ -254,4 +254,12 @@ version = \"0.0.0\"
     .unwrap();
 
     buildpack_dir.to_string_lossy().to_string()
+}
+
+#[must_use]
+pub fn test_name() -> String {
+    std::thread::current()
+        .name()
+        .expect("Test name should be available as the current thread name")
+        .to_string()
 }

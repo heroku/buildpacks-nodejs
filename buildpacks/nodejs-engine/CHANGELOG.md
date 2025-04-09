@@ -11,6 +11,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Set `HEROKU_AVAILABLE_PARALLELISM` environment variable at build and run time
 
+## [3.5.3] - 2025-04-03
+
+### Changed
+
+- Updated libcnb to 0.28.1, which includes tracing improvements/fixes. ([#1063](https://github.com/heroku/buildpacks-nodejs/pull/1063))
+
+### Added
+
+- 23.11.0 (linux-amd64, linux-arm64)
+
+## [3.5.2] - 2025-03-28
+
+### Added
+
+- 18.20.8 (linux-amd64, linux-arm64)
+
+## [3.5.1] - 2025-03-14
+
+### Added
+
+- 23.10.0 (linux-amd64, linux-arm64)
+- 20.19.0 (linux-amd64, linux-arm64)
+
+## [3.5.0] - 2025-02-28
+
+### Changed
+
+- Buildpack output is sent to `stderr` instead of `stdout`. ([#1039](https://github.com/heroku/buildpacks-nodejs/pull/1039))
+
+## [3.4.11] - 2025-02-27
+
+### Added
+
+- 23.9.0 (linux-amd64, linux-arm64)
+
+## [3.4.10] - 2025-02-25
+
+### Removed
+
+- Removing the layer responsible for registering the Node.js Runtime Metrics collector. ([#1021](https://github.com/heroku/buildpacks-nodejs/pull/1021))
+
+## [3.4.9] - 2025-02-21
+
+### Added
+
+- 18.20.7 (linux-amd64, linux-arm64)
+
+## [3.4.8] - 2025-02-14
+
+### Added
+
+- 23.8.0 (linux-amd64, linux-arm64)
+
+## [3.4.7] - 2025-02-12
+
+## [3.4.6] - 2025-02-11
+
+### Added
+
+- 22.14.0 (linux-amd64, linux-arm64)
+- 20.18.3 (linux-amd64, linux-arm64)
+
+## [3.4.5] - 2025-02-03
+
+### Added
+
+- 23.7.0 (linux-amd64, linux-arm64)
+
+## [3.4.4] - 2025-01-22
+
+### Added
+
+- 23.6.1 (linux-amd64, linux-arm64)
+- 22.13.1 (linux-amd64, linux-arm64)
+- 20.18.2 (linux-amd64, linux-arm64)
+- 18.20.6 (linux-amd64, linux-arm64)
+
+## [3.4.3] - 2025-01-10
+
+## [3.4.2] - 2025-01-08
+
+### Added
+
+- 23.6.0 (linux-amd64, linux-arm64)
+- 22.13.0 (linux-amd64, linux-arm64)
+
+## [3.4.1] - 2025-01-07
+
+### Added
+
+- 23.5.0 (linux-amd64, linux-arm64)
+
+## [3.4.0] - 2024-12-13
+
+## [3.3.5] - 2024-12-11
+
+### Added
+
+- 23.4.0 (linux-amd64, linux-arm64)
+
 ## [3.3.4] - 2024-12-05
 
 ### Added
@@ -723,110 +823,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.3...HEAD
+[3.5.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.2...v3.5.3
+[3.5.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.1...v3.5.2
+[3.5.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.0...v3.5.1
+[3.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.11...v3.5.0
+[3.4.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.10...v3.4.11
+[3.4.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.9...v3.4.10
+[3.4.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.8...v3.4.9
+[3.4.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.7...v3.4.8
+[3.4.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.6...v3.4.7
+[3.4.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.5...v3.4.6
+[3.4.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.4...v3.4.5
+[3.4.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.3...v3.4.4
+[3.4.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.2...v3.4.3
+[3.4.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.1...v3.4.2
+[3.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.0...v3.4.1
+[3.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.5...v3.4.0
+[3.3.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.4...v3.3.5
 [3.3.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.2...v3.3.3
-
 [3.3.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.1...v3.3.2
-
 [3.3.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.0...v3.3.1
-
 [3.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.18...v3.3.0
-
 [3.2.18]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.17...v3.2.18
-
 [3.2.17]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.16...v3.2.17
-
 [3.2.16]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.15...v3.2.16
-
 [3.2.15]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.14...v3.2.15
-
 [3.2.14]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.13...v3.2.14
-
 [3.2.13]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.12...v3.2.13
-
 [3.2.12]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.11...v3.2.12
-
 [3.2.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.10...v3.2.11
-
 [3.2.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.9...v3.2.10
-
 [3.2.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.8...v3.2.9
-
 [3.2.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.7...v3.2.8
-
 [3.2.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.6...v3.2.7
-
 [3.2.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.5...v3.2.6
-
 [3.2.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.4...v3.2.5
-
 [3.2.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.3...v3.2.4
-
 [3.2.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.2...v3.2.3
-
 [3.2.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.1...v3.2.2
-
 [3.2.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.2.0...v3.2.1
-
 [3.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.1.0...v3.2.0
-
 [3.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.6...v3.1.0
-
 [3.0.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.5...v3.0.6
-
 [3.0.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.4...v3.0.5
-
 [3.0.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.3...v3.0.4
-
 [3.0.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.2...v3.0.3
-
 [3.0.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.1...v3.0.2
-
 [3.0.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.0.0...v3.0.1
-
 [3.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.6...v3.0.0
-
 [2.6.6]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.5...v2.6.6
-
 [2.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.4...v2.6.5
-
 [2.6.4]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.3...v2.6.4
-
 [2.6.3]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.2...v2.6.3
-
 [2.6.2]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.1...v2.6.2
-
 [2.6.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.6.0...v2.6.1
-
 [2.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.5.0...v2.6.0
-
 [2.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.1...v2.5.0
-
 [2.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v2.4.0...v2.4.1
-
 [2.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.3.0...v2.4.0
-
 [2.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.2.0...v2.3.0
-
 [2.2.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.1.0...v2.2.0
-
 [2.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v2.0.0...v2.1.0
-
 [2.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.7...v2.0.0
-
 [1.1.7]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.6...v1.1.7
-
 [1.1.6]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.5...v1.1.6
-
 [1.1.5]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.4...v1.1.5
-
 [1.1.4]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.3...v1.1.4
-
 [1.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.2...v1.1.3
-
 [1.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.1...v1.1.2
-
 [1.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v1.1.0...v1.1.1
-
 [1.1.0]: https://github.com/heroku/buildpacks-nodejs/releases/tag/v1.1.0

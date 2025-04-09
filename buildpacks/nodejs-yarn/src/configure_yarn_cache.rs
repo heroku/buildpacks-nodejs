@@ -1,13 +1,14 @@
-use std::fs;
-
+use bullet_stream::state::SubBullet;
+use bullet_stream::Print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::Env;
-use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::io::Stderr;
 use thiserror::Error;
 
 use crate::yarn::Yarn;
@@ -22,7 +23,8 @@ pub(crate) fn configure_yarn_cache(
     context: &BuildContext<YarnBuildpack>,
     yarn: &Yarn,
     env: &Env,
-) -> Result<(), libcnb::Error<YarnBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<YarnBuildpackError>> {
     let new_metadata = DepsLayerMetadata {
         yarn: yarn.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -50,11 +52,11 @@ pub(crate) fn configure_yarn_cache(
 
     match deps_layer.state {
         LayerState::Restored { .. } => {
-            log_info("Restoring yarn dependency cache");
+            log = log.sub_bullet("Restoring yarn dependency cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                log_info("Clearing yarn dependency cache");
+                log = log.sub_bullet("Clearing yarn dependency cache");
             }
             deps_layer.write_metadata(DepsLayerMetadata {
                 cache_usage_count: new_metadata.cache_usage_count + 1.0,
@@ -65,10 +67,10 @@ pub(crate) fn configure_yarn_cache(
         }
     }
 
-    cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env)
+    log = cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env, log)
         .map_err(DepsLayerError::YarnCacheSet)?;
 
-    Ok(())
+    Ok(log)
 }
 
 const MAX_CACHE_USAGE_COUNT: f32 = 150.0;
@@ -89,7 +91,7 @@ pub(crate) enum DepsLayerError {
     #[error("Couldn't create yarn dependency cache: {0}")]
     CreateCacheDir(std::io::Error),
     #[error("Couldn't set yarn cache folder: {0}")]
-    YarnCacheSet(cmd::Error),
+    YarnCacheSet(fun_run::CmdError),
 }
 
 impl From<DepsLayerError> for libcnb::Error<YarnBuildpackError> {

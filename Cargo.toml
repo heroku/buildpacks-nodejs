@@ -10,7 +10,7 @@ members = [
     "buildpacks/nodejs-pnpm-install",
     "buildpacks/nodejs-yarn",
     "common/nodejs-utils",
-    "test_support"
+    "test_support",
 ]
 
 [workspace.package]
@@ -21,6 +21,10 @@ edition = "2021"
 unreachable_pub = "warn"
 unsafe_code = "warn"
 unused_crate_dependencies = "warn"
+# Allows the usage of cfg(coverage_nightly).
+# cargo-llvm-cov enables that config when instrumenting our code, so we can enable
+# the experimental coverage_attribute feature.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage_nightly)'] }
 
 [workspace.lints.clippy]
 panic_in_result_fn = "warn"

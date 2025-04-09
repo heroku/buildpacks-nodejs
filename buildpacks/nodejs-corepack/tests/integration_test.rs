@@ -16,7 +16,7 @@ fn corepack_yarn_2() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing yarn@2.4.1");
+            assert_contains!(ctx.pack_stderr, "Preparing yarn@2.4.1");
             let output = ctx.run_shell_command("yarn --version");
             assert_contains!(output.stdout, "2.4.1");
         },
@@ -35,7 +35,7 @@ fn corepack_yarn_3() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing yarn@3.2.0");
+            assert_contains!(ctx.pack_stderr, "Preparing yarn@3.2.0");
             let output = ctx.run_shell_command("yarn --version");
             assert_contains!(output.stdout, "3.2.0");
         },
@@ -58,7 +58,7 @@ fn corepack_pnpm_7() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing pnpm@7.32.3");
+            assert_contains!(ctx.pack_stderr, "Preparing pnpm@7.32.3");
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "7.32.3");
         },
@@ -81,7 +81,7 @@ fn corepack_pnpm_8() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing pnpm@8.4.0");
+            assert_contains!(ctx.pack_stderr, "Preparing pnpm@8.4.0");
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "8.4.0");
         },
@@ -104,7 +104,7 @@ fn corepack_npm_8() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing npm@8.19.4");
+            assert_contains!(ctx.pack_stderr, "Preparing npm@8.19.4");
             let output = ctx.run_shell_command("npm --version");
             assert_contains!(output.stdout, "8.19.4");
         },
@@ -127,7 +127,7 @@ fn corepack_npm_10() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stdout, "Preparing npm@10.2.0");
+            assert_contains!(ctx.pack_stderr, "Preparing npm@10.2.0");
             let output = ctx.run_shell_command("npm --version");
             assert_contains!(output.stdout, "10.2.0");
         },

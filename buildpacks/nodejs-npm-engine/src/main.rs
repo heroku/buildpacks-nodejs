@@ -1,3 +1,8 @@
+// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
+// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
+// to be able selectively opt out of coverage for functions/lines/modules.
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 mod errors;
 mod install_npm;
 mod node;
@@ -5,9 +10,8 @@ mod npm;
 
 use crate::errors::NpmEngineBuildpackError;
 use crate::install_npm::install_npm;
-use commons::output::build_log::{BuildLog, Logger, SectionLogger};
-use commons::output::fmt;
-use commons::output::section_log::log_step;
+use bullet_stream::state::SubBullet;
+use bullet_stream::{style, Print};
 use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::{Inventory, Release};
 use heroku_nodejs_utils::package_json::PackageJson;
@@ -21,7 +25,7 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
-use std::io::stdout;
+use std::io::{stderr, Stderr};
 use std::path::Path;
 use std::process::Command;
 #[cfg(test)]
@@ -63,7 +67,7 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut logger = BuildLog::new(stdout()).buildpack_name(BUILDPACK_NAME);
+        let mut logger = Print::new(stderr()).h1(BUILDPACK_NAME);
         let env = Env::from_current();
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
@@ -71,14 +75,14 @@ impl Buildpack for NpmEngineBuildpack {
             read_requested_npm_version(&context.app_dir.join("package.json"))?;
         let node_version = get_node_version(&env)?;
 
-        let section = logger.section("Installing npm");
-        let npm_release =
-            resolve_requested_npm_version(&requested_npm_version, &inventory, section.as_ref())?;
-        install_npm(&context, &npm_release, &node_version, section.as_ref())?;
-        log_installed_npm_version(&env, section.as_ref())?;
-        logger = section.end_section();
+        let section = logger.bullet("Installing npm");
+        let (npm_release, section) =
+            resolve_requested_npm_version(&requested_npm_version, &inventory, section)?;
+        let section = install_npm(&context, &npm_release, &node_version, section)?;
+        let section = log_installed_npm_version(&env, section)?;
+        logger = section.done();
 
-        logger.finish_logging();
+        logger.done();
         BuildResultBuilder::new().build()
     }
 
@@ -103,13 +107,13 @@ fn read_requested_npm_version(
 fn resolve_requested_npm_version(
     requested_version: &Requirement,
     inventory: &Inventory,
-    _section_logger: &dyn SectionLogger,
-) -> Result<Release, NpmEngineBuildpackError> {
-    log_step(format!(
+    mut section_logger: Print<SubBullet<Stderr>>,
+) -> Result<(Release, Print<SubBullet<Stderr>>), NpmEngineBuildpackError> {
+    section_logger = section_logger.sub_bullet(format!(
         "Found {} version {} declared in {}",
-        fmt::value("engines.npm"),
-        fmt::value(requested_version.to_string()),
-        fmt::value("package.json")
+        style::value("engines.npm"),
+        style::value(requested_version.to_string()),
+        style::value("package.json")
     ));
 
     let npm_release = inventory
@@ -119,13 +123,13 @@ fn resolve_requested_npm_version(
         ))?
         .to_owned();
 
-    log_step(format!(
+    section_logger = section_logger.sub_bullet(format!(
         "Resolved version {} to {}",
-        fmt::value(requested_version.to_string()),
-        fmt::value(npm_release.version.to_string())
+        style::value(requested_version.to_string()),
+        style::value(npm_release.version.to_string())
     ));
 
-    Ok(npm_release)
+    Ok((npm_release, section_logger))
 }
 
 fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
@@ -143,8 +147,8 @@ fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
 
 fn log_installed_npm_version(
     env: &Env,
-    _section_logger: &dyn SectionLogger,
-) -> Result<(), NpmEngineBuildpackError> {
+    section_logger: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, NpmEngineBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
         .map_err(npm::VersionError::Command)
@@ -156,10 +160,10 @@ fn log_installed_npm_version(
         })
         .map_err(NpmEngineBuildpackError::NpmVersion)
         .map(|npm_version| {
-            log_step(format!(
+            section_logger.sub_bullet(format!(
                 "Successfully installed {}",
-                fmt::value(format!("npm@{npm_version}")),
-            ));
+                style::value(format!("npm@{npm_version}")),
+            ))
         })
 }
 

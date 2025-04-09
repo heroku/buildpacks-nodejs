@@ -1,18 +1,20 @@
-use std::fs::create_dir;
-use std::os::unix::fs::symlink;
-
+use bullet_stream::state::SubBullet;
+use bullet_stream::Print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::Env;
-use libherokubuildpack::log::log_info;
+use std::fs::create_dir;
+use std::io::Stderr;
+use std::os::unix::fs::symlink;
 
 use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 
 pub(crate) fn configure_pnpm_virtual_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<PnpmInstallBuildpackError>> {
     let virtual_layer = context.uncached_layer(
         layer_name!("virtual"),
         UncachedLayerDefinition {
@@ -21,7 +23,7 @@ pub(crate) fn configure_pnpm_virtual_store_directory(
         },
     )?;
 
-    log_info("Creating pnpm virtual store");
+    log = log.sub_bullet("Creating pnpm virtual store");
     let virtual_store_dir = virtual_layer.path().join("store");
     // Create a directory for dependencies in the virtual store.
     create_dir(&virtual_store_dir).map_err(PnpmInstallBuildpackError::VirtualLayer)?;
@@ -38,5 +40,5 @@ pub(crate) fn configure_pnpm_virtual_store_directory(
     )
     .map_err(PnpmInstallBuildpackError::VirtualLayer)?;
 
-    Ok(())
+    Ok(log)
 }

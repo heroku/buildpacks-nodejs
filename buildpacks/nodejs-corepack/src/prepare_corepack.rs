@@ -1,12 +1,14 @@
+use bullet_stream::state::Bullet;
+use bullet_stream::{style, Print};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
-    CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Env;
-use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
+use std::io::Stderr;
 
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
@@ -17,7 +19,8 @@ pub(crate) fn prepare_corepack(
     context: &BuildContext<CorepackBuildpack>,
     package_manager: &PackageManager,
     env: &Env,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+    log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<CorepackBuildpackError>> {
     let new_metadata = ManagerLayerMetadata {
         manager_name: package_manager.name.clone(),
         manager_version: package_manager.version.clone(),
@@ -40,15 +43,30 @@ pub(crate) fn prepare_corepack(
         },
     )?;
 
+    let mut log = log.bullet(format!(
+        "Installing {}",
+        style::value(package_manager.to_string())
+    ));
+
     match manager_layer.state {
         LayerState::Restored { .. } => {
-            log_info("Restoring corepack package manager cache");
+            log = log.sub_bullet("Restoring Corepack package manager");
         }
-        LayerState::Empty { .. } => {
-            log_info("Package manager change detected. Clearing corepack package manager cache");
+        LayerState::Empty { cause } => {
+            match cause {
+                EmptyLayerCause::NewlyCreated => {
+                    log = log.sub_bullet("Creating Corepack package manager");
+                }
+                _ => {
+                    log = log.sub_bullet("Recreating Corepack package manager (version changed)");
+                }
+            }
             manager_layer.write_metadata(new_metadata)?;
+
             let cache_path = manager_layer.path().join("cache");
-            std::fs::create_dir(&cache_path).map_err(CorepackBuildpackError::ManagerLayer)?;
+            std::fs::create_dir(&cache_path)
+                .map_err(|e| CorepackBuildpackError::CreateCacheDirectory(cache_path.clone(), e))?;
+
             manager_layer.write_env(LayerEnv::new().chainable_insert(
                 Scope::All,
                 ModificationBehavior::Override,
@@ -62,9 +80,10 @@ pub(crate) fn prepare_corepack(
         .read_env()
         .map(|layer_env| layer_env.apply(Scope::Build, env))?;
 
-    cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+    let log =
+        cmd::corepack_prepare(&mgr_env, log).map_err(CorepackBuildpackError::CorepackPrepare)?;
 
-    Ok(())
+    Ok(log.done())
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

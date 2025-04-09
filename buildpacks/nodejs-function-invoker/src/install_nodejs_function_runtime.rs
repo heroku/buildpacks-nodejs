@@ -1,13 +1,13 @@
-use std::io::{stderr, stdout, Write};
-use std::process::Command;
-
+use bullet_stream::state::Bullet;
+use bullet_stream::Print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libherokubuildpack::log::log_info;
 use serde::{Deserialize, Serialize};
+use std::io::{stderr, stdout, Stderr, Write};
+use std::process::Command;
 use thiserror::Error;
 
 use crate::{NodeJsInvokerBuildpack, NodeJsInvokerBuildpackError};
@@ -15,7 +15,8 @@ use crate::{NodeJsInvokerBuildpack, NodeJsInvokerBuildpackError};
 pub(crate) fn install_nodejs_function_runtime(
     context: &BuildContext<NodeJsInvokerBuildpack>,
     package: &str,
-) -> Result<(), libcnb::Error<NodeJsInvokerBuildpackError>> {
+    mut log: Print<Bullet<Stderr>>,
+) -> Result<Print<Bullet<Stderr>>, libcnb::Error<NodeJsInvokerBuildpackError>> {
     let new_metadata = RuntimeLayerMetadata {
         package: package.to_string(),
         layer_version: LAYER_VERSION.to_string(),
@@ -41,16 +42,20 @@ pub(crate) fn install_nodejs_function_runtime(
 
     match runtime_layer.state {
         LayerState::Restored { .. } => {
-            log_info(format!(
-                "Reusing Node.js Function Invoker Runtime {package}",
-            ));
+            log = log
+                .bullet(format!(
+                    "Reusing Node.js Function Invoker Runtime {package}",
+                ))
+                .done();
         }
         LayerState::Empty { .. } => {
             runtime_layer.write_metadata(new_metadata)?;
 
-            log_info(format!(
-                "Installing Node.js Function Invoker Runtime {package}",
-            ));
+            log = log
+                .bullet(format!(
+                    "Installing Node.js Function Invoker Runtime {package}",
+                ))
+                .done();
 
             Command::new("npm")
                 .args([
@@ -73,7 +78,7 @@ pub(crate) fn install_nodejs_function_runtime(
         }
     }
 
-    Ok(())
+    Ok(log)
 }
 
 const LAYER_VERSION: &str = "1";

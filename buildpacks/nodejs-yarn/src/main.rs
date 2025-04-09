@@ -1,4 +1,10 @@
+// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
+// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
+// to be able selectively opt out of coverage for functions/lines/modules.
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use crate::yarn::Yarn;
+use bullet_stream::{style, Print};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
@@ -11,7 +17,7 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::{log_error, log_header, log_info};
+use std::io::{stderr, stdout};
 use thiserror::Error;
 
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
@@ -26,8 +32,6 @@ use indoc as _;
 use libcnb_test as _;
 #[cfg(test)]
 use test_support as _;
-#[cfg(test)]
-use ureq as _;
 
 mod cfg;
 mod cmd;
@@ -68,7 +72,15 @@ impl Buildpack for YarnBuildpack {
             .unwrap_or_else(|| DetectResultBuilder::fail().build())
     }
 
+    #[allow(clippy::too_many_lines)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        let mut log = Print::new(stderr()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack should have a name"));
+
         let mut env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(YarnBuildpackError::PackageJson)?;
@@ -78,19 +90,19 @@ impl Buildpack for YarnBuildpack {
         let yarn_version = match cmd::yarn_version(&env) {
             // Install yarn if it's not present.
             Err(cmd::Error::Spawn(_)) => {
-                log_header("Detecting yarn CLI version to install");
+                let mut bullet = log.bullet("Detecting yarn CLI version to install");
 
                 let inventory: Inventory =
                     toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
 
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
-                        log_info("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})");
+                        bullet = bullet.sub_bullet(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
                         Requirement::parse(DEFAULT_YARN_REQUIREMENT)
                             .map_err(YarnBuildpackError::YarnDefaultParse)?
                     }
                     Some(requirement) => {
-                        log_info(format!(
+                        bullet = bullet.sub_bullet(format!(
                             "Detected yarn engine version range {requirement} in package.json"
                         ));
                         requirement
@@ -101,13 +113,15 @@ impl Buildpack for YarnBuildpack {
                     YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
                 )?;
 
-                log_info(format!(
+                bullet = bullet.sub_bullet(format!(
                     "Resolved yarn CLI version: {}",
                     yarn_cli_release.version
                 ));
+                log = bullet.done();
 
-                log_header("Installing yarn CLI");
-                let yarn_env = install_yarn(&context, yarn_cli_release)?;
+                bullet = log.bullet("Installing yarn CLI");
+                let (yarn_env, bullet) = install_yarn(&context, yarn_cli_release, bullet)?;
+                log = bullet.done();
                 env = yarn_env.apply(Scope::Build, &env);
 
                 cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
@@ -120,97 +134,106 @@ impl Buildpack for YarnBuildpack {
         let yarn = Yarn::from_major(yarn_version.major())
             .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
-        log_info(format!("Yarn CLI operating in yarn {yarn_version} mode."));
+        log = log
+            .bullet(format!("Yarn CLI operating in yarn {yarn_version} mode."))
+            .done();
 
-        log_header("Setting up yarn dependency cache");
-        cmd::yarn_disable_global_cache(&yarn, &env)
+        let mut bullet = log.bullet("Setting up yarn dependency cache");
+        bullet = cmd::yarn_disable_global_cache(&yarn, &env, bullet)
             .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
         if zero_install {
-            log_info("Yarn zero-install detected. Skipping dependency cache.");
+            bullet = bullet.sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
         } else {
-            configure_yarn_cache(&context, &yarn, &env)?;
+            bullet = configure_yarn_cache(&context, &yarn, &env, bullet)?;
         }
+        log = bullet.done();
 
-        log_header("Installing dependencies");
-        cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
+        let mut bullet = log.bullet("Installing dependencies");
+        bullet = cmd::yarn_install(&yarn, zero_install, &env, bullet)
+            .map_err(YarnBuildpackError::YarnInstall)?;
+        log = bullet.done();
 
-        log_header("Running scripts");
+        let mut bullet = log.bullet("Running scripts");
         let scripts = pkg_json.build_scripts();
         if scripts.is_empty() {
-            log_info("No build scripts found");
+            bullet = bullet.sub_bullet("No build scripts found");
         } else {
             for script in scripts {
                 if let Some(false) = node_build_scripts_metadata.enabled {
-                    log_info(format!(
-                        "! Not running `{script}` as it was disabled by a participating buildpack",
+                    bullet = bullet.sub_bullet(format!(
+                        "! Not running {script} as it was disabled by a participating buildpack",
+                        script = style::value(script)
                     ));
                 } else {
-                    log_info(format!("Running `{script}` script"));
-                    cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
+                    bullet = cmd::yarn_run(&env, &script, bullet)
+                        .map_err(YarnBuildpackError::BuildScript)?;
                 }
             }
         }
+        log = bullet.done();
 
-        if pkg_json.has_start_script() {
-            BuildResultBuilder::new()
-                .launch(
-                    LaunchBuilder::new()
-                        .process(
-                            ProcessBuilder::new(process_type!("web"), ["yarn", "start"])
-                                .default(true)
-                                .build(),
-                        )
-                        .build(),
-                )
-                .build()
-        } else {
-            BuildResultBuilder::new().build()
+        let mut build_result_builder = BuildResultBuilder::new();
+        if context.app_dir.join("Procfile").exists() {
+            log = log
+                .bullet("Skipping default web process (Procfile detected)")
+                .done();
+        } else if pkg_json.has_start_script() {
+            build_result_builder = build_result_builder.launch(
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), ["yarn", "start"])
+                            .default(true)
+                            .build(),
+                    )
+                    .build(),
+            );
         }
+
+        log.done();
+        build_result_builder.build()
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
+        let log = Print::new(stdout()).without_header();
         match error {
-            libcnb::Error::BuildpackError(bp_err) => {
-                let err_string = bp_err.to_string();
-                match bp_err {
-                    YarnBuildpackError::BuildScript(_) => {
-                        log_error("Yarn build script error", err_string);
-                    }
-                    YarnBuildpackError::CliLayer(_) => {
-                        log_error("Yarn distribution layer error", err_string);
-                    }
-                    YarnBuildpackError::DepsLayer(_) => {
-                        log_error("Yarn dependency layer error", err_string);
-                    }
-                    YarnBuildpackError::InventoryParse(_) => {
-                        log_error("Yarn inventory parse error", err_string);
-                    }
-                    YarnBuildpackError::PackageJson(_) => {
-                        log_error("Yarn package.json error", err_string);
-                    }
-                    YarnBuildpackError::YarnCacheGet(_)
-                    | YarnBuildpackError::YarnDisableGlobalCache(_) => {
-                        log_error("Yarn cache error", err_string);
-                    }
-                    YarnBuildpackError::YarnInstall(_) => {
-                        log_error("Yarn install error", err_string);
-                    }
-                    YarnBuildpackError::YarnVersionDetect(_)
-                    | YarnBuildpackError::YarnVersionResolve(_)
-                    | YarnBuildpackError::YarnVersionUnsupported(_)
-                    | YarnBuildpackError::YarnDefaultParse(_) => {
-                        log_error("Yarn version error", err_string);
-                    }
-                    YarnBuildpackError::NodeBuildScriptsMetadata(_) => {
-                        log_error("Yarn buildplan error", err_string);
-                    }
+            libcnb::Error::BuildpackError(bp_err) => match bp_err {
+                YarnBuildpackError::BuildScript(_) => {
+                    log.error(format!("Yarn build script error\n\n{bp_err}"));
                 }
-            }
+                YarnBuildpackError::CliLayer(_) => {
+                    log.error(format!("Yarn distribution layer error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::DepsLayer(_) => {
+                    log.error(format!("Yarn dependency layer error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::InventoryParse(_) => {
+                    log.error(format!("Yarn inventory parse error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::PackageJson(_) => {
+                    log.error(format!("Yarn package.json error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::YarnCacheGet(_)
+                | YarnBuildpackError::YarnDisableGlobalCache(_) => {
+                    log.error(format!("Yarn cache error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::YarnInstall(_) => {
+                    log.error(format!("Yarn install error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::YarnVersionDetect(_)
+                | YarnBuildpackError::YarnVersionResolve(_)
+                | YarnBuildpackError::YarnVersionUnsupported(_)
+                | YarnBuildpackError::YarnDefaultParse(_) => {
+                    log.error(format!("Yarn version error\n\n{bp_err}"));
+                }
+                YarnBuildpackError::NodeBuildScriptsMetadata(_) => {
+                    log.error(format!("Yarn buildplan error\n\n{bp_err}"));
+                }
+            },
             err => {
-                log_error("Yarn internal buildpack error", err.to_string());
+                log.error(format!("Yarn internal buildpack error\n\n{err}"));
             }
         }
     }
@@ -219,7 +242,7 @@ impl Buildpack for YarnBuildpack {
 #[derive(Error, Debug)]
 enum YarnBuildpackError {
     #[error("Couldn't run build script: {0}")]
-    BuildScript(cmd::Error),
+    BuildScript(fun_run::CmdError),
     #[error("{0}")]
     CliLayer(#[from] CliLayerError),
     #[error("{0}")]
@@ -231,9 +254,9 @@ enum YarnBuildpackError {
     #[error("Couldn't read yarn cache folder: {0}")]
     YarnCacheGet(cmd::Error),
     #[error("Couldn't disable yarn global cache: {0}")]
-    YarnDisableGlobalCache(cmd::Error),
+    YarnDisableGlobalCache(fun_run::CmdError),
     #[error("Yarn install error: {0}")]
-    YarnInstall(cmd::Error),
+    YarnInstall(fun_run::CmdError),
     #[error("Couldn't determine yarn version: {0}")]
     YarnVersionDetect(cmd::Error),
     #[error("Unsupported yarn version: {0}")]

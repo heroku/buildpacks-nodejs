@@ -19,7 +19,7 @@ const FUNCTION_LOGGING_TIMEOUT: Duration = Duration::from_secs(5);
 #[ignore]
 fn simple_javascript_function() {
     function_integration_test("./fixtures/simple-function", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
         start_container(&ctx, |container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});
@@ -40,7 +40,7 @@ fn simple_javascript_function() {
 #[ignore]
 fn simple_typescript_function() {
     function_integration_test("./fixtures/simple-typescript-function", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
         start_container(&ctx, |_container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});
@@ -58,7 +58,7 @@ fn simple_typescript_function() {
 fn test_function_with_explicit_runtime_dependency_js() {
     function_integration_test("./fixtures/with-explicit-runtime-dependency-js", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
@@ -71,7 +71,7 @@ fn test_function_with_explicit_runtime_dependency_js() {
 fn test_function_with_explicit_runtime_dependency_ts() {
     function_integration_test("./fixtures/with-explicit-runtime-dependency-ts", |ctx| {
         assert_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         assert_not_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
@@ -85,7 +85,7 @@ fn test_function_with_implicit_runtime_dependency_js() {
     function_integration_test("./fixtures/with-implicit-runtime-dependency-js", |ctx| {
         assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         start_container_and_assert_health_check_responds(&ctx);
@@ -98,7 +98,7 @@ fn test_function_with_implicit_runtime_dependency_ts() {
     function_integration_test("./fixtures/with-implicit-runtime-dependency-ts", |ctx| {
         assert_contains!(ctx.pack_stderr, "Future versions of the Functions Runtime for Node.js (@heroku/sf-fx-runtime-nodejs) will not be auto-detected and must be added as a dependency in package.json");
         assert_not_contains!(
-            ctx.pack_stdout,
+            ctx.pack_stderr,
             "Node.js function runtime declared in package.json"
         );
         start_container_and_assert_health_check_responds(&ctx);
@@ -109,8 +109,8 @@ fn test_function_with_implicit_runtime_dependency_ts() {
 #[ignore]
 fn function_with_no_lockfile() {
     function_integration_test("./fixtures/function-with-no-lockfile", |ctx| {
-        assert_contains!(ctx.pack_stdout, "Installing Node.js Function Invoker");
-        assert_contains!(ctx.pack_stdout, "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git.");
+        assert_contains!(ctx.pack_stderr, "Installing Node.js Function Invoker");
+        assert_contains!(ctx.pack_stderr, "Running npm install without a package-lock.json is deprecated. Check in your lockfile to git.");
         start_container(&ctx, |container, socket_addr| {
             assert_health_check_responds(socket_addr);
             let payload = serde_json::json!({});
@@ -153,32 +153,35 @@ fn invoke_function(socket_addr: &SocketAddr, payload: &serde_json::Value) -> ser
         "functionInvocationId": serde_json::Value::Null
     }));
 
-    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+    let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
         ureq::post(&format!("http://{socket_addr}"))
-            .set("Content-Type", "application/json")
-            .set("Authorization", "")
-            .set("ce-id", &id)
-            .set("ce-time", "2020-09-03T20:56:28.297915Z")
-            .set("ce-type", "")
-            .set("ce-source", "")
-            .set("ce-specversion", "1.0")
-            .set("ce-sfcontext", &sf_context)
-            .set("ce-sffncontext", &ssfn_context)
+            .header("Content-Type", "application/json")
+            .header("Authorization", "")
+            .header("ce-id", &id)
+            .header("ce-time", "2020-09-03T20:56:28.297915Z")
+            .header("ce-type", "")
+            .header("ce-source", "")
+            .header("ce-specversion", "1.0")
+            .header("ce-sfcontext", &sf_context)
+            .header("ce-sffncontext", &ssfn_context)
             .send_json(payload.clone())
     })
     .unwrap();
 
-    response.into_json().expect("expected response to be json")
+    response
+        .body_mut()
+        .read_json()
+        .expect("expected response to be json")
 }
 
 fn assert_health_check_responds(socket_addr: &SocketAddr) {
-    let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+    let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
         ureq::post(&format!("http://{socket_addr}"))
-            .set("x-health-check", "true")
-            .call()
+            .header("x-health-check", "true")
+            .send_empty()
     })
     .unwrap();
-    let response_body = response.into_string().unwrap();
+    let response_body = response.body_mut().read_to_string().unwrap();
     assert_contains!(response_body, "OK");
 }
 
@@ -190,7 +193,7 @@ fn start_container_and_assert_health_check_responds(ctx: &TestContext) {
 
 fn random_hex_string(length: usize) -> String {
     let mut bytes = Vec::with_capacity(length);
-    rand::thread_rng().fill_bytes(&mut bytes);
+    rand::rng().fill_bytes(&mut bytes);
     hex::encode(&bytes)
 }
 

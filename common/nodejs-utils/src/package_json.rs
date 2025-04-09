@@ -1,6 +1,7 @@
 use crate::vrs::{Requirement, Version};
 use serde::{de, Deserialize, Deserializer};
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
@@ -60,6 +61,12 @@ pub struct PackageManager {
     pub version: Version,
 }
 
+impl Display for PackageManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        write!(f, "{}@{}", self.name, self.version)
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum PackageJsonError {
     #[error("Could not read package.json. {0}")]
@@ -107,7 +114,7 @@ impl PackageJson {
     pub fn has_start_script(&self) -> bool {
         self.scripts
             .as_ref()
-            .map_or(false, |scripts| scripts.start.is_some())
+            .is_some_and(|scripts| scripts.start.is_some())
     }
 }
 

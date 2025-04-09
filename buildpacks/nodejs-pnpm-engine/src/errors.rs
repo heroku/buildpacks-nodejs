@@ -1,10 +1,9 @@
 use crate::BUILDPACK_NAME;
-use commons::output::build_log::{BuildLog, Logger, StartedLogger};
-use commons::output::fmt;
-use commons::output::fmt::DEBUG_INFO;
+use bullet_stream::state::Bullet;
+use bullet_stream::{style, Print};
 use indoc::formatdoc;
 use std::fmt::Display;
-use std::io::stdout;
+use std::io::{stderr, Stderr};
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum PnpmEngineBuildpackError {
@@ -12,7 +11,7 @@ pub(crate) enum PnpmEngineBuildpackError {
 }
 
 pub(crate) fn on_error(error: libcnb::Error<PnpmEngineBuildpackError>) {
-    let logger = BuildLog::new(stdout()).without_buildpack_name();
+    let logger = Print::new(stderr()).without_header();
     match error {
         libcnb::Error::BuildpackError(buildpack_error) => {
             on_buildpack_error(buildpack_error, logger);
@@ -21,12 +20,10 @@ pub(crate) fn on_error(error: libcnb::Error<PnpmEngineBuildpackError>) {
     }
 }
 
-fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Box<dyn StartedLogger>) {
+fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Print<Bullet<Stderr>>) {
     match error {
         PnpmEngineBuildpackError::CorepackRequired => {
-            print_error_details(logger, &"Corepack Requirement Error")
-                .announce()
-                .error(&formatdoc! {"
+            print_error_details(logger, &"Corepack Requirement Error").error(formatdoc! {"
                     A pnpm lockfile ({pnpm_lockfile}) was detected, but the
                     version of {pnpm} to install could not be determined.
 
@@ -42,24 +39,23 @@ fn on_buildpack_error(error: PnpmEngineBuildpackError, logger: Box<dyn StartedLo
 
                     Then commit the result, and try again.
                 ",
-                corepack_enable = fmt::command("corepack enable"),
-                corepack_use_pnpm = fmt::command("corepack use pnpm@*"),
-                heroku_nodejs_corepack = fmt::command("heroku/nodejs-corepack"),
-                package_manager = fmt::value("packageManager"),
-                pnpm = fmt::value("pnpm"),
-                pnpm_lockfile = fmt::value("pnpm-lock.yaml"),
-                package_json = fmt::value("package.json")});
+            corepack_enable = style::command("corepack enable"),
+            corepack_use_pnpm = style::command("corepack use pnpm@*"),
+            heroku_nodejs_corepack = style::command("heroku/nodejs-corepack"),
+            package_manager = style::value("packageManager"),
+            pnpm = style::value("pnpm"),
+            pnpm_lockfile = style::value("pnpm-lock.yaml"),
+            package_json = style::value("package.json")});
         }
     }
 }
 
 fn on_framework_error(
     error: &libcnb::Error<PnpmEngineBuildpackError>,
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stderr>>,
 ) {
     print_error_details(logger, &error)
-        .announce()
-        .error(&formatdoc! {"
+        .error(formatdoc! {"
             {buildpack_name} internal error.
 
             The framework used by this buildpack encountered an unexpected error.
@@ -71,15 +67,15 @@ fn on_framework_error(
             the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
             and include the details.
 
-        ", buildpack_name = fmt::value(BUILDPACK_NAME) });
+        ", buildpack_name = style::value(BUILDPACK_NAME) });
 }
 
 fn print_error_details(
-    logger: Box<dyn StartedLogger>,
+    logger: Print<Bullet<Stderr>>,
     error: &impl Display,
-) -> Box<dyn StartedLogger> {
+) -> Print<Bullet<Stderr>> {
     logger
-        .section(DEBUG_INFO)
-        .step(&error.to_string())
-        .end_section()
+        .bullet(style::important("DEBUG INFO:"))
+        .sub_bullet(error.to_string())
+        .done()
 }

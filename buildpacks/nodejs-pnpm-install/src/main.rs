@@ -1,3 +1,9 @@
+// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
+// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
+// to be able selectively opt out of coverage for functions/lines/modules.
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
+use bullet_stream::{style, Print};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -7,7 +13,7 @@ use libcnb::data::store::Store;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use libherokubuildpack::log::{log_header, log_info};
+use std::io::stderr;
 
 use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
@@ -19,8 +25,6 @@ use heroku_nodejs_utils::buildplan::{
 use libcnb_test as _;
 #[cfg(test)]
 use test_support as _;
-#[cfg(test)]
-use ureq as _;
 
 mod cmd;
 mod configure_pnpm_store_directory;
@@ -58,60 +62,78 @@ impl Buildpack for PnpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        let mut log = Print::new(stderr()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack should have a name"));
+
         let env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
             .map_err(PnpmInstallBuildpackError::PackageJson)?;
         let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
             .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
 
-        log_header("Setting up pnpm dependency store");
-        configure_pnpm_store_directory(&context, &env)?;
-        configure_pnpm_virtual_store_directory(&context, &env)?;
+        let mut bullet = log.bullet("Setting up pnpm dependency store");
+        bullet = configure_pnpm_store_directory(&context, &env, bullet)?;
+        bullet = configure_pnpm_virtual_store_directory(&context, &env, bullet)?;
+        log = bullet.done();
 
-        log_header("Installing dependencies");
-        cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
+        let mut bullet = log.bullet("Installing dependencies");
+        bullet = cmd::pnpm_install(&env, bullet).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
+        log = bullet.done();
 
         let mut metadata = context.store.unwrap_or_default().metadata;
         let cache_use_count = store::read_cache_use_count(&metadata);
         if store::should_prune_cache(cache_use_count) {
-            log_info("Pruning unused dependencies from pnpm content-addressable store");
-            cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
+            let mut bullet =
+                log.bullet("Pruning unused dependencies from pnpm content-addressable store");
+            bullet = cmd::pnpm_store_prune(&env, bullet)
+                .map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
+            log = bullet.done();
         }
         store::set_cache_use_count(&mut metadata, cache_use_count + 1);
 
-        log_header("Running scripts");
+        let mut bullet = log.bullet("Running scripts");
         let scripts = pkg_json.build_scripts();
         if scripts.is_empty() {
-            log_info("No build scripts found");
+            bullet = bullet.sub_bullet("No build scripts found");
         } else {
             for script in scripts {
                 if let Some(false) = node_build_scripts_metadata.enabled {
-                    log_info(format!(
-                        "! Not running `{script}` as it was disabled by a participating buildpack",
+                    bullet = bullet.sub_bullet(format!(
+                        "! Not running {script} as it was disabled by a participating buildpack",
+                        script = style::value(&script)
                     ));
                 } else {
-                    log_info(format!("Running `{script}` script"));
-                    cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
+                    bullet = cmd::pnpm_run(&env, &script, bullet)
+                        .map_err(PnpmInstallBuildpackError::BuildScript)?;
                 }
             }
         }
+        log = bullet.done();
 
-        let result_builder = BuildResultBuilder::new().store(Store { metadata });
-        if pkg_json.has_start_script() {
-            result_builder
-                .launch(
-                    LaunchBuilder::new()
-                        .process(
-                            ProcessBuilder::new(process_type!("web"), ["pnpm", "start"])
-                                .default(true)
-                                .build(),
-                        )
-                        .build(),
-                )
-                .build()
-        } else {
-            result_builder.build()
+        let mut result_builder = BuildResultBuilder::new().store(Store { metadata });
+
+        if context.app_dir.join("Procfile").exists() {
+            log = log
+                .bullet("Skipping default web process (Procfile detected)")
+                .done();
+        } else if pkg_json.has_start_script() {
+            result_builder = result_builder.launch(
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), ["pnpm", "start"])
+                            .default(true)
+                            .build(),
+                    )
+                    .build(),
+            );
         }
+
+        log.done();
+        result_builder.build()
     }
 
     fn on_error(&self, err: libcnb::Error<Self::Error>) {
@@ -121,11 +143,11 @@ impl Buildpack for PnpmInstallBuildpack {
 
 #[derive(Debug)]
 enum PnpmInstallBuildpackError {
-    BuildScript(cmd::Error),
+    BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
-    PnpmDir(cmd::Error),
-    PnpmInstall(cmd::Error),
-    PnpmStorePrune(cmd::Error),
+    PnpmDir(fun_run::CmdError),
+    PnpmInstall(fun_run::CmdError),
+    PnpmStorePrune(fun_run::CmdError),
     VirtualLayer(std::io::Error),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }

@@ -11,6 +11,7 @@ pub(crate) fn list_releases() -> anyhow::Result<Vec<NodeJSRelease>> {
     ureq::get(NODE_UPSTREAM_LIST_URL)
         .call()
         .map_err(|e| anyhow!("Couldn't fetch nodejs.org release list: {e}"))?
-        .into_json::<Vec<NodeJSRelease>>()
+        .body_mut()
+        .read_json::<Vec<NodeJSRelease>>()
         .map_err(|e| anyhow!("Couldn't serialize nodejs.org release list from json: {e}"))
 }

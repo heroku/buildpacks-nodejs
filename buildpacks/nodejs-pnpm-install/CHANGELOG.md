@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.5.3] - 2025-04-03
+
+### Changed
+
+- Updated libcnb to 0.28.1, which includes tracing improvements/fixes. ([#1063](https://github.com/heroku/buildpacks-nodejs/pull/1063))
+
+## [3.5.2] - 2025-03-28
+
+- No changes.
+
+## [3.5.1] - 2025-03-14
+
+- No changes.
+
+## [3.5.0] - 2025-02-28
+
+### Changed
+
+- Buildpack output is sent to `stderr` instead of `stdout`. ([#1039](https://github.com/heroku/buildpacks-nodejs/pull/1039))
+
+## [3.4.11] - 2025-02-27
+
+- No changes.
+
+## [3.4.10] - 2025-02-25
+
+- No changes.
+
+## [3.4.9] - 2025-02-21
+
+- No changes.
+
+## [3.4.8] - 2025-02-14
+
+- No changes.
+
+## [3.4.7] - 2025-02-12
+
+- No changes.
+
+## [3.4.6] - 2025-02-11
+
+- No changes.
+
+## [3.4.5] - 2025-02-03
+
+- No changes.
+
+## [3.4.4] - 2025-01-22
+
+- No changes.
+
+## [3.4.3] - 2025-01-10
+
+- No changes.
+
+## [3.4.2] - 2025-01-08
+
+- No changes.
+
+## [3.4.1] - 2025-01-07
+
+- No changes.
+
+## [3.4.0] - 2024-12-13
+
+### Changed
+
+- Default processes will no longer be registered if a Procfile is present. ([#985](https://github.com/heroku/buildpacks-nodejs/pull/985))
+
+## [3.3.5] - 2024-12-11
+
+- No changes.
+
 ## [3.3.4] - 2024-12-05
 
 - No changes.
@@ -257,7 +331,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release ([#488](https://github.com/heroku/buildpacks-nodejs/pull/488))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.3...HEAD
+[3.5.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.2...v3.5.3
+[3.5.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.1...v3.5.2
+[3.5.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.0...v3.5.1
+[3.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.11...v3.5.0
+[3.4.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.10...v3.4.11
+[3.4.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.9...v3.4.10
+[3.4.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.8...v3.4.9
+[3.4.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.7...v3.4.8
+[3.4.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.6...v3.4.7
+[3.4.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.5...v3.4.6
+[3.4.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.4...v3.4.5
+[3.4.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.3...v3.4.4
+[3.4.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.2...v3.4.3
+[3.4.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.1...v3.4.2
+[3.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.0...v3.4.1
+[3.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.5...v3.4.0
+[3.3.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.4...v3.3.5
 [3.3.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.3...v3.3.4
 [3.3.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.2...v3.3.3
 [3.3.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.3.1...v3.3.2

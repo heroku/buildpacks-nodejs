@@ -1,42 +1,29 @@
-use heroku_nodejs_utils::vrs::Version;
+use bullet_stream::state::SubBullet;
+use bullet_stream::{style, Print};
+use fun_run::CommandWithName;
+use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
-use std::{
-    path::Path,
-    process::{Command, Stdio},
-};
+use std::io::Stderr;
+use std::{path::Path, process::Command};
 
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum Error {
-    #[error("Couldn't start corepack command: {0}")]
-    Spawn(std::io::Error),
-    #[error("Couldn't finish corepack command: {0}")]
-    Wait(std::io::Error),
-    #[error("Corepack command finished with a non-zero exit code: {0}")]
-    Exit(std::process::ExitStatus),
-    #[error("Corepack output couldn't be parsed: {0}")]
-    Parse(String),
+#[derive(Debug)]
+pub(crate) enum CorepackVersionError {
+    Parse(VersionError),
+    Command(fun_run::CmdError),
 }
 
 /// Execute `corepack --version` to determine corepack version
-pub(crate) fn corepack_version(env: &Env) -> Result<Version, Error> {
+pub(crate) fn corepack_version(env: &Env) -> Result<Version, CorepackVersionError> {
     let output = Command::new("corepack")
         .arg("--version")
         .envs(env)
-        .stdout(Stdio::piped())
-        .spawn()
-        .map_err(Error::Spawn)?
-        .wait_with_output()
-        .map_err(Error::Wait)?;
+        .named_output()
+        .map_err(CorepackVersionError::Command)?;
 
     output
-        .status
-        .success()
-        .then_some(())
-        .ok_or(Error::Exit(output.status))?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout
+        .stdout_lossy()
         .parse()
-        .map_err(|_| Error::Parse(stdout.into_owned()))
+        .map_err(CorepackVersionError::Parse)
 }
 
 /// Execute `corepack enable` to setup a corepack shim
@@ -44,29 +31,36 @@ pub(crate) fn corepack_enable(
     package_manager: &str,
     shim_path: &Path,
     env: &Env,
-) -> Result<(), Error> {
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, fun_run::CmdError> {
     let shim_path_string = shim_path.to_string_lossy();
-    let mut process = Command::new("corepack")
-        .args([
-            "enable",
-            "--install-directory",
-            &shim_path_string,
-            package_manager,
-        ])
-        .envs(env)
-        .spawn()
-        .map_err(Error::Spawn)?;
-    let status = process.wait().map_err(Error::Wait)?;
-    status.success().then_some(()).ok_or(Error::Exit(status))
+    let mut command = Command::new("corepack");
+    command.args([
+        "enable",
+        "--install-directory",
+        &shim_path_string,
+        package_manager,
+    ]);
+    command.envs(env);
+
+    log = log.sub_bullet(format!("Executing {}", style::command(command.name())));
+
+    command.named_output()?;
+
+    Ok(log)
 }
 
 /// Execute `corepack prepare` to install the correct package manager
-pub(crate) fn corepack_prepare(env: &Env) -> Result<(), Error> {
-    let mut process = Command::new("corepack")
-        .arg("prepare")
-        .envs(env)
-        .spawn()
-        .map_err(Error::Spawn)?;
-    let status = process.wait().map_err(Error::Wait)?;
-    status.success().then_some(()).ok_or(Error::Exit(status))
+pub(crate) fn corepack_prepare(
+    env: &Env,
+    mut log: Print<SubBullet<Stderr>>,
+) -> Result<Print<SubBullet<Stderr>>, fun_run::CmdError> {
+    let mut command = Command::new("corepack");
+    command.arg("prepare");
+    command.envs(env);
+    log.stream_with(
+        format!("Running {}", style::command(command.name())),
+        |stdout, stderr| command.stream_output(stdout, stderr),
+    )?;
+    Ok(log)
 }

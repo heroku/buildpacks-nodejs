@@ -9,12 +9,6 @@ updates:
       - "rust"
       - "skip changelog"
     groups:
-      # Note: The group order matters, since updates are assigned to the first matching group.
-      libcnb:
-        patterns:
-          - "libcnb"
-          - "libcnb-test"
-          - "libherokubuildpack"
       rust-dependencies:
         update-types:
           - "minor"
@@ -27,3 +21,8 @@ updates:
       - "dependencies"
       - "github actions"
       - "skip changelog"
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"
