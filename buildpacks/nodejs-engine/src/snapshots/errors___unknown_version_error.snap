@@ -9,7 +9,5 @@ source: buildpacks/nodejs-engine/src/errors.rs
 ! - Confirm if this is a valid Node.js release at https://github.com/nodejs/node/releases?q=v0.0.0&expanded=true
 ! - Check if this buildpack includes the requested Node.js version in its inventory file at https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-engine/inventory.toml
 !
-! Use the debug information above to troubleshoot and retry your build.
-!
 ! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
 ! https://github.com/heroku/buildpacks-nodejs/issues
