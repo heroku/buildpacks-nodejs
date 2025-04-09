@@ -3,6 +3,7 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use crate::configure_available_parallelism::configure_available_parallelism;
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
 use bullet_stream::{style, Print};
@@ -21,6 +22,8 @@ use libcnb_test as _;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
 #[cfg(test)]
+use regex as _;
+#[cfg(test)]
 use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
@@ -28,6 +31,7 @@ use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 
+mod configure_available_parallelism;
 mod configure_web_env;
 mod errors;
 mod install_node;
@@ -118,6 +122,7 @@ impl Buildpack for NodeJsEngineBuildpack {
         log = install_node(&context, target_artifact, log)?;
 
         configure_web_env(&context)?;
+        configure_available_parallelism(&context)?;
 
         let launchjs = ["server.js", "index.js"]
             .map(|name| context.app_dir.join(name))

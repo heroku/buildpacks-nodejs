@@ -188,7 +188,11 @@ pub fn add_package_json_dependency(app_dir: &Path, package_name: &str, package_v
 
 pub fn add_build_script(app_dir: &Path, script: &str) {
     update_package_json(app_dir, |json| {
-        let scripts = json["scripts"].as_object_mut().unwrap();
+        let scripts = json
+            .entry("scripts")
+            .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+            .as_object_mut()
+            .unwrap();
         scripts.insert(
             script.to_string(),
             serde_json::Value::String(format!("echo 'executed {script}'")),

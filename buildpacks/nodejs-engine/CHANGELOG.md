@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Set `HEROKU_AVAILABLE_PARALLELISM` environment variable at build and run time
+
 ## [3.5.3] - 2025-04-03
 
 ### Changed
