@@ -22,6 +22,8 @@ use libcnb_test as _;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
 #[cfg(test)]
+use regex as _;
+#[cfg(test)]
 use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
