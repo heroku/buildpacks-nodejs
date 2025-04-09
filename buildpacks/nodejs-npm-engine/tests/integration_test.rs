@@ -12,7 +12,7 @@ use test_support::nodejs_integration_test;
 #[ignore = "integration test"]
 fn npm_engine_install() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Engine Buildpack");
+        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Engine");
         assert_contains!(
             ctx.pack_stderr,
             "Found `engines.npm` version `9.6.6` declared in `package.json`"

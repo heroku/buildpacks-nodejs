@@ -8,13 +8,12 @@ mod install_npm;
 mod node;
 mod npm;
 
-use crate::errors::NpmEngineBuildpackError;
-use crate::install_npm::install_npm;
+use crate::install_npm::{install_npm, NpmInstallError};
 use bullet_stream::state::SubBullet;
 use bullet_stream::{style, Print};
 use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::{Inventory, Release};
-use heroku_nodejs_utils::package_json::PackageJson;
+use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -30,8 +29,6 @@ use std::path::Path;
 use std::process::Command;
 #[cfg(test)]
 use test_support as _;
-
-const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine Buildpack";
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 
@@ -67,7 +64,13 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut logger = Print::new(stderr()).h1(BUILDPACK_NAME);
+        let mut logger = Print::new(stderr()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack.toml should have a 'name' field set"));
+
         let env = Env::from_current();
         let inventory: Inventory =
             toml::from_str(INVENTORY).map_err(NpmEngineBuildpackError::InventoryParse)?;
@@ -87,7 +90,8 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        errors::on_error(error);
+        let error_message = errors::on_error(error);
+        eprintln!("\n{error_message}");
     }
 }
 
@@ -174,3 +178,14 @@ impl From<NpmEngineBuildpackError> for libcnb::Error<NpmEngineBuildpackError> {
 }
 
 buildpack_main!(NpmEngineBuildpack);
+
+#[derive(Debug)]
+pub(crate) enum NpmEngineBuildpackError {
+    PackageJson(PackageJsonError),
+    MissingNpmEngineRequirement,
+    InventoryParse(toml::de::Error),
+    NpmVersionResolve(Requirement),
+    NpmInstall(NpmInstallError),
+    NodeVersion(node::VersionError),
+    NpmVersion(npm::VersionError),
+}

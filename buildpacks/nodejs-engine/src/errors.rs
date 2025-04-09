@@ -59,7 +59,7 @@ fn on_unknown_version_error(version: String) -> ErrorMessage {
     let inventory_url = style::url("https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-engine/inventory.toml");
     let version = style::value(version);
     error_message()
-        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
         .header(format!("Unknown Node.js version: {version}"))
         .body(formatdoc! {"
             The Node.js version provided could not be resolved to a known release in this buildpack's \
