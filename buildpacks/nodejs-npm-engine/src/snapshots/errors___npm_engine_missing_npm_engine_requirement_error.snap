@@ -1,0 +1,6 @@
+---
+source: buildpacks/nodejs-npm-engine/src/errors.rs
+---
+! Missing `engines.npm` key in `package.json`
+!
+! This buildpack requires the `engines.npm` key to determine which engine versions to install.
