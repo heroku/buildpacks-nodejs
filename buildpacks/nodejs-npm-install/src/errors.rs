@@ -1,168 +1,136 @@
-use crate::npm;
-use crate::BUILDPACK_NAME;
-use bullet_stream::state::Bullet;
-use bullet_stream::{style, Print};
+use crate::{npm, NpmInstallBuildpackError};
+use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
-use heroku_nodejs_utils::package_json::PackageJsonError;
+use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
+use heroku_nodejs_utils::error_handling::{
+    on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder, ErrorType,
+    SuggestRetryBuild, SuggestSubmitIssue,
+};
 use indoc::formatdoc;
-use std::fmt::Display;
 use std::io;
-use std::io::{stderr, Stderr};
 
-const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
-Use the debug information above to troubleshoot and retry your build.";
+const BUILDPACK_NAME: &str = "Heroku Node.js npm Install";
 
-const SUBMIT_AN_ISSUE: &str = "\
-If the issue persists and you think you found a bug in the buildpack then reproduce the issue \
-locally with a minimal example and open an issue in the buildpack's GitHub repository with the details.";
+const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-#[derive(Debug)]
-pub(crate) enum NpmInstallBuildpackError {
-    Application(application::Error),
-    BuildScript(CmdError),
-    Detect(io::Error),
-    NpmInstall(CmdError),
-    NpmSetCacheDir(CmdError),
-    NpmVersion(npm::VersionError),
-    PackageJson(PackageJsonError),
-    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
-}
-
-pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) {
-    let logger = Print::new(stderr()).without_header();
+pub(crate) fn on_error(error: libcnb::Error<NpmInstallBuildpackError>) -> ErrorMessage {
     match error {
-        libcnb::Error::BuildpackError(buildpack_error) => {
-            on_buildpack_error(buildpack_error, logger);
-        }
-        framework_error => on_framework_error(&framework_error, logger),
+        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
+        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
     }
 }
 
-fn on_buildpack_error(error: NpmInstallBuildpackError, logger: Print<Bullet<Stderr>>) {
+// Wraps the error_message() builder to preset the issues_url field
+fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
+    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
+}
+
+fn on_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
-        NpmInstallBuildpackError::Application(e) => on_application_error(&e, logger),
-        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e, logger),
-        NpmInstallBuildpackError::Detect(e) => on_detect_error(&e, logger),
+        NpmInstallBuildpackError::Application(e) => on_application_error(&e),
+        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
+        NpmInstallBuildpackError::Detect(e) => on_detect_error(&e),
         NpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
-            on_node_build_scripts_metadata_error(e, logger);
+            on_node_build_scripts_metadata_error(e)
         }
-        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e, logger),
-        NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e, logger),
-        NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
-        NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
+        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e),
+        NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e),
+        NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e),
+        NpmInstallBuildpackError::PackageJson(e) => {
+            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
+        }
     }
 }
 
-fn on_node_build_scripts_metadata_error(
-    error: NodeBuildScriptsMetadataError,
-    logger: Print<Bullet<Stderr>>,
-) {
+fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) -> ErrorMessage {
     let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
     let value_type = value.type_str();
-    logger.error(formatdoc! { "
-        A participating buildpack has set invalid `[requires.metadata]` for the build plan \
-        named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
-        
-        Expected metadata format:
-        [requires.metadata]
-        enabled = <bool>
-        
-        But was:
-        [requires.metadata]
-        enabled = <{value_type}>     
-    "});
-}
-
-fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stderr>>) {
-    match error {
-        PackageJsonError::AccessError(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    Error reading {package_json}.
-
-                    This buildpack requires {package_json} to complete the build but the file can’t be read. 
-                    
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", package_json = style::value("package.json") });
-        }
-        PackageJsonError::ParseError(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    Error reading {package_json}.
-
-                    This buildpack requires {package_json} to complete the build but the file \
-                    can’t be parsed. Ensure {npm_install} runs locally to check the formatting in your file.
-                    
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", package_json = style::value("package.json"), npm_install = style::value("npm install") });
-        }
-    }
-}
-
-fn on_set_cache_dir_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
-    print_error_details(logger, &error).error(formatdoc! {"
-            Failed to set the {npm} cache directory.
-
-            An unexpected error occurred while setting the {npm} cache directory. 
-                    
-            {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-            {SUBMIT_AN_ISSUE}
-        ", npm = style::value("npm") });
-}
-
-fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stderr>>) {
-    match error {
-        npm::VersionError::Command(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to determine {npm} version information.
-
-                    An unexpected error occurred while executing {npm_version}.  
-                    
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm"), npm_version = style::value(e.name()) });
-        }
-        npm::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to parse {npm} version information.
-        
-                    An unexpected error occurred while parsing version information from {output}. 
-                    
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm"), output = style::value(stdout) });
-        }
-    }
-}
-
-fn on_npm_install_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
-    print_error_details(logger, &error)
-        .error(formatdoc! {"
-            Failed to install Node modules.
-
-            The {buildpack_name} uses the command {npm_install} to install your Node modules. This command \
-            failed and the buildpack cannot continue. See the log output above for more information.
-
-            This error can occur due to an unstable network connection. Ensure that this command runs locally \
-            without error (exit status = 0) and retry your build.
+    error_message()
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::No,
+            SuggestSubmitIssue::Yes,
+        ))
+        .header("Invalid build script metadata")
+        .body(formatdoc! { "
+            A participating buildpack has set invalid `[requires.metadata]` for the build plan \
+            named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
             
-            If that doesn’t help, check the status of the upstream Node module repository service at https://status.npmjs.org/.
-        ", npm_install = style::value(error.name()), buildpack_name = style::value(BUILDPACK_NAME) });
+            Expected metadata format:
+            [requires.metadata]
+            enabled = <bool>
+            
+            But was:
+            [requires.metadata]
+            enabled = <{value_type}>     
+        "})
+        .create()
 }
 
-fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
-    print_error_details(logger, &error)
-        .error(formatdoc! {"
-            Failed to execute build script.
+fn on_set_cache_dir_error(error: &CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to set the npm cache directory")
+        .body("An unexpected error occurred while setting the npm cache directory.")
+        .debug_info(error.to_string())
+        .create()
+}
 
-            The {buildpack_name} allows customization of the build process by executing the following scripts \
+fn on_npm_version_error(error: npm::VersionError) -> ErrorMessage {
+    match error {
+        npm::VersionError::Command(e) => error_message()
+            .error_type(ErrorType::Internal)
+            .header("Failed to determine npm version")
+            .body(formatdoc! { "
+                An unexpected error occurred while attempting to determine the current npm version \
+                from the system.
+            " })
+            .debug_info(e.to_string())
+            .create(),
+
+        npm::VersionError::Parse(stdout, e) => error_message()
+            .error_type(ErrorType::Internal)
+            .header("Failed to parse npm version")
+            .body(formatdoc! { "
+                An unexpected error occurred while parsing npm version information from '{stdout}'.
+            " })
+            .debug_info(e.to_string())
+            .create(),
+    }
+}
+
+fn on_npm_install_error(error: &CmdError) -> ErrorMessage {
+    let npm_install = style::value(error.name());
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header("Failed to install Node modules")
+        .body(formatdoc! { "
+            The {BUILDPACK_NAME} buildpack uses the command {npm_install} to install your Node modules. This command \
+            failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+            - Check the status of the upstream Node module repository service at https://status.npmjs.org/
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn on_build_script_error(error: &CmdError) -> ErrorMessage {
+    let build_script = style::value(error.name());
+    let package_json = style::value("package.json");
+    let heroku_prebuild = style::value("heroku-prebuild");
+    let heroku_build = style::value("heroku-build");
+    let build = style::value("build");
+    let heroku_postbuild = style::value("heroku-postbuild");
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+        .header("Failed to execute build script")
+        .body(formatdoc! { "
+            The {BUILDPACK_NAME} buildpack allows customization of the build process by executing the following scripts \
             if they are defined in {package_json}:
             - {heroku_prebuild} 
             - {heroku_build} or {build} 
@@ -170,54 +138,176 @@ fn on_build_script_error(error: &CmdError, logger: Print<Bullet<Stderr>>) {
 
             An unexpected error occurred while executing {build_script}. See the log output above for more information.
 
-            Ensure that this command runs locally without error and retry your build.
-        ",
-            build_script = style::value(error.name()),
-            buildpack_name = style::value(BUILDPACK_NAME),
-            package_json = style::value("package.json"),
-            heroku_prebuild = style::value("heroku-prebuild"),
-            heroku_build = style::value("heroku-build"),
-            build = style::value("build"),
-            heroku_postbuild = style::value("heroku-postbuild"),
+            Suggestions:
+            - Ensure that this command runs locally without error.
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn on_application_error(error: &application::Error) -> ErrorMessage {
+    match error {
+        application::Error::MissingLockfile => error_message()
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::No,
+                SuggestSubmitIssue::No,
+            ))
+            .header("Missing lockfile")
+            .body(error.to_string())
+            .create(),
+
+        application::Error::MultipleLockfiles(_) => error_message()
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::No,
+                SuggestSubmitIssue::No,
+            ))
+            .header("Multiple lockfiles detected")
+            .body(error.to_string())
+            .create(),
+    }
+}
+
+fn on_detect_error(error: &io::Error) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Unable to complete buildpack detection")
+        .body(formatdoc! { "
+            An unexpected error occurred while determining if the {BUILDPACK_NAME} buildpack should be \
+            run for this application. See the log output above for more information.
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bullet_stream::strip_ansi;
+    use fun_run::CommandWithName;
+    use heroku_nodejs_utils::package_json::PackageJsonError;
+    use heroku_nodejs_utils::package_manager::PackageManager;
+    use heroku_nodejs_utils::vrs::Version;
+    use insta::{assert_snapshot, with_settings};
+    use libcnb::Error;
+    use std::process::Command;
+    use test_support::test_name;
+
+    #[test]
+    fn test_npm_install_application_error_missing_lockfile() {
+        assert_error_snapshot(NpmInstallBuildpackError::Application(
+            application::Error::MissingLockfile,
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_application_error_multiple_lockfiles() {
+        assert_error_snapshot(NpmInstallBuildpackError::Application(
+            application::Error::MultipleLockfiles(vec![
+                PackageManager::Npm,
+                PackageManager::Yarn,
+                PackageManager::Pnpm,
+            ]),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_node_build_scripts_metadata_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::NodeBuildScriptsMetadata(
+            NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
+                "test".to_string(),
+            )),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_set_cache_dir_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::NpmSetCacheDir(create_cmd_error(
+            "npm config set cache /some/dir --global",
+        )));
+    }
+
+    #[test]
+    fn test_npm_install_npm_version_command_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::NpmVersion(
+            npm::VersionError::Command(create_cmd_error("npm --version")),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_npm_version_parse_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::NpmVersion(
+            npm::VersionError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_npm_install_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::NpmInstall(create_cmd_error(
+            "npm install",
+        )));
+    }
+
+    #[test]
+    fn test_npm_install_build_script_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::BuildScript(create_cmd_error(
+            "npm run build",
+        )));
+    }
+
+    #[test]
+    fn test_npm_install_package_json_access_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::PackageJson(
+            PackageJsonError::AccessError(create_io_error("test I/O error blah")),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_package_json_parse_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::PackageJson(
+            PackageJsonError::ParseError(create_json_error()),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_detect_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::Detect(create_io_error(
+            "test I/O error blah",
+        )));
+    }
+
+    fn assert_error_snapshot(error: impl Into<Error<NpmInstallBuildpackError>>) {
+        let error_message = strip_ansi(on_error(error.into()).to_string());
+        let test_name = format!(
+            "errors__{}",
+            test_name()
+                .split("::")
+                .last()
+                .unwrap()
+                .trim_start_matches("test")
+        );
+        with_settings!({
+            prepend_module_to_snapshot => false,
+            omit_expression => true,
+        }, {
+            assert_snapshot!(test_name, error_message);
         });
-}
+    }
 
-fn on_application_error(error: &application::Error, logger: Print<Bullet<Stderr>>) {
-    logger.error(error.to_string());
-}
+    fn create_io_error(text: &str) -> io::Error {
+        io::Error::new(io::ErrorKind::Other, text)
+    }
 
-fn on_detect_error(error: &io::Error, logger: Print<Bullet<Stderr>>) {
-    print_error_details(logger, &error).error(formatdoc! {"
-            Unable to complete buildpack detection.
+    fn create_json_error() -> serde_json::error::Error {
+        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
 
-            An unexpected error occurred while determining if the {buildpack_name} should be \
-            run for this application. See the log output above for more information. 
-        ", buildpack_name = style::value(BUILDPACK_NAME) });
-}
-
-fn on_framework_error(
-    error: &libcnb::Error<NpmInstallBuildpackError>,
-    logger: Print<Bullet<Stderr>>,
-) {
-    print_error_details(logger, &error)
-        .error(formatdoc! {"
-            {buildpack_name} internal error.
-
-            The framework used by this buildpack encountered an unexpected error.
-            
-            If you can't deploy to Heroku due to this issue, check the official Heroku Status page at \
-            status.heroku.com for any ongoing incidents. After all incidents resolve, retry your build.
-
-            {SUBMIT_AN_ISSUE}
-        ", buildpack_name = style::value(BUILDPACK_NAME) });
-}
-
-fn print_error_details(
-    logger: Print<Bullet<Stderr>>,
-    error: &impl Display,
-) -> Print<Bullet<Stderr>> {
-    logger
-        .bullet(style::important("DEBUG INFO:"))
-        .sub_bullet(error.to_string())
-        .done()
+    fn create_cmd_error(command: impl Into<String>) -> CmdError {
+        Command::new("false")
+            .named(command.into())
+            .named_output()
+            .unwrap_err()
+    }
 }
