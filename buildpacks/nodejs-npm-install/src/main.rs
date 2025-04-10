@@ -10,15 +10,15 @@ mod npm;
 
 use crate::configure_npm_cache_directory::configure_npm_cache_directory;
 use crate::configure_npm_runtime_env::configure_npm_runtime_env;
-use crate::errors::NpmInstallBuildpackError;
 use bullet_stream::state::SubBullet;
 use bullet_stream::{style, Print};
-use fun_run::{CommandWithName, NamedOutput};
+use fun_run::{CmdError, CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
-    read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
-use heroku_nodejs_utils::package_json::PackageJson;
+use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -32,11 +32,8 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
+use std::io;
 use std::io::{stderr, Stderr};
-#[cfg(test)]
-use test_support as _;
-
-const BUILDPACK_NAME: &str = "Heroku Node.js npm Install Buildpack";
 
 struct NpmInstallBuildpack;
 
@@ -75,7 +72,13 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let logger = Print::new(stderr()).h1(BUILDPACK_NAME);
+        let logger = Print::new(stderr()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack.toml should have a 'name' field set"));
+
         let env = Env::from_current();
         let app_dir = &context.app_dir;
         let package_json = PackageJson::read(app_dir.join("package.json"))
@@ -108,7 +111,8 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        errors::on_error(error);
+        let error_message = errors::on_error(error);
+        eprintln!("{error_message}");
     }
 }
 
@@ -224,6 +228,18 @@ fn configure_default_processes(
             section_logger.sub_bullet("Skipping default web process (no start script defined)"),
         )
     }
+}
+
+#[derive(Debug)]
+pub(crate) enum NpmInstallBuildpackError {
+    Application(application::Error),
+    BuildScript(CmdError),
+    Detect(io::Error),
+    NpmInstall(CmdError),
+    NpmSetCacheDir(CmdError),
+    NpmVersion(npm::VersionError),
+    PackageJson(PackageJsonError),
+    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
 impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> {

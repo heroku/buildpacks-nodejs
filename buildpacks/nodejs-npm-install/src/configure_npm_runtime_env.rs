@@ -1,12 +1,10 @@
-use std::env::temp_dir;
-
+use crate::NpmInstallBuildpack;
+use crate::NpmInstallBuildpackError;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-
-use crate::errors::NpmInstallBuildpackError;
-use crate::NpmInstallBuildpack;
+use std::env::temp_dir;
 
 pub(crate) fn configure_npm_runtime_env(
     context: &BuildContext<NpmInstallBuildpack>,

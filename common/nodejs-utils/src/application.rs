@@ -49,13 +49,11 @@ impl Display for Error {
                         package.json for this project specifies dependencies, \
                         but there isn't a lockfile.
 
-                        To use npm to install dependencies, run {npm_install}. \
+                        - To use npm to install dependencies, run {npm_install}. \
                         This command will generate a {npm_lockfile} lockfile.
-
-                        Or, to use yarn to install dependencies, run {yarn_install}. \
+                        - To use yarn to install dependencies, run {yarn_install}. \
                         This command will generate a {yarn_lockfile} lockfile.
-
-                        Or, to use pnpm to install dependencies, run {pnpm_install}. \
+                        - To use pnpm to install dependencies, run {pnpm_install}. \
                         This command will generate a {pnpm_lockfile} lockfile.
 
                         Ensure the resulting lockfile is committed to the repository, then try again.
@@ -77,7 +75,7 @@ impl Display for Error {
                     .join(", ");
 
                 writedoc!(f, "
-                    Multiple lockfiles found: {lockfiles}
+                    The following lockfiles were found in this application: {lockfiles}
 
                     More than one package manager has created lockfiles for this application. Only one \
                     can be used to install dependencies but the buildpack can't determine which when multiple \
@@ -127,7 +125,7 @@ mod tests {
         assert_eq!(
             error.to_string(),
             formatdoc! {"
-                Multiple lockfiles found: package-lock.json, pnpm-lock.yaml, yarn.lock
+                The following lockfiles were found in this application: package-lock.json, pnpm-lock.yaml, yarn.lock
 
                 More than one package manager has created lockfiles for this application. Only one can be used to install dependencies but the buildpack can't determine which when multiple lockfiles are present.
 
