@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated error messages and formatting. ([#1076](https://github.com/heroku/buildpacks-nodejs/pull/1076))
+
 ## [3.6.0] - 2025-04-09
 
 - No changes.
