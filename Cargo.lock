@@ -719,9 +719,11 @@ dependencies = [
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
+ "insta",
  "libcnb",
  "libcnb-test",
  "serde",
+ "serde_json",
  "test_support",
  "toml",
 ]

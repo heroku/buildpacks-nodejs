@@ -50,7 +50,7 @@ pub(crate) fn configure_pnpm_store_directory(
     }
 
     cmd::pnpm_set_store_dir(env, &addressable_layer.path())
-        .map_err(PnpmInstallBuildpackError::PnpmDir)?;
+        .map_err(PnpmInstallBuildpackError::PnpmSetStoreDir)?;
 
     Ok(log)
 }
