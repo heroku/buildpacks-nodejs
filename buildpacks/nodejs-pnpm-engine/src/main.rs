@@ -5,7 +5,7 @@
 
 mod errors;
 
-use crate::errors::PnpmEngineBuildpackError;
+use bullet_stream::Print;
 use libcnb::build::{BuildContext, BuildResult};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
@@ -13,10 +13,9 @@ use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack};
 #[cfg(test)]
 use libcnb_test as _;
+use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
-
-const BUILDPACK_NAME: &str = "Heroku Node.js pnpm Engine Buildpack";
 
 struct PnpmEngineBuildpack;
 
@@ -40,15 +39,28 @@ impl Buildpack for PnpmEngineBuildpack {
         DetectResultBuilder::fail().build()
     }
 
-    fn build(&self, _context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        let _logger = Print::new(stderr()).h1(context
+            .buildpack_descriptor
+            .buildpack
+            .name
+            .as_ref()
+            .expect("The buildpack.toml should have a 'name' field set"));
+
         // This buildpack does not install pnpm yet, suggest using
         // `heroku/nodejs-corepack` instead.
         Err(PnpmEngineBuildpackError::CorepackRequired)?
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        errors::on_error(error);
+        let error_message = errors::on_error(error);
+        eprintln!("{error_message}");
     }
+}
+
+#[derive(Debug, Copy, Clone)]
+pub(crate) enum PnpmEngineBuildpackError {
+    CorepackRequired,
 }
 
 impl From<PnpmEngineBuildpackError> for libcnb::Error<PnpmEngineBuildpackError> {

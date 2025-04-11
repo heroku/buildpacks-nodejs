@@ -17,21 +17,21 @@ fn pnpm_unknown_version() {
             assert_contains!(
                 ctx.pack_stderr,
                 &formatdoc! {"
-                ! A pnpm lockfile (`pnpm-lock.yaml`) was detected, but the
-                ! version of `pnpm` to install could not be determined.
-                !
-                ! `pnpm` may be installed via the `heroku/nodejs-corepack`
-                ! buildpack. It requires the desired `pnpm` version to be set
-                ! via the `packageManager` key in `package.json`.
-                !
-                ! To set `packageManager` in `package.json` to the latest
-                ! `pnpm`, run:
-                !
-                ! `corepack enable`
-                ! `corepack use pnpm@*`
-                !
-                ! Then commit the result, and try again.
-            "}
+                    ! A pnpm lockfile (`pnpm-lock.yaml`) was detected, but the \
+                    version of `pnpm` to install could not be determined.
+                    !
+                    ! `pnpm` may be installed via the `heroku/nodejs-corepack` \
+                    buildpack. It requires the desired `pnpm` version to be set \
+                    via the `packageManager` key in `package.json`.
+                    !
+                    ! To set `packageManager` in `package.json` to the latest \
+                    `pnpm`, run:
+                    !
+                    ! `corepack enable`
+                    ! `corepack use pnpm@*`
+                    !
+                    ! Then commit the result, and try again.
+                "}
             );
         },
     );
