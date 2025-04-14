@@ -142,23 +142,25 @@ fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
         PnpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
             let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = e;
             let value_type = value.type_str();
+            let requires_metadata = style::value("[requires.metadata]");
+            let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
             error_message()
                 .error_type(ErrorType::UserFacing(
                     SuggestRetryBuild::No,
                     SuggestSubmitIssue::Yes,
                 ))
-                .header("Invalid build script metadata")
-                .body(formatdoc! { "
-                    A participating buildpack has set invalid `[requires.metadata]` for the build plan \
-                    named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
-                    
+                .header("Invalid build plan metadata")
+                .body(formatdoc! {"
+                    A participating buildpack has set invalid {requires_metadata} for the \
+                    build plan named {buildplan_name}.
+
                     Expected metadata format:
                     [requires.metadata]
                     enabled = <bool>
-                    
+
                     But was:
                     [requires.metadata]
-                    enabled = <{value_type}>     
+                    enabled = <{value_type}>
                 "})
                 .create()
         }

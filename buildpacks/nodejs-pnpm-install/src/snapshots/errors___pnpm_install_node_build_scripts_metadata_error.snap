@@ -1,7 +1,7 @@
 ---
 source: buildpacks/nodejs-pnpm-install/src/errors.rs
 ---
-! Invalid build script metadata
+! Invalid build plan metadata
 !
 ! A participating buildpack has set invalid `[requires.metadata]` for the build plan named `node_build_scripts`.
 !
