@@ -54,7 +54,7 @@ impl Buildpack for PnpmEngineBuildpack {
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
         let error_message = errors::on_error(error);
-        eprintln!("{error_message}");
+        eprintln!("\n{error_message}");
     }
 }
 
