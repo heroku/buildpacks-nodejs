@@ -4,7 +4,7 @@ source: buildpacks/nodejs-npm-engine/src/errors.rs
 - Debug Info:
   - Invalid permissions
 
-! Failed to opening the downloaded `npm` package file
+! Failed to open the downloaded `npm` package file
 !
 ! An unexpected I/O occurred while opening the downloaded `npm` package file at `/layers/npm/install/npm.tgz`.
 !

@@ -114,7 +114,7 @@ fn on_npm_install_error(error: NpmInstallError) -> ErrorMessage {
 
         NpmInstallError::OpenTarball(path, e) => error_message()
             .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-            .header(format!("Failed to opening the downloaded {npm} package file"))
+            .header(format!("Failed to open the downloaded {npm} package file"))
             .body(formatdoc! {"
                 An unexpected I/O occurred while opening the downloaded {npm} package file at {path}.
             ", path = file_value(path) })
@@ -125,7 +125,7 @@ fn on_npm_install_error(error: NpmInstallError) -> ErrorMessage {
             .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
             .header(format!("Failed to extract {npm} package file"))
             .body(formatdoc! {"
-                An unexpected I/O occurred while extracing the contents of the downloaded {npm} package file at {path}.
+                An unexpected I/O occurred while extracting the contents of the downloaded {npm} package file at {path}.
             ", path = file_value(path) })
             .debug_info(e.to_string())
             .create(),
