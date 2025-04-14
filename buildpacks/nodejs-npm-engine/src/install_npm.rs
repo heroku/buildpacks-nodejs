@@ -1,6 +1,10 @@
+use crate::NpmEngineBuildpack;
+use crate::NpmEngineBuildpackError;
 use bullet_stream::state::SubBullet;
 use bullet_stream::{style, Print};
 use fun_run::{CommandWithName, NamedOutput};
+use heroku_nodejs_utils::inv::Release;
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -11,14 +15,8 @@ use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Stderr;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
-
-use heroku_nodejs_utils::inv::Release;
-use heroku_nodejs_utils::vrs::Version;
-
-use crate::errors::NpmEngineBuildpackError;
-use crate::NpmEngineBuildpack;
 
 pub(crate) fn install_npm(
     context: &BuildContext<NpmEngineBuildpack>,
@@ -91,14 +89,17 @@ fn download_and_unpack_release(
     download_to: &Path,
     unpack_into: &Path,
     logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
     let timer = logger.start_timer(format!("Downloading {}", style::value(download_from)));
     download_file(download_from, download_to)
-        .map_err(NpmEngineLayerError::Download)
-        .and_then(|()| File::open(download_to).map_err(NpmEngineLayerError::OpenTarball))
+        .map_err(NpmInstallError::Download)
+        .and_then(|()| {
+            File::open(download_to)
+                .map_err(|e| NpmInstallError::OpenTarball(download_to.to_path_buf(), e))
+        })
         .and_then(|mut npm_tgz_file| {
             decompress_tarball(&mut npm_tgz_file, unpack_into)
-                .map_err(NpmEngineLayerError::DecompressTarball)
+                .map_err(|e| NpmInstallError::DecompressTarball(download_to.to_path_buf(), e))
         })?;
     Ok(timer.done())
 }
@@ -106,7 +107,7 @@ fn download_and_unpack_release(
 fn remove_existing_npm_installation(
     npm_cli_script: &Path,
     mut logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
     logger = logger.sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
@@ -117,7 +118,7 @@ fn remove_existing_npm_installation(
             "--loglevel=silent",
         ])
         .named_output()
-        .map_err(NpmEngineLayerError::RemoveExistingNpmInstall)
+        .map_err(NpmInstallError::RemoveExistingNpmInstall)
         .map(|_| logger)
 }
 
@@ -125,7 +126,7 @@ fn install_npm_package(
     npm_cli_script: &Path,
     package: &Path,
     mut logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmEngineLayerError> {
+) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
     logger = logger.sub_bullet("Installing requested npm");
     Command::new("node")
         .args([
@@ -136,7 +137,7 @@ fn install_npm_package(
         ])
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
-        .map_err(NpmEngineLayerError::InstallNpm)
+        .map_err(NpmInstallError::InstallNpm)
         .map(|_| logger)
 }
 
@@ -177,16 +178,16 @@ pub(crate) struct NpmEngineLayerMetadata {
 }
 
 #[derive(Debug)]
-pub(crate) enum NpmEngineLayerError {
+pub(crate) enum NpmInstallError {
     Download(DownloadError),
-    OpenTarball(std::io::Error),
-    DecompressTarball(std::io::Error),
+    OpenTarball(PathBuf, std::io::Error),
+    DecompressTarball(PathBuf, std::io::Error),
     RemoveExistingNpmInstall(fun_run::CmdError),
     InstallNpm(fun_run::CmdError),
 }
 
-impl From<NpmEngineLayerError> for libcnb::Error<NpmEngineBuildpackError> {
-    fn from(value: NpmEngineLayerError) -> Self {
-        libcnb::Error::BuildpackError(NpmEngineBuildpackError::NpmEngineLayer(value))
+impl From<NpmInstallError> for libcnb::Error<NpmEngineBuildpackError> {
+    fn from(value: NpmInstallError) -> Self {
+        libcnb::Error::BuildpackError(NpmEngineBuildpackError::NpmInstall(value))
     }
 }

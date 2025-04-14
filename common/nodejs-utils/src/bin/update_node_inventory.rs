@@ -181,7 +181,8 @@ fn fetch_checksums(version: &Version) -> Result<HashMap<String, String>> {
         "https://nodejs.org/download/release/v{version}/SHASUMS256.txt"
     ))
     .call()?
-    .into_string()
+    .body_mut()
+    .read_to_string()
     .map_err(anyhow::Error::from)
     .map(|x| parse_shasums(&x))
 }
@@ -218,6 +219,7 @@ fn list_releases() -> Result<Vec<NodeJSRelease>> {
     ureq::get(NODE_UPSTREAM_LIST_URL)
         .call()
         .context("Failed to fetch nodejs.org release list")?
-        .into_json::<Vec<NodeJSRelease>>()
+        .body_mut()
+        .read_json::<Vec<NodeJSRelease>>()
         .context("Failed to parse nodejs.org release list from JSON")
 }

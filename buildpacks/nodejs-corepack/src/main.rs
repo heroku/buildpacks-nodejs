@@ -1,3 +1,12 @@
+// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
+// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
+// to be able selectively opt out of coverage for functions/lines/modules.
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
+use crate::cmd::CorepackVersionError;
+use crate::enable_corepack::enable_corepack;
+use crate::install_integrity_keys::install_integrity_keys;
+use crate::prepare_corepack::prepare_corepack;
 use bullet_stream::{style, Print};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -6,20 +15,14 @@ use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::{buildpack_main, Buildpack, Env};
+#[cfg(test)]
+use libcnb_test as _;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
 use std::io::stderr;
-
-use crate::cmd::CorepackVersionError;
-use crate::enable_corepack::enable_corepack;
-use crate::install_integrity_keys::install_integrity_keys;
-use crate::prepare_corepack::prepare_corepack;
-#[cfg(test)]
-use libcnb_test as _;
+use std::path::PathBuf;
 #[cfg(test)]
 use test_support as _;
-#[cfg(test)]
-use ureq as _;
 
 mod cfg;
 mod cmd;
@@ -122,8 +125,9 @@ impl Buildpack for CorepackBuildpack {
             })
     }
 
-    fn on_error(&self, err: libcnb::Error<Self::Error>) {
-        errors::on_error(err);
+    fn on_error(&self, error: libcnb::Error<Self::Error>) {
+        let error_message = errors::on_error(error);
+        eprintln!("\n{error_message}");
     }
 }
 
@@ -131,8 +135,8 @@ impl Buildpack for CorepackBuildpack {
 enum CorepackBuildpackError {
     PackageManagerMissing,
     PackageJson(PackageJsonError),
-    ShimLayer(std::io::Error),
-    ManagerLayer(std::io::Error),
+    CreateBinDirectory(PathBuf, std::io::Error),
+    CreateCacheDirectory(PathBuf, std::io::Error),
     CorepackVersion(CorepackVersionError),
     CorepackEnable(fun_run::CmdError),
     CorepackPrepare(fun_run::CmdError),

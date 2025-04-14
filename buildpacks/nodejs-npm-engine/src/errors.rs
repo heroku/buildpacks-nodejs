@@ -1,265 +1,353 @@
-use crate::install_npm::NpmEngineLayerError;
-use crate::BUILDPACK_NAME;
+use crate::install_npm::NpmInstallError;
+use crate::NpmEngineBuildpackError;
 use crate::{node, npm};
-use bullet_stream::state::Bullet;
-use bullet_stream::{style, Print};
-use heroku_nodejs_utils::package_json::PackageJsonError;
+use bullet_stream::style;
+use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
+use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
+use heroku_nodejs_utils::error_handling::{
+    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
+    SuggestRetryBuild, SuggestSubmitIssue,
+};
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
-use std::fmt::Display;
-use std::io::{stderr, Stderr};
 
-const USE_DEBUG_INFORMATION_AND_RETRY_BUILD: &str = "\
-Use the debug information above to troubleshoot and retry your build.";
+const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine";
 
-const SUBMIT_AN_ISSUE: &str = "\
-If the issue persists and you think you found a bug in the buildpack then reproduce the issue \
-locally with a minimal example and open an issue in the buildpack's GitHub repository with the details.";
+const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-#[derive(Debug)]
-pub(crate) enum NpmEngineBuildpackError {
-    PackageJson(PackageJsonError),
-    MissingNpmEngineRequirement,
-    InventoryParse(toml::de::Error),
-    NpmVersionResolve(Requirement),
-    NpmEngineLayer(NpmEngineLayerError),
-    NodeVersion(node::VersionError),
-    NpmVersion(npm::VersionError),
-}
-
-pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) {
-    let logger = Print::new(stderr()).without_header();
+pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) -> ErrorMessage {
     match error {
-        libcnb::Error::BuildpackError(buildpack_error) => {
-            on_buildpack_error(buildpack_error, logger);
-        }
-        framework_error => on_framework_error(&framework_error, logger),
+        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
+        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
     }
 }
 
-fn on_buildpack_error(error: NpmEngineBuildpackError, logger: Print<Bullet<Stderr>>) {
+// Wraps the error_message() builder to preset the issues_url field
+fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
+    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
+}
+
+fn on_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
     match error {
-        NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e, logger),
+        NpmEngineBuildpackError::PackageJson(e) => {
+            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
+        }
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
-            on_missing_npm_engine_requirement_error(logger);
+            on_missing_npm_engine_requirement_error()
         }
-        NpmEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e, logger),
+        NpmEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
         NpmEngineBuildpackError::NpmVersionResolve(requirement) => {
-            on_npm_version_resolve_error(&requirement, logger);
+            on_npm_version_resolve_error(&requirement)
         }
-        NpmEngineBuildpackError::NpmEngineLayer(e) => on_npm_engine_layer_error(e, logger),
-        NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e, logger),
-        NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e, logger),
+        NpmEngineBuildpackError::NpmInstall(e) => on_npm_install_error(e),
+        NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e),
+        NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e),
     }
 }
 
-fn on_package_json_error(error: PackageJsonError, logger: Print<Bullet<Stderr>>) {
-    match error {
-        PackageJsonError::AccessError(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    Error reading {package_json}.
-
-                    This buildpack requires {package_json} to complete the build but the file can’t be read. 
-                    
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", package_json = style::value("package.json")});
-        }
-        PackageJsonError::ParseError(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    Error reading {package_json}.
-
-                    This buildpack requires {package_json} to complete the build but the file \
-                    can’t be parsed. Ensure {npm_install} runs locally to check the formatting in your file. 
-                    
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", package_json = style::value("package.json"), npm_install = style::value("npm install") });
-        }
-    }
+fn on_missing_npm_engine_requirement_error() -> ErrorMessage {
+    let engines_key = style::value("engines.npm");
+    let package_json = style::value("package.json");
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+        .header(format!("Missing {engines_key} key in {package_json}"))
+        .body(formatdoc! { "
+            This buildpack requires the `engines.npm` key to determine which engine versions to \
+            install.
+        " })
+        .create()
 }
 
-fn on_missing_npm_engine_requirement_error(logger: Print<Bullet<Stderr>>) {
-    logger.error(formatdoc! {"
-        Missing {engines_key} key in {package_json}.
-        
-        This buildpack requires the `engines.npm` key to determine which engine versions to install.
-
-        Retry your build. 
-
-        {SUBMIT_AN_ISSUE}
-    ", engines_key = style::value("engines.npm"), package_json = style::value("package.json") });
-}
-
-fn on_inventory_parse_error(error: &toml::de::Error, logger: Print<Bullet<Stderr>>) {
-    print_error_details(logger, &error).error(formatdoc! {"
-            Failed to load available {npm} versions.
-
+fn on_inventory_parse_error(error: &toml::de::Error) -> ErrorMessage {
+    let npm = style::value("npm");
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
+        .header(format!("Failed to load available {npm} versions"))
+        .body(formatdoc! { "
             An unexpected error occurred while loading the available {npm} versions.
-        
-            {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-            {SUBMIT_AN_ISSUE}
-        ", npm = style::value("npm") });
+        "})
+        .debug_info(error.to_string())
+        .create()
 }
 
-fn on_npm_version_resolve_error(requirement: &Requirement, logger: Print<Bullet<Stderr>>) {
-    logger.error(formatdoc! {"
-            Error resolving requested {npm} version {requested_version}.
+fn on_npm_version_resolve_error(requirement: &Requirement) -> ErrorMessage {
+    let npm = style::value("npm");
+    let requested_version = style::value(requirement.to_string());
+    let npm_releases_url = style::url("https://www.npmjs.com/package/npm?activeTab=versions");
+    let inventory_url = style::url("https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-npm-engine/inventory.toml");
+    let npm_show_command = style::value(format!("npm show 'npm@{requirement}' versions"));
+    let package_json = style::value("package.json");
+    let engines_key = style::value("engines.npm");
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
+        .header(format!("Error resolving requested {npm} version {requested_version}"))
+        .body(formatdoc! { "
+            The requested npm version could not be resolved to a known release in this buildpack's \
+            inventory of npm releases.
             
-            Can’t find the `npm` version that matches the requested version declared in {package_json} ({requested_version}).
-    
-            Verify that the requested version range matches a published version of {npm} by checking \
-            https://www.npmjs.com/package/npm?activeTab=versions or trying the following command:
-            
-                $ npm show 'npm@{requirement}' versions
-    
-            Update the {engines_key} field in {package_json} to a single version or version range that \
+            Suggestions:
+            - Confirm if this is a valid npm release at {npm_releases_url} or by running {npm_show_command}
+            - Check if this buildpack includes the requested npm version in its inventory file at {inventory_url}
+            - Update the {engines_key} field in {package_json} to a single version or version range that \
             includes a published {npm} version.
-    
-            {SUBMIT_AN_ISSUE}
-        ",
-        npm = style::value("npm"),
-        requested_version = style::value(requirement.to_string()),
-        package_json = style::value("package.json"),
-        engines_key = style::value("engines.npm")
-    });
+        " })
+        .create()
 }
 
-fn on_npm_engine_layer_error(error: NpmEngineLayerError, logger: Print<Bullet<Stderr>>) {
+fn on_npm_install_error(error: NpmInstallError) -> ErrorMessage {
+    let npm = style::value("npm");
+    let npm_status_url = style::url("https://status.npmjs.org/");
     match error {
-        NpmEngineLayerError::Download(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    Failed to download {npm}.
+        NpmInstallError::Download(e) =>
+            error_message()
+                .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+                .header(format!("Failed to download {npm}"))
+                .body(formatdoc! {"
+                    An unexpected error occurred while downloading the {npm} package. This error can \
+                    occur due to an unstable network connection or an issue with the npm repository.
 
-                    An unexpected error occurred while downloading the {npm} package. This error can occur due to an unstable network connection.
+                    Suggestions:
+                    - Check the npm status page for any ongoing incidents ({npm_status_url})
+                " })
+                .debug_info(e.to_string())
+                .create(),
 
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+        NpmInstallError::OpenTarball(path, e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+            .header(format!("Failed to open the downloaded {npm} package file"))
+            .body(formatdoc! {"
+                An unexpected I/O occurred while opening the downloaded {npm} package file at {path}.
+            ", path = file_value(path) })
+            .debug_info(e.to_string())
+            .create(),
 
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm") });
-        }
-        NpmEngineLayerError::OpenTarball(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    An unexpected error occurred while opening the downloaded {npm} package file. 
+        NpmInstallError::DecompressTarball(path, e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+            .header(format!("Failed to extract {npm} package file"))
+            .body(formatdoc! {"
+                An unexpected I/O occurred while extracting the contents of the downloaded {npm} package file at {path}.
+            ", path = file_value(path) })
+            .debug_info(e.to_string())
+            .create(),
 
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
+        NpmInstallError::RemoveExistingNpmInstall(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+            .header(format!("Failed to remove the existing {npm} installation"))
+            .body(formatdoc! {"
+                An unexpected error occurred while removing the existing {npm} installation.
+            " })
+            .debug_info(e.to_string())
+            .create(),
 
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm") });
-        }
-        NpmEngineLayerError::DecompressTarball(e) => {
-            print_error_details(logger, &e)
-                .error(formatdoc! {"
-                    An unexpected error occurred while extracting the contents of the downloaded {npm} package file.
-
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm") });
-        }
-        NpmEngineLayerError::RemoveExistingNpmInstall(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    An unexpected error occurred while removing the existing {npm} installation. 
-
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm") });
-        }
-        NpmEngineLayerError::InstallNpm(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    An unexpected error occurred while installing the downloaded {npm} package. 
-
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-            ", npm = style::value("npm") });
-        }
+        NpmInstallError::InstallNpm(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+            .header(format!("Failed to install the downloaded {npm} package"))
+            .body(formatdoc! {"
+                An unexpected error occurred while installing the downloaded {npm} package.
+            " })
+            .debug_info(e.to_string())
+            .create()
     }
 }
 
-fn on_node_version_error(error: node::VersionError, logger: Print<Bullet<Stderr>>) {
+fn on_node_version_error(error: node::VersionError) -> ErrorMessage {
     match error {
-        node::VersionError::Command(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to determine {node} version information.
-    
-                    An unexpected error occurred while executing {node_version}. 
+        node::VersionError::Command(e) => error_message()
+            .error_type(Internal)
+            .header("Failed to determine Node.js version")
+            .body(formatdoc! { "
+                An unexpected error occurred while attempting to determine the current Node.js version \
+                from the system.
+            " })
+            .debug_info(e.to_string())
+            .create(),
 
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-
-                    {SUBMIT_AN_ISSUE}
-                ", node = style::value("Node"), node_version = style::value(e.name()) });
-        }
-        node::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to parse {node} version information.
-        
-                    An unexpected error occurred while parsing version information from {output}. 
-                    
-                    {SUBMIT_AN_ISSUE}
-                ", node = style::value("Node"), output = style::value(stdout) });
-        }
+        node::VersionError::Parse(stdout, e) => error_message()
+            .error_type(Internal)
+            .header("Failed to parse Node.js version")
+            .body(formatdoc! { "
+                An unexpected error occurred while parsing Node.js version information from '{stdout}'.
+            " })
+            .debug_info(e.to_string())
+            .create(),
     }
 }
 
-fn on_npm_version_error(error: npm::VersionError, logger: Print<Bullet<Stderr>>) {
+fn on_npm_version_error(error: npm::VersionError) -> ErrorMessage {
     match error {
-        npm::VersionError::Command(e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to determine {npm} version information.
+        npm::VersionError::Command(e) => error_message()
+            .error_type(Internal)
+            .header("Failed to determine npm version")
+            .body(formatdoc! { "
+                An unexpected error occurred while attempting to determine the current npm version \
+                from the system.
+            " })
+            .debug_info(e.to_string())
+            .create(),
 
-                    An unexpected error occurred while executing {npm_version}.  
-                    
-                    {USE_DEBUG_INFORMATION_AND_RETRY_BUILD}
-        
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm"), npm_version = style::value(e.name())});
-        }
-        npm::VersionError::Parse(stdout, e) => {
-            print_error_details(logger, &e).error(formatdoc! {"
-                    Failed to parse {npm} version information.
-        
-                    An unexpected error occurred while parsing version information from {output}. 
-                    
-                    {SUBMIT_AN_ISSUE}
-                ", npm = style::value("npm"), output = style::value(stdout) });
-        }
+        npm::VersionError::Parse(stdout, e) => error_message()
+            .error_type(Internal)
+            .header("Failed to parse npm version")
+            .body(formatdoc! { "
+                An unexpected error occurred while parsing npm version information from '{stdout}'.
+            " })
+            .debug_info(e.to_string())
+            .create(),
     }
 }
 
-fn on_framework_error(
-    error: &libcnb::Error<NpmEngineBuildpackError>,
-    logger: Print<Bullet<Stderr>>,
-) {
-    print_error_details(logger, &error)
-        .error(formatdoc! {"
-            {buildpack_name} internal error.
-    
-            The framework used by this buildpack encountered an unexpected error.
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::NpmEngineBuildpackError;
+    use bullet_stream::strip_ansi;
+    use fun_run::{CmdError, CommandWithName};
+    use heroku_nodejs_utils::package_json::PackageJsonError;
+    use heroku_nodejs_utils::vrs::Version;
+    use insta::{assert_snapshot, with_settings};
+    use libcnb::Error;
+    use libherokubuildpack::download::DownloadError;
+    use std::process::Command;
+    use test_support::test_name;
 
-            If you can't deploy to Heroku due to this issue, check the official Heroku Status page at \
-            status.heroku.com for any ongoing incidents. After all incidents resolve, retry your build.
+    #[test]
+    fn test_npm_engine_package_json_access_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::PackageJson(
+            PackageJsonError::AccessError(create_io_error("test I/O error blah")),
+        ));
+    }
 
-            If the issue persists and you think you found a bug in the buildpack or framework, reproduce \
-            the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository \
-            and include the details.
+    #[test]
+    fn test_npm_engine_package_json_parse_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::PackageJson(
+            PackageJsonError::ParseError(create_json_error()),
+        ));
+    }
 
-        ", buildpack_name = style::value(BUILDPACK_NAME) });
-}
+    #[test]
+    fn test_npm_engine_missing_npm_engine_requirement_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::MissingNpmEngineRequirement);
+    }
 
-fn print_error_details(
-    logger: Print<Bullet<Stderr>>,
-    error: &impl Display,
-) -> Print<Bullet<Stderr>> {
-    logger
-        .bullet(style::important("DEBUG INFO:"))
-        .sub_bullet(error.to_string())
-        .done()
+    #[test]
+    fn test_npm_engine_inventory_parse_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::InventoryParse(create_toml_error()));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_version_resolve_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::NpmVersionResolve(
+            Requirement::parse("1.2.3").unwrap(),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_install_download_error() {
+        assert_error_snapshot(NpmInstallError::Download(create_download_http_error()));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_install_open_tarball_error() {
+        assert_error_snapshot(NpmInstallError::OpenTarball(
+            "/layers/npm/install/npm.tgz".into(),
+            create_io_error("Invalid permissions"),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_install_decompress_tarball_error() {
+        assert_error_snapshot(NpmInstallError::DecompressTarball(
+            "/layers/npm/install/npm.tgz".into(),
+            create_io_error("Out of disk space"),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_install_remove_existing_npm_install_error() {
+        assert_error_snapshot(NpmInstallError::RemoveExistingNpmInstall(create_cmd_error(
+            "npm -g uninstall npm",
+        )));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_install_install_npm_error() {
+        assert_error_snapshot(NpmInstallError::InstallNpm(create_cmd_error(
+            "npm -g install /layers/npm/install/package",
+        )));
+    }
+
+    #[test]
+    fn test_npm_engine_node_version_command_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::NodeVersion(
+            node::VersionError::Command(create_cmd_error("node --version")),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_node_version_parse_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::NodeVersion(
+            node::VersionError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_version_command_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::NpmVersion(
+            npm::VersionError::Command(create_cmd_error("npm --version")),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_npm_version_parse_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::NpmVersion(
+            npm::VersionError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
+    }
+
+    fn assert_error_snapshot(error: impl Into<Error<NpmEngineBuildpackError>>) {
+        let error_message = strip_ansi(on_error(error.into()).to_string());
+        let test_name = format!(
+            "errors__{}",
+            test_name()
+                .split("::")
+                .last()
+                .unwrap()
+                .trim_start_matches("test")
+        );
+        with_settings!({
+            prepend_module_to_snapshot => false,
+            omit_expression => true,
+        }, {
+            assert_snapshot!(test_name, error_message);
+        });
+    }
+
+    fn create_io_error(text: &str) -> std::io::Error {
+        std::io::Error::new(std::io::ErrorKind::Other, text)
+    }
+
+    fn create_json_error() -> serde_json::error::Error {
+        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
+
+    fn create_toml_error() -> toml::de::Error {
+        toml::from_str::<toml::Table>("[[artifacts").unwrap_err()
+    }
+
+    fn create_cmd_error(command: impl Into<String>) -> CmdError {
+        Command::new("false")
+            .named(command.into())
+            .named_output()
+            .unwrap_err()
+    }
+
+    fn create_download_http_error() -> DownloadError {
+        Box::new(ureq::get("broken/ url").call().unwrap_err()).into()
+    }
 }

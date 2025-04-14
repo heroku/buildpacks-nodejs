@@ -2,7 +2,7 @@
 source: buildpacks/nodejs-engine/src/errors.rs
 ---
 - Debug Info:
-  - Bad URL: failed to parse URL: RelativeUrlWithoutBase: relative URL without a base
+  - http: invalid format
 
 ! Failed to download Node.js distribution
 !

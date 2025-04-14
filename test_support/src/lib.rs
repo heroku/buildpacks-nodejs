@@ -123,11 +123,11 @@ pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContex
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
     start_container(ctx, |_container, socket_addr| {
-        let response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+        let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             ureq::get(&format!("http://{socket_addr}/")).call()
         })
         .unwrap();
-        let response_body = response.into_string().unwrap();
+        let response_body = response.body_mut().read_to_string().unwrap();
         assert_contains!(response_body, expected_response_body);
     });
 }
@@ -190,7 +190,11 @@ pub fn add_package_json_dependency(app_dir: &Path, package_name: &str, package_v
 
 pub fn add_build_script(app_dir: &Path, script: &str) {
     update_package_json(app_dir, |json| {
-        let scripts = json["scripts"].as_object_mut().unwrap();
+        let scripts = json
+            .entry("scripts")
+            .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+            .as_object_mut()
+            .unwrap();
         scripts.insert(
             script.to_string(),
             serde_json::Value::String(format!("echo 'executed {script}'")),

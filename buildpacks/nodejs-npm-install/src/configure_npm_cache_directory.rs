@@ -1,3 +1,5 @@
+use crate::NpmInstallBuildpackError;
+use crate::{npm, NpmInstallBuildpack};
 use bullet_stream::state::SubBullet;
 use bullet_stream::Print;
 use fun_run::CommandWithName;
@@ -9,9 +11,6 @@ use libcnb::layer::{
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 use std::io::Stderr;
-
-use crate::errors::NpmInstallBuildpackError;
-use crate::{npm, NpmInstallBuildpack};
 
 pub(crate) fn configure_npm_cache_directory(
     context: &BuildContext<NpmInstallBuildpack>,

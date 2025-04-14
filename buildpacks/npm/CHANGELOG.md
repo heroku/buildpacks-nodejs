@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.0] - 2025-04-09
+
+- No changes.
+
+## [3.5.3] - 2025-04-03
+
+- No changes.
+
+## [3.5.2] - 2025-03-28
+
+- No changes.
+
+## [3.5.1] - 2025-03-14
+
+- No changes.
+
 ## [3.5.0] - 2025-02-28
 
 ### Changed
@@ -389,7 +405,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix broken builds when a `package-lock.json` is missing ([#9](https://github.com/heroku/nodejs-npm-buildpack/pull/9))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.3...v3.6.0
+[3.5.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.2...v3.5.3
+[3.5.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.1...v3.5.2
+[3.5.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.0...v3.5.1
 [3.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.11...v3.5.0
 [3.4.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.10...v3.4.11
 [3.4.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.4.9...v3.4.10

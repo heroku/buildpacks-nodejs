@@ -1,3 +1,5 @@
+use crate::yarn::Yarn;
+use crate::{cmd, YarnBuildpack, YarnBuildpackError};
 use bullet_stream::state::SubBullet;
 use bullet_stream::Print;
 use libcnb::build::BuildContext;
@@ -9,10 +11,7 @@ use libcnb::Env;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Stderr;
-use thiserror::Error;
-
-use crate::yarn::Yarn;
-use crate::{cmd, YarnBuildpack, YarnBuildpackError};
+use std::path::PathBuf;
 
 /// `DepsLayer` is a layer for caching yarn dependencies from build to build.
 /// This layer is irrelevant in zero-install mode, as cached dependencies are
@@ -62,8 +61,9 @@ pub(crate) fn configure_yarn_cache(
                 cache_usage_count: new_metadata.cache_usage_count + 1.0,
                 ..new_metadata
             })?;
-            fs::create_dir(deps_layer.path().join(CACHE_DIR))
-                .map_err(DepsLayerError::CreateCacheDir)?;
+
+            let cache_dir = deps_layer.path().join(CACHE_DIR);
+            fs::create_dir(&cache_dir).map_err(|e| DepsLayerError::CreateCacheDir(cache_dir, e))?;
         }
     }
 
@@ -86,11 +86,9 @@ pub(crate) struct DepsLayerMetadata {
     yarn: Yarn,
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum DepsLayerError {
-    #[error("Couldn't create yarn dependency cache: {0}")]
-    CreateCacheDir(std::io::Error),
-    #[error("Couldn't set yarn cache folder: {0}")]
+    CreateCacheDir(PathBuf, std::io::Error),
     YarnCacheSet(fun_run::CmdError),
 }
 

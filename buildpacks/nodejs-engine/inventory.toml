@@ -1,4 +1,32 @@
 [[artifacts]]
+version = "23.11.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v23.11.0/node-v23.11.0-linux-arm64.tar.gz"
+checksum = "sha256:12b29a87a7ccd7e1b97392d1e1533470d596578dad900430cff403e404fe72a7"
+
+[[artifacts]]
+version = "23.11.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v23.11.0/node-v23.11.0-linux-x64.tar.gz"
+checksum = "sha256:66f768a7f2d89ecdda8fe1e33ee71ac04ed9180111cbf1c5fb944655fe7c90c7"
+
+[[artifacts]]
+version = "23.10.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v23.10.0/node-v23.10.0-linux-arm64.tar.gz"
+checksum = "sha256:a7a2d642f43436ea22b0a050a3e7b8b9876ea33410e0d74cb18c0901cc9635d0"
+
+[[artifacts]]
+version = "23.10.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v23.10.0/node-v23.10.0-linux-x64.tar.gz"
+checksum = "sha256:26f85defcb75e3f8f00c6ad429f9a5b2fb1766e955045fe97e31b11c44315f2d"
+
+[[artifacts]]
 version = "23.9.0"
 os = "linux"
 arch = "arm64"
@@ -585,6 +613,20 @@ os = "linux"
 arch = "amd64"
 url = "https://nodejs.org/download/release/v21.0.0/node-v21.0.0-linux-x64.tar.gz"
 checksum = "sha256:013f370f1772197cb4e22f22f2185ee26d2e5f3acdb2f252d11cd214e9a8cdb9"
+
+[[artifacts]]
+version = "20.19.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v20.19.0/node-v20.19.0-linux-arm64.tar.gz"
+checksum = "sha256:618e4294602b78e97118a39050116b70d088b16197cd3819bba1fc18b473dfc4"
+
+[[artifacts]]
+version = "20.19.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v20.19.0/node-v20.19.0-linux-x64.tar.gz"
+checksum = "sha256:8a4dbcdd8bccef3132d21e8543940557e55dcf44f00f0a99ba8a062f4552e722"
 
 [[artifacts]]
 version = "20.18.3"
@@ -1201,6 +1243,20 @@ os = "linux"
 arch = "amd64"
 url = "https://nodejs.org/download/release/v19.0.0/node-v19.0.0-linux-x64.tar.gz"
 checksum = "sha256:857f4dde358a8b23afab47ebdc685ae736bcfeac1258c2dddae3648f6a03a77a"
+
+[[artifacts]]
+version = "18.20.8"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v18.20.8/node-v18.20.8-linux-arm64.tar.gz"
+checksum = "sha256:2e3dfc51154e6fea9fc86a90c4ea8f3ecb8b60acaf7367c4b76691da192571c1"
+
+[[artifacts]]
+version = "18.20.8"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v18.20.8/node-v18.20.8-linux-x64.tar.gz"
+checksum = "sha256:27a9f3f14d5e99ad05a07ed3524ba3ee92f8ff8b6db5ff80b00f9feb5ec8097a"
 
 [[artifacts]]
 version = "18.20.7"

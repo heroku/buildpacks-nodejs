@@ -117,7 +117,7 @@ pub(crate) fn install_node(
             })?;
             bullet = timer.done();
         }
-    };
+    }
 
     Ok(bullet.done())
 }

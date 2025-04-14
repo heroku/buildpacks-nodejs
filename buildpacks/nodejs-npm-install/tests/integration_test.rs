@@ -17,7 +17,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn test_npm_install_with_lockfile() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Install Buildpack");
+        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Install");
         assert_contains!(ctx.pack_stderr, "- Installing node modules");
         assert_contains!(ctx.pack_stderr, "- Using npm version `6.14.18`");
         assert_contains!(ctx.pack_stderr, "- Creating npm cache");
@@ -164,11 +164,11 @@ fn test_dependencies_and_missing_lockfile_errors() {
             );
             assert_contains!(
                 ctx.pack_stderr,
-                "to use yarn to install dependencies, run `yarn install`."
+                "To use yarn to install dependencies, run `yarn install`."
             );
             assert_contains!(
                 ctx.pack_stderr,
-                "to use pnpm to install dependencies, run `pnpm install`."
+                "To use pnpm to install dependencies, run `pnpm install`."
             );
         },
     );

@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-npm-install/src/errors.rs
+---
+! Missing lockfile
+!
+! Couldn't determine Node.js package manager. Package manager lockfile not found.
+!
+! A lockfile from a supported package manager is required to install Node.js dependencies. The package.json for this project specifies dependencies, but there isn't a lockfile.
+!
+! - To use npm to install dependencies, run `npm install`. This command will generate a `package-lock.json` lockfile.
+! - To use yarn to install dependencies, run `yarn install`. This command will generate a `yarn.lock` lockfile.
+! - To use pnpm to install dependencies, run `pnpm install`. This command will generate a `pnpm-lock.yaml` lockfile.
+!
+! Ensure the resulting lockfile is committed to the repository, then try again.

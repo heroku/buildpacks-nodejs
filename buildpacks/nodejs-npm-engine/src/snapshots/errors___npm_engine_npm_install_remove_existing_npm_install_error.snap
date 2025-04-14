@@ -1,0 +1,17 @@
+---
+source: buildpacks/nodejs-npm-engine/src/errors.rs
+---
+- Debug Info:
+  - Command failed `npm -g uninstall npm`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
+
+! Failed to remove the existing `npm` installation
+!
+! An unexpected error occurred while removing the existing `npm` installation.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

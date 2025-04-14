@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-npm-engine/src/errors.rs
+---
+- Debug Info:
+  - Invalid permissions
+
+! Failed to open the downloaded `npm` package file
+!
+! An unexpected I/O occurred while opening the downloaded `npm` package file at `/layers/npm/install/npm.tgz`.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

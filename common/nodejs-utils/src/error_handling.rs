@@ -1,3 +1,5 @@
+use crate::error_handling::ErrorType::UserFacing;
+use crate::package_json::PackageJsonError;
 use bullet_stream::{style, Print};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
@@ -24,6 +26,45 @@ where
         .debug_info(error.to_string())
         .issues_url(issues_url)
         .create()
+}
+
+#[must_use]
+pub fn on_package_json_error(
+    buildpack_name: &str,
+    issues_url: &str,
+    error: PackageJsonError,
+) -> ErrorMessage {
+    let package_json = file_value("./package.json");
+    let json_spec_url = style::url("https://www.json.org/");
+    match error {
+        PackageJsonError::AccessError(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+            .header(format!("Error reading {package_json}"))
+            .body(formatdoc! { "
+                The {buildpack_name} reads from {package_json} to complete the build but \
+                the file can't be read.
+
+                Suggestions:
+                - Ensure the file has read permissions.
+            " })
+            .debug_info(e.to_string())
+            .issues_url(issues_url)
+            .create(),
+
+        PackageJsonError::ParseError(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+            .header(format!("Error parsing {package_json}"))
+            .body(formatdoc! { "
+                The {buildpack_name} reads from {package_json} to complete the build but \
+                the file isn't valid JSON.
+
+                Suggestions:
+                - Ensure the file follows the JSON format described at {json_spec_url}
+            " })
+            .debug_info(e.to_string())
+            .issues_url(issues_url)
+            .create(),
+    }
 }
 
 #[bon::builder(finish_fn = create, on(String, into), state_mod(vis = "pub"))]

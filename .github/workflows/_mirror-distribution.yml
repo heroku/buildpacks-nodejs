@@ -17,6 +17,9 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   get-unmirrored-versions:
     name: Get Unmirrored Versions
@@ -31,7 +34,7 @@ jobs:
         run: rustup update
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.7.7
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
 
       - name: Get unmirrored versions
         id: get-unmirrored-versions

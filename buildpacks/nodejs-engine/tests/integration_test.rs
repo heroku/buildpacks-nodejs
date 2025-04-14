@@ -1,9 +1,12 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
+use indoc::indoc;
+use libcnb::data::buildpack_id;
+use libcnb_test::{assert_contains, assert_contains_match, BuildpackReference};
 use test_support::{
-    assert_web_response, create_build_snapshot, nodejs_integration_test,
-    nodejs_integration_test_with_config, set_node_engine,
+    assert_web_response, custom_buildpack, integration_test_with_config, nodejs_integration_test,
+    create_build_snapshot, nodejs_integration_test_with_config, set_node_engine,
 };
 
 #[test]
@@ -46,5 +49,33 @@ fn reinstalls_node_if_version_changes() {
                 build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
             });
         },
+    );
+}
+
+#[test]
+#[ignore]
+fn heroku_available_parallelism_is_set_at_build_and_runtime() {
+    integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |_| {},
+        |ctx| {
+            assert_contains_match!(ctx.pack_stdout, "HEROKU_AVAILABLE_PARALLELISM=\\d+");
+            assert_contains_match!(
+                ctx.run_shell_command("env").stdout,
+                "HEROKU_AVAILABLE_PARALLELISM=\\d+"
+            );
+        },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            BuildpackReference::Other(
+                custom_buildpack()
+                    .id("test/echo-build-parallelism")
+                    .build(indoc! { "
+                        #!/usr/bin/env bash
+                        env
+                    " })
+                    .call(),
+            ),
+        ],
     );
 }
