@@ -1,115 +1,289 @@
 use crate::PnpmInstallBuildpackError;
-use bullet_stream::state::Bullet;
-use bullet_stream::{style, Print};
+use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
+use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
+use heroku_nodejs_utils::error_handling::{
+    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
+    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+};
 use indoc::formatdoc;
-use std::io::{stderr, Stderr};
 
-pub(crate) fn on_error(err: libcnb::Error<PnpmInstallBuildpackError>) {
-    let log = Print::new(stderr()).without_header();
-    match err {
-        libcnb::Error::BuildpackError(bp_err) => on_buildpack_error(bp_err, log),
-        libcnb_err => {
-            log.error(formatdoc! {"
-                heroku/nodejs-pnpm internal buildpack error
+const BUILDPACK_NAME: &str = "Heroku Node.js pnpm Install";
+
+const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
+
+pub(crate) fn on_error(error: libcnb::Error<PnpmInstallBuildpackError>) -> ErrorMessage {
+    match error {
+        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
+        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
+    }
+}
+
+// Wraps the error_message() builder to preset the issues_url field
+fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
+    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
+}
+
+#[allow(clippy::too_many_lines)]
+fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
+    match error {
+        PnpmInstallBuildpackError::BuildScript(e) => {
+            let build_script = style::value(e.name());
+            let package_json = style::value("package.json");
+            let heroku_prebuild = style::value("heroku-prebuild");
+            let heroku_build = style::value("heroku-build");
+            let build = style::value("build");
+            let heroku_postbuild = style::value("heroku-postbuild");
+            error_message()
+                .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+                .header("Failed to execute build script")
+                .body(formatdoc! { "
+                    The {BUILDPACK_NAME} buildpack allows customization of the build process by executing the following scripts \
+                    if they are defined in {package_json}:
+                    - {heroku_prebuild} 
+                    - {heroku_build} or {build} 
+                    - {heroku_postbuild}
         
-                An unexpected internal error was reported by the framework used \
-                by this buildpack.
+                    An unexpected error occurred while executing {build_script}. See the log output above for more information.
         
-                If the issue persists, consider opening an issue on the GitHub \
-                repository. If you are unable to deploy to Heroku as a result \
-                of this issue, consider opening a ticket for additional support.
+                    Suggestions:
+                    - Ensure that this command runs locally without error.
+                "})
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::PackageJson(e) => {
+            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
+        }
+
+        PnpmInstallBuildpackError::PnpmInstall(e) => {
+            let pnpm_install = style::value(e.name());
+            error_message()
+                .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+                .header("Failed to install Node modules")
+                .body(formatdoc! { "
+                    The {BUILDPACK_NAME} buildpack uses the command {pnpm_install} to install your Node modules. This command \
+                    failed and the buildpack cannot continue. This error can occur due to an unstable network connection. \
+                    See the log output above for more information.
         
-                Details: {libcnb_err}
-            "});
+                    Suggestions:
+                    - Ensure that this command runs locally without error (exit status = 0).
+                    - Check the status of the upstream Node module repository service at https://status.npmjs.org/
+                " })
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::PnpmSetStoreDir(e) => {
+            error_message()
+                .error_type(ErrorType::Internal)
+                .header("Failed to configure pnpm store dir")
+                .body(formatdoc! { "
+                    An unexpected error occurred while configuring the store directory for pnpm. This is the location \
+                    on disk where pnpm saves all packages.
+                " })
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::PnpmSetVirtualStoreDir(e) => {
+            error_message()
+                .error_type(ErrorType::Internal)
+                .header("Failed to configure pnpm virtual store dir")
+                .body(formatdoc! { "
+                    An unexpected error occurred while configuring the store directory for pnpm. This is the directory \
+                    where pnpm links all installed packages from the store.
+                " })
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::PnpmStorePrune(e) => {
+            error_message()
+                .error_type(ErrorType::Internal)
+                .header("Failed to prune packages from the store directory")
+                .body(formatdoc! { "
+                    The {BUILDPACK_NAME} buildpack periodically cleans up the store directory to remove \
+                    packages that are no longer in use from the cache. An unexpected error occurred \
+                    during this operation.
+                " })
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::CreateDirectory(path, e) => {
+            let path = file_value(path);
+            error_message()
+                .error_type(ErrorType::Internal)
+                .header("Failed to create directory")
+                .body(formatdoc! { "
+                    An unexpected I/O error occurred while creating the directory at {path}.
+                " })
+                .debug_info(e.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::CreateSymlink { from, to, source } => {
+            let from = file_value(from);
+            let to = file_value(to);
+            error_message()
+                .error_type(ErrorType::Internal)
+                .header("Failed to create symlink")
+                .body(formatdoc! { "
+                    An unexpected I/O error occurred while create a symlink from {from} to {to}.
+                " })
+                .debug_info(source.to_string())
+                .create()
+        }
+
+        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
+            let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = e;
+            let value_type = value.type_str();
+            let requires_metadata = style::value("[requires.metadata]");
+            let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
+            error_message()
+                .error_type(ErrorType::UserFacing(
+                    SuggestRetryBuild::No,
+                    SuggestSubmitIssue::Yes,
+                ))
+                .header("Invalid build plan metadata")
+                .body(formatdoc! {"
+                    A participating buildpack has set invalid {requires_metadata} for the \
+                    build plan named {buildplan_name}.
+
+                    Expected metadata format:
+                    [requires.metadata]
+                    enabled = <bool>
+
+                    But was:
+                    [requires.metadata]
+                    enabled = <{value_type}>
+                "})
+                .create()
         }
     }
 }
 
-fn on_buildpack_error(bp_err: PnpmInstallBuildpackError, log: Print<Bullet<Stderr>>) {
-    match bp_err {
-        PnpmInstallBuildpackError::BuildScript(err) => {
-            log.error(formatdoc! {"
-                heroku/nodejs-pnpm build script error
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bullet_stream::strip_ansi;
+    use fun_run::{CmdError, CommandWithName};
+    use heroku_nodejs_utils::package_json::PackageJsonError;
+    use insta::{assert_snapshot, with_settings};
+    use libcnb::Error;
+    use std::io;
+    use std::process::Command;
+    use test_support::test_name;
 
-                There was an error while attempting to run a build script \
-                from this project's package.json. 
+    #[test]
+    fn test_pnpm_install_node_build_scripts_metadata_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::NodeBuildScriptsMetadata(
+            NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
+                "test".to_string(),
+            )),
+        ));
+    }
 
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::PackageJson(err) => {
-            log.error(formatdoc! {"
-                heroku/nodejs-pnpm package.json error
+    #[test]
+    fn test_pnpm_install_set_store_dir_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmSetStoreDir(
+            create_cmd_error("pnpm config set store-dir /some/dir --global"),
+        ));
+    }
 
-                There was an error while attempting to parse this project's \
-                package.json file. Please make sure it is present and properly \
-                formatted.
-    
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::PnpmInstall(err) => {
-            log.error(formatdoc! {"
-                pnpm install error
+    #[test]
+    fn test_pnpm_install_set_virtual_store_dir_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmSetVirtualStoreDir(
+            create_cmd_error("pnpm config set virtual-store-dir /some/dir --global"),
+        ));
+    }
 
-                There was an error while attempting to install dependencies \
-                with pnpm. 
-    
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::PnpmDir(err) => {
-            log.error(formatdoc! {"
-                directory error
+    #[test]
+    fn test_pnpm_install_pnpm_install_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmInstall(create_cmd_error(
+            "pnpm install",
+        )));
+    }
 
-                There was an error while attempting to configure a pnpm \
-                store to a buildpack layer directory. 
+    #[test]
+    fn test_pnpm_install_build_script_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::BuildScript(create_cmd_error(
+            "pnpm run build",
+        )));
+    }
 
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::PnpmStorePrune(err) => {
-            log.error(formatdoc! {"
-                store error
+    #[test]
+    fn test_pnpm_install_package_json_access_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PackageJson(
+            PackageJsonError::AccessError(create_io_error("test I/O error blah")),
+        ));
+    }
 
-                There was an error while attempting to prune the pnpm \
-                content-addressable store.
+    #[test]
+    fn test_pnpm_install_package_json_parse_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PackageJson(
+            PackageJsonError::ParseError(create_json_error()),
+        ));
+    }
 
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::VirtualLayer(err) => {
-            log.error(formatdoc! {"
-                virtual store layer error
+    #[test]
+    fn test_pnpm_install_pnpm_store_prune_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmStorePrune(create_cmd_error(
+            "pnpm prune",
+        )));
+    }
 
-                There was an error while attempting to create the virtual \
-                store layer for pnpm's installed dependencies.
+    #[test]
+    fn test_pnpm_install_create_directory_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::CreateDirectory(
+            "/layers/pnpm_install/dir".into(),
+            create_io_error("Insufficient permissions"),
+        ));
+    }
 
-                Details: {err}
-            "});
-        }
-        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(err) => {
-            let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = err;
-            let value_type = value.type_str();
-            let requires_metadata = style::value("[requires.metadata]");
-            let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-            log.error(formatdoc! {"
-                metadata error in {buildplan_name} build plan
+    #[test]
+    fn test_pnpm_install_create_symlink_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::CreateSymlink {
+            from: "/app/node_modules/.pnpm".into(),
+            to: "/layers/pnpm_install/dir".into(),
+            source: create_io_error("Target directory does not exist"),
+        });
+    }
 
-                A participating buildpack has set invalid {requires_metadata} for the \
-                build plan named {buildplan_name}.
+    fn assert_error_snapshot(error: impl Into<Error<PnpmInstallBuildpackError>>) {
+        let error_message = strip_ansi(on_error(error.into()).to_string());
+        let test_name = format!(
+            "errors__{}",
+            test_name()
+                .split("::")
+                .last()
+                .unwrap()
+                .trim_start_matches("test")
+        );
+        with_settings!({
+            prepend_module_to_snapshot => false,
+            omit_expression => true,
+        }, {
+            assert_snapshot!(test_name, error_message);
+        });
+    }
 
-                Expected metadata format:
-                [requires.metadata]
-                enabled = <bool>
+    fn create_io_error(text: &str) -> io::Error {
+        io::Error::new(io::ErrorKind::Other, text)
+    }
 
-                But was:
-                [requires.metadata]
-                enabled = <{value_type}>
-            "});
-        }
+    fn create_json_error() -> serde_json::error::Error {
+        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
+
+    fn create_cmd_error(command: impl Into<String>) -> CmdError {
+        Command::new("false")
+            .named(command.into())
+            .named_output()
+            .unwrap_err()
     }
 }

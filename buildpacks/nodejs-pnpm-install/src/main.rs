@@ -3,7 +3,13 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
+use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use bullet_stream::{style, Print};
+use heroku_nodejs_utils::buildplan::{
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -13,16 +19,10 @@ use libcnb::data::store::Store;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::stderr;
-
-use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
-use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
-use heroku_nodejs_utils::buildplan::{
-    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
-};
 #[cfg(test)]
 use libcnb_test as _;
+use std::io::stderr;
+use std::path::PathBuf;
 #[cfg(test)]
 use test_support as _;
 
@@ -137,7 +137,8 @@ impl Buildpack for PnpmInstallBuildpack {
     }
 
     fn on_error(&self, err: libcnb::Error<Self::Error>) {
-        errors::on_error(err);
+        let error_message = errors::on_error(err);
+        eprintln!("\n{error_message}");
     }
 }
 
@@ -145,10 +146,16 @@ impl Buildpack for PnpmInstallBuildpack {
 enum PnpmInstallBuildpackError {
     BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
-    PnpmDir(fun_run::CmdError),
+    PnpmSetStoreDir(fun_run::CmdError),
+    PnpmSetVirtualStoreDir(fun_run::CmdError),
     PnpmInstall(fun_run::CmdError),
     PnpmStorePrune(fun_run::CmdError),
-    VirtualLayer(std::io::Error),
+    CreateDirectory(PathBuf, std::io::Error),
+    CreateSymlink {
+        from: PathBuf,
+        to: PathBuf,
+        source: std::io::Error,
+    },
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
