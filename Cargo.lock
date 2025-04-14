@@ -810,7 +810,9 @@ name = "heroku-pnpm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
  "bullet_stream",
+ "heroku-nodejs-utils",
  "indoc",
+ "insta",
  "libcnb",
  "libcnb-test",
  "test_support",
