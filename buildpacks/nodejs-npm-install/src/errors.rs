@@ -56,7 +56,7 @@ fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) ->
             SuggestRetryBuild::No,
             SuggestSubmitIssue::Yes,
         ))
-        .header("Invalid build script metadata")
+        .header("Invalid build plan metadata")
         .body(formatdoc! { "
             A participating buildpack has set invalid {requires_metadata} for the build plan \
             named {buildplan_name}.
