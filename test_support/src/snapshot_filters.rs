@@ -9,6 +9,7 @@ pub(super) fn create_snapshot_filters(
     };
 
     let mut filters = vec![];
+    filters.extend(copy_filters(&ARCH_FILTERS));
     filters.extend(copy_filters(&TIMER_FILTERS));
     filters.extend(copy_filters(&NPM_FILTERS));
     filters.extend(copy_filters(&PNPM_FILTERS));
@@ -18,6 +19,12 @@ pub(super) fn create_snapshot_filters(
     }
     filters
 }
+
+const ARCH_FILTERS: [(&str, &str); 3] = [
+    (r"linux-amd64", "<arch>"),
+    (r"linux-arm64", "<arch>"),
+    (r"linux-x64", "<arch>"),
+];
 
 const TIMER_FILTERS: [(&str, &str); 5] = [
     (

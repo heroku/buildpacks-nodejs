@@ -2,55 +2,20 @@ name: Update Snapshots
 
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
-  find-libcnb-buildpacks:
-    name: Find libcnb buildpacks
+  update-snapshots:
+    name: Update Snapshots
     runs-on: ubuntu-24.04
 
-    outputs:
-      libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/create-github-app-token@v1
+        id: generate-token
         with:
-          submodules: true
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
 
-      - id: find-buildpack-dirs
-        name: Find libcnb buildpack directories
-        run: |
-          echo "buildpacks=$( \
-            find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
-            | sort \
-            | uniq \
-            | jq -nRc '[inputs] 
-                | map({ dir: ., name: split("/") | last | split("nodejs-") | last } 
-                | [
-                  . + { builder_tag: 20, arch: "amd64" },
-                  . + { builder_tag: 22, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "arm64" } 
-                ]) 
-                | flatten' \
-          )" >> $GITHUB_OUTPUT
-
-  update-snapshots:
-    name: Snapshot ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
-    runs-on: ${{ matrix.arch == 'arm64' && 'pub-hk-ubuntu-24.04-arm-medium' || 'ubuntu-24.04' }}
-
-    env:
-      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
-      INTEGRATION_TEST_CNB_ARCH: ${{ matrix.arch }}
-
-    needs: find-libcnb-buildpacks
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
-
-    steps:
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -61,35 +26,27 @@ jobs:
         run: rustup update
 
       - name: Install Rust linux-musl target
-        run: rustup target add ${{ matrix.arch == 'arm64' && 'aarch64-unknown-linux-musl' || 'x86_64-unknown-linux-musl' }}
+        run: rustup target add x86_64-unknown-linux-musl
 
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2.7.7
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
 
       - name: Install cargo-insta
         run: cargo install cargo-insta
 
-      - name: Install cargo-get
-        run: cargo install cargo-get
-
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@v5.8.8
+        uses: buildpacks/github-actions/setup-pack@d82294e03fd6b8e8484cde2ee166788876e366e3 #v5.8.10
 
       - name: Pull builder image
-        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+        run: docker pull heroku/builder:24
 
       - name: Pull run image
         run: |
           RUN_IMAGE=$(
-            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' 'heroku/builder:24' \
             | jq --exit-status --raw-output '.stack.runImage.image'
           )
           docker pull "${RUN_IMAGE}"
-
-      - name: Get package name
-        id: get-package-name
-        working-directory: ${{ matrix.dir }}
-        run: echo "package=$(cargo get package.name)" >> $GITHUB_OUTPUT
 
       - name: Rebuild integration test snapshots
         env:
@@ -101,46 +58,8 @@ jobs:
             --accept \
             --force-update-snapshots \
             --test integration_test \
-            --package ${{ steps.get-package-name.outputs.package }} \
-            -- --ignored --test-threads 16
-
-      - name: Create Snapshot Patch
-        run: |
-          git add .
-          git diff --cached > ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}.patch
-
-      - name: Upload Snapshot Patch
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}
-          path: ${{ matrix.name }}_${{ matrix.builder_tag }}_${{ matrix.arch }}.patch
-          if-no-files-found: error
-          retention-days: 1
-
-  create-pr:
-    name: Create Snapshots PR
-    needs: [update-snapshots]
-    runs-on: pub-hk-ubuntu-24.04-ip
-    steps:
-      - uses: actions/create-github-app-token@v1
-        id: generate-token
-        with:
-          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
-          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download Snapshot Patches
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-          path: ${{ runner.temp }}/patches
-
-      - name: Apply Snapshot Patches
-        run: |
-          git apply --allow-empty "${{ runner.temp }}/patches"/*.patch
-          git add -A
+            --package heroku-nodejs-engine-buildpack \
+            -- --ignored
 
       - name: Create Pull Request
         id: pr
