@@ -759,14 +759,16 @@ dependencies = [
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
+ "insta",
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
  "serde",
+ "serde_json",
  "tempfile",
  "test_support",
- "thiserror 2.0.12",
  "toml",
+ "ureq",
 ]
 
 [[package]]

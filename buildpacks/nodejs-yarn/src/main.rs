@@ -3,11 +3,20 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use crate::cmd::YarnVersionError;
+use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
+use crate::install_yarn::{install_yarn, CliLayerError};
 use crate::yarn::Yarn;
 use bullet_stream::{style, Print};
+use heroku_nodejs_utils::buildplan::{
+    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+};
 use heroku_nodejs_utils::inv::Inventory;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
+#[cfg(test)]
+use indoc as _;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -17,25 +26,16 @@ use libcnb::generic::GenericMetadata;
 use libcnb::generic::GenericPlatform;
 use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
-use std::io::{stderr, stdout};
-use thiserror::Error;
-
-use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
-use crate::install_yarn::{install_yarn, CliLayerError};
-use heroku_nodejs_utils::buildplan::{
-    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
-};
-#[cfg(test)]
-use indoc as _;
 #[cfg(test)]
 use libcnb_test as _;
+use std::io::{stderr, stdout};
 #[cfg(test)]
 use test_support as _;
 
 mod cfg;
 mod cmd;
 mod configure_yarn_cache;
+mod errors;
 mod install_yarn;
 mod yarn;
 
@@ -89,7 +89,7 @@ impl Buildpack for YarnBuildpack {
 
         let yarn_version = match cmd::yarn_version(&env) {
             // Install yarn if it's not present.
-            Err(cmd::Error::Spawn(_)) => {
+            Err(YarnVersionError::Command(_)) => {
                 let mut bullet = log.bullet("Detecting yarn CLI version to install");
 
                 let inventory: Inventory =
@@ -197,75 +197,25 @@ impl Buildpack for YarnBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let log = Print::new(stdout()).without_header();
-        match error {
-            libcnb::Error::BuildpackError(bp_err) => match bp_err {
-                YarnBuildpackError::BuildScript(_) => {
-                    log.error(format!("Yarn build script error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::CliLayer(_) => {
-                    log.error(format!("Yarn distribution layer error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::DepsLayer(_) => {
-                    log.error(format!("Yarn dependency layer error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::InventoryParse(_) => {
-                    log.error(format!("Yarn inventory parse error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::PackageJson(_) => {
-                    log.error(format!("Yarn package.json error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::YarnCacheGet(_)
-                | YarnBuildpackError::YarnDisableGlobalCache(_) => {
-                    log.error(format!("Yarn cache error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::YarnInstall(_) => {
-                    log.error(format!("Yarn install error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::YarnVersionDetect(_)
-                | YarnBuildpackError::YarnVersionResolve(_)
-                | YarnBuildpackError::YarnVersionUnsupported(_)
-                | YarnBuildpackError::YarnDefaultParse(_) => {
-                    log.error(format!("Yarn version error\n\n{bp_err}"));
-                }
-                YarnBuildpackError::NodeBuildScriptsMetadata(_) => {
-                    log.error(format!("Yarn buildplan error\n\n{bp_err}"));
-                }
-            },
-            err => {
-                log.error(format!("Yarn internal buildpack error\n\n{err}"));
-            }
-        }
+        let error_message = errors::on_error(error);
+        eprintln!("\n{error_message}");
     }
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 enum YarnBuildpackError {
-    #[error("Couldn't run build script: {0}")]
     BuildScript(fun_run::CmdError),
-    #[error("{0}")]
-    CliLayer(#[from] CliLayerError),
-    #[error("{0}")]
-    DepsLayer(#[from] DepsLayerError),
-    #[error("Couldn't parse yarn inventory: {0}")]
+    CliLayer(CliLayerError),
+    DepsLayer(DepsLayerError),
     InventoryParse(toml::de::Error),
-    #[error("Couldn't parse package.json: {0}")]
     PackageJson(PackageJsonError),
-    #[error("Couldn't read yarn cache folder: {0}")]
-    YarnCacheGet(cmd::Error),
-    #[error("Couldn't disable yarn global cache: {0}")]
+    YarnCacheGet(fun_run::CmdError),
     YarnDisableGlobalCache(fun_run::CmdError),
-    #[error("Yarn install error: {0}")]
     YarnInstall(fun_run::CmdError),
-    #[error("Couldn't determine yarn version: {0}")]
-    YarnVersionDetect(cmd::Error),
-    #[error("Unsupported yarn version: {0}")]
+    YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),
-    #[error("Couldn't resolve yarn version requirement ({0}) to a known yarn version")]
     YarnVersionResolve(Requirement),
-    #[error("Couldn't parse yarn default version range: {0}")]
     YarnDefaultParse(VersionError),
-    #[error("Couldn't parse metadata for the buildplan named {NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}: {0:?}")]
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 

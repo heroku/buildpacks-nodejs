@@ -2,7 +2,7 @@ use crate::yarn::Yarn;
 use bullet_stream::state::SubBullet;
 use bullet_stream::{style, Print};
 use fun_run::{CmdError, CommandWithName};
-use heroku_nodejs_utils::vrs::Version;
+use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
 use std::io::Stderr;
 use std::{
@@ -10,60 +10,43 @@ use std::{
     process::{Command, Stdio},
 };
 
-#[derive(thiserror::Error, Debug)]
-pub(crate) enum Error {
-    #[error("Couldn't start yarn command: {0}")]
-    Spawn(std::io::Error),
-    #[error("Couldn't finish yarn  command: {0}")]
-    Wait(std::io::Error),
-    #[error("Yarn command finished with a non-zero exit code: {0}")]
-    Exit(std::process::ExitStatus),
-    #[error("Yarn output couldn't be parsed: {0}")]
-    Parse(String),
+#[derive(Debug)]
+pub(crate) enum YarnVersionError {
+    Command(CmdError),
+    Parse(String, VersionError),
 }
 
 /// Execute `yarn --version` to determine what version of `yarn` is in effect
 /// for this codebase.
-pub(crate) fn yarn_version(env: &Env) -> Result<Version, Error> {
-    let output = Command::new("yarn")
+pub(crate) fn yarn_version(env: &Env) -> Result<Version, YarnVersionError> {
+    Command::new("yarn")
         .arg("--version")
         .envs(env)
-        .stdout(Stdio::piped())
-        .spawn()
-        .map_err(Error::Spawn)?
-        .wait_with_output()
-        .map_err(Error::Wait)?;
-
-    output
-        .status
-        .success()
-        .then_some(())
-        .ok_or(Error::Exit(output.status))?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    stdout
-        .parse()
-        .map_err(|_| Error::Parse(stdout.into_owned()))
+        .named_output()
+        .map_err(YarnVersionError::Command)
+        .and_then(|output| {
+            let stdout = output.stdout_lossy();
+            stdout
+                .parse::<Version>()
+                .map_err(|e| YarnVersionError::Parse(stdout, e))
+        })
 }
 
 /// Execute `yarn config get` to determine where the yarn cache is.
-pub(crate) fn yarn_get_cache(yarn_line: &Yarn, env: &Env) -> Result<PathBuf, Error> {
-    let mut args = vec!["config", "get"];
-    if yarn_line == &Yarn::Yarn1 {
-        args.push("cache-folder");
-    } else {
-        args.push("cacheFolder");
-    }
-    let output = Command::new("yarn")
-        .args(args)
-        .envs(env)
-        .stdout(Stdio::piped())
-        .spawn()
-        .map_err(Error::Spawn)?
-        .wait_with_output()
-        .map_err(Error::Wait)?;
+pub(crate) fn yarn_get_cache(yarn_line: &Yarn, env: &Env) -> Result<PathBuf, CmdError> {
+    let mut cmd = Command::new("yarn");
+    cmd.envs(env);
 
-    let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    Ok(stdout.into())
+    cmd.arg("config");
+    cmd.arg("get");
+    if yarn_line == &Yarn::Yarn1 {
+        cmd.arg("cache-folder");
+    } else {
+        cmd.arg("cacheFolder");
+    }
+
+    cmd.named_output()
+        .map(|output| PathBuf::from(output.stdout_lossy().trim()))
 }
 
 /// Execute `yarn config set` to set the yarn cache to a specfic location.

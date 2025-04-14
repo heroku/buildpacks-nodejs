@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-yarn/src/errors.rs
+---
+! Error resolving requested Yarn version `1.2.3`
+!
+! The requested Yarn version could not be resolved to a known release in this buildpack's inventory of Yarn releases.
+!
+! Suggestions:
+! - Confirm if this is a valid Yarn release at https://github.com/yarnpkg/berry/releases
+! - Check if this buildpack includes the requested Yarn version in its inventory file at https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-yarn/inventory.toml
+! - Update the `engines.yarn` field in `package.json` to a single version or version range that includes a published Yarn version.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues
