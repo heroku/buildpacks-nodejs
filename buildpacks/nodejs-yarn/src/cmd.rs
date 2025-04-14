@@ -7,7 +7,7 @@ use libcnb::Env;
 use std::io::Stderr;
 use std::{
     path::{Path, PathBuf},
-    process::{Command, Stdio},
+    process::Command,
 };
 
 #[derive(Debug)]

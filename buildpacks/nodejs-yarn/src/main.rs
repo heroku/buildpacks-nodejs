@@ -28,7 +28,7 @@ use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 #[cfg(test)]
 use libcnb_test as _;
-use std::io::{stderr, stdout};
+use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 
