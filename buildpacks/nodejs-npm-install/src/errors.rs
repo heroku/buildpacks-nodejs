@@ -49,15 +49,17 @@ fn on_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
 fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) -> ErrorMessage {
     let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
     let value_type = value.type_str();
+    let requires_metadata = style::value("[requires.metadata]");
+    let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
     error_message()
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::No,
             SuggestSubmitIssue::Yes,
         ))
-        .header("Invalid build script metadata")
+        .header("Invalid build plan metadata")
         .body(formatdoc! { "
-            A participating buildpack has set invalid `[requires.metadata]` for the build plan \
-            named `{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME}`.
+            A participating buildpack has set invalid {requires_metadata} for the build plan \
+            named {buildplan_name}.
             
             Expected metadata format:
             [requires.metadata]

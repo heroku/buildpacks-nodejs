@@ -6,7 +6,7 @@ source: buildpacks/nodejs-npm-engine/src/errors.rs
 
 ! Failed to extract `npm` package file
 !
-! An unexpected I/O occurred while extracing the contents of the downloaded `npm` package file at `/layers/npm/install/npm.tgz`.
+! An unexpected I/O occurred while extracting the contents of the downloaded `npm` package file at `/layers/npm/install/npm.tgz`.
 !
 ! Use the debug information above to troubleshoot and retry your build.
 !
