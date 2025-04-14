@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-yarn/src/errors.rs
+---
+- Debug Info:
+  - Disk full
+
+! Failed to extract the downloaded Yarn package file
+!
+! An unexpected I/O occurred while extracting the contents of the downloaded Yarn package file at `/layers/yarn/dist`.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

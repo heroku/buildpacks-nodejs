@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::io::Stderr;
 use std::os::unix::fs::PermissionsExt;
+use std::path::PathBuf;
 use tempfile::NamedTempFile;
-use thiserror::Error;
 
 use heroku_nodejs_utils::inv::Release;
 
@@ -63,7 +63,7 @@ pub(crate) fn install_yarn(
 
             log = log.sub_bullet(format!("Extracting yarn {}", release.version));
             decompress_tarball(&mut yarn_tgz.into_file(), dist_layer.path())
-                .map_err(CliLayerError::Untar)?;
+                .map_err(|e| CliLayerError::Untar(dist_layer.path(), e))?;
 
             log = log.sub_bullet(format!("Installing yarn {}", release.version));
 
@@ -98,17 +98,12 @@ pub(crate) struct CliLayerMetadata {
     os: String,
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug)]
 pub(crate) enum CliLayerError {
-    #[error("Couldn't create tempfile for yarn CLI: {0}")]
     TempFile(std::io::Error),
-    #[error("Couldn't download yarn CLI: {0}")]
     Download(DownloadError),
-    #[error("Couldn't decompress yarn CLI: {0}")]
-    Untar(std::io::Error),
-    #[error("Couldn't move yarn CLI to the target location: {0}")]
+    Untar(PathBuf, std::io::Error),
     Installation(std::io::Error),
-    #[error("Couldn't set CLI permissions: {0}")]
     Permissions(std::io::Error),
 }
 

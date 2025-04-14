@@ -1,0 +1,14 @@
+---
+source: buildpacks/nodejs-yarn/src/errors.rs
+---
+- Debug Info:
+  - HTTP error while downloading file: http: invalid format
+
+! Failed to download Yarn
+!
+! An unexpected error occurred while downloading the Yarn package manager. This error can occur due to an unstable network connection or an issue with the upstream repository.
+!
+! Suggestions:
+! - Check the npm status page for any ongoing incidents (https://status.npmjs.org/)
+!
+! Use the debug information above to troubleshoot and retry your build.
