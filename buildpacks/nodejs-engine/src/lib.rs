@@ -40,7 +40,9 @@ const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "22.x";
 
-pub struct NodeJsEngineBuildpack;
+pub struct NodeJsEngineBuildpack {
+    pub layer_prefix: String,
+}
 
 impl Buildpack for NodeJsEngineBuildpack {
     type Platform = GenericPlatform;
@@ -119,7 +121,7 @@ impl Buildpack for NodeJsEngineBuildpack {
             ))
             .done();
 
-        log = install_node(&context, target_artifact, log)?;
+        log = install_node(&self, &context, target_artifact, log)?;
 
         configure_web_env(&context)?;
         configure_available_parallelism(&context)?;

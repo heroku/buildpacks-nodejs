@@ -1,6 +1,7 @@
 use bullet_stream::state::Bullet;
 use bullet_stream::{style, Print};
 use libcnb::build::BuildContext;
+use libcnb::data::layer::LayerName;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -22,6 +23,7 @@ use heroku_nodejs_utils::vrs::Version;
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
 pub(crate) fn install_node(
+    buildpack: &NodeJsEngineBuildpack,
     context: &BuildContext<NodeJsEngineBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
     log: Print<Bullet<Stderr>>,
@@ -33,8 +35,9 @@ pub(crate) fn install_node(
         layer_version: LAYER_VERSION.to_string(),
     };
 
+    let layer_name: LayerName = format!("{}-dist", buildpack.layer_prefix).parse().unwrap();
     let distribution_layer = context.cached_layer(
-        layer_name!("dist"),
+        layer_name,
         CachedLayerDefinition {
             build: true,
             launch: true,

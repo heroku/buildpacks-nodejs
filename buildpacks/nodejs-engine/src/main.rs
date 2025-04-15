@@ -6,4 +6,6 @@
 use heroku_nodejs_engine_buildpack::NodeJsEngineBuildpack;
 use libcnb::buildpack_main;
 
-buildpack_main!(NodeJsEngineBuildpack);
+buildpack_main!(NodeJsEngineBuildpack {
+    layer_prefix: "nodejs".to_string(),
+});
