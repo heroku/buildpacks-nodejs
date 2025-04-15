@@ -1079,6 +1079,7 @@ dependencies = [
  "linked-hash-map",
  "once_cell",
  "pin-project",
+ "regex",
  "similar",
 ]
 
@@ -1985,6 +1986,7 @@ name = "test_support"
 version = "0.0.0"
 dependencies = [
  "bon",
+ "insta",
  "libcnb",
  "libcnb-test",
  "serde_json",
