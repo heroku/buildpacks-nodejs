@@ -42,11 +42,6 @@ source: test_support/src/lib.rs
       added <N> packages, and audited <M> packages in <time_elapsed>
 
       found 0 vulnerabilities
-      npm notice 
-      npm notice New major version of npm available! 8.19.4 -> 11.3.0
-      npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.3.0>
-      npm notice Run `npm install -g npm@11.3.0` to update!
-      npm notice 
 
   - Done (<time_elapsed>)
 - Running scripts

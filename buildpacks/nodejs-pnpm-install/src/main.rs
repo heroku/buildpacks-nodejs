@@ -6,6 +6,7 @@
 use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use bullet_stream::{style, Print};
+use fun_run::CommandWithName;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
@@ -23,6 +24,7 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 use std::io::stderr;
 use std::path::PathBuf;
+use std::process::Command;
 #[cfg(test)]
 use test_support as _;
 
@@ -78,6 +80,7 @@ impl Buildpack for PnpmInstallBuildpack {
         let mut bullet = log.bullet("Setting up pnpm dependency store");
         bullet = configure_pnpm_store_directory(&context, &env, bullet)?;
         bullet = configure_pnpm_virtual_store_directory(&context, &env, bullet)?;
+        disable_pnpm_auto_update_notifier(&env);
         log = bullet.done();
 
         let mut bullet = log.bullet("Installing dependencies");
@@ -140,6 +143,15 @@ impl Buildpack for PnpmInstallBuildpack {
         let error_message = errors::on_error(err);
         eprintln!("\n{error_message}");
     }
+}
+
+fn disable_pnpm_auto_update_notifier(env: &Env) {
+    let mut command = Command::new("pnpm");
+    command.envs(env);
+    command.args(["config", "set", "update-notifier", "false", "--global"]);
+    // it's fine if this command fails, we shouldn't prevent the build from happening,
+    // we don't need to show the pnpm update notifier during builds if we don't have to
+    let _ = command.named_output();
 }
 
 #[derive(Debug)]
