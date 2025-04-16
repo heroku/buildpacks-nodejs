@@ -49,17 +49,6 @@ source: test_support/src/lib.rs
       + debug 4.3.4
 
       Done in <time_elapsed>
-
-         ╭──────────────────────────────────────────────────────────────────╮
-         │                                                                  │
-         │                Update available! 7.32.3 → 10.8.1.                │
-         │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.8.1   │
-         │     Run "corepack prepare pnpm@10.8.1 --activate" to update.     │
-         │                                                                  │
-         │      Follow @pnpmjs for updates: https://twitter.com/pnpmjs      │
-         │                                                                  │
-         ╰──────────────────────────────────────────────────────────────────╯
-
       Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>, done
 
   - Done (<time_elapsed>)

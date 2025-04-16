@@ -42,7 +42,6 @@ source: test_support/src/lib.rs
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
       found 0 vulnerabilities
-      <NPM UPDATE NOTIFIER>
 
   - Done (<time_elapsed>)
 - Running scripts
