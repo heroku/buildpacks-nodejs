@@ -6,4 +6,6 @@
 use heroku_npm_engine_buildpack::NpmEngineBuildpack;
 use libcnb::buildpack_main;
 
-buildpack_main!(NpmEngineBuildpack);
+buildpack_main!(NpmEngineBuildpack {
+    layer_prefix: "pnpm-engine".to_string(),
+});

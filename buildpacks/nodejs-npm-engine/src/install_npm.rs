@@ -6,6 +6,7 @@ use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
+use libcnb::data::layer::LayerName;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -19,6 +20,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub(crate) fn install_npm(
+    buildpack: &NpmEngineBuildpack,
     context: &BuildContext<NpmEngineBuildpack>,
     npm_release: &Release,
     node_version: &Version,
@@ -32,8 +34,11 @@ pub(crate) fn install_npm(
         os: context.target.os.clone(),
     };
 
+    let layer_name: LayerName = format!("{}-npm_engine", buildpack.layer_prefix)
+        .parse()
+        .unwrap();
     let npm_engine_layer = context.cached_layer(
-        layer_name!("npm_engine"),
+        layer_name,
         CachedLayerDefinition {
             build: true,
             launch: true,

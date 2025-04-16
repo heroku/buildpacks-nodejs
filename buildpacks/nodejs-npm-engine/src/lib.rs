@@ -31,7 +31,9 @@ use test_support as _;
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 /// The NpmEngineBuildpack is responsible for installing the npm version specified in package.json
-pub struct NpmEngineBuildpack;
+pub struct NpmEngineBuildpack {
+    pub layer_prefix: String,
+}
 
 impl Buildpack for NpmEngineBuildpack {
     type Platform = GenericPlatform;
@@ -80,7 +82,7 @@ impl Buildpack for NpmEngineBuildpack {
         let section = logger.bullet("Installing npm");
         let (npm_release, section) =
             resolve_requested_npm_version(&requested_npm_version, &inventory, section)?;
-        let section = install_npm(&context, &npm_release, &node_version, section)?;
+        let section = install_npm(self, &context, &npm_release, &node_version, section)?;
         let section = log_installed_npm_version(&env, section)?;
         logger = section.done();
 
