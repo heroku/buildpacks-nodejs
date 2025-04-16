@@ -29,7 +29,7 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         ),
         (r"Done in (\d+|\d\.\d+)m?s", "Done in <time_elapsed>"),
         // YARN FILTERS
-        (r"Completed in \d+s \d+ms", "Completed in <time_elapsed>"),
+        (r"Completed in \d+s \d+ms", "Completed"), // Yarn emits both "Completed in Xs Xms" and "Completed" so use the simpler form in replacements
         (
             r"Done with warnings in \d+s \d+ms",
             "Done with warnings in <time_elapsed>",
