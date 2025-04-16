@@ -38,8 +38,7 @@ source: test_support/src/lib.rs
   - Running `pnpm install --frozen-lockfile`
 
       Lockfile is up to date, resolution step is skipped
-      Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>
-      Packages: +2
+            Packages: +2
       ++
       Packages are hard linked from the content-addressable store to the virtual store.
         Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
@@ -49,8 +48,7 @@ source: test_support/src/lib.rs
       + debug 4.3.4
 
       Done in <time_elapsed>
-      Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>, done
-
+      
   - Done (<time_elapsed>)
 - Pruning unused dependencies from pnpm content-addressable store
   - Running `pnpm store prune`

@@ -23,10 +23,7 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
             "added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>",
         ),
         // PNPM FILTERS
-        (
-            r"Progress: resolved \d+, reused \d+, downloaded \d+, added \d+",
-            "Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>",
-        ),
+        (r"Progress: resolved .*\n", ""), // This progress message is emitted non-deterministically, so better to remove it entirely
         (r"Done in (\d+|\d\.\d+)m?s", "Done in <time_elapsed>"),
         // YARN FILTERS
         (r"Completed in \d+s \d+ms", "Completed"), // Yarn emits both "Completed in Xs Xms" and "Completed" so use the simpler form in replacements
