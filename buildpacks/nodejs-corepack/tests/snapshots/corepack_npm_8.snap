@@ -39,10 +39,10 @@ source: test_support/src/lib.rs
 
       npm WARN config production Use `--omit=dev` instead.
 
-      added <N> packages, and audited <M> packages in <time_elapsed>
+      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
       found 0 vulnerabilities
-
+      <NPM UPDATE NOTIFIER>
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found

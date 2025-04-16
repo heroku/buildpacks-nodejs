@@ -38,7 +38,7 @@ source: test_support/src/lib.rs
   - Running `pnpm install --frozen-lockfile`
 
       Lockfile is up to date, resolution step is skipped
-      Progress: resolved <A>, reused <B>, downloaded <C>, added <D>
+      Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>
       Packages: +2
       ++
       Packages are hard linked from the content-addressable store to the virtual store.
@@ -49,7 +49,18 @@ source: test_support/src/lib.rs
       + debug 4.3.4
 
       Done in <time_elapsed>
-      Progress: resolved <A>, reused <B>, downloaded <C>, added <D>, done
+
+         ╭──────────────────────────────────────────────────────────────────╮
+         │                                                                  │
+         │                Update available! 7.32.3 → 10.8.1.                │
+         │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v10.8.1   │
+         │     Run "corepack prepare pnpm@10.8.1 --activate" to update.     │
+         │                                                                  │
+         │      Follow @pnpmjs for updates: https://twitter.com/pnpmjs      │
+         │                                                                  │
+         ╰──────────────────────────────────────────────────────────────────╯
+
+      Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>, done
 
   - Done (<time_elapsed>)
 - Pruning unused dependencies from pnpm content-addressable store

@@ -34,7 +34,6 @@ use libcnb_test as _;
 use serde_json as _;
 use std::io;
 use std::io::{stderr, Stderr};
-use std::process::Command;
 
 struct NpmInstallBuildpack;
 
@@ -93,7 +92,6 @@ impl Buildpack for NpmInstallBuildpack {
         let section = logger.bullet("Installing node modules");
         let section = log_npm_version(&env, section)?;
         let section = configure_npm_cache_directory(&context, &env, section)?;
-        disable_npm_auto_update_notifier(&env);
         let section = run_npm_install(&env, section)?;
         let logger = section.done();
 
@@ -230,15 +228,6 @@ fn configure_default_processes(
             section_logger.sub_bullet("Skipping default web process (no start script defined)"),
         )
     }
-}
-
-fn disable_npm_auto_update_notifier(env: &Env) {
-    let mut command = Command::new("npm");
-    command.envs(env);
-    command.args(["config", "set", "update-notifier", "false", "--global"]);
-    // it's fine if this command fails, we shouldn't prevent the build from happening,
-    // we don't need to show the npm update notifier during builds if we don't have to
-    let _ = command.named_output();
 }
 
 #[derive(Debug)]

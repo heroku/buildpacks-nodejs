@@ -20,14 +20,27 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         ),
         (
             r"added \d+ packages, and audited \d+ packages in (\d+|\d\.\d+)m?s",
-            "added <N> packages, and audited <M> packages in <time_elapsed>",
+            "added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>",
+        ),
+        // npm update notifier message. e.g.;
+        //
+        //       npm notice
+        //       npm notice New major version of npm available! 8.19.4 -> 11.3.0
+        //       npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.3.0>
+        //       npm notice Run `npm install -g npm@11.3.0` to update!
+        //       npm notice
+        //
+        (
+            r"npm notice\s+npm notice New major version.*\s+(?:npm notice.*\s+)+npm notice[^\n]+",
+            "<NPM UPDATE NOTIFIER>",
         ),
         // PNPM FILTERS
         (
             r"Progress: resolved \d+, reused \d+, downloaded \d+, added \d+",
-            "Progress: resolved <A>, reused <B>, downloaded <C>, added <D>",
+            "Progress: resolved <NUMBER>, reused <NUMBER>, downloaded <NUMBER>, added <NUMBER>",
         ),
         (r"Done in (\d+|\d\.\d+)m?s", "Done in <time_elapsed>"),
+        (r"╭─+╮\s+(?:│.*│\s+)+╰─+╯", "<PNPM UPDATE NOTIFIER>"),
         // YARN FILTERS
         (r"Completed in \d+s \d+ms", "Completed in <time_elapsed>"),
         (
