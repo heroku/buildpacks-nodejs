@@ -1,16 +1,20 @@
 use crate::NpmInstallBuildpack;
 use crate::NpmInstallBuildpackError;
 use libcnb::build::BuildContext;
-use libcnb::data::layer_name;
+use libcnb::data::layer::LayerName;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use std::env::temp_dir;
 
 pub(crate) fn configure_npm_runtime_env(
+    buildpack: &NpmInstallBuildpack,
     context: &BuildContext<NpmInstallBuildpack>,
 ) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
+    let layer_name: LayerName = format!("{}-npm_runtime_config", buildpack.layer_prefix)
+        .parse()
+        .unwrap();
     let npm_runtime_config_layer = context.uncached_layer(
-        layer_name!("npm_runtime_config"),
+        layer_name,
         UncachedLayerDefinition {
             build: false,
             launch: true,

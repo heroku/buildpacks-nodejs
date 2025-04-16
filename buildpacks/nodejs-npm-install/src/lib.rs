@@ -93,7 +93,7 @@ impl Buildpack for NpmInstallBuildpack {
 
         let section = logger.bullet("Installing node modules");
         let section = log_npm_version(&env, section)?;
-        let section = configure_npm_cache_directory(&context, &env, section)?;
+        let section = configure_npm_cache_directory(self, &context, &env, section)?;
         let section = run_npm_install(&env, section)?;
         let logger = section.done();
 
@@ -106,7 +106,7 @@ impl Buildpack for NpmInstallBuildpack {
         let (build_result, section) = configure_default_processes(&context, &package_json, section);
         let logger = section.done();
 
-        configure_npm_runtime_env(&context)?;
+        configure_npm_runtime_env(self, &context)?;
 
         logger.done();
         build_result
@@ -248,4 +248,4 @@ impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> 
     fn from(value: NpmInstallBuildpackError) -> Self {
         libcnb::Error::BuildpackError(value)
     }
-} 
+}
