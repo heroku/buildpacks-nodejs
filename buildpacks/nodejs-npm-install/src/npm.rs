@@ -30,7 +30,7 @@ impl<'a> From<SetCacheConfig<'a>> for Command {
 }
 
 #[derive(Debug)]
-pub(crate) enum VersionError {
+pub enum VersionError {
     Command(CmdError),
     Parse(String, heroku_nodejs_utils::vrs::VersionError),
 }

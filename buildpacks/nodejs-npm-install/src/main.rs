@@ -6,4 +6,6 @@
 use heroku_npm_install_buildpack::NpmInstallBuildpack;
 use libcnb::buildpack_main;
 
-buildpack_main!(NpmInstallBuildpack);
+buildpack_main!(NpmInstallBuildpack {
+    layer_prefix: "npm-install".to_string(),
+});

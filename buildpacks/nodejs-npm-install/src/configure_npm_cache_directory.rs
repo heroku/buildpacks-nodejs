@@ -4,7 +4,7 @@ use bullet_stream::state::SubBullet;
 use bullet_stream::Print;
 use fun_run::CommandWithName;
 use libcnb::build::BuildContext;
-use libcnb::data::layer_name;
+use libcnb::data::layer::LayerName;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 use std::io::Stderr;
 
 pub(crate) fn configure_npm_cache_directory(
+    buildpack: &NpmInstallBuildpack,
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,
     mut section_logger: Print<SubBullet<Stderr>>,
@@ -21,8 +22,11 @@ pub(crate) fn configure_npm_cache_directory(
         layer_version: LAYER_VERSION.to_string(),
     };
 
+    let layer_name: LayerName = format!("{}-npm_cache", buildpack.layer_prefix)
+        .parse()
+        .unwrap();
     let npm_cache_layer = context.cached_layer(
-        layer_name!("npm_cache"),
+        layer_name,
         CachedLayerDefinition {
             build: true,
             launch: false,

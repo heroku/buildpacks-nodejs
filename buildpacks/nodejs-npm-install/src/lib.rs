@@ -34,7 +34,10 @@ use std::io;
 use std::io::{stderr, Stderr};
 
 /// The NpmInstallBuildpack is responsible for installing npm dependencies and running build scripts
-pub struct NpmInstallBuildpack;
+pub struct NpmInstallBuildpack {
+    /// The prefix used for layers created by this buildpack
+    pub layer_prefix: String,
+}
 
 impl Buildpack for NpmInstallBuildpack {
     type Platform = GenericPlatform;
