@@ -178,7 +178,7 @@ pub(crate) struct NpmEngineLayerMetadata {
 }
 
 #[derive(Debug)]
-pub(crate) enum NpmInstallError {
+pub enum NpmInstallError {
     Download(DownloadError),
     OpenTarball(PathBuf, std::io::Error),
     DecompressTarball(PathBuf, std::io::Error),
