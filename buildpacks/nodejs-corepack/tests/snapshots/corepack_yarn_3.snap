@@ -1,0 +1,62 @@
+---
+source: test_support/src/lib.rs
+---
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.14.0`
+- Installing Node.js distribution
+  - Downloading Node.js `22.14.0 (<arch>)` from https://nodejs.org/download/release/v22.14.0/node-v22.14.0-<arch>.tar.gz ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.14.0 (<arch>)`
+  - Installing Node.js `22.14.0 (<arch>)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Corepack
+
+- Using Corepack version `0.31.0`
+- Found `packageManager` set to `yarn@3.2.0` in `package.json`
+- Enabling Corepack
+  - Creating Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+- Installing `yarn@3.2.0`
+  - Creating Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing yarn@3.2.0...
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Yarn
+
+- Yarn CLI operating in yarn 3.2.0 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set enableGlobalCache false`
+
+      ➤ YN0000: Successfully set enableGlobalCache to false
+
+  - Done (<time_elapsed>)
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0013: │ debug@npm:4.3.4 can't be found in the cache and will be fetched from the remote registry
+      ➤ YN0013: │ ms@npm:2.1.2 can't be found in the cache and will be fetched from the remote registry
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: Done in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Done (finished in <time_elapsed>)

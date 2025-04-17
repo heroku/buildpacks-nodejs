@@ -90,6 +90,14 @@ pub fn integration_test_with_config(
     let mut build_config = BuildConfig::new(builder, app_dir);
     build_config.buildpacks(buildpacks);
     build_config.target_triple(target_triple);
+
+    // NOTE: Due to the way that npm & pnpm emit their update notifier message, it
+    //       creates non-deterministic output. This creates issues with snapshot testing.
+    //       Since this is tool-provided output, I'd like to keep it in customer builds but
+    //       prevent from being emitted in test scenarios. By setting the following
+    //       environment variable, we can suppress this message in both npm & pnpm.
+    build_config.env("npm_config_update_notifier", "false");
+
     with_config(&mut build_config);
 
     TestRunner::default().build(build_config, test_body);

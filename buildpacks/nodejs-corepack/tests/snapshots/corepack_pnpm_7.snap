@@ -1,0 +1,63 @@
+---
+source: test_support/src/lib.rs
+---
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.14.0`
+- Installing Node.js distribution
+  - Downloading Node.js `22.14.0 (<arch>)` from https://nodejs.org/download/release/v22.14.0/node-v22.14.0-<arch>.tar.gz ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.14.0 (<arch>)`
+  - Installing Node.js `22.14.0 (<arch>)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Corepack
+
+- Using Corepack version `0.31.0`
+- Found `packageManager` set to `pnpm@7.32.3` in `package.json`
+- Enabling Corepack
+  - Creating Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin pnpm`
+- Installing `pnpm@7.32.3`
+  - Creating Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing pnpm@7.32.3...
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js pnpm Install
+
+- Setting up pnpm dependency store
+  - Creating new pnpm content-addressable store
+  - Creating pnpm virtual store
+- Installing dependencies
+  - Running `pnpm install --frozen-lockfile`
+
+      Lockfile is up to date, resolution step is skipped
+      Packages: +2
+      ++
+      Packages are hard linked from the content-addressable store to the virtual store.
+        Content-addressable store is at: /layers/heroku_nodejs-pnpm-install/addressable/v3
+        Virtual store is at:             ../layers/heroku_nodejs-pnpm-install/virtual/store
+
+      dependencies:
+      + debug 4.3.4
+
+      Done in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Pruning unused dependencies from pnpm content-addressable store
+  - Running `pnpm store prune`
+
+      Removed all cached metadata files
+      Removed 0 files
+      Removed 0 packages
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Done (finished in <time_elapsed>)
