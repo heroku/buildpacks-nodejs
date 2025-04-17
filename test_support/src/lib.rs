@@ -296,10 +296,13 @@ const REBUILD_SEPARATOR: &str = "\
 pub fn create_build_snapshot(
     #[builder(start_fn, into)] //
     build_output: String,
+    #[builder(field)] //
+    custom_filters: Vec<(String, String)>,
     #[builder(into)] //
     rebuild_output: Option<String>,
 ) {
-    let filters = create_snapshot_filters();
+    let mut filters = create_snapshot_filters();
+    filters.extend(custom_filters);
 
     let snapshot_output = if let Some(rebuild_output) = rebuild_output {
         format!("{build_output}\n{REBUILD_SEPARATOR}\n{rebuild_output}")
@@ -315,4 +318,12 @@ pub fn create_build_snapshot(
     }, {
         assert_snapshot!(test_name(), snapshot_output);
     });
+}
+
+impl<S: create_build_snapshot_builder::State> CreateBuildSnapshotBuilder<S> {
+    pub fn filter(mut self, matcher: impl Into<String>, replacement: impl Into<String>) -> Self {
+        self.custom_filters
+            .push((matcher.into(), replacement.into()));
+        self
+    }
 }
