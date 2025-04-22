@@ -103,8 +103,13 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     //         TOUCH Release/obj.target/DTraceProviderStub.stamp
     //       make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
     //       gyp info ok
+    //
+    // NOTE: This pattern must use the non-greedy form of `*?` to capture lines between the start of
+    //       node-gyp output and "gyp info ok". The greedy form (`+` or `*`) can end up consuming
+    //       more than expected if the output contains more than one node-gyp output section (e.g.;
+    //       during a rebuild).
     filters.push((
-        r"( *)gyp info.*\n(?:.*\n)+ *gyp info ok",
+        r"( *)gyp info.*\n(?:.*\n)*? *gyp info ok",
         "${1}<NODE-GYP BUILD OUTPUT>",
     ));
 

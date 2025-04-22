@@ -38,3 +38,40 @@ source: test_support/src/lib.rs
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
+
+--------------------------------------------- REBUILD ---------------------------------------------
+
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
+  - Resolved Node.js version: `20.19.0`
+- Installing Node.js distribution
+  - Reusing Node.js 20.19.0 (<arch>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js npm Install
+
+- Installing node modules
+  - Using npm version `10.8.2`
+  - Restoring npm cache
+  - Configuring npm cache directory
+  - Running `npm ci "--production=false"`
+
+      npm warn config production Use `--omit=dev` instead.
+
+      > dtrace-provider@0.8.8 install
+      > node-gyp rebuild || node suppress-error.js
+
+      <NODE-GYP BUILD OUTPUT> 
+
+      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Configuring default processes
+  - Skipping default web process (no start script defined)
+- Done (finished in <time_elapsed>)
