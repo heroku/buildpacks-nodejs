@@ -5,32 +5,20 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{assert_contains, assert_not_contains, BuildpackReference, PackResult};
+use libcnb_test::{assert_contains, BuildpackReference, PackResult};
 use serde_json::json;
 use std::path::Path;
 use test_support::{
-    add_build_script, add_package_json_dependency, custom_buildpack, integration_test_with_config,
-    nodejs_integration_test, nodejs_integration_test_with_config, update_json_file,
+    add_build_script, add_package_json_dependency, create_build_snapshot, custom_buildpack,
+    integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
+    update_json_file,
 };
 
 #[test]
 #[ignore = "integration test"]
 fn test_npm_install_with_lockfile() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stderr, "# Heroku Node.js npm Install");
-        assert_contains!(ctx.pack_stderr, "- Installing node modules");
-        assert_contains!(ctx.pack_stderr, "- Using npm version `6.14.18`");
-        assert_contains!(ctx.pack_stderr, "- Creating npm cache");
-        assert_contains!(ctx.pack_stderr, "- Configuring npm cache directory");
-        assert_contains!(ctx.pack_stderr, "- Running `npm ci \"--production=false\"`");
-        assert_contains!(ctx.pack_stderr, "added 4 packages");
-        assert_contains!(ctx.pack_stderr, "- Running scripts");
-        assert_contains!(ctx.pack_stderr, "- No build scripts found");
-        assert_contains!(ctx.pack_stderr, "- Configuring default processes");
-        assert_contains!(
-            ctx.pack_stderr,
-            "- Skipping default web process (no start script defined)"
-        );
+        create_build_snapshot(&ctx.pack_stderr).assert();
     });
 }
 
@@ -38,12 +26,10 @@ fn test_npm_install_with_lockfile() {
 #[ignore = "integration test"]
 fn test_npm_install_caching() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stderr, "- Creating npm cache");
-        assert_contains!(ctx.pack_stderr, "added 4 packages");
+        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            assert_contains!(ctx.pack_stderr, "- Restoring npm cache");
-            assert_contains!(ctx.pack_stderr, "added 4 packages");
+            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
         });
     });
 }
@@ -52,8 +38,7 @@ fn test_npm_install_caching() {
 #[ignore = "integration test"]
 fn test_npm_install_new_package() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        assert_contains!(ctx.pack_stderr, "- Creating npm cache");
-        assert_contains!(ctx.pack_stderr, "added 4 packages");
+        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
@@ -70,8 +55,7 @@ fn test_npm_install_new_package() {
         });
 
         ctx.rebuild(config, |ctx| {
-            assert_contains!(ctx.pack_stderr, "- Restoring npm cache");
-            assert_contains!(ctx.pack_stderr, "added 5 packages");
+            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
         });
     });
 }
@@ -89,14 +73,7 @@ fn test_npm_build_scripts() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stderr, "- Running `npm run heroku-prebuild`");
-            assert_contains!(ctx.pack_stderr, "executed heroku-prebuild");
-
-            assert_contains!(ctx.pack_stderr, "- Running `npm run build`");
-            assert_contains!(ctx.pack_stderr, "executed build");
-
-            assert_contains!(ctx.pack_stderr, "- Running `npm run heroku-postbuild`");
-            assert_contains!(ctx.pack_stderr, "executed heroku-postbuild");
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
     );
 }
@@ -113,11 +90,7 @@ fn test_npm_build_scripts_prefers_heroku_build_over_build() {
             });
         },
         |ctx| {
-            assert_contains!(ctx.pack_stderr, "- Running `npm run heroku-build`");
-            assert_contains!(ctx.pack_stderr, "executed heroku-build");
-
-            assert_not_contains!(ctx.pack_stderr, "- Running `npm run build`");
-            assert_not_contains!(ctx.pack_stderr, "executed build");
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
     );
 }
@@ -133,10 +106,7 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
             });
         },
         |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "- Adding default web process for `npm start`"
-            );
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
     );
 }
@@ -150,26 +120,7 @@ fn test_dependencies_and_missing_lockfile_errors() {
             cfg.expected_pack_result(PackResult::Failure);
         },
         |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "A lockfile from a supported package manager is required"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "The package.json for this project specifies dependencies"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "To use npm to install dependencies, run `npm install`."
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "To use yarn to install dependencies, run `yarn install`."
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "To use pnpm to install dependencies, run `pnpm install`."
-            );
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
     );
 }
@@ -207,14 +158,10 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
             config.env("npm_config_foreground-scripts", "true");
         },
         |ctx| {
-            assert_contains!(ctx.pack_stderr, "- Creating npm cache");
-            assert_contains!(ctx.pack_stderr, "> dtrace-provider@0.8.8 install");
-            assert_contains!(ctx.pack_stderr, "> node-gyp rebuild");
+            let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
             let config = ctx.config.clone();
             ctx.rebuild(config, |ctx| {
-                assert_contains!(ctx.pack_stderr, "- Restoring npm cache");
-                assert_contains!(ctx.pack_stderr, "> dtrace-provider@0.8.8 install");
-                assert_contains!(ctx.pack_stderr, "> node-gyp rebuild");
+                build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
             });
         },
     );
@@ -233,18 +180,7 @@ fn test_skip_build_scripts_from_buildplan() {
             });
         },
         |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "Not running `heroku-prebuild` as it was disabled by a participating buildpack"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "Not running `build` as it was disabled by a participating buildpack"
-            );
-            assert_contains!(
-                ctx.pack_stderr,
-                "Not running `heroku-postbuild` as it was disabled by a participating buildpack"
-            );
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
         &[
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
@@ -280,10 +216,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
             });
         },
         |ctx| {
-            assert_contains!(
-                ctx.pack_stderr,
-                "Skipping default web process (Procfile detected)"
-            );
+            create_build_snapshot(&ctx.pack_stderr).assert();
         },
     );
 }

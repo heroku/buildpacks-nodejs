@@ -62,6 +62,57 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>",
     ));
 
+    // [npm] Native module compilation output from node-gyp. e.g.;
+    // -     gyp info it worked if it ends with ok
+    //       gyp info using node-gyp@10.1.0
+    //       gyp info using node@20.19.0 | linux | x64
+    //       gyp info find Python using Python version 3.12.3 found at "/usr/bin/python3"
+    //
+    //       gyp http GET https://nodejs.org/download/release/v20.19.0/node-v20.19.0-headers.tar.gz
+    //       gyp http 200 https://nodejs.org/download/release/v20.19.0/node-v20.19.0-headers.tar.gz
+    //       gyp http GET https://nodejs.org/download/release/v20.19.0/SHASUMS256.txt
+    //       gyp http 200 https://nodejs.org/download/release/v20.19.0/SHASUMS256.txt
+    //       gyp info spawn /usr/bin/python3
+    //       gyp info spawn args [
+    //       gyp info spawn args '/layers/heroku_nodejs-engine/dist/lib/node_modules/npm/node_modules/node-gyp/gyp/gyp_main.py',
+    //       gyp info spawn args 'binding.gyp',
+    //       gyp info spawn args '-f',
+    //       gyp info spawn args 'make',
+    //       gyp info spawn args '-I',
+    //       gyp info spawn args '/workspace/node_modules/dtrace-provider/build/config.gypi',
+    //       gyp info spawn args '-I',
+    //       gyp info spawn args '/layers/heroku_nodejs-engine/dist/lib/node_modules/npm/node_modules/node-gyp/addon.gypi',
+    //       gyp info spawn args '-I',
+    //       gyp info spawn args '/home/heroku/.cache/node-gyp/20.19.0/include/node/common.gypi',
+    //       gyp info spawn args '-Dlibrary=shared_library',
+    //       gyp info spawn args '-Dvisibility=default',
+    //       gyp info spawn args '-Dnode_root_dir=/home/heroku/.cache/node-gyp/20.19.0',
+    //       gyp info spawn args '-Dnode_gyp_dir=/layers/heroku_nodejs-engine/dist/lib/node_modules/npm/node_modules/node-gyp',
+    //       gyp info spawn args '-Dnode_lib_file=/home/heroku/.cache/node-gyp/20.19.0/<(target_arch)/node.lib',
+    //       gyp info spawn args '-Dmodule_root_dir=/workspace/node_modules/dtrace-provider',
+    //       gyp info spawn args '-Dnode_engine=v8',
+    //       gyp info spawn args '--depth=.',
+    //       gyp info spawn args '--no-parallel',
+    //       gyp info spawn args '--generator-output',
+    //       gyp info spawn args 'build',
+    //       gyp info spawn args '-Goutput_dir=.'
+    //       gyp info spawn args ]
+    //       gyp info spawn make
+    //       gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+    //       make: Entering directory '/workspace/node_modules/dtrace-provider/build'
+    //         TOUCH Release/obj.target/DTraceProviderStub.stamp
+    //       make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
+    //       gyp info ok
+    //
+    // NOTE: This pattern must use the non-greedy form of `*?` to capture lines between the start of
+    //       node-gyp output and "gyp info ok". The greedy form (`+` or `*`) can end up consuming
+    //       more than expected if the output contains more than one node-gyp output section (e.g.;
+    //       during a rebuild).
+    filters.push((
+        r"( *)gyp info.*\n(?:.*\n)*? *gyp info ok",
+        "${1}<NODE-GYP BUILD OUTPUT>",
+    ));
+
     // [pnpm] Final progress messages for installed packages. e.g.;
     // - Progress: resolved 9, reused 2, downloaded 7, added 4, done
     //
