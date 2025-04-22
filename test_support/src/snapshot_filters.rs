@@ -46,6 +46,73 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     //       is preferred as the replacement value here.
     filters.push((r"Completed in \d+s \d+ms", "Completed"));
 
+    // [Yarn] Fetching modules not already in the cache. e.g.;
+    // -       ➤ YN0000: ┌ Fetch step
+    //         ➤ YN0013: │ side-channel@npm:1.0.4 can't be found in the cache and will be fetched from the remote registry
+    //         ➤ YN0013: │ send@npm:0.18.0 can't be found in the cache and will be fetched from the remote registry
+    //         ➤ YN0000: └ Completed
+    filters.push((
+        r"( *)➤ YN0013: │ .*\n(?:.*\n)*? *➤ YN0000: └ Completed",
+        "${1}➤ YN0013: │ <LIST OF DOWNLOADED MODULES>\n${1}➤ YN0000: └ Completed",
+    ));
+
+    // [Yarn] Native module compilation output from node-gyp which is slightly different than the npm
+    //        and pnpm versions as it contains log prefixes and other information to identify the package
+    //        being compiled. e.g.;
+    // -     ➤ YN0000: ┌ Link step
+    //       ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+    //       ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info it worked if it ends with ok
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info using node-gyp@10.1.0
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info using node@22.14.0 | linux | x64
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info find Python using Python version 3.12.3 found at "/usr/bin/python3"
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp http GET https://nodejs.org/download/release/v22.14.0/node-v22.14.0-headers.tar.gz
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp http 200 https://nodejs.org/download/release/v22.14.0/node-v22.14.0-headers.tar.gz
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp http GET https://nodejs.org/download/release/v22.14.0/SHASUMS256.txt
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp http 200 https://nodejs.org/download/release/v22.14.0/SHASUMS256.txt
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn /usr/bin/python3
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args [
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '/workspace/.yarn/unplugged/node-gyp-npm-10.1.0-bdea7d2ece/node_modules/node-gyp/gyp/gyp_main.py',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args 'binding.gyp',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-f',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args 'make',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-I',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '/workspace/.yarn/unplugged/dtrace-provider-npm-0.8.8-c06c6b4a53/node_modules/dtrace-provider/build/config.gypi',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-I',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '/workspace/.yarn/unplugged/node-gyp-npm-10.1.0-bdea7d2ece/node_modules/node-gyp/addon.gypi',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-I',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '/home/heroku/.cache/node-gyp/22.14.0/include/node/common.gypi',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dlibrary=shared_library',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dvisibility=default',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dnode_root_dir=/home/heroku/.cache/node-gyp/22.14.0',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dnode_gyp_dir=/workspace/.yarn/unplugged/node-gyp-npm-10.1.0-bdea7d2ece/node_modules/node-gyp',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dnode_lib_file=/home/heroku/.cache/node-gyp/22.14.0/<(target_arch)/node.lib',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dmodule_root_dir=/workspace/.yarn/unplugged/dtrace-provider-npm-0.8.8-c06c6b4a53/node_modules/dtrace-provider',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Dnode_engine=v8',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '--depth=.',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '--no-parallel',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '--generator-output',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args 'build',
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args '-Goutput_dir=.'
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args ]
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn make
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT make: Entering directory '/workspace/.yarn/unplugged/dtrace-provider-npm-0.8.8-c06c6b4a53/node_modules/dtrace-provider/build'
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT   TOUCH Release/obj.target/DTraceProviderStub.stamp
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT make: Leaving directory '/workspace/.yarn/unplugged/dtrace-provider-npm-0.8.8-c06c6b4a53/node_modules/dtrace-provider/build'
+    //       ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDERR gyp info ok
+    //       ➤ YN0000: └ Completed
+    //
+    // NOTE: This pattern must use the non-greedy form of `*?` to capture lines between the start of
+    //       node-gyp output and "gyp info ok". The greedy form (`+` or `*`) can end up consuming
+    //       more than expected if the output contains more than one node-gyp output section (e.g.;
+    //       during a rebuild).
+    filters.push((
+        r"( *)➤ YN0000:.*STDERR gyp info.*\n(?:.*\n)*? *➤ YN0000:.*STDERR gyp info ok",
+        "${1}➤ YN0000: │ <NODE-GYP BUILD OUTPUT>",
+    ));
+
     // [npm] Summary of added packages with no audit information. e.g.;
     // - added 12 packages in 27s
     // - added 3 packages in 1.13ms

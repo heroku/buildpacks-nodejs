@@ -1,0 +1,127 @@
+---
+source: test_support/src/lib.rs
+---
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.14.0`
+- Installing Node.js distribution
+  - Downloading Node.js `22.14.0 (<arch>)` from https://nodejs.org/download/release/v22.14.0/node-v22.14.0-<arch>.tar.gz ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.14.0 (<arch>)`
+  - Installing Node.js `22.14.0 (<arch>)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Corepack
+
+- Using Corepack version `0.31.0`
+- Found `packageManager` set to `yarn@4.2.2` in `package.json`
+- Enabling Corepack
+  - Creating Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+- Installing `yarn@4.2.2`
+  - Creating Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing yarn@4.2.2...
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Yarn
+
+- Yarn CLI operating in yarn 4.2.2 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set enableGlobalCache false`
+
+      ➤ YN0000: Successfully set enableGlobalCache to false
+
+  - Done (<time_elapsed>)
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: · Yarn 4.2.2
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
+      ➤ YN0000: │ <NODE-GYP BUILD OUTPUT> 
+      ➤ YN0000: └ Completed
+      ➤ YN0000: · Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Done (finished in <time_elapsed>)
+
+--------------------------------------------- REBUILD ---------------------------------------------
+
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.14.0`
+- Installing Node.js distribution
+  - Reusing Node.js 22.14.0 (<arch>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Corepack
+
+- Using Corepack version `0.31.0`
+- Found `packageManager` set to `yarn@4.2.2` in `package.json`
+- Enabling Corepack
+  - Restoring Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+- Installing `yarn@4.2.2`
+  - Restoring Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing yarn@4.2.2...
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Yarn
+
+- Yarn CLI operating in yarn 4.2.2 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set enableGlobalCache false`
+
+      ➤ YN0000: Successfully set enableGlobalCache to false
+
+  - Done (<time_elapsed>)
+  - Restoring yarn dependency cache
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: · Yarn 4.2.2
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
+      ➤ YN0000: │ <NODE-GYP BUILD OUTPUT> 
+      ➤ YN0000: └ Completed
+      ➤ YN0000: · Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Done (finished in <time_elapsed>)
