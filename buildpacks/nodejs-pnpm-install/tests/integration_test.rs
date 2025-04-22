@@ -33,8 +33,16 @@ fn pnpm_8_nuxt() {
     nodejs_integration_test("./fixtures/pnpm-8-nuxt", |ctx| {
         create_build_snapshot(&ctx.pack_stderr)
             .filter(
-                r"( *)> nuxt build\n(?:.*\n)+ *\[nitro] ✔.*",
+                r"( *)> nuxt build\n(?:.*\n)*? *\[nitro] ✔ You can preview this build.*",
                 "${1}> nuxt build\n\n${1}<NUXT BUILD OUTPUT>",
+            )
+            .filter(
+                r"( *)\.\.\./esbuild@\d+\.\d+\.\d+/node_modules/esbuild postinstall.*",
+                "${1}<ESBUILD POSTINSTALL_SCRIPT>",
+            )
+            .filter(
+                r"( *)ERROR  \(node:\d+\).*\n *\(Use node --trace-deprecation.*",
+                "${1}<NODE DEPRECATION ERROR>",
             )
             .assert();
     });

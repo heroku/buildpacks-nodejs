@@ -40,10 +40,10 @@ source: test_support/src/lib.rs
       Lockfile is up to date, resolution step is skipped
       Packages: +676
       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      .../esbuild@0.18.20/node_modules/esbuild postinstall$ node install.js
-      .../esbuild@0.19.8/node_modules/esbuild postinstall$ node install.js
-      .../esbuild@0.18.20/node_modules/esbuild postinstall: Done
-      .../esbuild@0.19.8/node_modules/esbuild postinstall: Done
+      <ESBUILD POSTINSTALL_SCRIPT>
+      <ESBUILD POSTINSTALL_SCRIPT>
+      <ESBUILD POSTINSTALL_SCRIPT>
+      <ESBUILD POSTINSTALL_SCRIPT>
 
       devDependencies:
       + @nuxt/devtools 1.0.4
@@ -59,8 +59,7 @@ source: test_support/src/lib.rs
       > nuxt prepare
 
 
-       ERROR  (node:147) [DEP0180] DeprecationWarning: fs.Stats constructor is deprecated.
-      (Use node --trace-deprecation ... to show where the warning was created)
+       <NODE DEPRECATION ERROR>
 
       ✔ Types generated in .nuxt
       Done in <time_elapsed>
