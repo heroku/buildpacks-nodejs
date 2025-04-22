@@ -28,9 +28,13 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [Yarn] Post `yarn install` timer output. e.g.;
     // - Done in 30s 9ms
+    // - Done in 19.24s.
     //
     // NOTE: This can conflict with the pnpm version of this filter, so ensure it's listed before
-    filters.push((r"Done in \d+s \d+ms", "Done in <time_elapsed>"));
+    filters.push((
+        r"Done in (?:\d+s \d+ms|\d+\.\d+m?s)",
+        "Done in <time_elapsed>",
+    ));
 
     // [Yarn] Post `yarn install` timer output when warnings are present. e.g.;
     // - Done with warnings in 30s 9ms
