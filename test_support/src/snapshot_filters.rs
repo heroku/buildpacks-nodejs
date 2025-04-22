@@ -83,7 +83,60 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // [pnpm] Post `pnpm install` timer output. e.g.;
     // - Done in 27s
     // - Done in 3.7ms
-    filters.push((r"Done in (\d+|\d\.\d+)m?s", "Done in <time_elapsed>"));
+    filters.push((r"Done in (?:\d+|\d+\.\d+)m?s", "Done in <time_elapsed>"));
+
+    // [pnpm] Native module compilation output from node-gyp. Similar to the npm version above except
+    //        pnpm adds a bit more decoration to each line about the specific module being rebuilt. e.g.;
+    // -     .../node_modules/dtrace-provider install$ node-gyp rebuild || node suppress-error.js
+    //       .../node_modules/dtrace-provider install: gyp info it worked if it ends with ok
+    //       .../node_modules/dtrace-provider install: gyp info using node-gyp@10.1.0
+    //       .../node_modules/dtrace-provider install: gyp info using node@20.19.0 | linux | x64
+    //       .../node_modules/dtrace-provider install: gyp info find Python using Python version 3.12.3 found at "/usr/bin/python3"
+    //       .../node_modules/dtrace-provider install: gyp http GET https://nodejs.org/download/release/v20.19.0/node-v20.19.0-headers.tar.gz
+    //       .../node_modules/dtrace-provider install: gyp http 200 https://nodejs.org/download/release/v20.19.0/node-v20.19.0-headers.tar.gz
+    //       .../node_modules/dtrace-provider install: gyp http GET https://nodejs.org/download/release/v20.19.0/SHASUMS256.txt
+    //       .../node_modules/dtrace-provider install: gyp http 200 https://nodejs.org/download/release/v20.19.0/SHASUMS256.txt
+    //       .../node_modules/dtrace-provider install: gyp info spawn /usr/bin/python3
+    //       .../node_modules/dtrace-provider install: gyp info spawn args [
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '/layers/heroku_nodejs-corepack/mgr/cache/v1/pnpm/9.1.1/dist/node_modules/node-gyp/gyp/gyp_main.py',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args 'binding.gyp',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-f',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args 'make',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-I',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '/layers/heroku_nodejs-pnpm-install/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider/build/config.gypi',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-I',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '/layers/heroku_nodejs-corepack/mgr/cache/v1/pnpm/9.1.1/dist/node_modules/node-gyp/addon.gypi',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-I',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '/home/heroku/.cache/node-gyp/20.19.0/include/node/common.gypi',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dlibrary=shared_library',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dvisibility=default',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dnode_root_dir=/home/heroku/.cache/node-gyp/20.19.0',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dnode_gyp_dir=/layers/heroku_nodejs-corepack/mgr/cache/v1/pnpm/9.1.1/dist/node_modules/node-gyp',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dnode_lib_file=/home/heroku/.cache/node-gyp/20.19.0/<(target_arch)/node.lib',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dmodule_root_dir=/layers/heroku_nodejs-pnpm-install/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Dnode_engine=v8',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '--depth=.',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '--no-parallel',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '--generator-output',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args 'build',
+    //       .../node_modules/dtrace-provider install: gyp info spawn args '-Goutput_dir=.'
+    //       .../node_modules/dtrace-provider install: gyp info spawn args ]
+    //       .../node_modules/dtrace-provider install: gyp info spawn make
+    //       .../node_modules/dtrace-provider install: gyp info spawn args [ 'BUILDTYPE=Release', '-C', 'build' ]
+    //       .../node_modules/dtrace-provider install: make: Entering directory '/layers/heroku_nodejs-pnpm-install/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider/build'
+    //       .../node_modules/dtrace-provider install:   TOUCH Release/obj.target/DTraceProviderStub.stamp
+    //       .../node_modules/dtrace-provider install: make: Leaving directory '/layers/heroku_nodejs-pnpm-install/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider/build'
+    //       .../node_modules/dtrace-provider install: gyp info ok
+    //       .../node_modules/dtrace-provider install: Done
+    //
+    // NOTE: This pattern must use the non-greedy form of `*?` to capture lines between the start of
+    //       node-gyp output and "gyp info ok". The greedy form (`+` or `*`) can end up consuming
+    //       more than expected if the output contains more than one node-gyp output section (e.g.;
+    //       during a rebuild).
+    filters.push((
+        r"( *).*gyp info.*\n(?:.*\n)*? *.*gyp info ok",
+        "${1}<NODE-GYP BUILD OUTPUT>",
+    ));
 
     filters
         .into_iter()
