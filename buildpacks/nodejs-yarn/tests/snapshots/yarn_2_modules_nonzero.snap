@@ -13,24 +13,15 @@ source: test_support/src/lib.rs
   - Installing Node.js `22.14.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js Corepack
-
-- Using Corepack version `0.31.0`
-- Found `packageManager` set to `yarn@2.4.1` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
-- Installing `yarn@2.4.1`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing yarn@2.4.1...
-
-  - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
 # Heroku Node.js Yarn
 
+- Detecting yarn CLI version to install
+  - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
+  - Resolved yarn CLI version: 2.4.2
+- Installing yarn CLI
+  - Downloading yarn 2.4.2 ... (<time_elapsed>)
+  - Extracting yarn 2.4.2
+  - Installing yarn 2.4.2
 - Yarn CLI operating in yarn 2.4.1 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`

@@ -38,18 +38,13 @@ source: test_support/src/lib.rs
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
-
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
-
-  - Done (<time_elapsed>)
+  - Yarn zero-install detected. Skipping dependency cache.
 - Installing dependencies
-  - Running `yarn install --immutable --inline-builds`
+  - Running `yarn install --immutable --inline-builds --immutable-cache`
 
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
-      ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed

@@ -1,0 +1,54 @@
+---
+source: test_support/src/lib.rs
+---
+# Heroku Node.js Engine
+
+- Checking Node.js version
+  - Detected Node.js version range: `>=16.0.0 <17.0.0-0`
+  - Resolved Node.js version: `16.20.2`
+- Installing Node.js distribution
+  - Downloading Node.js `16.20.2 (<arch>)` from https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `16.20.2 (<arch>)`
+  - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+
+# Heroku Node.js Yarn
+
+- Detecting yarn CLI version to install
+  - No yarn engine range detected in package.json, using default (1.22.x)
+  - Resolved yarn CLI version: 1.22.22
+- Installing yarn CLI
+  - Downloading yarn 1.22.22 ... (<time_elapsed>)
+  - Extracting yarn 1.22.22
+  - Installing yarn 1.22.22
+- Yarn CLI operating in yarn 1.22.22 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set cache-folder /layers/heroku_nodejs-yarn/deps/cache`
+
+      yarn config v1.22.22
+      success Set "cache-folder" to "/layers/heroku_nodejs-yarn/deps/cache".
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install "--production=false" --frozen-lockfile`
+
+      yarn install v1.22.22
+      [1/5] Validating package.json...
+      [2/5] Resolving packages...
+      [3/5] Fetching packages...
+      [4/5] Linking dependencies...
+      [5/5] Building fresh packages...
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - Running `build` script
+
+      yarn run v1.22.22
+      $ tsc
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)

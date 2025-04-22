@@ -16,22 +16,22 @@ source: test_support/src/lib.rs
 # Heroku Node.js Corepack
 
 - Using Corepack version `0.31.0`
-- Found `packageManager` set to `yarn@2.4.1` in `package.json`
+- Found `packageManager` set to `yarn@4.2.2` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
   - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
-- Installing `yarn@2.4.1`
+- Installing `yarn@4.2.2`
   - Creating Corepack package manager
   - Running `corepack prepare`
 
-      Preparing yarn@2.4.1...
+      Preparing yarn@4.2.2...
 
   - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 # Heroku Node.js Yarn
 
-- Yarn CLI operating in yarn 2.4.1 mode.
+- Yarn CLI operating in yarn 4.2.2 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 
@@ -46,16 +46,18 @@ source: test_support/src/lib.rs
 - Installing dependencies
   - Running `yarn install --immutable --inline-builds`
 
+      ➤ YN0000: · Yarn 4.2.2
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
-      ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed
-      ➤ YN0000: Done in <time_elapsed>
+      ➤ YN0000: · Done in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Running scripts
-  - No build scripts found
+  - ! Not running `heroku-prebuild` as it was disabled by a participating buildpack
+  - ! Not running `build` as it was disabled by a participating buildpack
+  - ! Not running `heroku-postbuild` as it was disabled by a participating buildpack
 - Done (finished in <time_elapsed>)
