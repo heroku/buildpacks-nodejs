@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs-npm-install"
-version = "3.6.0"
+version = "3.6.1"
 name = "Heroku Node.js npm Install"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's Node.js npm install buildpack. A component of the 'heroku/nodejs' buildpack."
