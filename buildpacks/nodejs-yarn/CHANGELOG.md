@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.6.1] - 2025-04-24
 
-- Added Yarn version 4.9.1.
 ### Added 
 
+- Added Yarn version 4.9.1.
 - Added Yarn version 4.9.0.
 
 ### Changed
