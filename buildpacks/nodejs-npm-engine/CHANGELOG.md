@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Added retry behavior for npm binary downloads ([#1092](https://github.com/heroku/buildpacks-nodejs/pull/1092))
+
 ## [3.6.1] - 2025-04-24
 
 ### Changed
