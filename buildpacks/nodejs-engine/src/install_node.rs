@@ -1,11 +1,12 @@
 use bullet_stream::state::Bullet;
 use bullet_stream::{style, Print};
+use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libherokubuildpack::download::download_file;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;
@@ -16,8 +17,6 @@ use std::fs;
 use std::io::{Read, Stderr};
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
-
-use heroku_nodejs_utils::vrs::Version;
 
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
@@ -67,13 +66,15 @@ pub(crate) fn install_node(
                 style::value(&version_tag),
                 style::url(&distribution_artifact.url)
             ));
-            download_file(&distribution_artifact.url, node_tgz.path()).map_err(|e| {
-                DistLayerError::Download {
+            download_file_sync()
+                .from_url(&distribution_artifact.url)
+                .to_file(node_tgz.path())
+                .call()
+                .map_err(|e| DistLayerError::Download {
                     src_url: distribution_artifact.url.clone(),
                     dst_path: node_tgz.path().to_path_buf(),
                     source: e,
-                }
-            })?;
+                })?;
             bullet = timer.done();
 
             bullet = bullet.sub_bullet("Verifying checksum");
@@ -158,7 +159,7 @@ pub(crate) enum DistLayerError {
     Download {
         src_url: String,
         dst_path: PathBuf,
-        source: libherokubuildpack::download::DownloadError,
+        source: DownloadError,
     },
     Untar {
         src_path: PathBuf,

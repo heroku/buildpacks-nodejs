@@ -1,6 +1,7 @@
 use crate::install_node::DistLayerError;
 use crate::NodeJsEngineBuildpackError;
 use bullet_stream::style;
+use heroku_nodejs_utils::download_file::DownloadError;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
@@ -9,7 +10,6 @@ use heroku_nodejs_utils::error_handling::{
 };
 use indoc::formatdoc;
 use libcnb::Error;
-use libherokubuildpack::download::DownloadError;
 
 const BUILDPACK_NAME: &str = "Heroku Node.js Engine buildpack";
 
@@ -94,7 +94,7 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
             let src_url = style::url(src_url);
             let dst_path = file_value(dst_path);
             match source {
-                DownloadError::HttpError(e) => error_message()
+                DownloadError::Request(_, _) | DownloadError::ReadResponse(_, _) => error_message()
                     .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
                     .header("Failed to download Node.js distribution")
                     .body(formatdoc! {"
@@ -106,17 +106,17 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
                         - Check the status of {nodejs_status_url} for any reported issues.
                         - Confirm the download url ({src_url}) works. 
                     "})
-                    .debug_info(e.to_string())
+                    .debug_info(source.to_string())
                     .create(),
 
-                DownloadError::IoError(e) => error_message()
+                DownloadError::OpenFile(_, _, _) | DownloadError::WriteFile(_, _, _) => error_message()
                     .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
                     .header("Failed to write downloaded Node.js distribution")
                     .body(formatdoc! {"
                         An unexpected I/O error occurred while writing the Node.js distribution from {src_url} to \
                         disk at {dst_path}.
                     "})
-                    .debug_info(e.to_string())
+                    .debug_info(source.to_string())
                     .create()
             }
         }
@@ -211,7 +211,6 @@ mod tests {
     use bullet_stream::strip_ansi;
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use insta::{assert_snapshot, with_settings};
-    use libherokubuildpack::download::DownloadError;
     use test_support::test_name;
 
     #[test]
@@ -247,12 +246,25 @@ mod tests {
     }
 
     #[test]
-    fn test_dist_layer_download_http_error() {
+    fn test_dist_layer_download_read_error() {
+        let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+            .to_string();
         assert_error_snapshot(DistLayerError::Download {
-            src_url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-                .to_string(),
+            src_url: url.clone(),
             dst_path: "/tmp/some-temp-file".into(),
-            source: create_download_http_error(),
+            source: DownloadError::Request(url, create_reqwest_error()),
+        });
+    }
+
+    #[test]
+    fn test_dist_layer_download_write_error() {
+        let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+            .to_string();
+        let path = "/tmp/some-temp-file";
+        assert_error_snapshot(DistLayerError::Download {
+            src_url: url.clone(),
+            dst_path: path.into(),
+            source: DownloadError::WriteFile(path.into(), url, create_io_error("Disk full")),
         });
     }
 
@@ -330,7 +342,19 @@ mod tests {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
     }
 
-    fn create_download_http_error() -> DownloadError {
-        Box::new(ureq::get("broken/ url").call().unwrap_err()).into()
+    fn create_reqwest_error() -> reqwest_middleware::Error {
+        async_runtime().block_on(async {
+            reqwest_middleware::Error::Reqwest(
+                reqwest::get("https://test/error").await.unwrap_err(),
+            )
+        })
+    }
+
+    fn async_runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .unwrap()
     }
 }

@@ -1,12 +1,13 @@
 use bullet_stream::state::SubBullet;
 use bullet_stream::Print;
+use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::LayerEnv;
-use libherokubuildpack::download::{download_file, DownloadError};
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
@@ -15,8 +16,6 @@ use std::io::Stderr;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
-
-use heroku_nodejs_utils::inv::Release;
 
 use crate::{YarnBuildpack, YarnBuildpackError};
 
@@ -58,7 +57,11 @@ pub(crate) fn install_yarn(
             let yarn_tgz = NamedTempFile::new().map_err(CliLayerError::TempFile)?;
 
             let timer = log.start_timer(format!("Downloading yarn {}", release.version));
-            download_file(&release.url, yarn_tgz.path()).map_err(CliLayerError::Download)?;
+            download_file_sync()
+                .from_url(&release.url)
+                .to_file(yarn_tgz.path())
+                .call()
+                .map_err(CliLayerError::Download)?;
             log = timer.done();
 
             log = log.sub_bullet(format!("Extracting yarn {}", release.version));

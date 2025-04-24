@@ -3,6 +3,7 @@ use crate::NpmEngineBuildpackError;
 use bullet_stream::state::SubBullet;
 use bullet_stream::{style, Print};
 use fun_run::{CommandWithName, NamedOutput};
+use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -10,7 +11,6 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libherokubuildpack::download::{download_file, DownloadError};
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -91,7 +91,10 @@ fn download_and_unpack_release(
     logger: Print<SubBullet<Stderr>>,
 ) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
     let timer = logger.start_timer(format!("Downloading {}", style::value(download_from)));
-    download_file(download_from, download_to)
+    download_file_sync()
+        .from_url(download_from)
+        .to_file(download_to)
+        .call()
         .map_err(NpmInstallError::Download)
         .and_then(|()| {
             File::open(download_to)

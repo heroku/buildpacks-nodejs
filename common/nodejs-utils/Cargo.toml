@@ -20,11 +20,15 @@ libherokubuildpack = { version = "=0.28.1", default-features = false, features =
 ] }
 node-semver = "2"
 regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls"] }
+reqwest-middleware = "0.4"
+reqwest-retry = "0.7"
 serde = { version = "1", features = ['derive'] }
 serde_json = "1"
 serde-xml-rs = "0.6"
 sha2 = "0.10.8"
 thiserror = "2"
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "time"] }
 toml = "0.8"
 ureq = { version = "3", features = ["json"] }
 url = "2"
