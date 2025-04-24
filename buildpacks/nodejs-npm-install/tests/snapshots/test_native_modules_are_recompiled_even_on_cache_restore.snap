@@ -5,12 +5,12 @@ source: test_support/src/lib.rs
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
-  - Resolved Node.js version: `20.19.0`
+  - Resolved Node.js version: `20.19.1`
 - Installing Node.js distribution
-  - Downloading Node.js `20.19.0 (<arch>)` from https://nodejs.org/download/release/v20.19.0/node-v20.19.0-<arch>.tar.gz ... (<time_elapsed>)
+  - Downloading Node.js `20.19.1 (<arch>)` from https://nodejs.org/download/release/v20.19.1/node-v20.19.1-<arch>.tar.gz ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.19.0 (<arch>)`
-  - Installing Node.js `20.19.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.19.1 (<arch>)`
+  - Installing Node.js `20.19.1 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 # Heroku Node.js npm Install
@@ -45,9 +45,9 @@ source: test_support/src/lib.rs
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
-  - Resolved Node.js version: `20.19.0`
+  - Resolved Node.js version: `20.19.1`
 - Installing Node.js distribution
-  - Reusing Node.js 20.19.0 (<arch>)
+  - Reusing Node.js 20.19.1 (<arch>)
 - Done (finished in <time_elapsed>)
 
 # Heroku Node.js npm Install
