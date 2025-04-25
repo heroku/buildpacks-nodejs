@@ -703,7 +703,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "base64",
- "bullet_stream 0.7.0",
+ "bullet_stream 0.8.0",
  "heroku-nodejs-utils",
  "hex",
  "indoc",

@@ -13,7 +13,7 @@ use crate::function::{
 use crate::install_nodejs_function_runtime::{install_nodejs_function_runtime, RuntimeLayerError};
 #[cfg(test)]
 use base64 as _;
-use bullet_stream::Print;
+use bullet_stream::global::print;
 #[cfg(test)]
 use hex as _;
 use indoc::formatdoc;
@@ -29,7 +29,6 @@ use libcnb_test as _;
 #[cfg(test)]
 use rand as _;
 use serde::Deserialize;
-use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 use thiserror::Error;
@@ -76,19 +75,21 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stderr()).h1(context
-            .buildpack_descriptor
-            .buildpack
-            .name
-            .as_ref()
-            .expect("The buildpack should have a name"));
+        let buildpack_start = print::buildpack(
+            context
+                .buildpack_descriptor
+                .buildpack
+                .name
+                .as_ref()
+                .expect("The buildpack should have a name"),
+        );
 
         let app_dir = &context.app_dir;
         let metadata_runtime = &context.buildpack_descriptor.metadata.runtime;
         let package_name = &metadata_runtime.package_name;
         let package_version = &metadata_runtime.package_version;
 
-        log = log.bullet("Checking for function file").done();
+        print::bullet("Checking for function file");
         get_main(app_dir).map_err(NodeJsInvokerBuildpackError::MainFunction)?;
 
         let declared_runtime_package_version =
@@ -96,24 +97,21 @@ impl Buildpack for NodeJsInvokerBuildpack {
                 .map_err(NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunction)?;
 
         if let Some(package_version) = declared_runtime_package_version.clone() {
-            log = log
-                .bullet(format!(
-                    "Node.js function runtime declared in package.json: {0}@{1}",
-                    package_name.clone(),
-                    package_version
-                ))
-                .done();
+            print::bullet(format!(
+                "Node.js function runtime declared in package.json: {0}@{1}",
+                package_name.clone(),
+                package_version
+            ));
         } else {
-            log = log.warning(
+            print::warning(
                 format!("\
                     Deprecation: Future versions of the Functions Runtime for Node.js ({package_name}) will not be auto-detected \
                     and must be added as a dependency in package.json."
                 )
             );
-            log = install_nodejs_function_runtime(
+            install_nodejs_function_runtime(
                 &context,
                 &format!("{package_name}@{package_version}"),
-                log,
             )?;
         }
 
@@ -124,8 +122,7 @@ impl Buildpack for NodeJsInvokerBuildpack {
 
         attach_startup_script(&context)?;
 
-        log.done();
-
+        print::all_done(&Some(buildpack_start));
         BuildResultBuilder::new()
             .launch(
                 LaunchBuilder::new()
@@ -147,40 +144,39 @@ impl Buildpack for NodeJsInvokerBuildpack {
     }
 
     fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let log = Print::new(stderr()).without_header();
         match error {
             Error::BuildpackError(buildpack_error) => match buildpack_error {
                 NodeJsInvokerBuildpackError::MainFunction(e) => {
-                    log.error(formatdoc! { "
-                            Node.js Function Invoker main function detection error
+                    print::error(formatdoc! { "
+                        Node.js Function Invoker main function detection error
 
-                            {e}
-                        "});
+                        {e}
+                    "});
                 }
                 NodeJsInvokerBuildpackError::RuntimeLayer(e) => {
-                    log.error(formatdoc! { "
-                            Node.js Function Invoker runtime layer error
+                    print::error(formatdoc! { "
+                        Node.js Function Invoker runtime layer error
 
-                            {e}
-                        "});
+                        {e}
+                    "});
                 }
                 NodeJsInvokerBuildpackError::ScriptLayer(e) => {
-                    log.error(formatdoc! { "
-                            Node.js Function Invoker script layer error
+                    print::error(formatdoc! { "
+                        Node.js Function Invoker script layer error
 
-                            {e}
-                        "});
+                        {e}
+                    "});
                 }
                 NodeJsInvokerBuildpackError::ExplicitRuntimeDependencyFunction(e) => {
-                    log.error(formatdoc! { "
-                            Node.js Function Invoker explicit Node.js function runtime dependency error
+                    print::error(formatdoc! { "
+                        Node.js Function Invoker explicit Node.js function runtime dependency error
 
-                            {e}
-                        "});
+                        {e}
+                    "});
                 }
             },
             framework_error => {
-                log.error(formatdoc! {"
+                print::error(formatdoc! {"
                     heroku/nodejs-function-invoker internal buildpack error
                     
                     An unexpected internal error was reported by the framework used \
