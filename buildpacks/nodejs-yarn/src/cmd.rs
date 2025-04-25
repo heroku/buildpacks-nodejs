@@ -1,6 +1,5 @@
 use crate::yarn::Yarn;
 use bullet_stream::global::print;
-use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
