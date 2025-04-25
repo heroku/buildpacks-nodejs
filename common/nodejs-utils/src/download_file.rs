@@ -95,12 +95,12 @@ pub async fn download_file(
 
 #[derive(Debug, thiserror::Error)]
 pub enum DownloadError {
-    #[error("Request to {0} failed\nError: {1}")]
+    #[error("Request to `{0}` failed\nError: {1}")]
     Request(String, reqwest_middleware::Error),
-    #[error("Reading response from request to {0} failed\nError: {1}")]
+    #[error("Reading response from request to `{0}` failed\nError: {1}")]
     ReadResponse(String, reqwest_middleware::Error),
-    #[error("Could not open file at {0} for download of {1}\nError: {2}")]
+    #[error("Could not open file at `{0}` for download of `{1}`\nError: {2}")]
     OpenFile(PathBuf, String, io::Error),
-    #[error("Could not write to file at {0} for download of {1}\nError: {2}")]
+    #[error("Could not write to file at `{0}` for download of `{1}`\nError: {2}")]
     WriteFile(PathBuf, String, io::Error),
 }
