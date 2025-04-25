@@ -1,7 +1,7 @@
 ---
 source: test_support/src/lib.rs
 ---
-# Heroku Node.js Engine
+## Heroku Node.js Engine
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
@@ -13,7 +13,7 @@ source: test_support/src/lib.rs
   - Installing Node.js `22.15.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js Yarn
+## Heroku Node.js Yarn
 
 - Detecting yarn CLI version to install
   - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
