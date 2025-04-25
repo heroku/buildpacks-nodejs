@@ -105,15 +105,5 @@ pub(crate) fn yarn_install(
 
 /// Execute `yarn run` commands like `build`.
 pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), CmdError> {
-    print::sub_stream_cmd(
-        Command::new("yarn")
-            .arg("run")
-            .arg(script)
-            .envs(yarn_env)
-            .named(format!(
-                "Running {script} script",
-                script = style::value(script)
-            )),
-    )
-    .map(|_| ())
+    print::sub_stream_cmd(Command::new("yarn").arg("run").arg(script).envs(yarn_env)).map(|_| ())
 }
