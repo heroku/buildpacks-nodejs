@@ -48,15 +48,15 @@ pub(crate) fn prepare_corepack(
 
     match manager_layer.state {
         LayerState::Restored { .. } => {
-            print::bullet("Restoring Corepack package manager");
+            print::sub_bullet("Restoring Corepack package manager");
         }
         LayerState::Empty { cause } => {
             match cause {
                 EmptyLayerCause::NewlyCreated => {
-                    print::bullet("Creating Corepack package manager");
+                    print::sub_bullet("Creating Corepack package manager");
                 }
                 _ => {
-                    print::bullet("Recreating Corepack package manager (version changed)");
+                    print::sub_bullet("Recreating Corepack package manager (version changed)");
                 }
             }
             manager_layer.write_metadata(new_metadata)?;
