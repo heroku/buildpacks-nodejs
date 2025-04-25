@@ -724,7 +724,7 @@ dependencies = [
 name = "heroku-nodejs-pnpm-install-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream 0.7.0",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",

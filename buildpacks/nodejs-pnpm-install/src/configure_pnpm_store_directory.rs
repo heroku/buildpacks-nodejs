@@ -1,5 +1,5 @@
-use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -7,15 +7,11 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stderr;
-
-use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 
 pub(crate) fn configure_pnpm_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<PnpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
     let new_metadata = AddressableStoreLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
@@ -38,21 +34,20 @@ pub(crate) fn configure_pnpm_store_directory(
 
     match addressable_layer.state {
         LayerState::Restored { .. } => {
-            log = log.sub_bullet("Restoring pnpm content-addressable store from cache");
+            print::sub_bullet("Restoring pnpm content-addressable store from cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                log = log.sub_bullet("Cached pnpm content-addressable store has expired");
+                print::sub_bullet("Cached pnpm content-addressable store has expired");
             }
-            log = log.sub_bullet("Creating new pnpm content-addressable store");
+            print::sub_bullet("Creating new pnpm content-addressable store");
             addressable_layer.write_metadata(new_metadata)?;
         }
     }
 
     cmd::pnpm_set_store_dir(env, &addressable_layer.path())
-        .map_err(PnpmInstallBuildpackError::PnpmSetStoreDir)?;
-
-    Ok(log)
+        .map_err(PnpmInstallBuildpackError::PnpmSetStoreDir)
+        .map_err(Into::into)
 }
 
 const LAYER_VERSION: &str = "1";
