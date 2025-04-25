@@ -1,5 +1,4 @@
 use bullet_stream::global::print;
-use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName};
 use libcnb::Env;
 use std::{path::Path, process::Command};
@@ -16,17 +15,7 @@ pub(crate) fn pnpm_install(pnpm_env: &Env) -> Result<(), CmdError> {
 
 /// Execute `pnpm run` commands like `build`.
 pub(crate) fn pnpm_run(pnpm_env: &Env, script: &str) -> Result<(), CmdError> {
-    print::sub_stream_cmd(
-        Command::new("pnpm")
-            .arg("run")
-            .arg(script)
-            .envs(pnpm_env)
-            .named(format!(
-                "Running {script} script",
-                script = style::value(script)
-            )),
-    )
-    .map(|_| ())
+    print::sub_stream_cmd(Command::new("pnpm").arg("run").arg(script).envs(pnpm_env)).map(|_| ())
 }
 
 /// Execute `pnpm config set store-dir` to set pnpm's addressable store location.
