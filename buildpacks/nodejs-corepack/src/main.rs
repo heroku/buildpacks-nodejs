@@ -7,7 +7,8 @@ use crate::cmd::CorepackVersionError;
 use crate::enable_corepack::enable_corepack;
 use crate::install_integrity_keys::install_integrity_keys;
 use crate::prepare_corepack::prepare_corepack;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -19,7 +20,6 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::KeyValue;
-use std::io::stderr;
 use std::path::PathBuf;
 #[cfg(test)]
 use test_support as _;
@@ -72,12 +72,14 @@ impl Buildpack for CorepackBuildpack {
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         opentelemetry::global::tracer(context.buildpack_descriptor.buildpack.id.to_string())
             .in_span("build", |cx| {
-                let mut log = Print::new(stderr()).h1(context
-                    .buildpack_descriptor
-                    .buildpack
-                    .name
-                    .as_ref()
-                    .expect("The buildpack should have a name"));
+                let buildpack_start = print::buildpack(
+                    context
+                        .buildpack_descriptor
+                        .buildpack
+                        .name
+                        .as_ref()
+                        .expect("The buildpack should have a name"),
+                );
 
                 let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
                     .map_err(CorepackBuildpackError::PackageJson)?
@@ -94,32 +96,28 @@ impl Buildpack for CorepackBuildpack {
                 let corepack_version =
                     cmd::corepack_version(env).map_err(CorepackBuildpackError::CorepackVersion)?;
 
-                log = log
-                    .bullet(format!(
-                        "Using Corepack version {}",
-                        style::value(corepack_version.to_string()),
-                    ))
-                    .done();
+                print::bullet(format!(
+                    "Using Corepack version {}",
+                    style::value(corepack_version.to_string()),
+                ));
 
                 cx.span().set_attribute(KeyValue::new(
                     "corepack.version",
                     corepack_version.to_string(),
                 ));
 
-                log = log
-                    .bullet(format!(
-                        "Found {package_manager_field} set to {package_manager} in {package_json}",
-                        package_manager_field = style::value("packageManager"),
-                        package_json = style::value("package.json"),
-                        package_manager = style::value(pkg_mgr.to_string()),
-                    ))
-                    .done();
+                print::bullet(format!(
+                    "Found {package_manager_field} set to {package_manager} in {package_json}",
+                    package_manager_field = style::value("packageManager"),
+                    package_json = style::value("package.json"),
+                    package_manager = style::value(pkg_mgr.to_string()),
+                ));
 
-                log = enable_corepack(&context, &corepack_version, &pkg_mgr, env, log)?;
+                enable_corepack(&context, &corepack_version, &pkg_mgr, env)?;
                 install_integrity_keys(&context, &corepack_version)?;
-                log = prepare_corepack(&context, &pkg_mgr, env, log)?;
+                prepare_corepack(&context, &pkg_mgr, env)?;
 
-                log.done();
+                print::all_done(&Some(buildpack_start));
 
                 BuildResultBuilder::new().build()
             })
