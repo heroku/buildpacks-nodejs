@@ -6,7 +6,8 @@
 use crate::configure_available_parallelism::configure_available_parallelism;
 use crate::configure_web_env::configure_web_env;
 use crate::install_node::{install_node, DistLayerError};
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -27,7 +28,6 @@ use regex as _;
 use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
-use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 
@@ -74,14 +74,16 @@ impl Buildpack for NodeJsEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stderr()).h1(context
-            .buildpack_descriptor
-            .buildpack
-            .name
-            .as_ref()
-            .expect("The buildpack.toml should have a 'name' field set"));
+        let buildpack_start = print::buildpack(
+            context
+                .buildpack_descriptor
+                .buildpack
+                .name
+                .as_ref()
+                .expect("The buildpack.toml should have a 'name' field set"),
+        );
 
-        let mut bullet = log.bullet("Checking Node.js version");
+        print::bullet("Checking Node.js version");
 
         let inv: Inventory<Version, Sha256, Option<()>> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParse)?;
@@ -91,13 +93,13 @@ impl Buildpack for NodeJsEngineBuildpack {
             .map(|package_json| package_json.engines.and_then(|e| e.node))?;
 
         let version_range = if let Some(value) = requested_version_range {
-            bullet = bullet.sub_bullet(format!(
+            print::sub_bullet(format!(
                 "Detected Node.js version range: {}",
                 style::value(value.to_string())
             ));
             value
         } else {
-            bullet = bullet.sub_bullet(format!(
+            print::sub_bullet(format!(
                 "Node.js version not specified, using {}",
                 style::value(LTS_VERSION)
             ));
@@ -112,15 +114,12 @@ impl Buildpack for NodeJsEngineBuildpack {
             version_range.to_string(),
         ))?;
 
-        log = bullet
-            .sub_bullet(format!(
-                "Resolved Node.js version: {}",
-                style::value(target_artifact.version.to_string())
-            ))
-            .done();
+        print::sub_bullet(format!(
+            "Resolved Node.js version: {}",
+            style::value(target_artifact.version.to_string())
+        ));
 
-        log = install_node(&context, target_artifact, log)?;
-
+        install_node(&context, target_artifact)?;
         configure_web_env(&context)?;
         configure_available_parallelism(&context)?;
 
@@ -141,7 +140,7 @@ impl Buildpack for NodeJsEngineBuildpack {
                     .build()
             });
 
-        log.done();
+        print::all_done(&Some(buildpack_start));
 
         let resulter = BuildResultBuilder::new();
         match launchjs {
