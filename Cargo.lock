@@ -822,7 +822,7 @@ dependencies = [
 name = "heroku-pnpm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream 0.7.0",
+ "bullet_stream 0.8.0",
  "heroku-nodejs-utils",
  "indoc",
  "insta",
