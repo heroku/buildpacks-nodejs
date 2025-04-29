@@ -7,7 +7,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-bullet_stream = "0.7"
+bullet_stream = "0.8"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
 libcnb = { version = "=0.28.1", features = ["trace"] }

@@ -1,7 +1,6 @@
 use crate::NpmInstallBuildpackError;
 use crate::{npm, NpmInstallBuildpack};
-use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use bullet_stream::global::print;
 use fun_run::CommandWithName;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -10,13 +9,11 @@ use libcnb::layer::{
 };
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
-use std::io::Stderr;
 
 pub(crate) fn configure_npm_cache_directory(
     context: &BuildContext<NpmInstallBuildpack>,
     env: &Env,
-    mut section_logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<NpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
     let new_metadata = NpmCacheLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
@@ -39,18 +36,18 @@ pub(crate) fn configure_npm_cache_directory(
 
     match npm_cache_layer.state {
         LayerState::Restored { .. } => {
-            section_logger = section_logger.sub_bullet("Restoring npm cache");
+            print::sub_bullet("Restoring npm cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                section_logger = section_logger.sub_bullet("Restoring npm cache");
+                print::sub_bullet("Restoring npm cache");
             }
-            section_logger = section_logger.sub_bullet("Creating npm cache");
+            print::sub_bullet("Creating npm cache");
             npm_cache_layer.write_metadata(new_metadata)?;
         }
     }
 
-    section_logger = section_logger.sub_bullet("Configuring npm cache directory");
+    print::sub_bullet("Configuring npm cache directory");
     npm::SetCacheConfig {
         env,
         cache_dir: &npm_cache_layer.path(),
@@ -59,7 +56,7 @@ pub(crate) fn configure_npm_cache_directory(
     .named_output()
     .map_err(NpmInstallBuildpackError::NpmSetCacheDir)?;
 
-    Ok(section_logger)
+    Ok(())
 }
 
 const LAYER_VERSION: &str = "1";

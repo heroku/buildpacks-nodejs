@@ -10,8 +10,8 @@ mod npm;
 
 use crate::configure_npm_cache_directory::configure_npm_cache_directory;
 use crate::configure_npm_runtime_env::configure_npm_runtime_env;
-use bullet_stream::state::SubBullet;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
@@ -33,7 +33,6 @@ use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
 use std::io;
-use std::io::{stderr, Stderr};
 
 struct NpmInstallBuildpack;
 
@@ -72,12 +71,14 @@ impl Buildpack for NpmInstallBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let logger = Print::new(stderr()).h1(context
-            .buildpack_descriptor
-            .buildpack
-            .name
-            .as_ref()
-            .expect("The buildpack.toml should have a 'name' field set"));
+        let buildpack_start = print::buildpack(
+            context
+                .buildpack_descriptor
+                .buildpack
+                .name
+                .as_ref()
+                .expect("The buildpack.toml should have a 'name' field set"),
+        );
 
         let env = Env::from_current();
         let app_dir = &context.app_dir;
@@ -89,24 +90,20 @@ impl Buildpack for NpmInstallBuildpack {
         application::check_for_singular_lockfile(app_dir)
             .map_err(NpmInstallBuildpackError::Application)?;
 
-        let section = logger.bullet("Installing node modules");
-        let section = log_npm_version(&env, section)?;
-        let section = configure_npm_cache_directory(&context, &env, section)?;
-        let section = run_npm_install(&env, section)?;
-        let logger = section.done();
+        print::bullet("Installing node modules");
+        log_npm_version(&env)?;
+        configure_npm_cache_directory(&context, &env)?;
+        run_npm_install(&env)?;
 
-        let section = logger.bullet("Running scripts");
-        let section =
-            run_build_scripts(&package_json, &node_build_scripts_metadata, &env, section)?;
-        let logger = section.done();
+        print::bullet("Running scripts");
+        run_build_scripts(&package_json, &node_build_scripts_metadata, &env)?;
 
-        let section = logger.bullet("Configuring default processes");
-        let (build_result, section) = configure_default_processes(&context, &package_json, section);
-        let logger = section.done();
+        print::bullet("Configuring default processes");
+        let build_result = configure_default_processes(&context, &package_json);
 
         configure_npm_runtime_env(&context)?;
 
-        logger.done();
+        print::all_done(&Some(buildpack_start));
         build_result
     }
 
@@ -116,10 +113,7 @@ impl Buildpack for NpmInstallBuildpack {
     }
 }
 
-fn log_npm_version(
-    env: &Env,
-    section_logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
+fn log_npm_version(env: &Env) -> Result<(), NpmInstallBuildpackError> {
     npm::Version { env }
         .into_command()
         .named_output()
@@ -133,100 +127,69 @@ fn log_npm_version(
         })
         .map_err(NpmInstallBuildpackError::NpmVersion)
         .map(|version| {
-            section_logger.sub_bullet(format!(
+            print::sub_bullet(format!(
                 "Using npm version {}",
                 style::value(version.to_string())
-            ))
+            ));
         })
 }
 
-fn run_npm_install(
-    env: &Env,
-    mut section_logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
-    let mut npm_install = npm::Install { env }.into_command();
-    section_logger
-        .stream_with(
-            format!("Running {}", style::command(npm_install.name())),
-            |stdout, stderr| {
-                npm_install
-                    .stream_output(stdout, stderr)
-                    .and_then(NamedOutput::nonzero_captured)
-                    .map_err(NpmInstallBuildpackError::NpmInstall)
-            },
-        )
-        .map(|_| section_logger)
+fn run_npm_install(env: &Env) -> Result<(), NpmInstallBuildpackError> {
+    print::sub_stream_cmd(npm::Install { env }.into_command())
+        .map(|_| ())
+        .map_err(NpmInstallBuildpackError::NpmInstall)
 }
 
 fn run_build_scripts(
     package_json: &PackageJson,
     node_build_scripts_metadata: &NodeBuildScriptsMetadata,
     env: &Env,
-    mut section_logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallBuildpackError> {
+) -> Result<(), NpmInstallBuildpackError> {
     let build_scripts = package_json.build_scripts();
     if build_scripts.is_empty() {
-        section_logger = section_logger.sub_bullet("No build scripts found");
+        print::sub_bullet("No build scripts found");
     } else {
         for script in build_scripts {
             if let Some(false) = node_build_scripts_metadata.enabled {
-                section_logger = section_logger.sub_bullet(format!(
+                print::sub_bullet(format!(
                     "Not running {} as it was disabled by a participating buildpack",
                     style::value(script)
                 ));
             } else {
-                let mut npm_run = npm::RunScript { env, script }.into_command();
-                section_logger.stream_with(
-                    format!("Running {}", style::command(npm_run.name())),
-                    |stdout, stderr| {
-                        npm_run
-                            .stream_output(stdout, stderr)
-                            .and_then(NamedOutput::nonzero_captured)
-                            .map_err(NpmInstallBuildpackError::BuildScript)
-                    },
-                )?;
+                print::sub_stream_cmd(npm::RunScript { env, script }.into_command())
+                    .map_err(NpmInstallBuildpackError::BuildScript)?;
             }
         }
     }
-    Ok(section_logger)
+    Ok(())
 }
 
 fn configure_default_processes(
     context: &BuildContext<NpmInstallBuildpack>,
     package_json: &PackageJson,
-    section_logger: Print<SubBullet<Stderr>>,
-) -> (
-    Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>>,
-    Print<SubBullet<Stderr>>,
-) {
+) -> Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>> {
     if context.app_dir.join("Procfile").exists() {
-        (
-            BuildResultBuilder::new().build(),
-            section_logger.sub_bullet("Skipping default web process (Procfile detected)"),
-        )
+        print::sub_bullet("Skipping default web process (Procfile detected)");
+        BuildResultBuilder::new().build()
     } else if package_json.has_start_script() {
-        (
-            BuildResultBuilder::new()
-                .launch(
-                    LaunchBuilder::new()
-                        .process(
-                            ProcessBuilder::new(process_type!("web"), ["npm", "start"])
-                                .default(true)
-                                .build(),
-                        )
-                        .build(),
-                )
-                .build(),
-            section_logger.sub_bullet(format!(
-                "Adding default web process for {}",
-                style::value("npm start")
-            )),
-        )
+        print::sub_bullet(format!(
+            "Adding default web process for {}",
+            style::value("npm start")
+        ));
+        BuildResultBuilder::new()
+            .launch(
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), ["npm", "start"])
+                            .default(true)
+                            .build(),
+                    )
+                    .build(),
+            )
+            .build()
     } else {
-        (
-            BuildResultBuilder::new().build(),
-            section_logger.sub_bullet("Skipping default web process (no start script defined)"),
-        )
+        print::sub_bullet("Skipping default web process (no start script defined)");
+        BuildResultBuilder::new().build()
     }
 }
 

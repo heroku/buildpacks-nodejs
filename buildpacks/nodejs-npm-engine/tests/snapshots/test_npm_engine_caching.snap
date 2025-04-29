@@ -1,7 +1,7 @@
 ---
 source: test_support/src/lib.rs
 ---
-# Heroku Node.js Engine
+## Heroku Node.js Engine
 
 - Checking Node.js version
   - Detected Node.js version range: `16.20.2`
@@ -13,7 +13,7 @@ source: test_support/src/lib.rs
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js npm Engine
+## Heroku Node.js npm Engine
 
 - Installing npm
   - Found `engines.npm` version `9.6.6` declared in `package.json`
@@ -24,7 +24,7 @@ source: test_support/src/lib.rs
   - Successfully installed `npm@9.6.6`
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js npm Install
+## Heroku Node.js npm Install
 
 - Installing node modules
   - Using npm version `9.6.6`
@@ -53,7 +53,7 @@ source: test_support/src/lib.rs
 
 --------------------------------------------- REBUILD ---------------------------------------------
 
-# Heroku Node.js Engine
+## Heroku Node.js Engine
 
 - Checking Node.js version
   - Detected Node.js version range: `16.20.2`
@@ -62,7 +62,7 @@ source: test_support/src/lib.rs
   - Reusing Node.js 16.20.2 (<arch>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js npm Engine
+## Heroku Node.js npm Engine
 
 - Installing npm
   - Found `engines.npm` version `9.6.6` declared in `package.json`
@@ -71,7 +71,7 @@ source: test_support/src/lib.rs
   - Successfully installed `npm@9.6.6`
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js npm Install
+## Heroku Node.js npm Install
 
 - Installing node modules
   - Using npm version `9.6.6`

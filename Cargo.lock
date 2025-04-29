@@ -160,6 +160,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "bullet_stream"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "adc54f3252b0ff30201f78a466a017afef4da0ec6c669efcabef8d4cec7c0d58"
+dependencies = [
+ "fun_run",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -655,7 +664,7 @@ checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
 name = "heroku-nodejs-corepack-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
@@ -672,7 +681,7 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "heroku-nodejs-utils",
  "indoc",
  "insta",
@@ -694,7 +703,7 @@ name = "heroku-nodejs-function-invoker-buildpack"
 version = "0.0.0"
 dependencies = [
  "base64",
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "heroku-nodejs-utils",
  "hex",
  "indoc",
@@ -715,7 +724,7 @@ dependencies = [
 name = "heroku-nodejs-pnpm-install-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
@@ -734,7 +743,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "bon",
- "bullet_stream",
+ "bullet_stream 0.7.0",
  "chrono",
  "indoc",
  "keep_a_changelog_file",
@@ -757,7 +766,7 @@ dependencies = [
 name = "heroku-nodejs-yarn-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
@@ -777,7 +786,7 @@ dependencies = [
 name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
@@ -796,7 +805,7 @@ dependencies = [
 name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "fun_run",
  "heroku-nodejs-utils",
  "indoc",
@@ -813,7 +822,7 @@ dependencies = [
 name = "heroku-pnpm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
- "bullet_stream",
+ "bullet_stream 0.8.0",
  "heroku-nodejs-utils",
  "indoc",
  "insta",

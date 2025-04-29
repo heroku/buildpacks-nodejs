@@ -1,10 +1,8 @@
 use crate::yarn::Yarn;
-use bullet_stream::state::SubBullet;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
-use std::io::Stderr;
 use std::{
     path::{Path, PathBuf},
     process::Command,
@@ -54,8 +52,7 @@ pub(crate) fn yarn_set_cache(
     yarn_line: &Yarn,
     cache_path: &Path,
     env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, CmdError> {
+) -> Result<(), CmdError> {
     let cache_path_string = cache_path.to_string_lossy();
     let mut args = vec!["config", "set"];
     if yarn_line == &Yarn::Yarn1 {
@@ -63,8 +60,7 @@ pub(crate) fn yarn_set_cache(
     } else {
         args.append(&mut vec!["cacheFolder", &cache_path_string]);
     }
-    log.stream_cmd(Command::new("yarn").args(args).envs(env))?;
-    Ok(log)
+    print::sub_stream_cmd(Command::new("yarn").args(args).envs(env)).map(|_| ())
 }
 
 /// Execute `yarn config set enableGlobalCache false`. This setting is
@@ -73,20 +69,16 @@ pub(crate) fn yarn_set_cache(
 /// Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
 /// persisted into the build cache or the final image. Yarn 2.x and 3.x have
 /// a default value to `false`. Yarn 4.x has a default value of `true`.
-pub(crate) fn yarn_disable_global_cache(
-    yarn_line: &Yarn,
-    env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, CmdError> {
+pub(crate) fn yarn_disable_global_cache(yarn_line: &Yarn, env: &Env) -> Result<(), CmdError> {
     if yarn_line == &Yarn::Yarn1 {
-        return Ok(log);
+        return Ok(());
     }
-    log.stream_cmd(
+    print::sub_stream_cmd(
         Command::new("yarn")
             .args(["config", "set", "enableGlobalCache", "false"])
             .envs(env),
-    )?;
-    Ok(log)
+    )
+    .map(|_| ())
 }
 
 /// Execute `yarn install` to install dependencies for a yarn project.
@@ -94,8 +86,7 @@ pub(crate) fn yarn_install(
     yarn_line: &Yarn,
     zero_install: bool,
     yarn_env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, CmdError> {
+) -> Result<(), CmdError> {
     let mut args = vec!["install"];
     if yarn_line == &Yarn::Yarn1 {
         args.push("--production=false");
@@ -108,26 +99,10 @@ pub(crate) fn yarn_install(
         }
     }
 
-    log.stream_cmd(Command::new("yarn").args(args).envs(yarn_env))?;
-
-    Ok(log)
+    print::sub_stream_cmd(Command::new("yarn").args(args).envs(yarn_env)).map(|_| ())
 }
 
 /// Execute `yarn run` commands like `build`.
-pub(crate) fn yarn_run(
-    yarn_env: &Env,
-    script: &str,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, CmdError> {
-    log.stream_with(
-        format!("Running {script} script", script = style::value(script)),
-        |stdout, stderr| {
-            Command::new("yarn")
-                .arg("run")
-                .arg(script)
-                .envs(yarn_env)
-                .stream_output(stdout, stderr)
-        },
-    )?;
-    Ok(log)
+pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), CmdError> {
+    print::sub_stream_cmd(Command::new("yarn").arg("run").arg(script).envs(yarn_env)).map(|_| ())
 }

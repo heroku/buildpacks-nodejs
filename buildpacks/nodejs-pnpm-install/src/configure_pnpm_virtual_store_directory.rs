@@ -1,20 +1,16 @@
-use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::Env;
 use std::fs::create_dir;
-use std::io::Stderr;
 use std::os::unix::fs::symlink;
-
-use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
 
 pub(crate) fn configure_pnpm_virtual_store_directory(
     context: &BuildContext<PnpmInstallBuildpack>,
     env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<PnpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
     let virtual_layer = context.uncached_layer(
         layer_name!("virtual"),
         UncachedLayerDefinition {
@@ -23,7 +19,7 @@ pub(crate) fn configure_pnpm_virtual_store_directory(
         },
     )?;
 
-    log = log.sub_bullet("Creating pnpm virtual store");
+    print::sub_bullet("Creating pnpm virtual store");
     let virtual_store_dir = virtual_layer.path().join("store");
     // Create a directory for dependencies in the virtual store.
     create_dir(&virtual_store_dir)
@@ -38,11 +34,7 @@ pub(crate) fn configure_pnpm_virtual_store_directory(
     // module loader's ancestor directory traversal.
     let from = context.app_dir.join("node_modules");
     let to = virtual_layer.path().join("node_modules");
-    symlink(&from, &to).map_err(|source| PnpmInstallBuildpackError::CreateSymlink {
-        from,
-        to,
-        source,
-    })?;
-
-    Ok(log)
+    symlink(&from, &to)
+        .map_err(|source| PnpmInstallBuildpackError::CreateSymlink { from, to, source })
+        .map_err(Into::into)
 }

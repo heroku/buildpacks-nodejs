@@ -1,7 +1,6 @@
 use crate::yarn::Yarn;
 use crate::{cmd, YarnBuildpack, YarnBuildpackError};
-use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -10,7 +9,6 @@ use libcnb::layer::{
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Stderr;
 use std::path::PathBuf;
 
 /// `DepsLayer` is a layer for caching yarn dependencies from build to build.
@@ -22,8 +20,7 @@ pub(crate) fn configure_yarn_cache(
     context: &BuildContext<YarnBuildpack>,
     yarn: &Yarn,
     env: &Env,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<YarnBuildpackError>> {
+) -> Result<(), libcnb::Error<YarnBuildpackError>> {
     let new_metadata = DepsLayerMetadata {
         yarn: yarn.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -51,11 +48,11 @@ pub(crate) fn configure_yarn_cache(
 
     match deps_layer.state {
         LayerState::Restored { .. } => {
-            log = log.sub_bullet("Restoring yarn dependency cache");
+            print::sub_bullet("Restoring yarn dependency cache");
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
-                log = log.sub_bullet("Clearing yarn dependency cache");
+                print::sub_bullet("Clearing yarn dependency cache");
             }
             deps_layer.write_metadata(DepsLayerMetadata {
                 cache_usage_count: new_metadata.cache_usage_count + 1.0,
@@ -67,10 +64,9 @@ pub(crate) fn configure_yarn_cache(
         }
     }
 
-    log = cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env, log)
-        .map_err(DepsLayerError::YarnCacheSet)?;
-
-    Ok(log)
+    cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env)
+        .map_err(DepsLayerError::YarnCacheSet)
+        .map_err(Into::into)
 }
 
 const MAX_CACHE_USAGE_COUNT: f32 = 150.0;
