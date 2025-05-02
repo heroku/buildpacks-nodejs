@@ -1,7 +1,7 @@
 ---
 source: test_support/src/lib.rs
 ---
-# Heroku Node.js Engine
+## Heroku Node.js Engine
 
 - Checking Node.js version
   - Detected Node.js version range: `>=16.0.0 <17.0.0-0`
@@ -13,13 +13,13 @@ source: test_support/src/lib.rs
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js Yarn
+## Heroku Node.js Yarn
 
 - Detecting yarn CLI version to install
   - No yarn engine range detected in package.json, using default (1.22.x)
   - Resolved yarn CLI version: 1.22.22
 - Installing yarn CLI
-  - Downloading yarn 1.22.22 ... (<time_elapsed>)
+  - Downloading https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.22.22.tar.gz ... (<time_elapsed>)
   - Extracting yarn 1.22.22
   - Installing yarn 1.22.22
 - Yarn CLI operating in yarn 1.22.22 mode.
@@ -44,7 +44,7 @@ source: test_support/src/lib.rs
 
   - Done (<time_elapsed>)
 - Running scripts
-  - Running `build` script
+  - Running `yarn run build`
 
       yarn run v1.22.22
       $ tsc

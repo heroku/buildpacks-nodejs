@@ -7,7 +7,8 @@ use crate::cmd::YarnVersionError;
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
 use crate::install_yarn::{install_yarn, CliLayerError};
 use crate::yarn::Yarn;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
@@ -28,7 +29,6 @@ use libcnb::layer_env::Scope;
 use libcnb::{buildpack_main, Buildpack, Env};
 #[cfg(test)]
 use libcnb_test as _;
-use std::io::stderr;
 #[cfg(test)]
 use test_support as _;
 
@@ -74,12 +74,14 @@ impl Buildpack for YarnBuildpack {
 
     #[allow(clippy::too_many_lines)]
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut log = Print::new(stderr()).h1(context
-            .buildpack_descriptor
-            .buildpack
-            .name
-            .as_ref()
-            .expect("The buildpack should have a name"));
+        let buildpack_start = print::buildpack(
+            context
+                .buildpack_descriptor
+                .buildpack
+                .name
+                .as_ref()
+                .expect("The buildpack should have a name"),
+        );
 
         let mut env = Env::from_current();
         let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
@@ -90,19 +92,19 @@ impl Buildpack for YarnBuildpack {
         let yarn_version = match cmd::yarn_version(&env) {
             // Install yarn if it's not present.
             Err(YarnVersionError::Command(_)) => {
-                let mut bullet = log.bullet("Detecting yarn CLI version to install");
+                print::bullet("Detecting yarn CLI version to install");
 
                 let inventory: Inventory =
                     toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
 
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
-                        bullet = bullet.sub_bullet(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
+                        print::sub_bullet(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
                         Requirement::parse(DEFAULT_YARN_REQUIREMENT)
                             .map_err(YarnBuildpackError::YarnDefaultParse)?
                     }
                     Some(requirement) => {
-                        bullet = bullet.sub_bullet(format!(
+                        print::sub_bullet(format!(
                             "Detected yarn engine version range {requirement} in package.json"
                         ));
                         requirement
@@ -113,15 +115,13 @@ impl Buildpack for YarnBuildpack {
                     YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
                 )?;
 
-                bullet = bullet.sub_bullet(format!(
+                print::sub_bullet(format!(
                     "Resolved yarn CLI version: {}",
                     yarn_cli_release.version
                 ));
-                log = bullet.done();
 
-                bullet = log.bullet("Installing yarn CLI");
-                let (yarn_env, bullet) = install_yarn(&context, yarn_cli_release, bullet)?;
-                log = bullet.done();
+                print::bullet("Installing yarn CLI");
+                let yarn_env = install_yarn(&context, yarn_cli_release)?;
                 env = yarn_env.apply(Scope::Build, &env);
 
                 cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
@@ -134,52 +134,43 @@ impl Buildpack for YarnBuildpack {
         let yarn = Yarn::from_major(yarn_version.major())
             .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
-        log = log
-            .bullet(format!("Yarn CLI operating in yarn {yarn_version} mode."))
-            .done();
+        print::bullet(format!("Yarn CLI operating in yarn {yarn_version} mode."));
 
-        let mut bullet = log.bullet("Setting up yarn dependency cache");
-        bullet = cmd::yarn_disable_global_cache(&yarn, &env, bullet)
+        print::bullet("Setting up yarn dependency cache");
+        cmd::yarn_disable_global_cache(&yarn, &env)
             .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
         if zero_install {
-            bullet = bullet.sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+            print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
         } else {
-            bullet = configure_yarn_cache(&context, &yarn, &env, bullet)?;
+            configure_yarn_cache(&context, &yarn, &env)?;
         }
-        log = bullet.done();
 
-        let mut bullet = log.bullet("Installing dependencies");
-        bullet = cmd::yarn_install(&yarn, zero_install, &env, bullet)
-            .map_err(YarnBuildpackError::YarnInstall)?;
-        log = bullet.done();
+        print::bullet("Installing dependencies");
+        cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
 
-        let mut bullet = log.bullet("Running scripts");
+        print::bullet("Running scripts");
         let scripts = pkg_json.build_scripts();
         if scripts.is_empty() {
-            bullet = bullet.sub_bullet("No build scripts found");
+            print::sub_bullet("No build scripts found");
         } else {
             for script in scripts {
                 if let Some(false) = node_build_scripts_metadata.enabled {
-                    bullet = bullet.sub_bullet(format!(
+                    print::sub_bullet(format!(
                         "! Not running {script} as it was disabled by a participating buildpack",
                         script = style::value(script)
                     ));
                 } else {
-                    bullet = cmd::yarn_run(&env, &script, bullet)
-                        .map_err(YarnBuildpackError::BuildScript)?;
+                    cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
                 }
             }
         }
-        log = bullet.done();
 
         let mut build_result_builder = BuildResultBuilder::new();
         if context.app_dir.join("Procfile").exists() {
-            log = log
-                .bullet("Skipping default web process (Procfile detected)")
-                .done();
+            print::bullet("Skipping default web process (Procfile detected)");
         } else if pkg_json.has_start_script() {
             build_result_builder = build_result_builder.launch(
                 LaunchBuilder::new()
@@ -192,7 +183,7 @@ impl Buildpack for YarnBuildpack {
             );
         }
 
-        log.done();
+        print::all_done(&Some(buildpack_start));
         build_result_builder.build()
     }
 

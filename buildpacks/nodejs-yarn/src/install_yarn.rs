@@ -1,5 +1,4 @@
-use bullet_stream::state::SubBullet;
-use bullet_stream::Print;
+use bullet_stream::global::print;
 use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
@@ -12,7 +11,6 @@ use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Stderr;
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
@@ -22,8 +20,7 @@ use crate::{YarnBuildpack, YarnBuildpackError};
 pub(crate) fn install_yarn(
     context: &BuildContext<YarnBuildpack>,
     release: &Release,
-    mut log: Print<SubBullet<Stderr>>,
-) -> Result<(LayerEnv, Print<SubBullet<Stderr>>), libcnb::Error<YarnBuildpackError>> {
+) -> Result<LayerEnv, libcnb::Error<YarnBuildpackError>> {
     let new_metadata = CliLayerMetadata {
         yarn_version: release.version.to_string(),
         layer_version: LAYER_VERSION.to_string(),
@@ -49,26 +46,24 @@ pub(crate) fn install_yarn(
 
     match dist_layer.state {
         LayerState::Restored { .. } => {
-            log = log.sub_bullet(format!("Reusing yarn {}", release.version));
+            print::sub_bullet(format!("Reusing yarn {}", release.version));
         }
         LayerState::Empty { .. } => {
             dist_layer.write_metadata(new_metadata)?;
 
             let yarn_tgz = NamedTempFile::new().map_err(CliLayerError::TempFile)?;
 
-            let timer = log.start_timer(format!("Downloading yarn {}", release.version));
             download_file_sync()
                 .from_url(&release.url)
                 .to_file(yarn_tgz.path())
                 .call()
                 .map_err(CliLayerError::Download)?;
-            log = timer.done();
 
-            log = log.sub_bullet(format!("Extracting yarn {}", release.version));
+            print::sub_bullet(format!("Extracting yarn {}", release.version));
             decompress_tarball(&mut yarn_tgz.into_file(), dist_layer.path())
                 .map_err(|e| CliLayerError::Untar(dist_layer.path(), e))?;
 
-            log = log.sub_bullet(format!("Installing yarn {}", release.version));
+            print::sub_bullet(format!("Installing yarn {}", release.version));
 
             let dist_name = if dist_layer.path().join("package").exists() {
                 "package".to_string()
@@ -87,7 +82,7 @@ pub(crate) fn install_yarn(
         }
     }
 
-    dist_layer.read_env().map(|env| (env, log))
+    dist_layer.read_env()
 }
 
 const LAYER_VERSION: &str = "1";

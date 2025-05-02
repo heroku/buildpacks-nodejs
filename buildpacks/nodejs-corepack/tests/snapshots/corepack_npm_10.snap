@@ -1,7 +1,7 @@
 ---
 source: test_support/src/lib.rs
 ---
-# Heroku Node.js Engine
+## Heroku Node.js Engine
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
@@ -13,7 +13,7 @@ source: test_support/src/lib.rs
   - Installing Node.js `22.15.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js Corepack
+## Heroku Node.js Corepack
 
 - Using Corepack version `0.32.0`
 - Found `packageManager` set to `npm@10.2.0` in `package.json`
@@ -29,7 +29,7 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
-# Heroku Node.js npm Install
+## Heroku Node.js npm Install
 
 - Installing node modules
   - Using npm version `10.2.0`

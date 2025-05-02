@@ -2,7 +2,7 @@
 source: buildpacks/nodejs-engine/src/errors.rs
 ---
 - Debug Info:
-  - Could not write to file at /tmp/some-temp-file for download of https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz
+  - Could not write to file at `/tmp/some-temp-file` for download of `https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz`
     Error: Disk full
 
 ! Failed to write downloaded Node.js distribution

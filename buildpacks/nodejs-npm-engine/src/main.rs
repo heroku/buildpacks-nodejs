@@ -9,8 +9,8 @@ mod node;
 mod npm;
 
 use crate::install_npm::{install_npm, NpmInstallError};
-use bullet_stream::state::SubBullet;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use fun_run::CommandWithName;
 use heroku_nodejs_utils::inv::{Inventory, Release};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -24,7 +24,6 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use serde_json as _;
-use std::io::{stderr, Stderr};
 use std::path::Path;
 use std::process::Command;
 #[cfg(test)]
@@ -64,12 +63,14 @@ impl Buildpack for NpmEngineBuildpack {
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let mut logger = Print::new(stderr()).h1(context
-            .buildpack_descriptor
-            .buildpack
-            .name
-            .as_ref()
-            .expect("The buildpack.toml should have a 'name' field set"));
+        let buildpack_start = print::buildpack(
+            context
+                .buildpack_descriptor
+                .buildpack
+                .name
+                .as_ref()
+                .expect("The buildpack.toml should have a 'name' field set"),
+        );
 
         let env = Env::from_current();
         let inventory: Inventory =
@@ -78,14 +79,12 @@ impl Buildpack for NpmEngineBuildpack {
             read_requested_npm_version(&context.app_dir.join("package.json"))?;
         let node_version = get_node_version(&env)?;
 
-        let section = logger.bullet("Installing npm");
-        let (npm_release, section) =
-            resolve_requested_npm_version(&requested_npm_version, &inventory, section)?;
-        let section = install_npm(&context, &npm_release, &node_version, section)?;
-        let section = log_installed_npm_version(&env, section)?;
-        logger = section.done();
+        print::bullet("Installing npm");
+        let npm_release = resolve_requested_npm_version(&requested_npm_version, &inventory)?;
+        install_npm(&context, &npm_release, &node_version)?;
+        log_installed_npm_version(&env)?;
 
-        logger.done();
+        print::all_done(&Some(buildpack_start));
         BuildResultBuilder::new().build()
     }
 
@@ -111,9 +110,8 @@ fn read_requested_npm_version(
 fn resolve_requested_npm_version(
     requested_version: &Requirement,
     inventory: &Inventory,
-    mut section_logger: Print<SubBullet<Stderr>>,
-) -> Result<(Release, Print<SubBullet<Stderr>>), NpmEngineBuildpackError> {
-    section_logger = section_logger.sub_bullet(format!(
+) -> Result<Release, NpmEngineBuildpackError> {
+    print::sub_bullet(format!(
         "Found {} version {} declared in {}",
         style::value("engines.npm"),
         style::value(requested_version.to_string()),
@@ -127,13 +125,13 @@ fn resolve_requested_npm_version(
         ))?
         .to_owned();
 
-    section_logger = section_logger.sub_bullet(format!(
+    print::sub_bullet(format!(
         "Resolved version {} to {}",
         style::value(requested_version.to_string()),
         style::value(npm_release.version.to_string())
     ));
 
-    Ok((npm_release, section_logger))
+    Ok(npm_release)
 }
 
 fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
@@ -149,10 +147,7 @@ fn get_node_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
         .map_err(NpmEngineBuildpackError::NodeVersion)
 }
 
-fn log_installed_npm_version(
-    env: &Env,
-    section_logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmEngineBuildpackError> {
+fn log_installed_npm_version(env: &Env) -> Result<(), NpmEngineBuildpackError> {
     Command::from(npm::Version { env })
         .named_output()
         .map_err(npm::VersionError::Command)
@@ -164,10 +159,10 @@ fn log_installed_npm_version(
         })
         .map_err(NpmEngineBuildpackError::NpmVersion)
         .map(|npm_version| {
-            section_logger.sub_bullet(format!(
+            print::sub_bullet(format!(
                 "Successfully installed {}",
                 style::value(format!("npm@{npm_version}")),
-            ))
+            ));
         })
 }
 

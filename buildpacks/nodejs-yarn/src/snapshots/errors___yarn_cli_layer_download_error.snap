@@ -2,7 +2,7 @@
 source: buildpacks/nodejs-yarn/src/errors.rs
 ---
 - Debug Info:
-  - Request to https://test/error failed
+  - Request to `https://test/error` failed
     Error: error sending request for url (https://test/error)
 
 ! Failed to download Yarn

@@ -1,7 +1,6 @@
 use crate::NpmEngineBuildpack;
 use crate::NpmEngineBuildpackError;
-use bullet_stream::state::SubBullet;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
 use heroku_nodejs_utils::inv::Release;
@@ -14,7 +13,6 @@ use libcnb::layer::{
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
-use std::io::Stderr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -22,8 +20,7 @@ pub(crate) fn install_npm(
     context: &BuildContext<NpmEngineBuildpack>,
     npm_release: &Release,
     node_version: &Version,
-    mut logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, libcnb::Error<NpmEngineBuildpackError>> {
+) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
         npm_version: npm_release.version.to_string(),
@@ -53,13 +50,13 @@ pub(crate) fn install_npm(
 
     match npm_engine_layer.state {
         LayerState::Restored { .. } => {
-            logger = logger.sub_bullet("Using cached npm");
+            print::sub_bullet("Using cached npm");
         }
         LayerState::Empty { ref cause } => {
             npm_engine_layer.write_metadata(new_metadata)?;
 
             if let EmptyLayerCause::RestoredLayerAction { cause } = cause {
-                logger = logger.sub_bullet(format!(
+                print::sub_bullet(format!(
                     "Invalidating cached npm ({} changed)",
                     cause.join(", ")
                 ));
@@ -70,27 +67,24 @@ pub(crate) fn install_npm(
 
             // this install process is generalized from the npm install script at:
             // https://www.npmjs.com/install.sh
-            logger = download_and_unpack_release(
+            download_and_unpack_release(
                 &npm_release.url,
                 &downloaded_package_path,
                 &npm_engine_layer.path(),
-                logger,
             )?;
-            logger = remove_existing_npm_installation(&npm_cli_script, logger)?;
-            logger = install_npm_package(&npm_cli_script, &downloaded_package_path, logger)?;
+            remove_existing_npm_installation(&npm_cli_script)?;
+            install_npm_package(&npm_cli_script, &downloaded_package_path)?;
         }
     }
 
-    Ok(logger)
+    Ok(())
 }
 
 fn download_and_unpack_release(
     download_from: &String,
     download_to: &Path,
     unpack_into: &Path,
-    logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
-    let timer = logger.start_timer(format!("Downloading {}", style::value(download_from)));
+) -> Result<(), NpmInstallError> {
     download_file_sync()
         .from_url(download_from)
         .to_file(download_to)
@@ -104,14 +98,11 @@ fn download_and_unpack_release(
             decompress_tarball(&mut npm_tgz_file, unpack_into)
                 .map_err(|e| NpmInstallError::DecompressTarball(download_to.to_path_buf(), e))
         })?;
-    Ok(timer.done())
+    Ok(())
 }
 
-fn remove_existing_npm_installation(
-    npm_cli_script: &Path,
-    mut logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
-    logger = logger.sub_bullet("Removing npm bundled with Node.js");
+fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmInstallError> {
+    print::sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
             &npm_cli_script.to_string_lossy(),
@@ -122,15 +113,11 @@ fn remove_existing_npm_installation(
         ])
         .named_output()
         .map_err(NpmInstallError::RemoveExistingNpmInstall)
-        .map(|_| logger)
+        .map(|_| ())
 }
 
-fn install_npm_package(
-    npm_cli_script: &Path,
-    package: &Path,
-    mut logger: Print<SubBullet<Stderr>>,
-) -> Result<Print<SubBullet<Stderr>>, NpmInstallError> {
-    logger = logger.sub_bullet("Installing requested npm");
+fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmInstallError> {
+    print::sub_bullet("Installing requested npm");
     Command::new("node")
         .args([
             &npm_cli_script.to_string_lossy(),
@@ -141,7 +128,7 @@ fn install_npm_package(
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmInstallError::InstallNpm)
-        .map(|_| logger)
+        .map(|_| ())
 }
 
 fn changed_metadata_fields(

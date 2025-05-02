@@ -1,5 +1,5 @@
-use bullet_stream::state::Bullet;
-use bullet_stream::{style, Print};
+use bullet_stream::global::print;
+use bullet_stream::style;
 use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use sha2::digest::Output;
 use sha2::{Digest, Sha256};
 use std::fs;
-use std::io::{Read, Stderr};
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 
@@ -23,9 +23,8 @@ use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsEngineBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-    log: Print<Bullet<Stderr>>,
-) -> Result<Print<Bullet<Stderr>>, libcnb::Error<NodeJsEngineBuildpackError>> {
-    let mut bullet = log.bullet("Installing Node.js distribution");
+) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+    print::bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {
         artifact: distribution_artifact.clone(),
@@ -54,19 +53,19 @@ pub(crate) fn install_node(
     );
     match distribution_layer.state {
         LayerState::Restored { .. } => {
-            bullet = bullet.sub_bullet(format!("Reusing Node.js {version_tag}"));
+            print::sub_bullet(format!("Reusing Node.js {version_tag}"));
         }
         LayerState::Empty { .. } => {
             distribution_layer.write_metadata(new_metadata)?;
 
             let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-            let timer = bullet.start_timer(format!(
-                "Downloading Node.js {} from {}",
-                style::value(&version_tag),
-                style::url(&distribution_artifact.url)
-            ));
             download_file_sync()
+                .downloading_message(format!(
+                    "Downloading Node.js {} from {}",
+                    style::value(&version_tag),
+                    style::url(&distribution_artifact.url)
+                ))
                 .from_url(&distribution_artifact.url)
                 .to_file(node_tgz.path())
                 .call()
@@ -75,9 +74,8 @@ pub(crate) fn install_node(
                     dst_path: node_tgz.path().to_path_buf(),
                     source: e,
                 })?;
-            bullet = timer.done();
 
-            bullet = bullet.sub_bullet("Verifying checksum");
+            print::sub_bullet("Verifying checksum");
             let digest = sha256(node_tgz.path()).map_err(|e| DistLayerError::ReadTempFile {
                 path: node_tgz.path().to_path_buf(),
                 source: e,
@@ -93,8 +91,7 @@ pub(crate) fn install_node(
                 })?;
             }
 
-            bullet =
-                bullet.sub_bullet(format!("Extracting Node.js {}", style::value(&version_tag)));
+            print::sub_bullet(format!("Extracting Node.js {}", style::value(&version_tag)));
             let node_tgz_path = node_tgz.path().to_path_buf();
             decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path()).map_err(
                 |e| DistLayerError::Untar {
@@ -104,8 +101,10 @@ pub(crate) fn install_node(
                 },
             )?;
 
-            let timer =
-                bullet.start_timer(format!("Installing Node.js {}", style::value(&version_tag)));
+            let timer = print::sub_start_timer(format!(
+                "Installing Node.js {}",
+                style::value(&version_tag)
+            ));
             let dist_name = extract_tarball_prefix(&distribution_artifact.url)
                 .ok_or_else(|| DistLayerError::TarballPrefix(distribution_artifact.url.clone()))?;
             let dist_path = distribution_layer.path().join(dist_name);
@@ -116,11 +115,11 @@ pub(crate) fn install_node(
                     source: e,
                 }
             })?;
-            bullet = timer.done();
+            let _ = timer.done();
         }
     }
 
-    Ok(bullet.done())
+    Ok(())
 }
 
 fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {
