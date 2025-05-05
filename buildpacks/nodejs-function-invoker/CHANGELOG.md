@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.2] - 2025-05-05
+
 ### Changed
 
 - Buildpack output changes. ([#1093](https://github.com/heroku/buildpacks-nodejs/pull/1093))
@@ -462,7 +464,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial implementation ([#47](https://github.com/heroku/buildpacks-node/pull/47))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.1...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.2...HEAD
+[3.6.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.1...v3.6.2
 [3.6.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.0...v3.6.1
 [3.6.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.3...v3.6.0
 [3.5.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.5.2...v3.5.3
