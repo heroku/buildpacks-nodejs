@@ -96,7 +96,6 @@ jobs:
             | jq -nRc '[inputs] 
                 | map({ dir: ., name: split("/") | last | split("nodejs-") | last } 
                 | [
-                  . + { builder_tag: 20, arch: "amd64" },
                   . + { builder_tag: 22, arch: "amd64" },
                   . + { builder_tag: 24, arch: "amd64" },
                   . + { builder_tag: 24, arch: "arm64" } 
@@ -147,7 +146,6 @@ jobs:
     strategy:
       matrix:
         stack-version:
-          - '20'
           - '22'
         buildpack-dir:
           - buildpacks/npm
