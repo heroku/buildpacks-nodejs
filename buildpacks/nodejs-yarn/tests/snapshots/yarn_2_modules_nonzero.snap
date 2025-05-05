@@ -19,7 +19,7 @@ source: test_support/src/lib.rs
   - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
   - Resolved yarn CLI version: 2.4.2
 - Installing yarn CLI
-  - Downloading https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v2.4.2.tar.gz ... (<time_elapsed>)
+  - Downloading Yarn from https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v2.4.2.tar.gz ... (<time_elapsed>)
   - Extracting yarn 2.4.2
   - Installing yarn 2.4.2
 - Yarn CLI operating in yarn 2.4.1 mode.

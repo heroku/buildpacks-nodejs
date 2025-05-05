@@ -1,3 +1,4 @@
+use bullet_stream::style;
 use reqwest::{IntoUrl, Request, Response};
 use reqwest_middleware::{ClientBuilder, Middleware, Next};
 use reqwest_retry::policies::ExponentialBackoff;
@@ -55,8 +56,8 @@ pub async fn download_file(
 ) -> Result<(), DownloadError> {
     let to_file = to_file.as_ref();
 
-    let downloading_message =
-        downloading_message.unwrap_or_else(|| format!("Downloading {from_url}"));
+    let downloading_message = downloading_message
+        .unwrap_or_else(|| format!("Downloading {}", style::url(from_url.to_string())));
 
     let client = ClientBuilder::new(
         reqwest::ClientBuilder::new()

@@ -1,4 +1,5 @@
 use bullet_stream::global::print;
+use bullet_stream::style;
 use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
@@ -54,6 +55,10 @@ pub(crate) fn install_yarn(
             let yarn_tgz = NamedTempFile::new().map_err(CliLayerError::TempFile)?;
 
             download_file_sync()
+                .downloading_message(format!(
+                    "Downloading Yarn from {}",
+                    style::url(&release.url)
+                ))
                 .from_url(&release.url)
                 .to_file(yarn_tgz.path())
                 .call()
