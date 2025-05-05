@@ -312,11 +312,11 @@ mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
+    use heroku_nodejs_utils::download_file::DownloadError;
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use libcnb::Error;
-    use libherokubuildpack::download::DownloadError;
     use std::process::Command;
     use test_support::test_name;
 
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn test_yarn_cli_layer_download_error() {
         assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Download(
-            create_download_http_error(),
+            DownloadError::Request("https://test/error".into(), create_reqwest_error()),
         )));
     }
 
@@ -501,7 +501,19 @@ mod tests {
         toml::from_str::<toml::Table>("[[artifacts").unwrap_err()
     }
 
-    fn create_download_http_error() -> DownloadError {
-        Box::new(ureq::get("broken/ url").call().unwrap_err()).into()
+    fn create_reqwest_error() -> reqwest_middleware::Error {
+        async_runtime().block_on(async {
+            reqwest_middleware::Error::Reqwest(
+                reqwest::get("https://test/error").await.unwrap_err(),
+            )
+        })
+    }
+
+    fn async_runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .unwrap()
     }
 }

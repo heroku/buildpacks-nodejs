@@ -1,11 +1,12 @@
 use bullet_stream::global::print;
 use bullet_stream::style;
+use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libherokubuildpack::download::download_file;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;
@@ -16,8 +17,6 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
-
-use heroku_nodejs_utils::vrs::Version;
 
 use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
@@ -61,19 +60,20 @@ pub(crate) fn install_node(
 
             let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-            let timer = print::sub_start_timer(format!(
-                "Downloading Node.js {} from {}",
-                style::value(&version_tag),
-                style::url(&distribution_artifact.url)
-            ));
-            download_file(&distribution_artifact.url, node_tgz.path()).map_err(|e| {
-                DistLayerError::Download {
+            download_file_sync()
+                .downloading_message(format!(
+                    "Downloading Node.js {} from {}",
+                    style::value(&version_tag),
+                    style::url(&distribution_artifact.url)
+                ))
+                .from_url(&distribution_artifact.url)
+                .to_file(node_tgz.path())
+                .call()
+                .map_err(|e| DistLayerError::Download {
                     src_url: distribution_artifact.url.clone(),
                     dst_path: node_tgz.path().to_path_buf(),
                     source: e,
-                }
-            })?;
-            let _ = timer.done();
+                })?;
 
             print::sub_bullet("Verifying checksum");
             let digest = sha256(node_tgz.path()).map_err(|e| DistLayerError::ReadTempFile {
@@ -158,7 +158,7 @@ pub(crate) enum DistLayerError {
     Download {
         src_url: String,
         dst_path: PathBuf,
-        source: libherokubuildpack::download::DownloadError,
+        source: DownloadError,
     },
     Untar {
         src_path: PathBuf,

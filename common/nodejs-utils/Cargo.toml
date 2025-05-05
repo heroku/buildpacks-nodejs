@@ -8,6 +8,7 @@ workspace = true
 
 [dependencies]
 anyhow = "1"
+async-trait = "0.1.88"
 bon = "3"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 bullet_stream = "0.8"
@@ -20,14 +21,22 @@ libherokubuildpack = { version = "=0.28.1", default-features = false, features =
 ] }
 node-semver = "2"
 regex = "1"
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls"] }
+reqwest-middleware = "0.4"
+reqwest-retry = "0.7"
 serde = { version = "1", features = ['derive'] }
 serde_json = "1"
 serde-xml-rs = "0.7"
 sha2 = "0.10.9"
 thiserror = "2"
+tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "time", "macros"] }
 toml = "0.8"
 ureq = { version = "3", features = ["json"] }
 url = "2"
 
 [dev-dependencies]
+hyper = "1"
+hyper-util = "0.1"
+http = "1"
 tempfile = "3"
+wiremock = "0.6"

@@ -19,7 +19,7 @@ source: test_support/src/lib.rs
   - No yarn engine range detected in package.json, using default (1.22.x)
   - Resolved yarn CLI version: 1.22.22
 - Installing yarn CLI
-  - Downloading yarn 1.22.22 ... (<time_elapsed>)
+  - Downloading Yarn from https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.22.22.tar.gz ... (<time_elapsed>)
   - Extracting yarn 1.22.22
   - Installing yarn 1.22.22
 - Yarn CLI operating in yarn 1.22.22 mode.

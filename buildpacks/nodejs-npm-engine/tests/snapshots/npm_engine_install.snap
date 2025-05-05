@@ -18,7 +18,7 @@ source: test_support/src/lib.rs
 - Installing npm
   - Found `engines.npm` version `9.6.6` declared in `package.json`
   - Resolved version `9.6.6` to `9.6.6`
-  - Downloading `https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.6.tar.gz` ... (<time_elapsed>)
+  - Downloading npm from https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.6.tar.gz ... (<time_elapsed>)
   - Removing npm bundled with Node.js
   - Installing requested npm
   - Successfully installed `npm@9.6.6`

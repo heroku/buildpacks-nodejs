@@ -2,7 +2,8 @@
 source: buildpacks/nodejs-npm-engine/src/errors.rs
 ---
 - Debug Info:
-  - HTTP error while downloading file: http: invalid format
+  - Request to `https://test/error` failed
+    Error: error sending request for url (https://test/error)
 
 ! Failed to download `npm`
 !
