@@ -1,3 +1,10 @@
+# IMPORTANT: This automation was copied from:
+# https://github.com/heroku/languages-github-actions/blob/v1.0.0/.github/workflows/_buildpacks-prepare-release.yml
+#
+# Modifications have been made to adjust for:
+# - only preparing functions-related buildpacks
+# - ensuring pull requests are created with a suffix of `-functions` so it doesn't interfere with the `main` branch
+
 name: Prepare Buildpack Releases
 
 on:
@@ -14,14 +21,67 @@ on:
           - patch
 
 # Disable all GITHUB_TOKEN permissions, since the GitHub App token is used instead.
-permissions: {}
+permissions: { }
+
+defaults:
+  run:
+    # Setting an explicit bash shell ensures GitHub Actions enables pipefail mode too,
+    # rather than only error on exit (improving failure UX when pipes are used). See:
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
   prepare-release:
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-prepare-release.yml@latest
-    with:
-      app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-      bump: ${{ inputs.bump }}
-      declarations_starting_version: 1.0.0
-    secrets:
-      app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+    name: Prepare Release
+    runs-on: pub-hk-ubuntu-24.04-ip
+    steps:
+      - name: Get token for GH application (Linguist)
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Using the GH application token here will configure the local git config for this repo with credentials
+          # that can be used to make signed commits that are attributed to the GH application user
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Install Languages CLI
+        uses: heroku/languages-github-actions/.github/actions/install-languages-cli@v1.0.0
+      - name: Bump versions and update changelogs
+        id: prepare
+        run: |
+          actions prepare-release \
+            --bump ${{ inputs.bump }} \
+            --repository-url https://github.com/${{ github.repository }} \
+            --declarations-starting-version 1.0.0
+      - name: Generate changelog
+        id: generate-changelog
+        run: actions generate-changelog --version ${{ steps.prepare.outputs.to_version }}
+      - name: Create pull request
+        id: pr
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          # Make sure we're only created PRs targeted at the `sf-functions` branch
+          base: sf-functions
+          token: ${{ steps.generate-token.outputs.token }}
+          title: Prepare release v${{ steps.prepare.outputs.to_version }} (Functions)
+          body: ${{ steps.generate-changelog.outputs.changelog }}
+          commit-message: |
+            Prepare release v${{ steps.prepare.outputs.to_version }} (Functions)
+
+            ${{ steps.generate-changelog.outputs.changelog }}
+          branch: prepare-release
+          delete-branch: true
+          # This will ensure commits made from this workflow are attributed to the GH application user
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+      - name: Configure pull request
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        run: gh pr merge --auto --squash "${{ steps.pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}

@@ -1,3 +1,11 @@
+# IMPORTANT: This automation was copied from:
+# https://github.com/heroku/languages-github-actions/blob/v1.0.0/.github/workflows/_buildpacks-release.yml
+#
+# Modifications have been made to adjust for:
+# - only releasing functions-related buildpacks
+# - publishing GitHub releases with a suffix of `-functions` so it doesn't interfere with releases on the main branch
+# - only updating the `salesforce-functions` builder
+
 name: Release Buildpacks
 
 on:
@@ -9,18 +17,363 @@ on:
         default: false
 
 # Disable all GITHUB_TOKEN permissions, since the GitHub App token is used instead.
-permissions: {}
+permissions: { }
+defaults:
+  run:
+    # Setting an explicit bash shell ensures GitHub Actions enables pipefail mode too,
+    # rather than only error on exit (improving failure UX when pipes are used). See:
+    # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
+    shell: bash
+env:
+  CARGO_TERM_COLOR: always
+  PACKAGE_DIR: ./packaged
 
 jobs:
-  release:
-    name: Release
-    uses: heroku/languages-github-actions/.github/workflows/_buildpacks-release.yml@latest
-    with:
-      app_id: ${{ vars.LINGUIST_GH_APP_ID }}
-      dry_run: ${{ inputs.dry_run }}
-      reviewers: 'colincasey'
-    secrets:
-      app_private_key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
-      cnb_registry_token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
-      docker_hub_user: ${{ secrets.DOCKER_HUB_USER }}
-      docker_hub_token: ${{ secrets.DOCKER_HUB_TOKEN }}
+  compile:
+    name: Compile Buildpacks
+    runs-on: ubuntu-24.04
+    outputs:
+      buildpacks: ${{ steps.generate-buildpack-matrix.outputs.buildpacks }}
+      version: ${{ steps.generate-buildpack-matrix.outputs.version }}
+      changelog: ${{ steps.generate-changelog.outputs.changelog }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install Languages CLI
+        uses: heroku/languages-github-actions/.github/actions/install-languages-cli@v1.0.0
+      - name: Generate buildpack matrix
+        id: generate-buildpack-matrix
+        run: actions generate-buildpack-matrix --temporary-id "${{ github.run_id }}" --package-dir "${{ env.PACKAGE_DIR }}"
+      - name: Update Rust toolchain
+        run: rustup update
+      - name: Install cross-compile tooling
+        env:
+          RUST_TRIPLES: ${{ steps.generate-buildpack-matrix.outputs.rust_triples }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends musl-tools
+          for triple in $(jq --exit-status -r '.[]' <<< "${RUST_TRIPLES}"); do
+            if [[ "$triple" == "aarch64-unknown-linux-musl" ]]; then
+              sudo apt-get install --no-install-recommends gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross
+            fi
+            rustup target add "$triple"
+          done
+      - name: Rust cache
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
+      # the version of `libcnb-cargo` installed here is kept in sync with the version of `libcnb-package`
+      # that the release automation CLI tooling depends on
+      - name: Install libcnb-cargo
+        run: |
+          LOCKFILE_URL="https://raw.githubusercontent.com/heroku/languages-github-actions/v1.0.0/Cargo.lock"
+          LIBCNB_PACKAGE_VERSION=$( \
+            curl --silent --show-error --fail --retry 5 --retry-all-errors --connect-timeout 10 --max-time 60 "${LOCKFILE_URL}" \
+            | yq -ptoml -oyaml '.package[] | select(.name == "libcnb-package") | .version' \
+          )
+          cargo install --locked "libcnb-cargo@${LIBCNB_PACKAGE_VERSION}"
+      - name: Package buildpacks
+        id: libcnb-package
+        env:
+          BUILDPACKS: ${{ steps.generate-buildpack-matrix.outputs.buildpacks }}
+        run: |
+          package_dir=$(realpath "${{ env.PACKAGE_DIR }}")
+          for buildpack in $(jq --exit-status -c '.[]' <<< "${BUILDPACKS}"); do
+            buildpack_dir=$(jq --exit-status -r '.buildpack_dir' <<< "${buildpack}")
+            buildpack_type=$(jq --exit-status -r '.buildpack_type' <<< "${buildpack}")
+            cd "$buildpack_dir"
+            for target in $(jq --exit-status -c '.targets | .[]' <<< "${buildpack}"); do
+              output_dir=$(jq --exit-status -r '.output_dir' <<< "${target}")
+              if [[ "$buildpack_type" == "bash" ]]; then
+                echo "Copying bash buildpack from ${buildpack_dir} to ${output_dir}."
+                mkdir -p $(dirname "$output_dir")
+                cp -R "$buildpack_dir" "$output_dir"
+                continue
+              fi
+              echo "Packaging ${buildpack_dir}."
+              triple=$(jq --exit-status -r '.rust_triple' <<< "${target}")
+              cargo libcnb package --release --package-dir "${package_dir}" --target "${triple}"
+              os=$(jq --exit-status -r '.os' <<< "${target}")
+              arch=$(jq --exit-status -r '.arch' <<< "${target}")
+              sed -r -i "s/(docker:\/\/.+:[0-9.]+)/\0_${os}-${arch}/" "${output_dir}/package.toml"
+            done
+          done
+      - name: Generate changelog
+        id: generate-changelog
+        run: actions generate-changelog --version ${{ steps.generate-buildpack-matrix.outputs.version }}
+      - name: Cache buildpacks
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ github.run_id }}-compiled-buildpacks
+          path: ${{ env.PACKAGE_DIR }}
+  publish-docker:
+    name: Publish → Docker - ${{ matrix.buildpack_id }}
+    needs: [compile]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.compile.outputs.buildpacks) }}
+    steps:
+      # Composite buildpacks that depend on bash buildpacks (like
+      # heroku/nodejs-function) refer to bash buildpacks by their source
+      # location rather than the packaged location. Other buildpacks
+      # don't need this step, so it's skipped where possible.
+      - name: Checkout
+        if: matrix.buildpack_type == 'composite'
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Restore buildpacks
+        uses: actions/cache/restore@v4
+        with:
+          fail-on-cache-miss: true
+          key: ${{ github.run_id }}-compiled-buildpacks
+          path: ${{ env.PACKAGE_DIR }}
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+      - name: Install Crane
+        uses: buildpacks/github-actions/setup-tools@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+      - name: Login to Docker Hub
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Check if version is already on Docker Hub
+        id: check
+        run: echo "published_to_docker=$(docker manifest inspect "${{ matrix.stable_tag }}" &> /dev/null && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+      - name: Publish to temporary tags
+        if: steps.check.outputs.published_to_docker == 'false'
+        env:
+          TARGETS: ${{ toJSON(matrix.targets) }}
+        run: |
+          echo "Published temporary tags:" >> $GITHUB_STEP_SUMMARY
+          target_temp_tags=($(jq --exit-status -r "map(.temporary_tag) | join(\" \")" <<< "${TARGETS}"))
+          # Publish each target to a temp tag
+          for i in "${!target_temp_tags[@]}"; do
+            output_dir=$(jq --exit-status -r ".[$i].output_dir" <<< "${TARGETS}")
+            echo "Packaging ${output_dir} into ${target_temp_tags[i]}"
+            pack buildpack package "${target_temp_tags[i]}" --config "${output_dir}/package.toml" -v --publish
+            digest=$(crane digest "${target_temp_tags[i]}")
+            echo -e "- \`${target_temp_tags[i]}\`\n  - \`${digest}\`" >> $GITHUB_STEP_SUMMARY
+          done
+
+          # If there is more than one target, publish a multi-platform
+          # manifest list / image index to a temp tag.
+          if (( ${#target_temp_tags[@]} > 1 )); then
+            # create a manifest list using platform-specific images created above.
+            docker manifest create "${{ matrix.temporary_tag }}" "${target_temp_tags[@]}"
+
+            # annotate each of the manifest list entries with the correct os/arch
+            for i in "${!target_temp_tags[@]}"; do
+              os=$(jq --exit-status -r ".[$i].os" <<< "${TARGETS}")
+              arch=$(jq --exit-status -r ".[$i].arch" <<< "${TARGETS}")
+              echo "Annotating ${{ matrix.temporary_tag }} / ${target_temp_tags[i]} with ${os}/${arch}"
+              docker manifest annotate "${{ matrix.temporary_tag }}" "${target_temp_tags[i]}" --os "${os}" --arch "${arch}"
+            done
+
+            # Push the manifest list / image index to a temporary tag
+            docker manifest push "${{ matrix.temporary_tag }}"
+            digest=$(crane digest "${{ matrix.temporary_tag }}")
+            echo -e "- \`${{ matrix.temporary_tag }}\`\n  - \`${digest}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+      - name: Promote temporary tags to stable tags
+        if: inputs.dry_run == false && steps.check.outputs.published_to_docker == 'false'
+        env:
+          TARGETS: ${{ toJSON(matrix.targets) }}
+        run: |
+          # Promote target temp tags to stable tags
+          echo "Published stable tags:" >> $GITHUB_STEP_SUMMARY
+          target_temp_tags=($(jq --exit-status -r "map(.temporary_tag) | join(\" \")" <<< "${TARGETS}"))
+          for i in "${!target_temp_tags[@]}"; do
+            stable_tag=$(jq --exit-status -r ".[$i].stable_tag" <<< "${TARGETS}")
+            crane copy "${target_temp_tags[i]}" "${stable_tag}"
+            echo "- \`${stable_tag}\`" >> $GITHUB_STEP_SUMMARY
+          done
+          # promote primary image manifest or manifest list to permanent tag
+          crane copy "${{ matrix.temporary_tag }}" "${{ matrix.stable_tag }}"
+          echo "- \`${{ matrix.stable_tag }}\`" >> $GITHUB_STEP_SUMMARY
+      - name: Unpublish temp tags from this run
+        if: always()
+        env:
+          TARGETS: ${{ toJSON(matrix.targets) }}
+        # TODO: Consider using secret masking for the generated token here, or preferably
+        # switching to an approach that doesn't involve manually crafted curl requests.
+        # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/workflow-commands-for-github-actions#masking-a-value-in-a-log
+        run: |
+          dockerhub_token=$(curl -sS -f --retry 3 --retry-connrefused --connect-timeout 5 --max-time 30 -H "Content-Type: application/json" -X POST -d "{\"username\": \"${{ secrets.DOCKER_HUB_USER }}\", \"password\": \"${{ secrets.DOCKER_HUB_TOKEN }}\"}" https://hub.docker.com/v2/users/login/ | jq --exit-status -r .token)
+          namespace=$(cut -d "/" -f2 <<< "${{ matrix.image_repository }}")
+          repo=$(cut -d "/" -f3 <<< "${{ matrix.image_repository }}")
+          status=0
+          temp_tags=($(jq --exit-status -r "map(.temporary_tag) | join(\" \")" <<< "${TARGETS}"))
+          temp_tags+=("${{ matrix.temporary_tag }}")
+          temp_tags=($(printf '%s\n' "${temp_tags[@]}" | sort -u))
+          for temp_tag in "${temp_tags[@]}"; do
+            echo "Deleting ${temp_tag}"
+            response=$(curl -sS --retry 3 --retry-connrefused --connect-timeout 5 --max-time 30 -X DELETE \
+              -H "Authorization: JWT ${dockerhub_token}" \
+              "https://hub.docker.com/v2/namespaces/${namespace}/repositories/${repo}/tags/${temp_tag#*:}"
+            )
+
+            if [[ -z $response ]]; then
+              echo "Deleted."
+            elif [[ $response =~ "tag not found" ]]; then
+              echo "Tag does not exist."
+            else
+              echo "Couldn't delete. Response: ${response}"
+              status=22
+            fi
+          done
+          exit $status
+  publish-github:
+    name: Publish → GitHub Release
+    needs: [compile]
+    runs-on: pub-hk-ubuntu-24.04-ip
+    steps:
+      # Composite buildpacks that depend on bash buildpacks (like
+      # heroku/nodejs-function) refer to bash buildpacks by their source
+      # location rather than the packaged location. Other buildpacks don't
+      # don't need this step. Since it's challenging to determine if any of
+      # the buildpacks in this repo meet this criteria, and this step is
+      # reasonably fast, it is always run.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Restore buildpacks
+        uses: actions/cache/restore@v4
+        with:
+          fail-on-cache-miss: true
+          key: ${{ github.run_id }}-compiled-buildpacks
+          path: ${{ env.PACKAGE_DIR }}
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: 1
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+      - name: Generate CNB files
+        run: |
+          for buildpack in $(jq --exit-status -c '.[]' <<< '${{ needs.compile.outputs.buildpacks }}'); do
+            for target in $(jq --exit-status -c ".targets | .[]" <<< "${buildpack}"); do
+              output_dir=$(jq --exit-status -r ".output_dir" <<< "${target}")
+              cnb_file=$(jq --exit-status -r ".cnb_file" <<< "${target}")
+              oci_target=$(jq --exit-status -r ".oci_target" <<< "${target}")
+              pack buildpack package "$cnb_file" --target "${oci_target}" --config "${output_dir}/package.toml" --format file --verbose
+            done
+          done
+      - name: Get token for GitHub application (Linguist)
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+      - name: Check if release exists
+        id: check
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        # publish the release with a `-functions` appended to the version so it does not conflict with releases on the main branch
+        run: echo "published_to_github=$(gh release view v${{ needs.compile.outputs.version }}-functions -R ${{ github.repository }} &> /dev/null && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+      - name: Create GitHub Release
+        if: inputs.dry_run == false && steps.check.outputs.published_to_github == 'false'
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          # publish the release with a `-functions` appended to the version so it does not conflict with releases on the main branch
+          tag_name: v${{ needs.compile.outputs.version }}-functions
+          body: ${{ needs.compile.outputs.changelog }}
+          files: "*.cnb"
+          fail_on_unmatched_files: true
+  publish-cnb-registry:
+    name: Publish → CNB Registry - ${{ matrix.buildpack_id }}
+    needs: [compile, publish-docker]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.compile.outputs.buildpacks) }}
+    steps:
+      - name: Install crane
+        uses: buildpacks/github-actions/setup-tools@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+      - name: Check if version is already in the registry
+        id: check
+        run: |
+          registry_url="https://registry.buildpacks.io/api/v1/buildpacks/${{ matrix.buildpack_id }}/${{ matrix.buildpack_version }}"
+          if curl --head --silent --show-error --fail --retry 1 --retry-all-errors --connect-timeout 10 --max-time 60 "${registry_url}"; then
+            echo "published_to_cnb_registry=true" >> $GITHUB_OUTPUT
+          else
+            echo "published_to_cnb_registry=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Calculate the buildpack image digest
+        id: digest
+        run: echo "value=$(crane digest ${{ matrix.stable_tag }})" >> "$GITHUB_OUTPUT"
+      - name: Register the new version with the CNB Buildpack Registry
+        if: inputs.dry_run == false && steps.check.outputs.published_to_cnb_registry == 'false'
+        uses: docker://ghcr.io/buildpacks/actions/registry/request-add-entry:5.8.5
+        with:
+          token: ${{ secrets.CNB_REGISTRY_RELEASE_BOT_GITHUB_TOKEN }}
+          id: ${{ matrix.buildpack_id }}
+          version: ${{ matrix.buildpack_version }}
+          address: ${{ matrix.image_repository }}@${{ steps.digest.outputs.value }}
+  update-builder:
+    name: Update Builder
+    needs: [compile, publish-docker, publish-cnb-registry, publish-github]
+    runs-on: pub-hk-ubuntu-24.04-ip
+    steps:
+      - name: Get token for GH application (Linguist)
+        uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+          owner: heroku
+          repositories: cnb-builder-images
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ./buildpacks
+      - name: Checkout cnb-builder-images repository
+        uses: actions/checkout@v4
+        with:
+          repository: heroku/cnb-builder-images
+          path: ./cnb-builder-images
+          # Using the GH application token here will configure the local git config for this repo with credentials
+          # that can be used to make signed commits that are attributed to the GH application user
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Install crane
+        uses: buildpacks/github-actions/setup-tools@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+      - name: Install Languages CLI
+        uses: heroku/languages-github-actions/.github/actions/install-languages-cli@v1.0.0
+      - name: Update Builder
+        # The dry run check is performed here because the update process requires a published
+        # image to exist in order to calculate a digest with `crane`. Adding the check here
+        # means no files will be modified and so no PR will be created later.
+        if: inputs.dry_run == false
+        # only update the `salesforce-functions` builder
+        run: actions update-builder --repository-path ./buildpacks --builder-repository-path ./cnb-builder-images --builders salesforce-functions
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          # Make sure we're targeting the `main` branch of heroku/cnb-builder-images
+          base: main
+          token: ${{ steps.generate-token.outputs.token }}
+          title: Update ${{ github.repository }} to v${{ needs.compile.outputs.version }} (Functions)
+          body: ${{ needs.compile.outputs.changelog }}
+          commit-message: |
+            Update ${{ github.repository }} to v${{ needs.compile.outputs.version }} (Functions)
+
+            ${{ needs.compile.outputs.changelog }}
+          reviewers: colincasey
+          path: ./cnb-builder-images
+          branch: update/${{ github.repository }}-functions
+          delete-branch: true
+          # This will ensure commits made from this workflow are attributed to the GH application user
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        run: gh pr merge --auto --squash --repo heroku/cnb-builder-images "${{ steps.pr.outputs.pull-request-number }}"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
