@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-npm_version="5.7.0"
-
-if [[ "$1" == "-v" ]]; then
-	echo "$npm_version"
-fi

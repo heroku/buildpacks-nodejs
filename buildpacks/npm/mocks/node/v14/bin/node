@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-node_version="v14.16.1"
-
-if [[ "$1" == "-v" ]]; then
-	echo "$node_version"
-fi
