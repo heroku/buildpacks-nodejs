@@ -2,7 +2,9 @@
 uri = "."
 
 [[dependencies]]
-uri = "libcnb:heroku/nodejs-engine"
+# Locking this at v3.6.3 which is the last published version used
+# before this sf-functions branch was created.
+uri = "docker://heroku/buildpack-nodejs:3.6.3"
 
 [[dependencies]]
 uri = "../../buildpacks/npm"
