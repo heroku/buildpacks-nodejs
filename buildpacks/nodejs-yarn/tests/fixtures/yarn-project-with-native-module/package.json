@@ -1,7 +1,0 @@
-{
-  "name": "yarn-project-with-native-module",
-  "packageManager": "yarn@4.2.2",
-  "dependencies": {
-    "dtrace-provider": "0.8.8"
-  }
-}
