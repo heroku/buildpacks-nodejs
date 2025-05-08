@@ -3,7 +3,6 @@ resolver = "2"
 members = [
     "buildpacks/nodejs-engine",
     "buildpacks/nodejs-corepack",
-    "buildpacks/nodejs-function-invoker",
     "buildpacks/nodejs-npm-engine",
     "buildpacks/nodejs-npm-install",
     "buildpacks/nodejs-pnpm-engine",
