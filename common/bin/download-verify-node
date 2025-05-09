@@ -7,26 +7,26 @@ set -e
 
 version_number=$1
 if [ -z "$version_number" ]; then
-	echo "Node.js version not provided as first argument. Should be something like '20.1.0'" >&2
-	exit 1
+  echo "Node.js version not provided as first argument. Should be something like '20.1.0'" >&2
+  exit 1
 fi
 
 platform=$2
 if [ -z "$platform" ]; then
-	echo "Node.js platform not provided as second argument. Should be something like 'linux-x64'" >&2
-	exit 1
+  echo "Node.js platform not provided as second argument. Should be something like 'linux-x64'" >&2
+  exit 1
 fi
 
 echo "Downloading Node.js release artifacts..." >&2
 
 curl -o "node-v${version_number}-${platform}.tar.gz" \
-	"https://nodejs.org/download/release/v${version_number}/node-v${version_number}-${platform}.tar.gz"
+  "https://nodejs.org/download/release/v${version_number}/node-v${version_number}-${platform}.tar.gz"
 
 curl -o "SHASUMS256.txt" \
-	-O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt"
+  -O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt"
 
 curl -o "SHASUMS256.txt.sig" \
-	-O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt.sig"
+  -O "https://nodejs.org/dist/v${version_number}/SHASUMS256.txt.sig"
 
 echo "Checking Node.js integrity..." >&2
 grep "node-v${version_number}-${platform}.tar.gz" SHASUMS256.txt | sha256sum -c -
@@ -40,7 +40,7 @@ gpg --keyserver hkps://keys.openpgp.org --recv-keys 8FCCA13FEF1D0C2E91008E09770F
 gpg --keyserver hkps://keys.openpgp.org --recv-keys 890C08DB8579162FEE0DF9DB8BEAB4DFCF555EF4 # Rafael Gonzaga
 gpg --keyserver hkps://keys.openpgp.org --recv-keys C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C # Richard Lau
 gpg --keyserver hkps://keys.openpgp.org --recv-keys 108F52B48DB57BB0CC439B2997B01419BD92F80A # Ruy Adorno
-gpg --keyserver hkps://keys.openpgp.org --recv-keys A363A499291CBBC940DD62E41F10027AF002F8B0 # Ulises Gascónne
+gpg --keyserver hkps://keys.openpgp.org --recv-keys A363A499291CBBC940DD62E41F10027AF002F8B0 # Ulises Gascón
 
 echo "Verifying Node.js gpg signature..." >&2
 gpg --verify SHASUMS256.txt.sig SHASUMS256.txt
