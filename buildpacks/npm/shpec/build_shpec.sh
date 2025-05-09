@@ -67,7 +67,7 @@ describe "lib/build.sh"
 	describe "clear_cache_on_stack_change"
 		touch "$layers_dir/my_layer.toml"
 
-		export CNB_STACK_ID="heroku-20"
+		export CNB_STACK_ID="heroku-22"
 
 		it "does not delete layers with same stack"
 			assert file_present "$layers_dir/my_layer.toml"
@@ -80,7 +80,7 @@ describe "lib/build.sh"
 		write_to_store_toml "$layers_dir"
 
 		it "deletes layers when stack changes"
-			export CNB_STACK_ID="heroku-22"
+			export CNB_STACK_ID="heroku-24"
 
 			assert file_present "$layers_dir/my_layer.toml"
 
