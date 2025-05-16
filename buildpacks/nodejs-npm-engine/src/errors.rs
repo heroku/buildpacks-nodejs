@@ -332,7 +332,7 @@ mod tests {
     }
 
     fn create_io_error(text: &str) -> std::io::Error {
-        std::io::Error::new(std::io::ErrorKind::Other, text)
+        std::io::Error::other(text)
     }
 
     fn create_json_error() -> serde_json::error::Error {

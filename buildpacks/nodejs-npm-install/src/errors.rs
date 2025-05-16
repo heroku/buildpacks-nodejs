@@ -299,7 +299,7 @@ mod tests {
     }
 
     fn create_io_error(text: &str) -> io::Error {
-        io::Error::new(io::ErrorKind::Other, text)
+        io::Error::other(text)
     }
 
     fn create_json_error() -> serde_json::error::Error {

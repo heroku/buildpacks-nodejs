@@ -59,19 +59,19 @@ impl Buildpack for NodeJsInvokerBuildpack {
     type Error = NodeJsInvokerBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        is_function(context.app_dir)
-            .then(|| {
-                DetectResultBuilder::pass()
-                    .build_plan(
-                        BuildPlanBuilder::new()
-                            .requires("node")
-                            .requires("nodejs-function-invoker")
-                            .provides("nodejs-function-invoker")
-                            .build(),
-                    )
-                    .build()
-            })
-            .unwrap_or_else(|| DetectResultBuilder::fail().build())
+        if is_function(context.app_dir) {
+            DetectResultBuilder::pass()
+                .build_plan(
+                    BuildPlanBuilder::new()
+                        .requires("node")
+                        .requires("nodejs-function-invoker")
+                        .provides("nodejs-function-invoker")
+                        .build(),
+                )
+                .build()
+        } else {
+            DetectResultBuilder::fail().build()
+        }
     }
 
     fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
