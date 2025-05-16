@@ -50,26 +50,23 @@ impl Buildpack for YarnBuildpack {
     type Error = YarnBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        context
-            .app_dir
-            .join("yarn.lock")
-            .exists()
-            .then(|| {
-                DetectResultBuilder::pass()
-                    .build_plan(
-                        BuildPlanBuilder::new()
-                            .provides("yarn")
-                            .provides("node_modules")
-                            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                            .requires("node")
-                            .requires("yarn")
-                            .requires("node_modules")
-                            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                            .build(),
-                    )
-                    .build()
-            })
-            .unwrap_or_else(|| DetectResultBuilder::fail().build())
+        if context.app_dir.join("yarn.lock").exists() {
+            DetectResultBuilder::pass()
+                .build_plan(
+                    BuildPlanBuilder::new()
+                        .provides("yarn")
+                        .provides("node_modules")
+                        .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
+                        .requires("node")
+                        .requires("yarn")
+                        .requires("node_modules")
+                        .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
+                        .build(),
+                )
+                .build()
+        } else {
+            DetectResultBuilder::fail().build()
+        }
     }
 
     #[allow(clippy::too_many_lines)]
