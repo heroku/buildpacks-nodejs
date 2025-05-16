@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.5] - 2025-05-16
+
 ### Added
 
 - 24.0.2 (linux-amd64, linux-arm64)
@@ -858,7 +860,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.5...HEAD
+[3.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.4...v3.6.5
 [3.6.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.3...v3.6.4
 [3.6.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.2...v3.6.3
 [3.6.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.1...v3.6.2
