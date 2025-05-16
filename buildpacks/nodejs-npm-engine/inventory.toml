@@ -157,6 +157,12 @@ url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v11.3.0
 etag = "30bf6bd462edaaadee6dfcd08edef5ff"
 
 [[releases]]
+version = "11.4.0"
+channel = "release"
+url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v11.4.0.tar.gz"
+etag = "c87e149185e8a4b1afe29b73e11bc4ba"
+
+[[releases]]
 version = "8.0.0"
 channel = "release"
 url = "https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v8.0.0.tar.gz"
