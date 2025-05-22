@@ -1,0 +1,79 @@
+name: Rebuild Snapshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rebuild-snapshots:
+    name: Rebuild Snapshots
+    runs-on: ubuntu-24.04
+    env:
+      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:24
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools -y --no-install-recommends
+
+      - name: Update Rust toolchain
+        run: rustup update
+
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: Install cargo insta
+        run: cargo install cargo-insta
+
+      - name: Install cargo nextest
+        uses: taiki-e/install-action@nextest
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@9d47c6ad4b02e050fd481d890b2ea34778fd09d6 # v2.7.8
+
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@c502bcff683efa6f6d56a325df3fbe1722e21881 # v5.8.11
+
+      - name: Pull builder image
+        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
+      - name: Pull run image
+        run: |
+          RUN_IMAGE=$(
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
+            | jq --exit-status --raw-output '.stack.runImage.image'
+          )
+          docker pull "${RUN_IMAGE}"
+
+      - name: Configure test runner
+        run: |
+          mkdir .config
+          cat > .config/nextest.toml << EOF
+          [profile.default]
+          slow-timeout = "5m"
+          retries = 2
+          EOF
+
+      - name: Rebuild snapshots
+        run: cargo insta test --accept --test-runner nextest -- --include-ignored
+        env:
+          # This might be unnecessary since `cargo insta test` should already do this, but I was seeing some unexpected
+          # test failures from integration tests until I added this.
+          INSTA_FORCE_PASS: 1
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ vars.LINGUIST_GH_APP_USERNAME }}"  
+          git config --global user.email "${{ vars.LINGUIST_GH_APP_EMAIL }}"
+
+      - name: Commit and push changes
+        run: |
+          git status
+          git add "**/*.snap"
+          if git diff --quiet && git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            echo "Committing and pushing changes"
+            git commit -m "Update integration test snapshots"
+            git push origin update-nodejs-inventory
+          fi
