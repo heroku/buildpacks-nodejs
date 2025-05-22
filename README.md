@@ -69,7 +69,6 @@ This repository contains multiple buildpacks:
 | `heroku/nodejs`              | Node.js Composite Buildpack | [Readme](meta-buildpacks/nodejs/README.md)         |
 | `heroku/nodejs-engine`       | Node.js Engine Buildpack    | [Readme](buildpacks/nodejs-engine/README.md)       |
 | `heroku/nodejs-corepack`     | Corepack Buildpack          | [Readme](buildpacks/nodejs-corepack/README.md)     |
-| `heroku/nodejs-npm`          | npm Buildpack               | [Readme](buildpacks/npm/README.md)                 |
 | `heroku/nodejs-npm-engine`   | npm Engine Buildpack        | [Readme](buildpacks/nodejs-npm-engine/README.md)   |
 | `heroku/nodejs-npm-install`  | npm Install Buildpack       | [Readme](buildpacks/nodejs-npm-install/README.md)  |
 | `heroku/nodejs-pnpm-install` | pnpm install Buildpack      | [Readme](buildpacks/nodejs-pnpm-install/README.md) |

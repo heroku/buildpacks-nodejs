@@ -139,23 +139,3 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: cargo test --locked -- --ignored --test-threads 16
 
-  shpec:
-    runs-on: ubuntu-24.04
-    container:
-      image: heroku/heroku:${{ matrix.stack-version }}-build
-    strategy:
-      matrix:
-        stack-version:
-          - '22'
-        buildpack-dir:
-          - buildpacks/npm
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install shpec
-        run: sh -c "`curl -L https://raw.githubusercontent.com/rylnd/shpec/master/install.sh`"
-      - name: Shpec unit tests on heroku-${{ matrix.stack-version }}
-        run: shpec ${{ matrix.buildpack-dir }}/shpec/*_shpec.sh
