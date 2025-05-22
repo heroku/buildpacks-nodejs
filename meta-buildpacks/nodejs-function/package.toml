@@ -2,9 +2,9 @@
 uri = "."
 
 [[dependencies]]
-# Locking this at v3.6.3 which is the last published version used
-# before this sf-functions branch was created.
-uri = "docker://heroku/buildpack-nodejs:3.6.3"
+# Locking this at v3.6.6 which is the last published version used
+# before this sf-functions branch was finalized.
+uri = "docker://heroku/buildpack-nodejs:3.6.6"
 
 [[dependencies]]
 uri = "../../buildpacks/npm"

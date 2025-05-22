@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.6] - 2025-05-22
+
+### Changed
+
+- Updated `heroku/nodejs-engine` to `3.6.6`.
+- Updated `heroku/nodejs-function-invoker` to `3.6.6`.
+- Updated `heroku/nodejs-npm` to `3.6.6`.
+
+## [3.6.5] - 2025-05-16
+
+### Changed
+
+- Updated `heroku/nodejs-engine` to `3.6.5`.
+- Updated `heroku/nodejs-function-invoker` to `3.6.5`.
+- Updated `heroku/nodejs-npm` to `3.6.5`.
+
+## [3.6.4] - 2025-05-09
+
+### Changed
+
+- Updated `heroku/nodejs-engine` to `3.6.4`.
+- Updated `heroku/nodejs-function-invoker` to `3.6.4`.
+- Updated `heroku/nodejs-npm` to `3.6.4`.
+
 ## [3.6.3] - 2025-05-07
 
 ### Changed
@@ -841,7 +865,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Switch from the Riff based invoker buildpacks to `heroku/nodejs-function` ([#48](https://github.com/heroku/buildpacks-node/pull/48))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.3...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.6...HEAD
+[3.6.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.5...v3.6.6
+[3.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.4...v3.6.5
+[3.6.4]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.3...v3.6.4
 [3.6.3]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.2...v3.6.3
 [3.6.2]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.1...v3.6.2
 [3.6.1]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.0...v3.6.1
