@@ -75,5 +75,5 @@ jobs:
           else
             echo "Committing and pushing changes"
             git commit -m "Update integration test snapshots"
-            git push origin update-nodejs-inventory
+            git push
           fi
