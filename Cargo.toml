@@ -37,6 +37,7 @@ module_name_repetitions = "allow"
 [workspace.dependencies]
 heroku-nodejs-utils = { path = "./common/nodejs-utils" }
 test_support = { path = "./test_support" }
+bullet_stream = { version = ">=0.8,<1.0", features = ["fun_run"] }
 
 [profile.release]
 strip = true
