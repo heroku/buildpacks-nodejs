@@ -74,7 +74,7 @@ fn yarn_4_modules_zero() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_native_modules_are_recompiled_even_on_cache_restore() {
+fn yarn_test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/yarn-project-with-native-module", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
         let config = ctx.config.clone();
@@ -86,7 +86,7 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_skip_build_scripts_from_buildplan() {
+fn yarn_test_skip_build_scripts_from_buildplan() {
     integration_test_with_config(
         "./fixtures/yarn-project",
         |config| {
@@ -124,7 +124,7 @@ fn test_skip_build_scripts_from_buildplan() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
+fn yarn_test_default_web_process_registration_is_skipped_if_procfile_exists() {
     nodejs_integration_test_with_config(
         "./fixtures/yarn-project",
         |config| {
