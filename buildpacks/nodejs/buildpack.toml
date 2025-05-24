@@ -1,0 +1,22 @@
+api = "0.10"
+
+[buildpack]
+id = "heroku/nodejs"
+version = "3.6.6"
+name = "Heroku Node.js"
+homepage = "https://github.com/heroku/buildpacks-nodejs"
+description = "Heroku's Node.js tools buildpack"
+keywords = ["node.js", "nodejs", "heroku", "npm", "pnpm", "yarn"]
+
+[[buildpack.licenses]]
+type = "MIT"
+
+[[targets]]
+os = "linux"
+arch = "amd64"
+
+[[targets]]
+os = "linux"
+arch = "arm64"
+
+[metadata.release]
