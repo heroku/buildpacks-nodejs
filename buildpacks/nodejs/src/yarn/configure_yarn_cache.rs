@@ -1,5 +1,6 @@
-use crate::yarn::Yarn;
-use crate::{cmd, YarnBuildpack, YarnBuildpackError};
+use crate::yarn::cmd;
+use crate::yarn::main::{Yarn, YarnBuildpackError};
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -17,10 +18,10 @@ use std::path::PathBuf;
 /// scenarios, so the cache is invalidated after a number of builds to prevent
 /// unbound cache growth.
 pub(crate) fn configure_yarn_cache(
-    context: &BuildContext<YarnBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     yarn: &Yarn,
     env: &Env,
-) -> Result<(), libcnb::Error<YarnBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = DepsLayerMetadata {
         yarn: yarn.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -88,8 +89,10 @@ pub(crate) enum DepsLayerError {
     YarnCacheSet(fun_run::CmdError),
 }
 
-impl From<DepsLayerError> for libcnb::Error<YarnBuildpackError> {
+impl From<DepsLayerError> for libcnb::Error<NodeJsBuildpackError> {
     fn from(value: DepsLayerError) -> Self {
-        libcnb::Error::BuildpackError(YarnBuildpackError::DepsLayer(value))
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::Yarn(YarnBuildpackError::DepsLayer(
+            value,
+        )))
     }
 }

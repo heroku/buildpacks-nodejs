@@ -1,33 +1,25 @@
-use crate::cmd::CorepackVersionError;
+use crate::corepack::cmd::CorepackVersionError;
 use crate::CorepackBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    file_value, on_package_json_error, ErrorMessage, ErrorMessageBuilder, ErrorType,
+    SuggestRetryBuild, SuggestSubmitIssue,
 };
 use indoc::formatdoc;
-use libcnb::Error;
 use std::path::Path;
 
 const BUILDPACK_NAME: &str = "Heroku Node.js Corepack";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-pub(crate) fn on_error(error: libcnb::Error<CorepackBuildpackError>) -> ErrorMessage {
-    match error {
-        Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
 // Wraps the error_message() builder to preset the issues_url field
 fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
     heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
 }
 
-fn on_buildpack_error(error: CorepackBuildpackError) -> ErrorMessage {
+pub(crate) fn on_corepack_buildpack_error(error: CorepackBuildpackError) -> ErrorMessage {
     match error {
         CorepackBuildpackError::CorepackEnable(e) => on_corepack_enable_error(&e),
         CorepackBuildpackError::CorepackPrepare(e) => on_corepack_prepare_error(&e),
@@ -211,8 +203,8 @@ mod tests {
         assert_error_snapshot(CorepackBuildpackError::PackageManagerMissing);
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<CorepackBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<CorepackBuildpackError>) {
+        let error_message = strip_ansi(on_corepack_buildpack_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

@@ -1,33 +1,25 @@
-use crate::install_node::DistLayerError;
+use crate::engine::install_node::DistLayerError;
 use crate::NodeJsEngineBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::download_file::DownloadError;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    SuggestRetryBuild, SuggestSubmitIssue,
+    file_value, on_package_json_error, ErrorMessage, ErrorMessageBuilder, SuggestRetryBuild,
+    SuggestSubmitIssue,
 };
 use indoc::formatdoc;
-use libcnb::Error;
 
 const BUILDPACK_NAME: &str = "Heroku Node.js Engine buildpack";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
-
-pub(crate) fn on_error(error: Error<NodeJsEngineBuildpackError>) -> ErrorMessage {
-    match error {
-        Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
 
 // Wraps the error_message() builder to preset the issues_url field
 fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
     heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
 }
 
-fn on_buildpack_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
+pub(crate) fn on_nodejs_engine_buildpack_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
     match error {
         NodeJsEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
         NodeJsEngineBuildpackError::PackageJson(e) => {
@@ -242,18 +234,22 @@ mod tests {
 
     #[test]
     fn test_dist_layer_temp_file_error() {
-        assert_error_snapshot(DistLayerError::TempFile(create_io_error("Disk full")));
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::TempFile(create_io_error("Disk full")),
+        ));
     }
 
     #[test]
     fn test_dist_layer_download_read_error() {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
             .to_string();
-        assert_error_snapshot(DistLayerError::Download {
-            src_url: url.clone(),
-            dst_path: "/tmp/some-temp-file".into(),
-            source: DownloadError::Request(url, create_reqwest_error()),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::Download {
+                src_url: url.clone(),
+                dst_path: "/tmp/some-temp-file".into(),
+                source: DownloadError::Request(url, create_reqwest_error()),
+            },
+        ));
     }
 
     #[test]
@@ -261,59 +257,71 @@ mod tests {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
             .to_string();
         let path = "/tmp/some-temp-file";
-        assert_error_snapshot(DistLayerError::Download {
-            src_url: url.clone(),
-            dst_path: path.into(),
-            source: DownloadError::WriteFile(path.into(), url, create_io_error("Disk full")),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::Download {
+                src_url: url.clone(),
+                dst_path: path.into(),
+                source: DownloadError::WriteFile(path.into(), url, create_io_error("Disk full")),
+            },
+        ));
     }
 
     #[test]
     fn test_dist_layer_untar_error() {
-        assert_error_snapshot(DistLayerError::Untar {
-            src_path: "/tmp/some-temp-file".into(),
-            dst_path: "/layers/buildpack/some-layer-dir".into(),
-            source: create_io_error("permission denied"),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::Untar {
+                src_path: "/tmp/some-temp-file".into(),
+                dst_path: "/layers/buildpack/some-layer-dir".into(),
+                source: create_io_error("permission denied"),
+            },
+        ));
     }
 
     #[test]
     fn test_dist_layer_tarball_prefix_error() {
-        assert_error_snapshot(DistLayerError::TarballPrefix(
-            "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-                .to_string(),
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::TarballPrefix(
+                "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                    .to_string(),
+            ),
         ));
     }
 
     #[test]
     fn test_dist_layer_installation_error() {
-        assert_error_snapshot(DistLayerError::Installation {
-            src_path: "/tmp/path-to-src".into(),
-            dst_path: "/layers/buildpack/path-to-dst".into(),
-            source: create_io_error("unexpected end of file"),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::Installation {
+                src_path: "/tmp/path-to-src".into(),
+                dst_path: "/layers/buildpack/path-to-dst".into(),
+                source: create_io_error("unexpected end of file"),
+            },
+        ));
     }
 
     #[test]
     fn test_dist_layer_checksum_verification_error() {
-        assert_error_snapshot(DistLayerError::ChecksumVerification {
-            url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-                .into(),
-            expected: "d41d8cd98f00b204e9800998ecf8427e".into(),
-            actual: "e62ff0123a74adfc6903d59a449cbdb0".into(),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::ChecksumVerification {
+                url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                    .into(),
+                expected: "d41d8cd98f00b204e9800998ecf8427e".into(),
+                actual: "e62ff0123a74adfc6903d59a449cbdb0".into(),
+            },
+        ));
     }
 
     #[test]
     fn test_dist_layer_read_temp_file_error() {
-        assert_error_snapshot(DistLayerError::ReadTempFile {
-            path: "/tmp/path-to-src".into(),
-            source: create_io_error("read-only filesystem or storage medium"),
-        });
+        assert_error_snapshot(NodeJsEngineBuildpackError::DistLayer(
+            DistLayerError::ReadTempFile {
+                path: "/tmp/path-to-src".into(),
+                source: create_io_error("read-only filesystem or storage medium"),
+            },
+        ));
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<NodeJsEngineBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<NodeJsEngineBuildpackError>) {
+        let error_message = strip_ansi(on_nodejs_engine_buildpack_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

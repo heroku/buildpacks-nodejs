@@ -10,14 +10,15 @@ use serde::{Deserialize, Serialize};
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 
-use crate::{cmd, CorepackBuildpack, CorepackBuildpackError};
+use crate::corepack::cmd;
+use crate::{CorepackBuildpackError, NodeJsBuildpack, NodeJsBuildpackError};
 
 pub(crate) fn enable_corepack(
-    context: &BuildContext<CorepackBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     corepack_version: &Version,
     package_manager: &PackageManager,
     env: &Env,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = ShimLayerMetadata {
         corepack_version: corepack_version.clone(),
         layer_version: LAYER_VERSION.to_string(),

@@ -3,114 +3,69 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-mod configure_npm_cache_directory;
-mod configure_npm_runtime_env;
-mod errors;
-mod npm;
-
-use crate::configure_npm_cache_directory::configure_npm_cache_directory;
-use crate::configure_npm_runtime_env::configure_npm_runtime_env;
+use crate::npm_install::configure_npm_cache_directory::configure_npm_cache_directory;
+use crate::npm_install::configure_npm_runtime_env::configure_npm_runtime_env;
+use crate::npm_install::{errors, npm};
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
 use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
-use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
-use libcnb::data::build_plan::BuildPlanBuilder;
+use libcnb::build::{BuildContext, BuildResultBuilder};
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::{buildpack_main, Buildpack, Env};
-#[cfg(test)]
-use libcnb_test as _;
-#[cfg(test)]
-use serde_json as _;
+use libcnb::Env;
 use std::io;
 
-struct NpmInstallBuildpack;
+pub(crate) fn detect(
+    context: &BuildContext<NodeJsBuildpack>,
+) -> libcnb::Result<bool, NodeJsBuildpackError> {
+    context
+        .app_dir
+        .join(PackageManager::Npm.lockfile())
+        .try_exists()
+        .map_err(|e| NpmInstallBuildpackError::Detect(e).into())
+}
 
-impl Buildpack for NpmInstallBuildpack {
-    type Platform = GenericPlatform;
-    type Metadata = GenericMetadata;
-    type Error = NpmInstallBuildpackError;
+pub(crate) fn build(
+    context: &BuildContext<NodeJsBuildpack>,
+    env: Env,
+    build_result_builder: BuildResultBuilder,
+) -> libcnb::Result<(Env, BuildResultBuilder), NodeJsBuildpackError> {
+    let app_dir = &context.app_dir;
+    let package_json = PackageJson::read(app_dir.join("package.json"))
+        .map_err(NpmInstallBuildpackError::PackageJson)?;
+    let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
+        .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
 
-    fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let npm_lockfile_exists = context
-            .app_dir
-            .join(PackageManager::Npm.lockfile())
-            .try_exists()
-            .map_err(NpmInstallBuildpackError::Detect)?;
+    application::check_for_singular_lockfile(app_dir)
+        .map_err(NpmInstallBuildpackError::Application)?;
 
-        if let Ok(package_json) = PackageJson::read(context.app_dir.join("package.json")) {
-            if npm_lockfile_exists || package_json.has_dependencies() {
-                DetectResultBuilder::pass()
-                    .build_plan(
-                        BuildPlanBuilder::new()
-                            .provides("node_modules")
-                            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                            .requires("node")
-                            .requires("npm")
-                            .requires("node_modules")
-                            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                            .build(),
-                    )
-                    .build()
-            } else {
-                DetectResultBuilder::fail().build()
-            }
-        } else {
-            DetectResultBuilder::fail().build()
-        }
-    }
+    print::bullet("Installing node modules");
+    log_npm_version(&env)?;
+    configure_npm_cache_directory(context, &env)?;
+    run_npm_install(&env)?;
 
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let buildpack_start = print::buildpack(
-            context
-                .buildpack_descriptor
-                .buildpack
-                .name
-                .as_ref()
-                .expect("The buildpack.toml should have a 'name' field set"),
-        );
+    print::bullet("Running scripts");
+    run_build_scripts(&package_json, &node_build_scripts_metadata, &env)?;
 
-        let env = Env::from_current();
-        let app_dir = &context.app_dir;
-        let package_json = PackageJson::read(app_dir.join("package.json"))
-            .map_err(NpmInstallBuildpackError::PackageJson)?;
-        let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
-            .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
+    print::bullet("Configuring default processes");
+    let build_result_builder =
+        configure_default_processes(context, build_result_builder, &package_json);
 
-        application::check_for_singular_lockfile(app_dir)
-            .map_err(NpmInstallBuildpackError::Application)?;
+    configure_npm_runtime_env(context)?;
 
-        print::bullet("Installing node modules");
-        log_npm_version(&env)?;
-        configure_npm_cache_directory(&context, &env)?;
-        run_npm_install(&env)?;
+    Ok((env, build_result_builder))
+}
 
-        print::bullet("Running scripts");
-        run_build_scripts(&package_json, &node_build_scripts_metadata, &env)?;
-
-        print::bullet("Configuring default processes");
-        let build_result = configure_default_processes(&context, &package_json);
-
-        configure_npm_runtime_env(&context)?;
-
-        print::all_done(&Some(buildpack_start));
-        build_result
-    }
-
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: NpmInstallBuildpackError) {
+    print::error(errors::on_npm_install_buildpack_error(error).to_string());
 }
 
 fn log_npm_version(env: &Env) -> Result<(), NpmInstallBuildpackError> {
@@ -165,31 +120,30 @@ fn run_build_scripts(
 }
 
 fn configure_default_processes(
-    context: &BuildContext<NpmInstallBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
+    build_result_builder: BuildResultBuilder,
     package_json: &PackageJson,
-) -> Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>> {
+) -> BuildResultBuilder {
     if context.app_dir.join("Procfile").exists() {
         print::sub_bullet("Skipping default web process (Procfile detected)");
-        BuildResultBuilder::new().build()
+        build_result_builder
     } else if package_json.has_start_script() {
         print::sub_bullet(format!(
             "Adding default web process for {}",
             style::value("npm start")
         ));
-        BuildResultBuilder::new()
-            .launch(
-                LaunchBuilder::new()
-                    .process(
-                        ProcessBuilder::new(process_type!("web"), ["npm", "start"])
-                            .default(true)
-                            .build(),
-                    )
-                    .build(),
-            )
-            .build()
+        build_result_builder.launch(
+            LaunchBuilder::new()
+                .process(
+                    ProcessBuilder::new(process_type!("web"), ["npm", "start"])
+                        .default(true)
+                        .build(),
+                )
+                .build(),
+        )
     } else {
         print::sub_bullet("Skipping default web process (no start script defined)");
-        BuildResultBuilder::new().build()
+        build_result_builder
     }
 }
 
@@ -205,10 +159,8 @@ pub(crate) enum NpmInstallBuildpackError {
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
 }
 
-impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> {
+impl From<NpmInstallBuildpackError> for libcnb::Error<NodeJsBuildpackError> {
     fn from(value: NpmInstallBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::NpmInstall(value))
     }
 }
-
-buildpack_main!(NpmInstallBuildpack);

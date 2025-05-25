@@ -5,8 +5,8 @@ use heroku_nodejs_utils::buildplan::{
 };
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    file_value, on_package_json_error, ErrorMessage, ErrorMessageBuilder, ErrorType,
+    SuggestRetryBuild, SuggestSubmitIssue,
 };
 use indoc::formatdoc;
 
@@ -14,20 +14,13 @@ const BUILDPACK_NAME: &str = "Heroku Node.js pnpm Install";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-pub(crate) fn on_error(error: libcnb::Error<PnpmInstallBuildpackError>) -> ErrorMessage {
-    match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
 // Wraps the error_message() builder to preset the issues_url field
 fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
     heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
 }
 
 #[allow(clippy::too_many_lines)]
-fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
+pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
     match error {
         PnpmInstallBuildpackError::BuildScript(e) => {
             let build_script = style::value(e.name());
@@ -174,7 +167,6 @@ mod tests {
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use insta::{assert_snapshot, with_settings};
-    use libcnb::Error;
     use std::io;
     use std::process::Command;
     use test_support::test_name;
@@ -254,8 +246,8 @@ mod tests {
         });
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<PnpmInstallBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<PnpmInstallBuildpackError>) {
+        let error_message = strip_ansi(on_pnpm_install_buildpack_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

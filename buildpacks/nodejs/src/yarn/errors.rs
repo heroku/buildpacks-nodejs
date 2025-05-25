@@ -1,6 +1,6 @@
-use crate::cmd::YarnVersionError;
-use crate::configure_yarn_cache::DepsLayerError;
-use crate::install_yarn::CliLayerError;
+use crate::yarn::cmd::YarnVersionError;
+use crate::yarn::configure_yarn_cache::DepsLayerError;
+use crate::yarn::install_yarn::CliLayerError;
 use crate::YarnBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
@@ -9,8 +9,8 @@ use heroku_nodejs_utils::buildplan::{
 };
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    file_value, on_package_json_error, ErrorMessage, ErrorMessageBuilder, ErrorType,
+    SuggestRetryBuild, SuggestSubmitIssue,
 };
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use indoc::formatdoc;
@@ -19,19 +19,12 @@ const BUILDPACK_NAME: &str = "Heroku Node.js Yarn";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-pub(crate) fn on_error(error: libcnb::Error<YarnBuildpackError>) -> ErrorMessage {
-    match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
 // Wraps the error_message() builder to preset the issues_url field
 fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
     heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
 }
 
-fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
+pub(crate) fn on_yarn_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
     match error {
         YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
         YarnBuildpackError::CliLayer(e) => on_cli_layer_error(&e),
@@ -316,7 +309,6 @@ mod tests {
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
-    use libcnb::Error;
     use std::process::Command;
     use test_support::test_name;
 
@@ -460,8 +452,8 @@ mod tests {
         ));
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<YarnBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<YarnBuildpackError>) {
+        let error_message = strip_ansi(on_yarn_buildpack_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

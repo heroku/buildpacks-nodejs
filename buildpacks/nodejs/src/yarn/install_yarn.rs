@@ -16,12 +16,13 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
-use crate::{YarnBuildpack, YarnBuildpackError};
+use crate::yarn::main::YarnBuildpackError;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 
 pub(crate) fn install_yarn(
-    context: &BuildContext<YarnBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     release: &Release,
-) -> Result<LayerEnv, libcnb::Error<YarnBuildpackError>> {
+) -> Result<LayerEnv, libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = CliLayerMetadata {
         yarn_version: release.version.to_string(),
         layer_version: LAYER_VERSION.to_string(),
@@ -110,8 +111,10 @@ pub(crate) enum CliLayerError {
     Permissions(std::io::Error),
 }
 
-impl From<CliLayerError> for libcnb::Error<YarnBuildpackError> {
+impl From<CliLayerError> for libcnb::Error<NodeJsBuildpackError> {
     fn from(value: CliLayerError) -> Self {
-        libcnb::Error::BuildpackError(YarnBuildpackError::CliLayer(value))
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::Yarn(YarnBuildpackError::CliLayer(
+            value,
+        )))
     }
 }

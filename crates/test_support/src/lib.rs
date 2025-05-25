@@ -232,7 +232,7 @@ pub fn update_json_file(path: &Path, update: impl FnOnce(&mut serde_json::Value)
 
 #[bon::builder(on(String, into))]
 pub fn custom_buildpack(id: &str, detect: Option<String>, build: Option<String>) -> String {
-    let buildpack_dir = tempfile::tempdir().unwrap().into_path();
+    let buildpack_dir = tempfile::tempdir().unwrap().keep();
     let bin_dir = buildpack_dir.join("bin");
 
     fs::create_dir(&bin_dir).unwrap();

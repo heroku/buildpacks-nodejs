@@ -1,4 +1,6 @@
-use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use crate::pnpm_install::cmd;
+use crate::pnpm_install::main::PnpmInstallBuildpackError;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -9,9 +11,9 @@ use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn configure_pnpm_store_directory(
-    context: &BuildContext<PnpmInstallBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = AddressableStoreLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };

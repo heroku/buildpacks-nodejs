@@ -3,11 +3,11 @@ use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 
-use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 
 pub(crate) fn configure_web_env(
-    context: &BuildContext<NodeJsEngineBuildpack>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+    context: &BuildContext<NodeJsBuildpack>,
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let web_env_layer = context.uncached_layer(
         layer_name!("web_env"),
         UncachedLayerDefinition {

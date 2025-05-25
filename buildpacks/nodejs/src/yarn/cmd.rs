@@ -1,4 +1,4 @@
-use crate::yarn::Yarn;
+use crate::yarn::main::Yarn;
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};

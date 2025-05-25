@@ -1,5 +1,4 @@
-use crate::NpmEngineBuildpack;
-use crate::NpmEngineBuildpackError;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError, NpmEngineBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CommandWithName, NamedOutput};
@@ -18,10 +17,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub(crate) fn install_npm(
-    context: &BuildContext<NpmEngineBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     npm_release: &Release,
     node_version: &Version,
-) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
         npm_version: npm_release.version.to_string(),
@@ -181,8 +180,10 @@ pub(crate) enum NpmInstallError {
     InstallNpm(fun_run::CmdError),
 }
 
-impl From<NpmInstallError> for libcnb::Error<NpmEngineBuildpackError> {
+impl From<NpmInstallError> for libcnb::Error<NodeJsBuildpackError> {
     fn from(value: NpmInstallError) -> Self {
-        libcnb::Error::BuildpackError(NpmEngineBuildpackError::NpmInstall(value))
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::NpmEngine(
+            NpmEngineBuildpackError::NpmInstall(value),
+        ))
     }
 }

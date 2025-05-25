@@ -12,13 +12,14 @@ use serde::{Deserialize, Serialize};
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 
-use crate::{cmd, CorepackBuildpack, CorepackBuildpackError};
+use crate::corepack::cmd;
+use crate::{CorepackBuildpackError, NodeJsBuildpack, NodeJsBuildpackError};
 
 pub(crate) fn prepare_corepack(
-    context: &BuildContext<CorepackBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     package_manager: &PackageManager,
     env: &Env,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = ManagerLayerMetadata {
         manager_name: package_manager.name.clone(),
         manager_version: package_manager.version.clone(),

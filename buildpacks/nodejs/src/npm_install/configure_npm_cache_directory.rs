@@ -1,5 +1,5 @@
-use crate::NpmInstallBuildpackError;
-use crate::{npm, NpmInstallBuildpack};
+use crate::npm_install::npm;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError, NpmInstallBuildpackError};
 use bullet_stream::global::print;
 use fun_run::CommandWithName;
 use libcnb::build::BuildContext;
@@ -11,9 +11,9 @@ use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn configure_npm_cache_directory(
-    context: &BuildContext<NpmInstallBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     env: &Env,
-) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = NpmCacheLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };

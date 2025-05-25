@@ -1,12 +1,12 @@
-use crate::install_npm::NpmInstallError;
+use crate::npm_engine::install_npm::NpmInstallError;
+use crate::npm_engine::{node, npm};
 use crate::NpmEngineBuildpackError;
-use crate::{node, npm};
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    SuggestRetryBuild, SuggestSubmitIssue,
+    file_value, on_package_json_error, ErrorMessage, ErrorMessageBuilder, SuggestRetryBuild,
+    SuggestSubmitIssue,
 };
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
@@ -15,19 +15,12 @@ const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) -> ErrorMessage {
-    match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
 // Wraps the error_message() builder to preset the issues_url field
 fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
     heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
 }
 
-fn on_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
+pub(crate) fn on_npm_engine_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
     match error {
         NpmEngineBuildpackError::PackageJson(e) => {
             on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
@@ -206,7 +199,6 @@ mod tests {
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
-    use libcnb::Error;
     use std::process::Command;
     use test_support::test_name;
 
@@ -243,40 +235,48 @@ mod tests {
 
     #[test]
     fn test_npm_engine_npm_install_download_error() {
-        assert_error_snapshot(NpmInstallError::Download(DownloadError::Request(
-            "https://test/error".into(),
-            create_reqwest_error(),
-        )));
+        assert_error_snapshot(NpmEngineBuildpackError::NpmInstall(
+            NpmInstallError::Download(DownloadError::Request(
+                "https://test/error".into(),
+                create_reqwest_error(),
+            )),
+        ));
     }
 
     #[test]
     fn test_npm_engine_npm_install_open_tarball_error() {
-        assert_error_snapshot(NpmInstallError::OpenTarball(
-            "/layers/npm/install/npm.tgz".into(),
-            create_io_error("Invalid permissions"),
+        assert_error_snapshot(NpmEngineBuildpackError::NpmInstall(
+            NpmInstallError::OpenTarball(
+                "/layers/npm/install/npm.tgz".into(),
+                create_io_error("Invalid permissions"),
+            ),
         ));
     }
 
     #[test]
     fn test_npm_engine_npm_install_decompress_tarball_error() {
-        assert_error_snapshot(NpmInstallError::DecompressTarball(
-            "/layers/npm/install/npm.tgz".into(),
-            create_io_error("Out of disk space"),
+        assert_error_snapshot(NpmEngineBuildpackError::NpmInstall(
+            NpmInstallError::DecompressTarball(
+                "/layers/npm/install/npm.tgz".into(),
+                create_io_error("Out of disk space"),
+            ),
         ));
     }
 
     #[test]
     fn test_npm_engine_npm_install_remove_existing_npm_install_error() {
-        assert_error_snapshot(NpmInstallError::RemoveExistingNpmInstall(create_cmd_error(
-            "npm -g uninstall npm",
-        )));
+        assert_error_snapshot(NpmEngineBuildpackError::NpmInstall(
+            NpmInstallError::RemoveExistingNpmInstall(create_cmd_error("npm -g uninstall npm")),
+        ));
     }
 
     #[test]
     fn test_npm_engine_npm_install_install_npm_error() {
-        assert_error_snapshot(NpmInstallError::InstallNpm(create_cmd_error(
-            "npm -g install /layers/npm/install/package",
-        )));
+        assert_error_snapshot(NpmEngineBuildpackError::NpmInstall(
+            NpmInstallError::InstallNpm(create_cmd_error(
+                "npm -g install /layers/npm/install/package",
+            )),
+        ));
     }
 
     #[test]
@@ -313,8 +313,8 @@ mod tests {
         ));
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<NpmEngineBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<NpmEngineBuildpackError>) {
+        let error_message = strip_ansi(on_npm_engine_buildpack_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

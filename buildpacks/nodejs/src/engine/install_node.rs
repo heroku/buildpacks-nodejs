@@ -18,12 +18,12 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 
-use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use crate::{NodeJsBuildpack, NodeJsBuildpackError, NodeJsEngineBuildpackError};
 
 pub(crate) fn install_node(
-    context: &BuildContext<NodeJsEngineBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     print::bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {
@@ -182,9 +182,11 @@ pub(crate) enum DistLayerError {
     },
 }
 
-impl From<DistLayerError> for libcnb::Error<NodeJsEngineBuildpackError> {
+impl From<DistLayerError> for libcnb::Error<NodeJsBuildpackError> {
     fn from(value: DistLayerError) -> Self {
-        libcnb::Error::BuildpackError(NodeJsEngineBuildpackError::DistLayer(value))
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::NodeEngine(
+            NodeJsEngineBuildpackError::DistLayer(value),
+        ))
     }
 }
 

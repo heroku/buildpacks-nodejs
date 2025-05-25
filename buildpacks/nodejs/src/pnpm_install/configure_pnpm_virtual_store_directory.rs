@@ -1,4 +1,6 @@
-use crate::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use crate::pnpm_install::cmd;
+use crate::pnpm_install::main::PnpmInstallBuildpackError;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -8,9 +10,9 @@ use std::fs::create_dir;
 use std::os::unix::fs::symlink;
 
 pub(crate) fn configure_pnpm_virtual_store_directory(
-    context: &BuildContext<PnpmInstallBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let virtual_layer = context.uncached_layer(
         layer_name!("virtual"),
         UncachedLayerDefinition {

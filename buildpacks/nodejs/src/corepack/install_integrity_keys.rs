@@ -1,4 +1,4 @@
-use crate::{CorepackBuildpack, CorepackBuildpackError};
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::indoc;
 use libcnb::build::BuildContext;
@@ -7,9 +7,9 @@ use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 
 pub(super) fn install_integrity_keys(
-    context: &BuildContext<CorepackBuildpack>,
+    context: &BuildContext<NodeJsBuildpack>,
     corepack_version: &Version,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     // This is a workaround for Node versions that bundle a version of Corepack that is affected by
     // recent changes to npm's public signing keys:
     // * Corepack versions before 0.27.0 don't verify the integrity signatures from npm

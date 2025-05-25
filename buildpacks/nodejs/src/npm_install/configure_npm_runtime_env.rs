@@ -1,5 +1,4 @@
-use crate::NpmInstallBuildpack;
-use crate::NpmInstallBuildpackError;
+use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
@@ -7,8 +6,8 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use std::env::temp_dir;
 
 pub(crate) fn configure_npm_runtime_env(
-    context: &BuildContext<NpmInstallBuildpack>,
-) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
+    context: &BuildContext<NodeJsBuildpack>,
+) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
     let npm_runtime_config_layer = context.uncached_layer(
         layer_name!("npm_runtime_config"),
         UncachedLayerDefinition {
