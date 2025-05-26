@@ -8,7 +8,7 @@ use libcnb::{additional_buildpack_binary_path, Env};
 
 pub(crate) fn configure_available_parallelism(
     context: &BuildContext<NodeJsBuildpack>,
-    env: Env,
+    env: &Env,
 ) -> Result<Env, libcnb::Error<NodeJsBuildpackError>> {
     let available_parallelism_layer = context.uncached_layer(
         layer_name!("available_parallelism"),
@@ -37,5 +37,5 @@ pub(crate) fn configure_available_parallelism(
 
     available_parallelism_layer
         .read_env()
-        .map(|layer_env| layer_env.apply(Scope::Build, &env))
+        .map(|layer_env| layer_env.apply(Scope::Build, env))
 }

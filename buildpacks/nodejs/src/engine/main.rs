@@ -66,8 +66,8 @@ pub(crate) fn build(
         style::value(target_artifact.version.to_string())
     ));
 
-    env = install_node(context, target_artifact, env)?;
-    env = configure_available_parallelism(context, env)?;
+    env = install_node(context, target_artifact, &env)?;
+    env = configure_available_parallelism(context, &env)?;
     configure_web_env(context)?;
 
     let launchjs = ["server.js", "index.js"]

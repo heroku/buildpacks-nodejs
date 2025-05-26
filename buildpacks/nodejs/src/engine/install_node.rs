@@ -25,7 +25,7 @@ use crate::{NodeJsBuildpack, NodeJsBuildpackError, NodeJsEngineBuildpackError};
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-    env: Env,
+    env: &Env,
 ) -> Result<Env, libcnb::Error<NodeJsBuildpackError>> {
     print::bullet("Installing Node.js distribution");
 
@@ -124,7 +124,7 @@ pub(crate) fn install_node(
 
     distribution_layer
         .read_env()
-        .map(|layer_env| layer_env.apply(Scope::Build, &env))
+        .map(|layer_env| layer_env.apply(Scope::Build, env))
 }
 
 fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {

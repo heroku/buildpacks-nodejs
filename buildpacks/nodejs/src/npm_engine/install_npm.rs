@@ -82,7 +82,7 @@ pub(crate) fn install_npm(
 
     npm_engine_layer
         .read_env()
-        .map(|layer_env| layer_env.apply(Scope::Build, &env))
+        .map(|layer_env| layer_env.apply(Scope::Build, env))
 }
 
 fn download_and_unpack_release(
