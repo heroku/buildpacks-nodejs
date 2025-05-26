@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
@@ -11,15 +11,11 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `22.16.0 (<arch>)`
   - Installing Node.js `22.16.0 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
 - Using Corepack version `0.32.0`
 - Found `packageManager` set to `npm@10.2.0` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin npm`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin npm`
 - Installing `npm@10.2.0`
   - Creating Corepack package manager
   - Running `corepack prepare`
@@ -27,10 +23,6 @@ source: test_support/src/lib.rs
       Preparing npm@10.2.0...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Install
-
 - Installing node modules
   - Using npm version `10.2.0`
   - Creating npm cache

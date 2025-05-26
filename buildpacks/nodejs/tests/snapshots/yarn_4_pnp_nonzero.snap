@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
@@ -11,15 +11,11 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `22.16.0 (<arch>)`
   - Installing Node.js `22.16.0 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
 - Using Corepack version `0.32.0`
 - Found `packageManager` set to `yarn@4.0.0` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
 - Installing `yarn@4.0.0`
   - Creating Corepack package manager
   - Running `corepack prepare`
@@ -27,10 +23,6 @@ source: test_support/src/lib.rs
       Preparing yarn@4.0.0...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Yarn
-
 - Yarn CLI operating in yarn 4.0.0 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
@@ -38,9 +30,9 @@ source: test_support/src/lib.rs
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
 
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
 
   - Done (<time_elapsed>)
 - Installing dependencies

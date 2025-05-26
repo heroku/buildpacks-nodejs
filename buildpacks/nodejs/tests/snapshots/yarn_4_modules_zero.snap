@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `>=18.0.0 <19.0.0-0`
@@ -11,15 +11,11 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `18.20.8 (<arch>)`
   - Installing Node.js `18.20.8 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
 - Using Corepack version `0.32.0`
 - Found `packageManager` set to `yarn@4.0.0` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
 - Installing `yarn@4.0.0`
   - Creating Corepack package manager
   - Running `corepack prepare`
@@ -27,10 +23,6 @@ source: test_support/src/lib.rs
       Preparing yarn@4.0.0...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Yarn
-
 - Yarn CLI operating in yarn 4.0.0 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`

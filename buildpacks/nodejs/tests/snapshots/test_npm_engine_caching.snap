@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `16.20.2`
@@ -11,10 +11,6 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Engine
-
 - Installing npm
   - Found `engines.npm` version `9.6.6` declared in `package.json`
   - Resolved version `9.6.6` to `9.6.6`
@@ -22,10 +18,6 @@ source: test_support/src/lib.rs
   - Removing npm bundled with Node.js
   - Installing requested npm
   - Successfully installed `npm@9.6.6`
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Install
-
 - Installing node modules
   - Using npm version `9.6.6`
   - Creating npm cache
@@ -53,26 +45,18 @@ source: test_support/src/lib.rs
 
 --------------------------------------------- REBUILD ---------------------------------------------
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `16.20.2`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
   - Reusing Node.js 16.20.2 (<arch>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Engine
-
 - Installing npm
   - Found `engines.npm` version `9.6.6` declared in `package.json`
   - Resolved version `9.6.6` to `9.6.6`
   - Using cached npm
   - Successfully installed `npm@9.6.6`
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Install
-
 - Installing node modules
   - Using npm version `9.6.6`
   - Restoring npm cache

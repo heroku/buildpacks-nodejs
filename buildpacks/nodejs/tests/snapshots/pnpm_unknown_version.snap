@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
@@ -11,11 +11,6 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `22.16.0 (<arch>)`
   - Installing Node.js `22.16.0 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js pnpm Engine
-
-
 
 ! Corepack Requirement Error
 !
@@ -29,6 +24,4 @@ source: test_support/src/lib.rs
 ! `corepack use pnpm@*`
 !
 ! Then commit the result, and try again.
-
-
 ERROR: failed to build: executing lifecycle: failed with status code: 51

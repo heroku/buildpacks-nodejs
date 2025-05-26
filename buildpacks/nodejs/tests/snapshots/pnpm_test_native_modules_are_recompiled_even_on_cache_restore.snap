@@ -1,7 +1,7 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
@@ -11,15 +11,11 @@ source: test_support/src/lib.rs
   - Verifying checksum
   - Extracting Node.js `20.19.2 (<arch>)`
   - Installing Node.js `20.19.2 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
 - Using Corepack version `0.31.0`
 - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin pnpm`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin pnpm`
 - Installing `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b`
   - Creating Corepack package manager
   - Running `corepack prepare`
@@ -27,10 +23,6 @@ source: test_support/src/lib.rs
       Preparing pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js pnpm Install
-
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
@@ -64,22 +56,18 @@ source: test_support/src/lib.rs
 
 --------------------------------------------- REBUILD ---------------------------------------------
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
   - Resolved Node.js version: `20.19.2`
 - Installing Node.js distribution
   - Reusing Node.js 20.19.2 (<arch>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
 - Using Corepack version `0.31.0`
 - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
 - Enabling Corepack
   - Restoring Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin pnpm`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin pnpm`
 - Installing `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b`
   - Restoring Corepack package manager
   - Running `corepack prepare`
@@ -87,10 +75,6 @@ source: test_support/src/lib.rs
       Preparing pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js pnpm Install
-
 - Setting up pnpm dependency store
   - Restoring pnpm content-addressable store from cache
   - Creating pnpm virtual store
