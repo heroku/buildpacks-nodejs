@@ -35,7 +35,7 @@ pub(crate) fn detect(
 
 pub(crate) fn build(
     context: &BuildContext<NodeJsBuildpack>,
-    env: Env,
+    mut env: Env,
     build_result_builder: BuildResultBuilder,
 ) -> libcnb::Result<(Env, BuildResultBuilder), NodeJsBuildpackError> {
     let inventory: Inventory =
@@ -45,14 +45,14 @@ pub(crate) fn build(
 
     print::bullet("Installing npm");
     let npm_release = resolve_requested_npm_version(&requested_npm_version, &inventory)?;
-    install_npm(context, &npm_release, &node_version)?;
+    env = install_npm(context, &env, &npm_release, &node_version)?;
     log_installed_npm_version(&env)?;
 
     Ok((env, build_result_builder))
 }
 
 pub(crate) fn on_error(error: NpmEngineBuildpackError) {
-    print::error(errors::on_npm_engine_buildpack_error(error).to_string());
+    print::plain(errors::on_npm_engine_buildpack_error(error).to_string());
 }
 
 fn read_requested_npm_version(

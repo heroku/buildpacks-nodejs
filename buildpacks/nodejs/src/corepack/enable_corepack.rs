@@ -4,6 +4,7 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::Scope;
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
@@ -17,8 +18,8 @@ pub(crate) fn enable_corepack(
     context: &BuildContext<NodeJsBuildpack>,
     corepack_version: &Version,
     package_manager: &PackageManager,
-    env: &Env,
-) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
+    mut env: Env,
+) -> Result<Env, libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = ShimLayerMetadata {
         corepack_version: corepack_version.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -60,9 +61,12 @@ pub(crate) fn enable_corepack(
         }
     }
 
-    cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), env)
-        .map_err(CorepackBuildpackError::CorepackEnable)
-        .map_err(Into::into)
+    env = shim_layer.read_env()?.apply(Scope::Build, &env);
+
+    cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), &env)
+        .map_err(CorepackBuildpackError::CorepackEnable)?;
+
+    Ok(env)
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

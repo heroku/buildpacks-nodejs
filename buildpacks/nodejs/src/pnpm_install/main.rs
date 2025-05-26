@@ -94,7 +94,7 @@ pub(crate) fn build(
 }
 
 pub(crate) fn on_error(err: PnpmInstallBuildpackError) {
-    print::error(errors::on_pnpm_install_buildpack_error(err).to_string());
+    print::plain(errors::on_pnpm_install_buildpack_error(err).to_string());
 }
 
 #[derive(Debug)]

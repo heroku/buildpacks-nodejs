@@ -10,6 +10,8 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::Scope;
+use libcnb::Env;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -18,9 +20,10 @@ use std::process::Command;
 
 pub(crate) fn install_npm(
     context: &BuildContext<NodeJsBuildpack>,
+    env: &Env,
     npm_release: &Release,
     node_version: &Version,
-) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
+) -> Result<Env, libcnb::Error<NodeJsBuildpackError>> {
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
         npm_version: npm_release.version.to_string(),
@@ -72,12 +75,14 @@ pub(crate) fn install_npm(
                 &downloaded_package_path,
                 &npm_engine_layer.path(),
             )?;
-            remove_existing_npm_installation(&npm_cli_script)?;
-            install_npm_package(&npm_cli_script, &downloaded_package_path)?;
+            remove_existing_npm_installation(&npm_cli_script, env)?;
+            install_npm_package(&npm_cli_script, &downloaded_package_path, env)?;
         }
     }
 
-    Ok(())
+    npm_engine_layer
+        .read_env()
+        .map(|layer_env| layer_env.apply(Scope::Build, &env))
 }
 
 fn download_and_unpack_release(
@@ -105,7 +110,10 @@ fn download_and_unpack_release(
     Ok(())
 }
 
-fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmInstallError> {
+fn remove_existing_npm_installation(
+    npm_cli_script: &Path,
+    env: &Env,
+) -> Result<(), NpmInstallError> {
     print::sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
@@ -115,12 +123,17 @@ fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmInst
             "-gf",
             "--loglevel=silent",
         ])
+        .envs(env)
         .named_output()
         .map_err(NpmInstallError::RemoveExistingNpmInstall)
         .map(|_| ())
 }
 
-fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmInstallError> {
+fn install_npm_package(
+    npm_cli_script: &Path,
+    package: &Path,
+    env: &Env,
+) -> Result<(), NpmInstallError> {
     print::sub_bullet("Installing requested npm");
     Command::new("node")
         .args([
@@ -129,6 +142,7 @@ fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmI
             "-gf",
             &package.to_string_lossy(),
         ])
+        .envs(env)
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmInstallError::InstallNpm)

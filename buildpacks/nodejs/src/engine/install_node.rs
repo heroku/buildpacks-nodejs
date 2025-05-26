@@ -7,6 +7,8 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::Scope;
+use libcnb::Env;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;
@@ -23,7 +25,8 @@ use crate::{NodeJsBuildpack, NodeJsBuildpackError, NodeJsEngineBuildpackError};
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsBuildpack>,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-) -> Result<(), libcnb::Error<NodeJsBuildpackError>> {
+    env: Env,
+) -> Result<Env, libcnb::Error<NodeJsBuildpackError>> {
     print::bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {
@@ -119,7 +122,9 @@ pub(crate) fn install_node(
         }
     }
 
-    Ok(())
+    distribution_layer
+        .read_env()
+        .map(|layer_env| layer_env.apply(Scope::Build, &env))
 }
 
 fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {

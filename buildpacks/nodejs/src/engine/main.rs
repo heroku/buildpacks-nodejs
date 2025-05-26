@@ -27,7 +27,7 @@ const LTS_VERSION: &str = "22.x";
 
 pub(crate) fn build(
     context: &BuildContext<NodeJsBuildpack>,
-    env: Env,
+    mut env: Env,
     mut build_result_builder: BuildResultBuilder,
 ) -> libcnb::Result<(Env, BuildResultBuilder), NodeJsBuildpackError> {
     print::bullet("Checking Node.js version");
@@ -66,9 +66,9 @@ pub(crate) fn build(
         style::value(target_artifact.version.to_string())
     ));
 
-    install_node(context, target_artifact)?;
+    env = install_node(context, target_artifact, env)?;
+    env = configure_available_parallelism(context, env)?;
     configure_web_env(context)?;
-    configure_available_parallelism(context)?;
 
     let launchjs = ["server.js", "index.js"]
         .map(|name| context.app_dir.join(name))
@@ -92,7 +92,7 @@ pub(crate) fn build(
 }
 
 pub(crate) fn on_error(error: NodeJsEngineBuildpackError) {
-    print::error(errors::on_nodejs_engine_buildpack_error(error).to_string());
+    print::plain(errors::on_nodejs_engine_buildpack_error(error).to_string());
 }
 
 #[derive(Debug)]

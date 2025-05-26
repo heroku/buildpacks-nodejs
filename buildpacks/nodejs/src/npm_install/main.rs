@@ -65,7 +65,7 @@ pub(crate) fn build(
 }
 
 pub(crate) fn on_error(error: NpmInstallBuildpackError) {
-    print::error(errors::on_npm_install_buildpack_error(error).to_string());
+    print::plain(errors::on_npm_install_buildpack_error(error).to_string());
 }
 
 fn log_npm_version(env: &Env) -> Result<(), NpmInstallBuildpackError> {

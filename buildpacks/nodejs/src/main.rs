@@ -80,7 +80,10 @@ impl Buildpack for NodeJsBuildpack {
         if corepack::main::detect(&context)? {
             (env, build_result_builder) =
                 corepack::main::build(&context, env, build_result_builder)?;
-            if pnpm_install::main::detect(&context)? {
+            if npm_install::main::detect(&context)? {
+                (_, build_result_builder) =
+                    npm_install::main::build(&context, env, build_result_builder)?;
+            } else if pnpm_install::main::detect(&context)? {
                 (_, build_result_builder) =
                     pnpm_install::main::build(&context, env, build_result_builder)?;
             } else if yarn::main::detect(&context)? {

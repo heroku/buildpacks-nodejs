@@ -28,7 +28,7 @@ pub(crate) fn build(
 }
 
 pub(crate) fn on_error(error: PnpmEngineBuildpackError) {
-    print::error(errors::on_pnpm_engine_buildpack_error(error).to_string());
+    print::plain(errors::on_pnpm_engine_buildpack_error(error).to_string());
 }
 
 #[derive(Debug, Copy, Clone)]

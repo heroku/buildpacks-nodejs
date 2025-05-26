@@ -142,7 +142,7 @@ pub(crate) fn build(
 }
 
 pub(crate) fn on_error(error: YarnBuildpackError) {
-    print::error(errors::on_yarn_buildpack_error(error).to_string());
+    print::plain(errors::on_yarn_buildpack_error(error).to_string());
 }
 
 #[derive(Debug)]

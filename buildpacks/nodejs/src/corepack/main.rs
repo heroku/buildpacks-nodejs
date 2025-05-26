@@ -33,7 +33,7 @@ pub(crate) fn detect(
 
 pub(crate) fn build(
     context: &BuildContext<NodeJsBuildpack>,
-    env: Env,
+    mut env: Env,
     build_result_builder: BuildResultBuilder,
 ) -> libcnb::Result<(Env, BuildResultBuilder), NodeJsBuildpackError> {
     let pkg_mgr = PackageJson::read(context.app_dir.join("package.json"))
@@ -56,15 +56,15 @@ pub(crate) fn build(
         package_manager = style::value(pkg_mgr.to_string()),
     ));
 
-    enable_corepack(context, &corepack_version, &pkg_mgr, &env)?;
-    install_integrity_keys(context, &corepack_version)?;
-    prepare_corepack(context, &pkg_mgr, &env)?;
+    env = enable_corepack(context, &corepack_version, &pkg_mgr, env)?;
+    env = install_integrity_keys(context, &corepack_version, env)?;
+    env = prepare_corepack(context, &pkg_mgr, env)?;
 
     Ok((env, build_result_builder))
 }
 
 pub(crate) fn on_error(err: CorepackBuildpackError) {
-    print::error(errors::on_corepack_buildpack_error(err).to_string());
+    print::plain(errors::on_corepack_buildpack_error(err).to_string());
 }
 
 #[derive(Debug)]
