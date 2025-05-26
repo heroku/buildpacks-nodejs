@@ -10,7 +10,6 @@ use crate::{NodeJsBuildpack, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
-use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
 };
@@ -43,9 +42,6 @@ pub(crate) fn build(
         .map_err(NpmInstallBuildpackError::PackageJson)?;
     let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
         .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
-
-    application::check_for_singular_lockfile(app_dir)
-        .map_err(NpmInstallBuildpackError::Application)?;
 
     print::bullet("Installing node modules");
     log_npm_version(&env)?;
@@ -149,7 +145,6 @@ fn configure_default_processes(
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
-    Application(application::Error),
     BuildScript(CmdError),
     Detect(io::Error),
     NpmInstall(CmdError),

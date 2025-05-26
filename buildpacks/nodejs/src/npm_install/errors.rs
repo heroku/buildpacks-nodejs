@@ -2,7 +2,6 @@ use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::npm_install::npm;
 use bullet_stream::style;
 use fun_run::CmdError;
-use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
@@ -25,7 +24,6 @@ fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
 
 pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
-        NpmInstallBuildpackError::Application(e) => on_application_error(&e),
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
         NpmInstallBuildpackError::Detect(e) => on_detect_error(&e),
         NpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
@@ -141,28 +139,6 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
         .create()
 }
 
-fn on_application_error(error: &application::Error) -> ErrorMessage {
-    match error {
-        application::Error::MissingLockfile => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::No,
-                SuggestSubmitIssue::No,
-            ))
-            .header("Missing lockfile")
-            .body(error.to_string())
-            .create(),
-
-        application::Error::MultipleLockfiles(_) => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::No,
-                SuggestSubmitIssue::No,
-            ))
-            .header("Multiple lockfiles detected")
-            .body(error.to_string())
-            .create(),
-    }
-}
-
 fn on_detect_error(error: &io::Error) -> ErrorMessage {
     error_message()
         .error_type(ErrorType::Internal)
@@ -181,29 +157,10 @@ mod tests {
     use bullet_stream::strip_ansi;
     use fun_run::CommandWithName;
     use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::package_manager::PackageManager;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_npm_install_application_error_missing_lockfile() {
-        assert_error_snapshot(NpmInstallBuildpackError::Application(
-            application::Error::MissingLockfile,
-        ));
-    }
-
-    #[test]
-    fn test_npm_install_application_error_multiple_lockfiles() {
-        assert_error_snapshot(NpmInstallBuildpackError::Application(
-            application::Error::MultipleLockfiles(vec![
-                PackageManager::Npm,
-                PackageManager::Yarn,
-                PackageManager::Pnpm,
-            ]),
-        ));
-    }
 
     #[test]
     fn test_npm_install_node_build_scripts_metadata_error() {
