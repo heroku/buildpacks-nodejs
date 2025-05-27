@@ -4,6 +4,7 @@ members = [
     "buildpacks/nodejs",
     "crates/nodejs-utils",
     "crates/test_support",
+    "crates/xtask"
 ]
 
 [workspace.package]
