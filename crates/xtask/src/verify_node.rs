@@ -1,3 +1,4 @@
+use crate::support::args::version_arg;
 use crate::support::download_file::download_file;
 use clap::{Parser, ValueEnum, arg};
 use node_semver::Version;
@@ -14,15 +15,6 @@ use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-#[derive(Parser, Debug)]
-pub(super) struct DownloadVerifyNodeCommandArgs {
-    #[arg(long, value_parser = node_semver_version)]
-    version: Version,
-
-    #[arg(long, value_enum)]
-    arch: SupportedNodeJsArchitecture,
-}
-
 // See https://github.com/nodejs/node?tab=readme-ov-file#release-keys
 const NODE_RELEASE_KEYS: &str = "
     gpg --keyserver hkps://keys.openpgp.org --recv-keys C0D6248439F1D5604AAFFB4021D900FFDB233756 # Antoine du Hamel
@@ -35,42 +27,57 @@ const NODE_RELEASE_KEYS: &str = "
     gpg --keyserver hkps://keys.openpgp.org --recv-keys A363A499291CBBC940DD62E41F10027AF002F8B0 # Ulises Gascón
 ";
 
+#[derive(Parser, Debug)]
+pub(super) struct VerifyNodeArgs {
+    #[arg(long, value_parser = version_arg)]
+    version: Version,
+
+    #[arg(long, value_enum)]
+    arch: SupportedNodeJsArchitecture,
+}
+
 /// See https://github.com/nodejs/node#verifying-binaries
-pub(crate) async fn execute_download_verify_node(args: &DownloadVerifyNodeCommandArgs) {
-    let DownloadVerifyNodeCommandArgs { version, arch } = args;
+pub(crate) async fn verify_node(args: &VerifyNodeArgs) {
+    let VerifyNodeArgs { version, arch } = args;
     let node_artifact = format!("node-v{version}-linux-{arch}.tar.gz");
     let base_url = reqwest::Url::parse(&format!("https://nodejs.org/download/release/v{version}/"))
         .expect("base url should be valid");
 
-    println!("Importing trusted release keys ...");
+    print!("Importing trusted release keys ... ");
     let node_release_keys = import_trusted_release_keys().await;
+    println!("✅ ");
 
-    println!("Downloading release checksums ...");
+    print!("Downloading release checksums ... ");
     let shasums_url = base_url
         .join("SHASUMS256.txt")
         .expect("SHASUMS256.txt url should be valid");
     let shasums = download_file(shasums_url).await;
+    println!("✅ ");
 
-    println!("Download detached GPG signature");
+    print!("Download detached GPG signature ... ");
     let shasums_sig_url = base_url
         .join("SHASUMS256.txt.sig")
         .expect("SHASUMS256.txt.sig url should be valid");
     let shasums_sig = download_file(shasums_sig_url).await;
+    println!("✅ ");
 
-    println!("Verifying release checksums ... ");
+    print!("Verifying release checksums ... ");
     verify_shasum_signature(node_release_keys, &shasums, &shasums_sig);
+    println!("✅ ");
 
-    println!("Downloading Node.js release ...");
+    print!("Downloading Node.js release ... ");
     let node_download_url = base_url
         .join(&node_artifact)
         .expect("download url should be valid");
     let node_download = download_file(node_download_url).await;
+    println!("✅ ");
 
-    println!("Checking Node.js release checksum ...");
+    print!("Checking Node.js release checksum ... ");
     verify_node_download_checksum(
         &node_download,
         read_node_artifact_checksum(&shasums, &node_artifact),
     );
+    println!("✅ ");
 }
 
 async fn import_trusted_release_keys() -> NodeReleaseKeys {
@@ -201,12 +208,6 @@ impl VerificationHelper for NodeReleaseKeys {
 
         Ok(())
     }
-}
-
-fn node_semver_version(value: &str) -> Result<Version, String> {
-    value
-        .parse::<Version>()
-        .map_err(|_| format!("Failed to parse version: {value}"))
 }
 
 #[derive(Debug, Clone, ValueEnum)]
