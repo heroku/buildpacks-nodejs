@@ -9,8 +9,8 @@ workspace = true
 [dependencies]
 bon = "3"
 insta = { version = "1", features = ["filters"] }
-libcnb = "=0.28.1"
-libcnb-test = "=0.28.1"
+libcnb = "=0.29.0"
+libcnb-test = "=0.29.0"
 serde_json = "1"
 tempfile = "3"
 ureq = "3"
