@@ -3,7 +3,7 @@ source: buildpacks/nodejs-engine/src/errors.rs
 ---
 - Debug Info:
   - Request to `https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz` failed
-    Error: error sending request for url (https://test/error)
+    Error: error sending request
 
 ! Failed to download Node.js distribution
 !
