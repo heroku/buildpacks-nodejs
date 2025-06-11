@@ -7,7 +7,8 @@ source: test_support/src/lib.rs
   - Node.js version not specified, using `22.x`
   - Resolved Node.js version: `22.16.0`
 - Installing Node.js distribution
-  - Downloading Node.js `22.16.0 (<arch>)` from https://nodejs.org/download/release/v22.16.0/node-v22.16.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.16.0/node-v22.16.0-<arch>.tar.gz ... (<time_elapsed>)
+  - Downloading ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `22.16.0 (<arch>)`
   - Installing Node.js `22.16.0 (<arch>)` ... (<time_elapsed>)
@@ -19,7 +20,8 @@ source: test_support/src/lib.rs
   - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
   - Resolved yarn CLI version: 2.4.2
 - Installing yarn CLI
-  - Downloading Yarn from https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v2.4.2.tar.gz ... (<time_elapsed>)
+  - GET https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v2.4.2.tar.gz ... (<time_elapsed>)
+  - Downloading ... (<time_elapsed>)
   - Extracting yarn 2.4.2
   - Installing yarn 2.4.2
 - Yarn CLI operating in yarn 2.4.1 mode.
