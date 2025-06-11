@@ -1,7 +1,6 @@
 use crate::install_node::DistLayerError;
 use crate::NodeJsEngineBuildpackError;
 use bullet_stream::style;
-use heroku_nodejs_utils::download_file::DownloadError;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
@@ -85,40 +84,23 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
             .debug_info(e.to_string())
             .create(),
 
-        DistLayerError::Download {
-            src_url,
-            dst_path,
-            source,
-        } => {
+        DistLayerError::Download { src_url, source } => {
             let nodejs_status_url = style::url("https://status.nodejs.org/");
             let src_url = style::url(src_url);
-            let dst_path = file_value(dst_path);
-            match source {
-                DownloadError::Request(_, _) | DownloadError::ReadResponse(_, _) => error_message()
-                    .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-                    .header("Failed to download Node.js distribution")
-                    .body(formatdoc! {"
-                        A request to download the target Node.js distribution from {src_url} failed unexpectedly. This error can \
-                        occur due to an unstable network connection or an issue with the upstream Node.js distribution \
-                        server.
-                        
-                        Suggestions:
-                        - Check the status of {nodejs_status_url} for any reported issues.
-                        - Confirm the download url ({src_url}) works. 
-                    "})
-                    .debug_info(source.to_string())
-                    .create(),
-
-                DownloadError::OpenFile(_, _, _) | DownloadError::WriteFile(_, _, _) => error_message()
-                    .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-                    .header("Failed to write downloaded Node.js distribution")
-                    .body(formatdoc! {"
-                        An unexpected I/O error occurred while writing the Node.js distribution from {src_url} to \
-                        disk at {dst_path}.
-                    "})
-                    .debug_info(source.to_string())
-                    .create()
-            }
+            error_message()
+                .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+                .header("Failed to download Node.js distribution")
+                .body(formatdoc! {"
+                    A request to download the target Node.js distribution from {src_url} failed unexpectedly. This error can \
+                    occur due to an unstable network connection or an issue with the upstream Node.js distribution \
+                    server.
+                    
+                    Suggestions:
+                    - Check the status of {nodejs_status_url} for any reported issues.
+                    - Confirm the download url ({src_url}) works. 
+                "})
+                .debug_info(source.to_string())
+                .create()
         }
 
         DistLayerError::Untar {
@@ -246,25 +228,12 @@ mod tests {
     }
 
     #[test]
-    fn test_dist_layer_download_read_error() {
+    fn test_dist_layer_download_error() {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
             .to_string();
         assert_error_snapshot(DistLayerError::Download {
             src_url: url.clone(),
-            dst_path: "/tmp/some-temp-file".into(),
-            source: DownloadError::Request(url, create_reqwest_error()),
-        });
-    }
-
-    #[test]
-    fn test_dist_layer_download_write_error() {
-        let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-            .to_string();
-        let path = "/tmp/some-temp-file";
-        assert_error_snapshot(DistLayerError::Download {
-            src_url: url.clone(),
-            dst_path: path.into(),
-            source: DownloadError::WriteFile(path.into(), url, create_io_error("Disk full")),
+            source: heroku_nodejs_utils::http::Error::Request(url, create_reqwest_error()),
         });
     }
 
