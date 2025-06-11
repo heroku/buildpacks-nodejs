@@ -3,7 +3,6 @@ use reqwest::{IntoUrl, Request, Response};
 use reqwest_middleware::{ClientBuilder, Middleware, Next};
 use reqwest_retry::policies::ExponentialBackoff;
 use reqwest_retry::RetryTransientMiddleware;
-use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicU32;
@@ -55,7 +54,37 @@ pub async fn download_file(
     #[builder(default = DEFAULT_RETRIES)] max_retries: u32,
 ) -> Result<(), DownloadError> {
     let to_file = to_file.as_ref();
+    let mut output_file = tokio::fs::File::options()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(to_file)
+        .await
+        .map_err(|e| DownloadError::OpenFile(to_file.to_path_buf(), from_url.to_string(), e))?;
 
+    download_writer()
+        .from_url(from_url)
+        .writer(&mut output_file)
+        .maybe_downloading_message(downloading_message)
+        .connect_timeout(connect_timeout)
+        .read_timeout(read_timeout)
+        .max_retries(max_retries)
+        .call()
+        .await
+}
+
+#[bon::builder]
+pub async fn download_writer<W>(
+    from_url: impl IntoUrl + std::fmt::Display + Clone,
+    writer: &mut W,
+    #[builder(into)] downloading_message: Option<String>,
+    #[builder(default = DEFAULT_CONNECT_TIMEOUT)] connect_timeout: Duration,
+    #[builder(default = DEFAULT_READ_TIMEOUT)] read_timeout: Duration,
+    #[builder(default = DEFAULT_RETRIES)] max_retries: u32,
+) -> Result<(), DownloadError>
+where
+    W: tokio::io::AsyncWrite + Unpin + ?Sized,
+{
     let downloading_message = downloading_message
         .unwrap_or_else(|| format!("Downloading {}", style::url(from_url.to_string())));
 
@@ -94,15 +123,9 @@ pub async fn download_file(
         })?
         .to_vec();
 
-    let mut output_file = File::options()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(to_file)
-        .map_err(|e| DownloadError::OpenFile(to_file.to_path_buf(), from_url.to_string(), e))?;
-
-    io::copy(&mut response_data.as_slice(), &mut output_file)
-        .map_err(|e| DownloadError::WriteFile(to_file.to_path_buf(), from_url.to_string(), e))?;
+    tokio::io::copy(&mut response_data.as_slice(), writer)
+        .await
+        .expect("Real error handling in the future");
 
     Ok(())
 }
