@@ -1,5 +1,6 @@
 ---
 source: buildpacks/nodejs-engine/src/errors.rs
+assertion_line: 298
 ---
 - Debug Info:
   - Request to `https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz` failed

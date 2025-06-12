@@ -202,7 +202,6 @@ mod tests {
     use crate::NpmEngineBuildpackError;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
-    use heroku_nodejs_utils::download_file::DownloadError;
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
@@ -243,10 +242,12 @@ mod tests {
 
     #[test]
     fn test_npm_engine_npm_install_download_error() {
-        assert_error_snapshot(NpmInstallError::Download(DownloadError::Request(
-            "https://test/error".into(),
-            create_reqwest_error(),
-        )));
+        assert_error_snapshot(NpmInstallError::Download(
+            heroku_nodejs_utils::http::Error::Request(
+                "https://test/error".into(),
+                create_reqwest_error(),
+            ),
+        ));
     }
 
     #[test]
