@@ -59,6 +59,7 @@ where
         .map_err(|e| Error::Request(url.to_string(), e))
 }
 
+/// Extend the [`bon::builder`] for [`get`]
 impl<U, State> GetBuilder<U, State>
 where
     U: IntoUrl + std::fmt::Display + Clone,
