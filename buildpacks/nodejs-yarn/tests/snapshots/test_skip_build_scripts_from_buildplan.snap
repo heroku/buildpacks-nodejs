@@ -7,7 +7,7 @@ source: test_support/src/lib.rs
   - Node.js version not specified, using `22.x`
   - Resolved Node.js version: `22.16.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.16.0/node-v22.16.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.16.0/node-v22.16.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `22.16.0 (<arch>)`
