@@ -35,13 +35,13 @@ fn on_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
             on_missing_npm_engine_requirement_error()
         }
-        NpmEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
         NpmEngineBuildpackError::NpmVersionResolve(requirement) => {
             on_npm_version_resolve_error(&requirement)
         }
         NpmEngineBuildpackError::NpmInstall(e) => on_npm_install_error(e),
         NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e),
         NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e),
+        NpmEngineBuildpackError::FetchNpmVersions(e) => panic!("{e:?}"),
     }
 }
 
@@ -55,18 +55,6 @@ fn on_missing_npm_engine_requirement_error() -> ErrorMessage {
             This buildpack requires the `engines.npm` key to determine which engine versions to \
             install.
         " })
-        .create()
-}
-
-fn on_inventory_parse_error(error: &toml::de::Error) -> ErrorMessage {
-    let npm = style::value("npm");
-    error_message()
-        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-        .header(format!("Failed to load available {npm} versions"))
-        .body(formatdoc! { "
-            An unexpected error occurred while loading the available {npm} versions.
-        "})
-        .debug_info(error.to_string())
         .create()
 }
 
@@ -229,11 +217,6 @@ mod tests {
     }
 
     #[test]
-    fn test_npm_engine_inventory_parse_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::InventoryParse(create_toml_error()));
-    }
-
-    #[test]
     fn test_npm_engine_npm_version_resolve_error() {
         assert_error_snapshot(NpmEngineBuildpackError::NpmVersionResolve(
             Requirement::parse("1.2.3").unwrap(),
@@ -338,10 +321,6 @@ mod tests {
 
     fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
-    }
-
-    fn create_toml_error() -> toml::de::Error {
-        toml::from_str::<toml::Table>("[[artifacts").unwrap_err()
     }
 
     fn create_cmd_error(command: impl Into<String>) -> CmdError {
