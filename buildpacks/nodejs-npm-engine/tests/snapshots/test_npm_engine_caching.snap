@@ -7,7 +7,7 @@ source: test_support/src/lib.rs
   - Detected Node.js version range: `16.20.2`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
@@ -16,10 +16,13 @@ source: test_support/src/lib.rs
 
 ## Heroku Node.js npm Engine
 
-- Installing npm
+- Determining npm package information
   - Found `engines.npm` version `9.6.6` declared in `package.json`
-  - Resolved version `9.6.6` to `9.6.6`
-  - GET https://heroku-nodebin.s3.us-east-1.amazonaws.com/npm/release/npm-v9.6.6.tar.gz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved npm version `9.6.6` to `9.6.6`
+- Installing npm
+  - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Removing npm bundled with Node.js
   - Installing requested npm
@@ -66,10 +69,13 @@ source: test_support/src/lib.rs
 
 ## Heroku Node.js npm Engine
 
-- Installing npm
+- Determining npm package information
   - Found `engines.npm` version `9.6.6` declared in `package.json`
-  - Resolved version `9.6.6` to `9.6.6`
-  - Using cached npm
+  - GET https://registry.npmjs.org/npm ... (Not Modified)
+  - Using cached packument for npm
+  - Resolved npm version `9.6.6` to `9.6.6`
+- Installing npm
+  - Requested npm version is already installed
   - Successfully installed `npm@9.6.6`
 - Done (finished in <time_elapsed>)
 
