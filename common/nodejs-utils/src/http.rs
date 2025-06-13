@@ -259,7 +259,7 @@ mod test {
         assert_log_contains_matches(
             &log,
             &[
-                request_failed_matcher(mock_download.url(), "unexpected response"),
+                request_failed_matcher(mock_download.url(), "Internal Server Error"),
                 retry_attempt_success_matcher(1, 2),
                 download_file_matcher(),
             ],
@@ -289,9 +289,9 @@ mod test {
         assert_log_contains_matches(
             &log,
             &[
-                request_failed_matcher(mock_download.url(), "unexpected response"),
-                retry_attempt_failed_matcher(1, 2, "unexpected response"),
-                retry_attempt_failed_matcher(2, 2, "unexpected response"),
+                request_failed_matcher(mock_download.url(), "Internal Server Error"),
+                retry_attempt_failed_matcher(1, 2, "Internal Server Error"),
+                retry_attempt_failed_matcher(2, 2, "Internal Server Error"),
             ],
         );
     }
@@ -448,7 +448,7 @@ mod test {
 
     fn request_success_matcher(url: impl AsRef<str>) -> Regex {
         let url = url.as_ref().replace('.', r"\.");
-        Regex::new(&format!(r"- GET {url} {PROGRESS_DOTS} {TIMER}")).unwrap()
+        Regex::new(&format!(r"- GET {url} {PROGRESS_DOTS} \(OK\)")).unwrap()
     }
 
     fn request_failed_matcher(url: impl AsRef<str>, reason: &str) -> Regex {
@@ -458,7 +458,7 @@ mod test {
 
     fn retry_attempt_success_matcher(attempt: u32, max_retries: u32) -> Regex {
         Regex::new(&format!(
-            r"- Retry attempt {attempt} of {max_retries} {PROGRESS_DOTS} {TIMER}"
+            r"- Retry attempt {attempt} of {max_retries} {PROGRESS_DOTS} \(OK\)"
         ))
         .unwrap()
     }
