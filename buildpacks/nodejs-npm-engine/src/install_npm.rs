@@ -3,7 +3,7 @@ use crate::NpmEngineBuildpackError;
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::http::{get, ResponseExt};
-use heroku_nodejs_utils::inv::Release;
+use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -18,12 +18,14 @@ use std::process::Command;
 
 pub(crate) fn install_npm(
     context: &BuildContext<NpmEngineBuildpack>,
-    npm_release: &Release,
+    npm_packument: &PackagePackument,
     node_version: &Version,
 ) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
+    let npm_version = &npm_packument.version;
+
     let new_metadata = NpmEngineLayerMetadata {
         node_version: node_version.to_string(),
-        npm_version: npm_release.version.to_string(),
+        npm_version: npm_version.to_string(),
         layer_version: LAYER_VERSION.to_string(),
         arch: context.target.arch.clone(),
         os: context.target.os.clone(),
@@ -68,7 +70,7 @@ pub(crate) fn install_npm(
             // this install process is generalized from the npm install script at:
             // https://www.npmjs.com/install.sh
             download_and_unpack_release(
-                &npm_release.url,
+                &npm_packument.dist.tarball,
                 &downloaded_package_path,
                 &npm_engine_layer.path(),
             )?;

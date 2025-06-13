@@ -907,6 +907,7 @@ dependencies = [
  "hyper-util",
  "indoc",
  "keep_a_changelog_file",
+ "libcnb",
  "libcnb-data",
  "libherokubuildpack",
  "node-semver",
@@ -968,7 +969,6 @@ dependencies = [
  "serde_json",
  "test_support",
  "tokio",
- "toml",
 ]
 
 [[package]]
