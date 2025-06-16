@@ -56,12 +56,3 @@ jobs:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
 
-  update-yarn-inventory:
-    name: Yarn
-    uses: ./.github/workflows/_update-inventory.yml
-    with:
-      name: Yarn
-      distribution: yarn
-      buildpack_id: heroku/nodejs-yarn
-      buildpack_path: buildpacks/nodejs-yarn
-    secrets: inherit

@@ -2,7 +2,7 @@ name: _get-unmirrored-distributions
 
 env:
   CARGO_TERM_COLOR: always
-  
+
 on:
   workflow_call:
     inputs:
@@ -58,11 +58,7 @@ jobs:
 
       - name: Download and verify distribution
         run: |
-          if [ "${{ inputs.distribution }}" = "node" ]; then
-            common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
-          else
-            common/bin/download-verify-npm-package "${{ inputs.distribution }}" "${{ matrix.version }}"
-          fi
+          common/bin/download-verify-node "${{ matrix.version }}" "${{ matrix.platform }}"
 
       - name: Upload ${{ matrix.version }} to S3
         env:
@@ -70,12 +66,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
         run: |
-          if [ "${{ inputs.distribution }}" = "node" ]; then
-            aws s3 cp \
-              "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz" \
-              "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"
-          else
-            aws s3 cp \
-              "${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz" \
-              "s3://${{ secrets.AWS_S3_BUCKET }}/${{ inputs.distribution }}/release/${{ inputs.distribution }}-v${{ matrix.version }}.tar.gz"
-          fi
+          aws s3 cp \
+            "node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz" \
+            "s3://${{ secrets.AWS_S3_BUCKET }}/node/release/${{ matrix.platform}}/node-v${{ matrix.version }}-${{ matrix.platform }}.tar.gz"

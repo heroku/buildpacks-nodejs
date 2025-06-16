@@ -14,10 +14,3 @@ jobs:
     with:
       distribution: node
     secrets: inherit
-
-  mirror-yarn:
-    name: Mirror Yarn
-    uses: ./.github/workflows/_mirror-distribution.yml
-    with:
-      distribution: yarn
-    secrets: inherit

@@ -293,22 +293,6 @@ mod tests {
     }
 
     #[test]
-    fn converts_s3_result_to_inv_arch_optional() {
-        let content = s3::Content {
-            key: "yarn/release/yarn-v0.16.0.tar.gz".to_string(),
-            ..Default::default()
-        };
-        let bucket_content = s3::BucketContent {
-            prefix: "yarn".to_string(),
-            contents: vec![content],
-            ..Default::default()
-        };
-
-        let result = Inventory::try_from(bucket_content);
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn it_fails_to_convert_s3_result_to_inv() {
         let content = s3::Content {
             key: "garbage".to_string(),
