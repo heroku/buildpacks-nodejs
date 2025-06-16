@@ -114,6 +114,11 @@ impl Requirement {
     pub fn satisfies(&self, ver: &Version) -> bool {
         self.0.satisfies(&ver.0)
     }
+
+    #[must_use]
+    pub fn allows_any(&self, other: &Requirement) -> bool {
+        self.0.allows_any(&other.0)
+    }
 }
 
 impl TryFrom<String> for Requirement {

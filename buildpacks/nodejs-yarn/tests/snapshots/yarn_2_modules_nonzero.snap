@@ -18,9 +18,11 @@ source: test_support/src/lib.rs
 
 - Detecting yarn CLI version to install
   - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
+  - Downloading ... (<time_elapsed>)
   - Resolved yarn CLI version: 2.4.2
 - Installing yarn CLI
-  - GET https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v2.4.2.tar.gz ... (OK)
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-2.4.2.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Extracting yarn 2.4.2
   - Installing yarn 2.4.2

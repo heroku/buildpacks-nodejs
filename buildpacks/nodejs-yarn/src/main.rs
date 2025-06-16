@@ -13,7 +13,9 @@ use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
-use heroku_nodejs_utils::inv::Inventory;
+use heroku_nodejs_utils::npmjs_org::{
+    packument_layer, resolve_package_packument, PackumentLayerError,
+};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 #[cfg(test)]
@@ -39,7 +41,6 @@ mod errors;
 mod install_yarn;
 mod yarn;
 
-const INVENTORY: &str = include_str!("../inventory.toml");
 const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 
 struct YarnBuildpack;
@@ -91,9 +92,6 @@ impl Buildpack for YarnBuildpack {
             Err(YarnVersionError::Command(_)) => {
                 print::bullet("Detecting yarn CLI version to install");
 
-                let inventory: Inventory =
-                    toml::from_str(INVENTORY).map_err(YarnBuildpackError::InventoryParse)?;
-
                 let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                     None => {
                         print::sub_bullet(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
@@ -108,17 +106,33 @@ impl Buildpack for YarnBuildpack {
                     }
                 };
 
-                let yarn_cli_release = inventory.resolve(&requested_yarn_cli_range).ok_or(
-                    YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
+                // Yarn 2+ (aka: "berry") is hosted under a different npm package.
+                let yarn_berry_range = Requirement::parse(">=2")
+                    .expect("Yarn berry requirement range should be valid");
+                let yarn_package_name = if requested_yarn_cli_range.allows_any(&yarn_berry_range) {
+                    "@yarnpkg/cli-dist"
+                } else {
+                    "yarn"
+                };
+
+                let yarn_packument = packument_layer(
+                    &context,
+                    yarn_package_name,
+                    YarnBuildpackError::FetchYarnPackument,
                 )?;
+
+                let yarn_package_packument =
+                    resolve_package_packument(&yarn_packument, &requested_yarn_cli_range).ok_or(
+                        YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
+                    )?;
 
                 print::sub_bullet(format!(
                     "Resolved yarn CLI version: {}",
-                    yarn_cli_release.version
+                    yarn_package_packument.version
                 ));
 
                 print::bullet("Installing yarn CLI");
-                let yarn_env = install_yarn(&context, yarn_cli_release)?;
+                let yarn_env = install_yarn(&context, &yarn_package_packument)?;
                 env = yarn_env.apply(Scope::Build, &env);
 
                 cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
@@ -195,7 +209,7 @@ enum YarnBuildpackError {
     BuildScript(fun_run::CmdError),
     CliLayer(CliLayerError),
     DepsLayer(DepsLayerError),
-    InventoryParse(toml::de::Error),
+    FetchYarnPackument(PackumentLayerError),
     PackageJson(PackageJsonError),
     YarnCacheGet(fun_run::CmdError),
     YarnDisableGlobalCache(fun_run::CmdError),

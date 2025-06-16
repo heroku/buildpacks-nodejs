@@ -1,6 +1,7 @@
+use crate::{YarnBuildpack, YarnBuildpackError};
 use bullet_stream::global::print;
 use heroku_nodejs_utils::http::{get, ResponseExt};
-use heroku_nodejs_utils::inv::Release;
+use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -15,14 +16,12 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
-use crate::{YarnBuildpack, YarnBuildpackError};
-
 pub(crate) fn install_yarn(
     context: &BuildContext<YarnBuildpack>,
-    release: &Release,
+    yarn_package_packument: &PackagePackument,
 ) -> Result<LayerEnv, libcnb::Error<YarnBuildpackError>> {
     let new_metadata = CliLayerMetadata {
-        yarn_version: release.version.to_string(),
+        yarn_version: yarn_package_packument.version.to_string(),
         layer_version: LAYER_VERSION.to_string(),
         arch: context.target.arch.clone(),
         os: context.target.os.clone(),
@@ -46,28 +45,34 @@ pub(crate) fn install_yarn(
 
     match dist_layer.state {
         LayerState::Restored { .. } => {
-            print::sub_bullet(format!("Reusing yarn {}", release.version));
+            print::sub_bullet(format!("Reusing yarn {}", yarn_package_packument.version));
         }
         LayerState::Empty { .. } => {
             dist_layer.write_metadata(new_metadata)?;
 
             let yarn_tgz = NamedTempFile::new().map_err(CliLayerError::TempFile)?;
 
-            get(&release.url)
+            get(&yarn_package_packument.dist.tarball)
                 .call_sync()
                 .and_then(|res| res.download_to_file_sync(yarn_tgz.path()))
                 .map_err(CliLayerError::Download)?;
 
-            print::sub_bullet(format!("Extracting yarn {}", release.version));
+            print::sub_bullet(format!(
+                "Extracting yarn {}",
+                yarn_package_packument.version
+            ));
             decompress_tarball(&mut yarn_tgz.into_file(), dist_layer.path())
                 .map_err(|e| CliLayerError::Untar(dist_layer.path(), e))?;
 
-            print::sub_bullet(format!("Installing yarn {}", release.version));
+            print::sub_bullet(format!(
+                "Installing yarn {}",
+                yarn_package_packument.version
+            ));
 
             let dist_name = if dist_layer.path().join("package").exists() {
                 "package".to_string()
             } else {
-                format!("yarn-v{}", release.version)
+                format!("yarn-v{}", yarn_package_packument.version)
             };
 
             move_directory_contents(dist_layer.path().join(dist_name), dist_layer.path())

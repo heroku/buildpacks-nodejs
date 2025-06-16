@@ -58,9 +58,15 @@ where
 
     let package_name = package_name.as_ref();
 
-    let layer_name = format!("{package_name}_packument")
-        .parse::<LayerName>()
-        .map_err(|e| on_error(PackumentLayerError::InvalidLayerName(e)))?;
+    // Handle package names with or without an org-scope as layer names. E.g.;
+    // npm → npm_packment
+    // @yarnpkg/cli-dist → yarnpkg_cli-dist_packument
+    let layer_name = format!(
+        "{}_packument",
+        package_name.replace('/', "_").replace('@', "")
+    )
+    .parse::<LayerName>()
+    .map_err(|e| on_error(PackumentLayerError::InvalidLayerName(e)))?;
 
     let packument_layer = context.cached_layer(
         layer_name,

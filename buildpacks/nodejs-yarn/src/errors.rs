@@ -8,10 +8,12 @@ use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
+use heroku_nodejs_utils::error_handling::ErrorType::UserFacing;
 use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
     ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
 };
+use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use indoc::formatdoc;
 
@@ -36,7 +38,6 @@ fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
         YarnBuildpackError::CliLayer(e) => on_cli_layer_error(&e),
         YarnBuildpackError::DepsLayer(e) => on_deps_layer_error(&e),
-        YarnBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
         YarnBuildpackError::PackageJson(e) => on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e),
         YarnBuildpackError::YarnCacheGet(e) => on_yarn_cache_get_error(&e),
         YarnBuildpackError::YarnDisableGlobalCache(e) => on_yarn_disable_global_cache_error(&e),
@@ -50,6 +51,7 @@ fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
         }
         YarnBuildpackError::YarnDefaultParse(e) => on_yarn_default_parse_error(&e),
         YarnBuildpackError::NodeBuildScriptsMetadata(e) => on_node_build_scripts_metadata_error(e),
+        YarnBuildpackError::FetchYarnPackument(e) => on_fetch_yarn_packument_error(&e),
     }
 }
 
@@ -154,17 +156,6 @@ fn on_deps_layer_error(error: &DepsLayerError) -> ErrorMessage {
             .debug_info(e.to_string())
             .create(),
     }
-}
-
-fn on_inventory_parse_error(error: &toml::de::Error) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Failed to parse Yarn inventory")
-        .body(formatdoc! {"
-            The {BUILDPACK_NAME} buildpack was unable to parse the Yarn inventory file.
-        "})
-        .debug_info(error.to_string())
-        .create()
 }
 
 fn on_yarn_cache_get_error(error: &CmdError) -> ErrorMessage {
@@ -307,6 +298,23 @@ fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) ->
         .create()
 }
 
+fn on_fetch_yarn_packument_error(error: &PackumentLayerError) -> ErrorMessage {
+    let yarn = style::value("Yarn");
+    let npm_status_url = style::url("https://status.npmjs.org/");
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header(format!("Failed to load available {yarn} versions"))
+        .body(formatdoc! { "
+            An unexpected error occurred while loading the available {yarn} versions. This error can \
+            occur due to an unstable network connection or an issue with the npm registry.
+
+            Suggestions:
+            - Check the npm status page for any ongoing incidents ({npm_status_url})
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -380,11 +388,6 @@ mod tests {
         assert_error_snapshot(YarnBuildpackError::DepsLayer(DepsLayerError::YarnCacheSet(
             create_cmd_error("yarn config set cache-dir /some/dir"),
         )));
-    }
-
-    #[test]
-    fn test_yarn_inventory_parse_error() {
-        assert_error_snapshot(YarnBuildpackError::InventoryParse(create_toml_error()));
     }
 
     #[test]
@@ -462,6 +465,13 @@ mod tests {
         ));
     }
 
+    #[test]
+    fn test_yarn_fetch_yarn_packument_error() {
+        assert_error_snapshot(YarnBuildpackError::FetchYarnPackument(
+            PackumentLayerError::ParsePackument(create_json_error()),
+        ));
+    }
+
     fn assert_error_snapshot(error: impl Into<Error<YarnBuildpackError>>) {
         let error_message = strip_ansi(on_error(error.into()).to_string());
         let test_name = format!(
@@ -497,10 +507,6 @@ mod tests {
 
     fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
-    }
-
-    fn create_toml_error() -> toml::de::Error {
-        toml::from_str::<toml::Table>("[[artifacts").unwrap_err()
     }
 
     fn create_reqwest_error() -> reqwest_middleware::Error {
