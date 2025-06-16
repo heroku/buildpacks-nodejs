@@ -12,6 +12,7 @@ use libcnb_data::layer::{LayerName, LayerNameError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 use thiserror::Error;
 
 const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
@@ -53,6 +54,8 @@ where
     E: Into<libcnb::Error<B::Error>>,
     libcnb::Error<<B as Buildpack>::Error>: From<E>,
 {
+    let packument_filename = "contents.json";
+
     let package_name = package_name.as_ref();
 
     let layer_name = format!("{package_name}_packument")
@@ -65,8 +68,19 @@ where
             build: true,
             launch: false,
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
-            restored_layer_action: &|packument_metadata: &PackumentMetadata, _| {
-                (RestoredLayerAction::KeepLayer, packument_metadata.clone())
+            restored_layer_action: &|packument_metadata: &PackumentMetadata, layer_dir| {
+                // make sure we can deserialize the packument file stored in the layer
+                if parse_packument(&layer_dir.join(packument_filename)).is_ok() {
+                    (RestoredLayerAction::KeepLayer, packument_metadata.clone())
+                } else {
+                    (
+                        RestoredLayerAction::DeleteLayer,
+                        PackumentMetadata {
+                            etag: None,
+                            last_modified: None,
+                        },
+                    )
+                }
             },
         },
     )?;
@@ -97,7 +111,7 @@ where
         .call_sync()
         .map_err(|e| on_error(PackumentLayerError::FetchPackument(e)))?;
 
-    let packument_file = packument_layer.path().join("contents.json");
+    let packument_file = packument_layer.path().join(packument_filename);
 
     // only update the metadata if we have a 200 response
     if packument_response.status() == StatusCode::OK {
@@ -123,11 +137,18 @@ where
         print::sub_bullet(format!("Using cached packument for {package_name}"));
     }
 
-    let packument_contents = fs::read_to_string(&packument_file)
-        .map_err(|e| on_error(PackumentLayerError::ReadPackument(e)))?;
+    parse_packument(&packument_file)
+        .map_err(on_error)
+        .map_err(Into::into)
+}
 
-    serde_json::from_str::<Packument>(&packument_contents)
-        .map_err(|e| on_error(PackumentLayerError::ParsePackument(e)).into())
+fn parse_packument(packument_path: &Path) -> Result<Packument, PackumentLayerError> {
+    fs::read_to_string(packument_path)
+        .map_err(PackumentLayerError::ReadPackument)
+        .and_then(|packument_contents| {
+            serde_json::from_str::<Packument>(&packument_contents)
+                .map_err(PackumentLayerError::ParsePackument)
+        })
 }
 
 #[derive(Debug, Error)]
