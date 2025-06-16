@@ -36,6 +36,7 @@ pub(crate) fn list_releases(package: &str) -> anyhow::Result<Vec<NpmRelease>> {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct PackumentMetadata {
     etag: Option<String>,
     last_modified: Option<String>,
@@ -165,4 +166,25 @@ pub fn resolve_package_packument(
     package_packuments
         .into_iter()
         .find(|package_packument| requirement.satisfies(&package_packument.version))
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_packument_metadata() {
+        let metadata = PackumentMetadata {
+            etag: Some(String::from("\"fd20872fa73c2b790cc0eb7ff1bb42da\"")),
+            last_modified: Some(String::from("Fri, 02 May 2025 13:50:44 GMT")),
+        };
+
+        let actual = toml::to_string(&metadata).unwrap();
+        let expected = r#"
+etag = '"fd20872fa73c2b790cc0eb7ff1bb42da"'
+last_modified = "Fri, 02 May 2025 13:50:44 GMT"
+"#
+        .trim();
+        assert_eq!(expected, actual.trim());
+    }
 }
