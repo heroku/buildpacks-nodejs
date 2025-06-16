@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace Yarn version resolution from inventory to packument-based resolver. ([#1122](https://github.com/heroku/buildpacks-nodejs/pull/1122))
+
 ## [3.6.7] - 2025-06-12
 
 - Added Yarn version 4.9.2.
