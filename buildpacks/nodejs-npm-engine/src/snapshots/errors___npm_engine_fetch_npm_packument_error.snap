@@ -1,0 +1,15 @@
+---
+source: buildpacks/nodejs-npm-engine/src/errors.rs
+---
+- Debug Info:
+  - Packument read error:
+    Insufficient permissions
+
+! Failed to load available `npm` versions
+!
+! An unexpected error occurred while loading the available `npm` versions. This error can occur due to an unstable network connection or an issue with the npm registry.
+!
+! Suggestions:
+! - Check the npm status page for any ongoing incidents (https://status.npmjs.org/)
+!
+! Use the debug information above to troubleshoot and retry your build.

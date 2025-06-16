@@ -8,6 +8,7 @@ use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
     SuggestRetryBuild, SuggestSubmitIssue,
 };
+use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
 
@@ -41,7 +42,7 @@ fn on_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
         NpmEngineBuildpackError::NpmInstall(e) => on_npm_install_error(e),
         NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e),
         NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e),
-        NpmEngineBuildpackError::FetchNpmVersions(e) => panic!("{e:?}"),
+        NpmEngineBuildpackError::FetchNpmPackument(e) => on_fetch_npm_packument_error(&e),
     }
 }
 
@@ -184,6 +185,23 @@ fn on_npm_version_error(error: npm::VersionError) -> ErrorMessage {
     }
 }
 
+fn on_fetch_npm_packument_error(error: &PackumentLayerError) -> ErrorMessage {
+    let npm = style::value("npm");
+    let npm_status_url = style::url("https://status.npmjs.org/");
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header(format!("Failed to load available {npm} versions"))
+        .body(formatdoc! { "
+            An unexpected error occurred while loading the available {npm} versions. This error can \
+            occur due to an unstable network connection or an issue with the npm registry.
+
+            Suggestions:
+            - Check the npm status page for any ongoing incidents ({npm_status_url})
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -294,6 +312,13 @@ mod tests {
                 "not.a.version".into(),
                 Version::parse("not.a.version").unwrap_err(),
             ),
+        ));
+    }
+
+    #[test]
+    fn test_npm_engine_fetch_npm_packument_error() {
+        assert_error_snapshot(NpmEngineBuildpackError::FetchNpmPackument(
+            PackumentLayerError::ReadPackument(create_io_error("Insufficient permissions")),
         ));
     }
 

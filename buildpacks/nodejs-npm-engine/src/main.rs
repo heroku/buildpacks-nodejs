@@ -129,7 +129,8 @@ fn resolve_requested_npm_packument(
         style::value("package.json")
     ));
 
-    let npm_packument = packument_layer(context, "npm", NpmEngineBuildpackError::FetchNpmVersions)?;
+    let npm_packument =
+        packument_layer(context, "npm", NpmEngineBuildpackError::FetchNpmPackument)?;
 
     let npm_package_packument = resolve_package_packument(&npm_packument, requested_version)
         .ok_or(NpmEngineBuildpackError::NpmVersionResolve(
@@ -183,7 +184,7 @@ buildpack_main!(NpmEngineBuildpack);
 pub(crate) enum NpmEngineBuildpackError {
     PackageJson(PackageJsonError),
     MissingNpmEngineRequirement,
-    FetchNpmVersions(PackumentLayerError),
+    FetchNpmPackument(PackumentLayerError),
     NpmVersionResolve(Requirement),
     NpmInstall(NpmInstallError),
     NodeVersion(node::VersionError),

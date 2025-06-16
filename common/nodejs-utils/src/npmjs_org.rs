@@ -12,6 +12,7 @@ use libcnb_data::layer::{LayerName, LayerNameError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use thiserror::Error;
 
 const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
 
@@ -129,11 +130,15 @@ where
         .map_err(|e| on_error(PackumentLayerError::ParsePackument(e)).into())
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum PackumentLayerError {
+    #[error("Packument layer name error:\n{0}")]
     InvalidLayerName(LayerNameError),
+    #[error("Packument request error:\n{0}")]
     FetchPackument(crate::http::Error),
+    #[error("Packument read error:\n{0}")]
     ReadPackument(std::io::Error),
+    #[error("Packument parse error:\n{0}")]
     ParsePackument(serde_json::Error),
 }
 
