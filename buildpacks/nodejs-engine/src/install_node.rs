@@ -1,6 +1,6 @@
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -60,18 +60,11 @@ pub(crate) fn install_node(
 
             let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
 
-            download_file_sync()
-                .downloading_message(format!(
-                    "Downloading Node.js {} from {}",
-                    style::value(&version_tag),
-                    style::url(&distribution_artifact.url)
-                ))
-                .from_url(&distribution_artifact.url)
-                .to_file(node_tgz.path())
-                .call()
+            get(&distribution_artifact.url)
+                .call_sync()
+                .and_then(|res| res.download_to_file_sync(node_tgz.path()))
                 .map_err(|e| DistLayerError::Download {
                     src_url: distribution_artifact.url.clone(),
-                    dst_path: node_tgz.path().to_path_buf(),
                     source: e,
                 })?;
 
@@ -157,8 +150,7 @@ pub(crate) enum DistLayerError {
     TempFile(std::io::Error),
     Download {
         src_url: String,
-        dst_path: PathBuf,
-        source: DownloadError,
+        source: heroku_nodejs_utils::http::Error,
     },
     Untar {
         src_path: PathBuf,

@@ -1,6 +1,5 @@
 use bullet_stream::global::print;
-use bullet_stream::style;
-use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::inv::Release;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -54,14 +53,9 @@ pub(crate) fn install_yarn(
 
             let yarn_tgz = NamedTempFile::new().map_err(CliLayerError::TempFile)?;
 
-            download_file_sync()
-                .downloading_message(format!(
-                    "Downloading Yarn from {}",
-                    style::url(&release.url)
-                ))
-                .from_url(&release.url)
-                .to_file(yarn_tgz.path())
-                .call()
+            get(&release.url)
+                .call_sync()
+                .and_then(|res| res.download_to_file_sync(yarn_tgz.path()))
                 .map_err(CliLayerError::Download)?;
 
             print::sub_bullet(format!("Extracting yarn {}", release.version));
@@ -104,7 +98,7 @@ pub(crate) struct CliLayerMetadata {
 #[derive(Debug)]
 pub(crate) enum CliLayerError {
     TempFile(std::io::Error),
-    Download(DownloadError),
+    Download(heroku_nodejs_utils::http::Error),
     Untar(PathBuf, std::io::Error),
     Installation(std::io::Error),
     Permissions(std::io::Error),

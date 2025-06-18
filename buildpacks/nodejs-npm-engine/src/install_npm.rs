@@ -1,9 +1,8 @@
 use crate::NpmEngineBuildpack;
 use crate::NpmEngineBuildpackError;
 use bullet_stream::global::print;
-use bullet_stream::style;
 use fun_run::{CommandWithName, NamedOutput};
-use heroku_nodejs_utils::download_file::{download_file_sync, DownloadError};
+use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::inv::Release;
 use heroku_nodejs_utils::vrs::Version;
 use libcnb::build::BuildContext;
@@ -86,14 +85,9 @@ fn download_and_unpack_release(
     download_to: &Path,
     unpack_into: &Path,
 ) -> Result<(), NpmInstallError> {
-    download_file_sync()
-        .downloading_message(format!(
-            "Downloading npm from {}",
-            style::url(download_from)
-        ))
-        .from_url(download_from)
-        .to_file(download_to)
-        .call()
+    get(download_from)
+        .call_sync()
+        .and_then(|res| res.download_to_file_sync(download_to))
         .map_err(NpmInstallError::Download)
         .and_then(|()| {
             File::open(download_to)
@@ -174,7 +168,7 @@ pub(crate) struct NpmEngineLayerMetadata {
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallError {
-    Download(DownloadError),
+    Download(heroku_nodejs_utils::http::Error),
     OpenTarball(PathBuf, std::io::Error),
     DecompressTarball(PathBuf, std::io::Error),
     RemoveExistingNpmInstall(fun_run::CmdError),

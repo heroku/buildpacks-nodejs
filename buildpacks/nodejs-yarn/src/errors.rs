@@ -312,7 +312,6 @@ mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
-    use heroku_nodejs_utils::download_file::DownloadError;
     use heroku_nodejs_utils::package_json::PackageJsonError;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
@@ -337,7 +336,10 @@ mod tests {
     #[test]
     fn test_yarn_cli_layer_download_error() {
         assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Download(
-            DownloadError::Request("https://test/error".into(), create_reqwest_error()),
+            heroku_nodejs_utils::http::Error::Request(
+                "https://test/error".into(),
+                create_reqwest_error(),
+            ),
         )));
     }
 
