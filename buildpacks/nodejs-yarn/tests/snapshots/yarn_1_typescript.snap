@@ -7,7 +7,7 @@ source: test_support/src/lib.rs
   - Detected Node.js version range: `>=16.0.0 <17.0.0-0`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
@@ -20,7 +20,7 @@ source: test_support/src/lib.rs
   - No yarn engine range detected in package.json, using default (1.22.x)
   - Resolved yarn CLI version: 1.22.22
 - Installing yarn CLI
-  - GET https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.22.22.tar.gz ... (<time_elapsed>)
+  - GET https://heroku-nodebin.s3.us-east-1.amazonaws.com/yarn/release/yarn-v1.22.22.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Extracting yarn 1.22.22
   - Installing yarn 1.22.22

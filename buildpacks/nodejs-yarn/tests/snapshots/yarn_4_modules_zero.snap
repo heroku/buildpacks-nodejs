@@ -7,7 +7,7 @@ source: test_support/src/lib.rs
   - Detected Node.js version range: `>=18.0.0 <19.0.0-0`
   - Resolved Node.js version: `18.20.8`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v18.20.8/node-v18.20.8-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v18.20.8/node-v18.20.8-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `18.20.8 (<arch>)`

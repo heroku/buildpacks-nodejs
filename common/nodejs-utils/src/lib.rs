@@ -9,7 +9,7 @@ pub mod error_handling;
 pub mod http;
 pub mod inv;
 mod nodejs_org;
-mod npmjs_org;
+pub mod npmjs_org;
 pub mod package_json;
 pub mod package_manager;
 mod s3;

@@ -13,8 +13,10 @@ bon = "3"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 bullet_stream = "0.10"
 futures = { version = "0.3", default-features = false, features = ["io-compat"] }
+http = "1"
 indoc = "2"
 keep_a_changelog_file = "0.1.0"
+libcnb = "=0.29"
 libcnb-data = "=0.29.0"
 libherokubuildpack = { version = "=0.29.0", default-features = false, features = [
     "inventory",
