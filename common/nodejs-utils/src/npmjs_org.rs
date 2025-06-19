@@ -1,6 +1,5 @@
 use crate::http::{get, ResponseExt};
 use crate::vrs::{Requirement, Version};
-use anyhow::anyhow;
 use bullet_stream::global::print;
 use http::{HeaderMap, HeaderValue, StatusCode};
 use libcnb::build::BuildContext;
@@ -16,26 +15,6 @@ use std::path::Path;
 use thiserror::Error;
 
 const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
-
-#[derive(Deserialize)]
-struct NpmPackage {
-    versions: HashMap<String, NpmRelease>,
-}
-
-#[derive(Deserialize)]
-pub(crate) struct NpmRelease {
-    pub(crate) version: Version,
-}
-
-pub(crate) fn list_releases(package: &str) -> anyhow::Result<Vec<NpmRelease>> {
-    ureq::get(&format!("{NPMJS_ORG_HOST}/{package}"))
-        .call()
-        .map_err(|e| anyhow!("Couldn't fetch npmjs registry release list from for {package}: {e}"))?
-        .body_mut()
-        .read_json::<NpmPackage>()
-        .map_err(|e| anyhow!("Couldn't serialize npmjs registry release list for {package}: {e}"))
-        .map(|rel| rel.versions.into_values().collect())
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
