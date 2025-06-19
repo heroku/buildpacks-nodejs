@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "license": "MIT",
   "engines": {
-    "node": "^14.0"
+    "node": "^22.0"
   },
   "dependencies": {
     "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0"
   },
   "scripts": {}
 }
