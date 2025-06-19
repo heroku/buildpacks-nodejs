@@ -1,0 +1,15 @@
+---
+source: buildpacks/nodejs-yarn/src/errors.rs
+---
+- Debug Info:
+  - Packument parse error:
+    key must be a string at line 1 column 2
+
+! Failed to load available `Yarn` versions
+!
+! An unexpected error occurred while loading the available `Yarn` versions. This error can occur due to an unstable network connection or an issue with the npm registry.
+!
+! Suggestions:
+! - Check the npm status page for any ongoing incidents (https://status.npmjs.org/)
+!
+! Use the debug information above to troubleshoot and retry your build.
