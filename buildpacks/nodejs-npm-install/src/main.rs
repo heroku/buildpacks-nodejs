@@ -98,6 +98,22 @@ impl Buildpack for NpmInstallBuildpack {
         print::bullet("Running scripts");
         run_build_scripts(&package_json, &node_build_scripts_metadata, &env)?;
 
+        // NOTE:
+        // Up until now, we haven't been pruning dev dependencies from the final runtime image. This
+        // causes unnecessary bloat to image sizes so we're going to start pruning these dependencies
+        // as the default behavior. Unfortunately, the front-end buildpacks rely on dev dependencies
+        // being available for execution at release phase time. The front-end buildpacks also rely on
+        // setting `node_build_scripts` requires metadata to configure some opt-out features. This buildpack
+        // configuration mechanism is going to be changed in the near-future but, for now, we'll
+        // also attach the pruning opt-out configuration to it.
+        print::bullet("Pruning dev dependencies");
+        if let Some(true) = node_build_scripts_metadata.skip_pruning {
+            print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
+        } else {
+            print::sub_stream_cmd(npm::Prune { env: &env }.into_command())
+                .map_err(NpmInstallBuildpackError::PruneDevDependencies)?;
+        }
+
         print::bullet("Configuring default processes");
         let build_result = configure_default_processes(&context, &package_json);
 
@@ -203,6 +219,7 @@ pub(crate) enum NpmInstallBuildpackError {
     NpmVersion(npm::VersionError),
     PackageJson(PackageJsonError),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
+    PruneDevDependencies(CmdError),
 }
 
 impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> {

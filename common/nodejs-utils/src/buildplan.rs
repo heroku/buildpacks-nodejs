@@ -3,10 +3,12 @@ use libcnb_data::buildpack_plan::BuildpackPlan;
 #[derive(Debug, Default, PartialEq)]
 pub struct NodeBuildScriptsMetadata {
     pub enabled: Option<bool>,
+    pub skip_pruning: Option<bool>,
 }
 
 pub const NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME: &str = "node_build_scripts";
 const NODE_BUILD_SCRIPTS_METADATA_ENABLED_KEY: &str = "enabled";
+const NODE_BUILD_SCRIPTS_METADATA_SKIP_PRUNING_KEY: &str = "skip_pruning";
 
 pub fn read_node_build_scripts_metadata(
     buildpack_plan: &BuildpackPlan,
@@ -29,6 +31,27 @@ pub fn read_node_build_scripts_metadata(
                     }
                     None => {}
                 }
+                match entry
+                    .metadata
+                    .get(NODE_BUILD_SCRIPTS_METADATA_SKIP_PRUNING_KEY)
+                {
+                    Some(toml::Value::Boolean(enabled)) => {
+                        node_build_hooks_metadata.skip_pruning = Some(*enabled);
+                    }
+                    Some(value) => {
+                        Err(NodeBuildScriptsMetadataError::InvalidSkipPruningValue(
+                            value.clone(),
+                        ))?;
+                    }
+                    None => {
+                        // As the front-end buildpacks are the only ones that are likely to
+                        // using the buildplan metadata, if the build scripts are disabled,
+                        // there's a good chance that we need to also skip pruning.
+                        if node_build_hooks_metadata.enabled == Some(false) {
+                            node_build_hooks_metadata.skip_pruning = Some(true);
+                        }
+                    }
+                }
                 Ok(node_build_hooks_metadata)
             },
         )
@@ -37,6 +60,7 @@ pub fn read_node_build_scripts_metadata(
 #[derive(Debug)]
 pub enum NodeBuildScriptsMetadataError {
     InvalidEnabledValue(toml::Value),
+    InvalidSkipPruningValue(toml::Value),
 }
 
 #[cfg(test)]
@@ -81,7 +105,8 @@ mod test {
         assert_eq!(
             read_node_build_scripts_metadata(&buildpack_plan).unwrap(),
             NodeBuildScriptsMetadata {
-                enabled: Some(false)
+                enabled: Some(false),
+                skip_pruning: None
             }
         );
     }
@@ -111,7 +136,8 @@ mod test {
         assert_eq!(
             read_node_build_scripts_metadata(&buildpack_plan).unwrap(),
             NodeBuildScriptsMetadata {
-                enabled: Some(true)
+                enabled: Some(true),
+                skip_pruning: None
             }
         );
     }
@@ -128,6 +154,9 @@ mod test {
         };
         match read_node_build_scripts_metadata(&buildpack_plan).unwrap_err() {
             NodeBuildScriptsMetadataError::InvalidEnabledValue(_) => {}
+            e @ NodeBuildScriptsMetadataError::InvalidSkipPruningValue(_) => {
+                panic!("Unexpected error: {e:?}")
+            }
         }
     }
 }
