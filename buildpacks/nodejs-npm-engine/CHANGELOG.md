@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Added npm version 11.4.2.
 ### Changed
 
 - Replace npm version resolution from inventory to packument-based resolver. ([#1121](https://github.com/heroku/buildpacks-nodejs/pull/1121))
