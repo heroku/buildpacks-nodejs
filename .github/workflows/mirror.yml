@@ -21,10 +21,3 @@ jobs:
     with:
       distribution: yarn
     secrets: inherit
-
-  mirror-npm:
-    name: Mirror npm
-    uses: ./.github/workflows/_mirror-distribution.yml
-    with:
-      distribution: npm
-    secrets: inherit
