@@ -4,35 +4,47 @@ source: test_support/src/lib.rs
 ## Heroku Node.js Engine
 
 - Checking Node.js version
-  - Detected Node.js version range: `>=14.0.0 <15.0.0-0`
-  - Resolved Node.js version: `14.21.3`
+  - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
+  - Resolved Node.js version: `22.16.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v14.21.3/node-v14.21.3-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.16.0/node-v22.16.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `14.21.3 (<arch>)`
-  - Installing Node.js `14.21.3 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.16.0 (<arch>)`
+  - Installing Node.js `22.16.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js npm Install
 
 - Installing node modules
-  - Using npm version `6.14.18`
+  - Using npm version `10.9.2`
   - Creating npm cache
   - Configuring npm cache directory
-  - Running `npm ci "--production=false"`
+  - Running `npm ci`
 
-      added <NUMBER> packages in <time_elapsed>
+
+      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
+
+      found 0 vulnerabilities
 
   - Done (<time_elapsed>)
 - Running scripts
   - Running `npm run heroku-build`
 
 
-      > npm-project@1.0.0 heroku-build /workspace
+      > npm-project@1.0.0 heroku-build
       > echo 'executed heroku-build'
 
       executed heroku-build
+
+  - Done (<time_elapsed>)
+- Pruning dev dependencies
+  - Running `npm prune`
+
+
+      up to date, audited <N> packages in <time_elapsed>
+
+      found 0 vulnerabilities
 
   - Done (<time_elapsed>)
 - Configuring default processes
