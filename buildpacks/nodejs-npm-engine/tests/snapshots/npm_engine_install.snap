@@ -35,9 +35,8 @@ source: test_support/src/lib.rs
   - Using npm version `9.6.6`
   - Creating npm cache
   - Configuring npm cache directory
-  - Running `npm ci "--production=false"`
+  - Running `npm ci`
 
-      npm WARN config production Use `--omit=dev` instead.
       npm WARN old lockfile 
       npm WARN old lockfile The package-lock.json file was created with an old version of npm,
       npm WARN old lockfile so supplemental metadata must be fetched from the registry.
@@ -52,6 +51,21 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `npm prune`
+
+      npm WARN old lockfile 
+      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
+      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
+      npm WARN old lockfile 
+      npm WARN old lockfile This is a one-time fix-up, please be patient...
+      npm WARN old lockfile 
+
+      up to date, audited <N> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
