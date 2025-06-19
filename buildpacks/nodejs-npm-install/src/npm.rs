@@ -68,7 +68,6 @@ impl<'a> From<Install<'a>> for Command {
     fn from(value: Install<'a>) -> Self {
         let mut cmd = Command::new("npm");
         cmd.arg("ci");
-        cmd.arg("--production=false");
         cmd.envs(value.env);
         cmd
     }
@@ -108,7 +107,7 @@ impl<'a> From<Prune<'a>> for Command {
     fn from(value: Prune<'a>) -> Self {
         let mut cmd = Command::new("npm");
         cmd.arg("prune");
-        cmd.arg("--production");
+        cmd.env("NODE_ENV", "production");
         cmd.envs(value.env);
         cmd
     }
