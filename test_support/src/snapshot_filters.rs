@@ -133,6 +133,13 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>",
     ));
 
+    // [npm] Up to date messaging from `npm prune` command. e.g.;
+    // - up to date, audited 6 packages in 817ms
+    filters.push((
+        r"up to date, audited \d+ packages in \d+ms",
+        "up to date, audited <N> packages in <time_elapsed>",
+    ));
+
     // [npm] Native module compilation output from node-gyp. e.g.;
     // -     gyp info it worked if it ends with ok
     //       gyp info using node-gyp@10.1.0
