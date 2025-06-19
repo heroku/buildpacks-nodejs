@@ -49,6 +49,8 @@ pub fn read_node_build_scripts_metadata(
                         // there's a good chance that we need to also skip pruning.
                         if node_build_hooks_metadata.enabled == Some(false) {
                             node_build_hooks_metadata.skip_pruning = Some(true);
+                        } else {
+                            node_build_hooks_metadata.skip_pruning = None;
                         }
                     }
                 }
@@ -99,6 +101,7 @@ mod test {
                 name: NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME.to_string(),
                 metadata: toml! {
                     enabled = false
+                    skip_pruning = false
                 },
             }],
         };
@@ -106,7 +109,7 @@ mod test {
             read_node_build_scripts_metadata(&buildpack_plan).unwrap(),
             NodeBuildScriptsMetadata {
                 enabled: Some(false),
-                skip_pruning: None
+                skip_pruning: Some(false)
             }
         );
     }
@@ -143,7 +146,7 @@ mod test {
     }
 
     #[test]
-    fn read_node_build_scripts_when_entry_contains_invalid_metadata() {
+    fn read_node_build_scripts_when_entry_contains_invalid_metadata_for_enabled() {
         let buildpack_plan = BuildpackPlan {
             entries: vec![Entry {
                 name: NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME.to_string(),
@@ -155,6 +158,25 @@ mod test {
         match read_node_build_scripts_metadata(&buildpack_plan).unwrap_err() {
             NodeBuildScriptsMetadataError::InvalidEnabledValue(_) => {}
             e @ NodeBuildScriptsMetadataError::InvalidSkipPruningValue(_) => {
+                panic!("Unexpected error: {e:?}")
+            }
+        }
+    }
+
+    #[test]
+    fn read_node_build_scripts_when_entry_contains_invalid_metadata_for_skip_pruning() {
+        let buildpack_plan = BuildpackPlan {
+            entries: vec![Entry {
+                name: NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME.to_string(),
+                metadata: toml! {
+                    enabled = false
+                    skip_pruning = 0
+                },
+            }],
+        };
+        match read_node_build_scripts_metadata(&buildpack_plan).unwrap_err() {
+            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(_) => {}
+            e @ NodeBuildScriptsMetadataError::InvalidEnabledValue(_) => {
                 panic!("Unexpected error: {e:?}")
             }
         }
