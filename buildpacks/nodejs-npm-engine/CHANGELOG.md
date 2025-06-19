@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.6.8] - 2025-06-19
+
 ### Changed
 
 - Replace npm version resolution from inventory to packument-based resolver. ([#1121](https://github.com/heroku/buildpacks-nodejs/pull/1121))
@@ -325,7 +327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.7...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.8...HEAD
+[3.6.8]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.7...v3.6.8
 [3.6.7]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.6...v3.6.7
 [3.6.6]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.5...v3.6.6
 [3.6.5]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.4...v3.6.5

@@ -2,7 +2,7 @@ api = "0.10"
 
 [buildpack]
 id = "heroku/nodejs"
-version = "3.6.7"
+version = "3.6.8"
 name = "Heroku Node.js"
 homepage = "https://github.com/heroku/buildpacks-nodejs"
 description = "Heroku's buildpack for Node.js applications."
@@ -15,70 +15,70 @@ type = "MIT"
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-install"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-pnpm-install"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "3.6.7"
+version = "3.6.8"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-yarn"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order.group]]
 id = "heroku/nodejs-corepack"
-version = "3.6.7"
+version = "3.6.8"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-npm-engine"
-version = "3.6.7"
+version = "3.6.8"
 optional = true
 
 [[order.group]]
 id = "heroku/nodejs-npm-install"
-version = "3.6.7"
+version = "3.6.8"
 
 [[order]]
 
 [[order.group]]
 id = "heroku/nodejs-engine"
-version = "3.6.7"
+version = "3.6.8"
 
 [[metadata.targets]]
 os = "linux"
