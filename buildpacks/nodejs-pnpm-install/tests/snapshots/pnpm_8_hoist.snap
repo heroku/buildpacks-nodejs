@@ -61,4 +61,13 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `pnpm prune --prod`
+
+      Lockfile is up to date, resolution step is skipped
+      Already up to date
+
+      devDependencies: skipped
+
+  - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
