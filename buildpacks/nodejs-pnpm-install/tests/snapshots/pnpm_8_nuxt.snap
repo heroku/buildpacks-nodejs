@@ -84,4 +84,17 @@ source: test_support/src/lib.rs
       <NUXT BUILD OUTPUT>
 
   - Done (<time_elapsed>)
+- Pruning dev dependencies
+
+! Pruning skipped due to presence of lifecycle scripts
+!
+! The version of pnpm used (8.11.0) will execute the following lifecycle scripts declared in package.json during pruning which can cause build failures:
+! - pnpm:devPreinstall
+! - preinstall
+! - install
+! - postinstall
+! - prepare
+!
+! Since pruning can't be done safely for your build, it will be skipped. To fix this you must upgrade your version of pnpm to 8.15.6 or higher.
+
 - Done (finished in <time_elapsed>)
