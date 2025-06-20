@@ -20,9 +20,8 @@ source: test_support/src/lib.rs
   - Using npm version `10.8.2`
   - Creating npm cache
   - Configuring npm cache directory
-  - Running `npm ci "--production=false"`
+  - Running `npm ci`
 
-      npm warn config production Use `--omit=dev` instead.
 
       > dtrace-provider@0.8.8 install
       > node-gyp rebuild || node suppress-error.js
@@ -36,6 +35,15 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `npm prune`
+
+
+      up to date, audited <N> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
@@ -57,9 +65,8 @@ source: test_support/src/lib.rs
   - Using npm version `10.8.2`
   - Restoring npm cache
   - Configuring npm cache directory
-  - Running `npm ci "--production=false"`
+  - Running `npm ci`
 
-      npm warn config production Use `--omit=dev` instead.
 
       > dtrace-provider@0.8.8 install
       > node-gyp rebuild || node suppress-error.js
@@ -73,6 +80,15 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `npm prune`
+
+
+      up to date, audited <N> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)

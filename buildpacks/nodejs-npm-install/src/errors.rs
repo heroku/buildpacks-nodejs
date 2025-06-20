@@ -43,33 +43,55 @@ fn on_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
         NpmInstallBuildpackError::PackageJson(e) => {
             on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
         }
+        NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
     }
 }
 
 fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) -> ErrorMessage {
-    let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = error;
-    let value_type = value.type_str();
     let requires_metadata = style::value("[requires.metadata]");
     let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-    error_message()
-        .error_type(ErrorType::UserFacing(
-            SuggestRetryBuild::No,
-            SuggestSubmitIssue::Yes,
-        ))
-        .header("Invalid build plan metadata")
-        .body(formatdoc! { "
-            A participating buildpack has set invalid {requires_metadata} for the build plan \
-            named {buildplan_name}.
-            
-            Expected metadata format:
-            [requires.metadata]
-            enabled = <bool>
-            
-            But was:
-            [requires.metadata]
-            enabled = <{value_type}>     
-        "})
-        .create()
+
+    match error {
+        NodeBuildScriptsMetadataError::InvalidEnabledValue(value) => error_message()
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::No,
+                SuggestSubmitIssue::Yes,
+            ))
+            .header("Invalid build plan metadata")
+            .body(formatdoc! { "
+                A participating buildpack has set invalid {requires_metadata} for the build plan \
+                named {buildplan_name}.
+                
+                Expected metadata format:
+                [requires.metadata]
+                enabled = <bool>
+                skip_pruning = <bool>
+                
+                But configured with:
+                enabled = {value} <{value_type}>     
+            ", value_type = value.type_str() })
+            .create(),
+
+        NodeBuildScriptsMetadataError::InvalidSkipPruningValue(value) => error_message()
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::No,
+                SuggestSubmitIssue::Yes,
+            ))
+            .header("Invalid build plan metadata")
+            .body(formatdoc! { "
+                A participating buildpack has set invalid {requires_metadata} for the build plan \
+                named {buildplan_name}.
+                
+                Expected metadata format:
+                [requires.metadata]
+                enabled = <bool>
+                skip_pruning = <bool>
+                
+                But configured with:
+                skip_pruning = {value} <{value_type}>     
+            ", value_type = value.type_str() })
+            .create(),
+    }
 }
 
 fn on_set_cache_dir_error(error: &CmdError) -> ErrorMessage {
@@ -181,6 +203,22 @@ fn on_detect_error(error: &io::Error) -> ErrorMessage {
         .create()
 }
 
+fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
+    let npm_prune = style::value(error.name());
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header("Failed to install Node modules")
+        .body(formatdoc! { "
+            The {BUILDPACK_NAME} buildpack uses the command {npm_prune} to prune your Node modules for the production environment. This command \
+            failed and the buildpack cannot continue. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -213,9 +251,18 @@ mod tests {
     }
 
     #[test]
-    fn test_npm_install_node_build_scripts_metadata_error() {
+    fn test_npm_install_node_build_scripts_metadata_error_for_invalid_enabled_value() {
         assert_error_snapshot(NpmInstallBuildpackError::NodeBuildScriptsMetadata(
             NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
+                "test".to_string(),
+            )),
+        ));
+    }
+
+    #[test]
+    fn test_npm_install_node_build_scripts_metadata_error_for_invalid_skip_pruning_value() {
+        assert_error_snapshot(NpmInstallBuildpackError::NodeBuildScriptsMetadata(
+            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
                 "test".to_string(),
             )),
         ));
@@ -278,6 +325,13 @@ mod tests {
         assert_error_snapshot(NpmInstallBuildpackError::Detect(create_io_error(
             "test I/O error blah",
         )));
+    }
+
+    #[test]
+    fn test_npm_install_prune_dev_dependencies_error() {
+        assert_error_snapshot(NpmInstallBuildpackError::PruneDevDependencies(
+            create_cmd_error("npm prune --production"),
+        ));
     }
 
     fn assert_error_snapshot(error: impl Into<Error<NpmInstallBuildpackError>>) {

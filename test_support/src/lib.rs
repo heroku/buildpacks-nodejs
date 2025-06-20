@@ -97,6 +97,8 @@ pub fn integration_test_with_config(
     //       prevent from being emitted in test scenarios. By setting the following
     //       environment variable, we can suppress this message in both npm & pnpm.
     build_config.env("npm_config_update_notifier", "false");
+    // similar for the message looking for funding which doesn't need to appear in testing scenarios
+    build_config.env("npm_config_fund", "false");
 
     with_config(&mut build_config);
 
