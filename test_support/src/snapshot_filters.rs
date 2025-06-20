@@ -135,8 +135,9 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [npm] Up to date messaging from `npm prune` command. e.g.;
     // - up to date, audited 6 packages in 817ms
+    // - up to date, audited 5 packages in 1s
     filters.push((
-        r"up to date, audited \d+ packages in \d+ms",
+        r"up to date, audited \d+ packages in \d+m?s",
         "up to date, audited <N> packages in <time_elapsed>",
     ));
 
