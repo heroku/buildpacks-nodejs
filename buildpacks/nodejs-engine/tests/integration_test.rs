@@ -10,7 +10,7 @@ use test_support::{
 };
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn simple_indexjs() {
     nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
         create_build_snapshot(&ctx.pack_stderr).assert();
@@ -19,7 +19,7 @@ fn simple_indexjs() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn simple_serverjs() {
     nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
         create_build_snapshot(&ctx.pack_stderr).assert();
@@ -28,7 +28,7 @@ fn simple_serverjs() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn reinstalls_node_if_version_changes() {
     nodejs_integration_test_with_config(
         "./fixtures/node-with-indexjs",
@@ -53,7 +53,7 @@ fn reinstalls_node_if_version_changes() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn heroku_available_parallelism_is_set_at_build_and_runtime() {
     integration_test_with_config(
         "./fixtures/node-with-indexjs",
@@ -81,7 +81,7 @@ fn heroku_available_parallelism_is_set_at_build_and_runtime() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn node_24() {
     nodejs_integration_test_with_config(
         "./fixtures/node-with-serverjs",

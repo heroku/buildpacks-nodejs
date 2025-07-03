@@ -113,7 +113,7 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn test_dependencies_and_missing_lockfile_errors() {
     nodejs_integration_test_with_config(
         "./fixtures/dependencies-missing-lockfile",
@@ -127,7 +127,7 @@ fn test_dependencies_and_missing_lockfile_errors() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn detect_rejects_non_npm_project() {
     nodejs_integration_test_with_config(
         "./fixtures/empty",
@@ -141,7 +141,7 @@ fn detect_rejects_non_npm_project() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn npm_runtime_settings_are_set() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
         let env_output = ctx.run_shell_command("env").stdout;
@@ -207,7 +207,7 @@ fn test_skip_build_scripts_from_buildplan() {
 }
 
 #[test]
-#[ignore]
+#[ignore = "integration test"]
 fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",
