@@ -38,8 +38,9 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [Yarn] Post `yarn install` timer output when warnings are present. e.g.;
     // - Done with warnings in 30s 9ms
+    // - Done with warnings in 2s
     filters.push((
-        r"Done with warnings in \d+s \d+ms",
+        r"Done with warnings in \d+s(?: \d+ms)?",
         "Done with warnings in <time_elapsed>",
     ));
 
@@ -131,6 +132,14 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     filters.push((
         r"added \d+ packages, and audited \d+ packages in (\d+|\d\.\d+)m?s",
         "added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>",
+    ));
+
+    // [npm] Up to date messaging from `npm prune` command. e.g.;
+    // - up to date, audited 6 packages in 817ms
+    // - up to date, audited 5 packages in 1s
+    filters.push((
+        r"up to date, audited \d+ packages in \d+m?s",
+        "up to date, audited <N> packages in <time_elapsed>",
     ));
 
     // [npm] Native module compilation output from node-gyp. e.g.;
