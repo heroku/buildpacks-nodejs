@@ -1,5 +1,7 @@
+use crate::PnpmInstallBuildpackError;
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
+use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
 use std::{path::Path, process::Command};
 
@@ -45,4 +47,43 @@ pub(crate) fn pnpm_set_virtual_dir(pnpm_env: &Env, location: &Path) -> Result<()
 /// content-addressable store.
 pub(crate) fn pnpm_store_prune(pnpm_env: &Env) -> Result<(), CmdError> {
     print::sub_stream_cmd(Command::new("pnpm").args(["store", "prune"]).envs(pnpm_env)).map(|_| ())
+}
+
+pub(crate) fn pnpm_prune_dev_dependencies(
+    env: &Env,
+    extra_args: Vec<&str>,
+) -> Result<(), CmdError> {
+    print::sub_stream_cmd(
+        Command::new("pnpm")
+            .args(["prune", "--prod"])
+            .args(extra_args)
+            .envs(env),
+    )
+    .map(|_| ())
+}
+
+pub(crate) fn pnpm_version(env: &Env) -> Result<Version, PnpmVersionError> {
+    Command::new("pnpm")
+        .arg("--version")
+        .envs(env)
+        .named_output()
+        .map_err(PnpmVersionError::Command)
+        .and_then(|output| {
+            let stdout = output.stdout_lossy();
+            stdout
+                .parse()
+                .map_err(|e| PnpmVersionError::Parse(stdout, e))
+        })
+}
+
+#[derive(Debug)]
+pub(crate) enum PnpmVersionError {
+    Command(CmdError),
+    Parse(String, VersionError),
+}
+
+impl From<PnpmVersionError> for libcnb::Error<PnpmInstallBuildpackError> {
+    fn from(value: PnpmVersionError) -> Self {
+        libcnb::Error::BuildpackError(PnpmInstallBuildpackError::PnpmVersion(value))
+    }
 }

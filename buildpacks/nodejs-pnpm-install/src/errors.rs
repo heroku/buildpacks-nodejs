@@ -1,3 +1,4 @@
+use crate::cmd::PnpmVersionError;
 use crate::PnpmInstallBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
@@ -185,6 +186,42 @@ fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
                     .create(),
             }
         }
+
+        PnpmInstallBuildpackError::PruneDevDependencies(error) => error_message()
+            .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+            .header("Failed to install Node modules")
+            .body(formatdoc! { "
+                The {BUILDPACK_NAME} buildpack uses the command {pnpm_prune} to prune your Node modules for the production environment. This command \
+                failed and the buildpack cannot continue. See the log output above for more information.
+
+                Suggestions:
+                - Ensure that this command runs locally without error (exit status = 0).
+            ", pnpm_prune = style::value(error.name()) })
+            .debug_info(error.to_string())
+            .create(),
+
+        PnpmInstallBuildpackError::PnpmVersion(error) => {
+                match error {
+                    PnpmVersionError::Command(e) => error_message()
+                        .error_type(ErrorType::Internal)
+                        .header("Failed to determine pnpm version")
+                        .body(formatdoc! { "
+                            An unexpected error occurred while attempting to determine the current pnpm version \
+                            from the system.
+                        " })
+                        .debug_info(e.to_string())
+                        .create(),
+
+                    PnpmVersionError::Parse(stdout, e) => error_message()
+                        .error_type(ErrorType::Internal)
+                        .header("Failed to parse pnpm version")
+                        .body(formatdoc! { "
+                            An unexpected error occurred while parsing pnpm version information from '{stdout}'.
+                        " })
+                        .debug_info(e.to_string())
+                        .create(),
+                }
+        }
     }
 }
 
@@ -194,6 +231,7 @@ mod tests {
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;
+    use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use libcnb::Error;
     use std::io;
@@ -282,6 +320,30 @@ mod tests {
             to: "/layers/pnpm_install/dir".into(),
             source: create_io_error("Target directory does not exist"),
         });
+    }
+
+    #[test]
+    fn test_pnpm_install_prune_dev_dependencies_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PruneDevDependencies(
+            create_cmd_error("pnpm prune --prod --ignore-scripts"),
+        ));
+    }
+
+    #[test]
+    fn test_pnpm_install_pnpm_version_command_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmVersion(
+            PnpmVersionError::Command(create_cmd_error("pnpm --version")),
+        ));
+    }
+
+    #[test]
+    fn test_pnpm_install_pnpm_version_parse_error() {
+        assert_error_snapshot(PnpmInstallBuildpackError::PnpmVersion(
+            PnpmVersionError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
     }
 
     fn assert_error_snapshot(error: impl Into<Error<PnpmInstallBuildpackError>>) {
