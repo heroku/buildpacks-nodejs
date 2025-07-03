@@ -38,8 +38,9 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [Yarn] Post `yarn install` timer output when warnings are present. e.g.;
     // - Done with warnings in 30s 9ms
+    // - Done with warnings in 2s
     filters.push((
-        r"Done with warnings in \d+s \d+ms",
+        r"Done with warnings in \d+s(?: \d+ms)?",
         "Done with warnings in <time_elapsed>",
     ));
 
