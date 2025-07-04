@@ -1,0 +1,15 @@
+---
+source: buildpacks/nodejs-yarn/src/errors.rs
+---
+! Failed to parse Yarn's nodeLinker configuration
+!
+! An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
+! Expected - 'pnp', 'node-modules', or 'pnpm'
+! Actual   - 'test-linker'
+!
+! Suggestions:
+! - Run `yarn config get nodeLinker` locally to check your 'nodeLinker' configuration.
+! - Set an explicit 'nodeLinker' configuration in `.yarnrc.yml` (https://yarnpkg.com/features/linkers)
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

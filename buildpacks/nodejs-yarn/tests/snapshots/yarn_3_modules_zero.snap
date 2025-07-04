@@ -54,4 +54,17 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn heroku prune`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: └ Completed
+      ➤ YN0019: dotenv-npm-16.6.1-01334288ea-e8bd63c9a3.zip appears to be unused - removing
+      ➤ YN0000: Done in <time_elapsed>
+
+  - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
