@@ -112,6 +112,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:^16.5.0":
+  version: 16.6.1
+  resolution: "dotenv@npm:16.6.1"
+  checksum: 72204637eb263d8affd4f16e1445a90419c51a6cf4d2a66703b7facc326c36fb67ddb0c749303058b235d0d8db6930adca4a99b37dc18394f8e6fbd3ca3d0755
+  languageName: node
+  linkType: hard
+
 "ee-first@npm:1.1.1":
   version: 1.1.1
   resolution: "ee-first@npm:1.1.1"
@@ -527,6 +534,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "yarn-2-pnp-zero@workspace:."
   dependencies:
+    dotenv: ^16.5.0
     express: ^4.18.2
   languageName: unknown
   linkType: soft

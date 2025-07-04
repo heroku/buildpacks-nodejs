@@ -124,6 +124,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:^16.5.0":
+  version: 16.6.1
+  resolution: "dotenv@npm:16.6.1"
+  checksum: 15ce56608326ea0d1d9414a5c8ee6dcf0fffc79d2c16422b4ac2268e7e2d76ff5a572d37ffe747c377de12005f14b3cc22361e79fc7f1061cce81f77d2c973dc
+  languageName: node
+  linkType: hard
+
 "ee-first@npm:1.1.1":
   version: 1.1.1
   resolution: "ee-first@npm:1.1.1"
@@ -577,6 +584,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "yarn-4-modules-nonzero@workspace:."
   dependencies:
+    dotenv: "npm:^16.5.0"
     express: "npm:^4.17.3"
   languageName: unknown
   linkType: soft
