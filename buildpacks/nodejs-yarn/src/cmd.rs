@@ -1,4 +1,4 @@
-use crate::yarn::Yarn;
+use crate::yarn::{NodeLinker, UnknownNodeLinker, Yarn};
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};
@@ -105,4 +105,58 @@ pub(crate) fn yarn_install(
 /// Execute `yarn run` commands like `build`.
 pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), CmdError> {
     print::sub_stream_cmd(Command::new("yarn").arg("run").arg(script).envs(yarn_env)).map(|_| ())
+}
+
+pub(crate) fn yarn_prune(env: &Env) -> Result<(), CmdError> {
+    print::sub_stream_cmd(
+        Command::new("yarn")
+            .args([
+                "install",
+                "--production",
+                "--frozen-lockfile",
+                "--ignore-engines",
+                "--ignore-scripts",
+                "--prefer-offline",
+            ])
+            .envs(env),
+    )
+    .map(|_| ())
+}
+
+pub(crate) fn yarn_prune_with_plugin(env: &Env, plugin_path: &Path) -> Result<(), CmdError> {
+    print::sub_stream_cmd(
+        Command::new("yarn")
+            .envs(env)
+            .env("YARN_PLUGINS", plugin_path)
+            .args(["heroku", "prune"]),
+    )
+    .map(|_| ())
+}
+
+pub(crate) fn yarn_config_get_node_linker(
+    env: &Env,
+    yarn: &Yarn,
+) -> Result<Option<NodeLinker>, GetNodeLinkerError> {
+    match yarn {
+        Yarn::Yarn1 => Ok(None),
+        Yarn::Yarn2 | Yarn::Yarn3 | Yarn::Yarn4 => {
+            let output = Command::new("yarn")
+                .envs(env)
+                .args(["config", "get", "nodeLinker"])
+                .named_output()
+                .map_err(GetNodeLinkerError::Command)?;
+            let node_linker = output
+                .stdout_lossy()
+                .trim()
+                .parse()
+                .map_err(GetNodeLinkerError::Parse)?;
+            Ok(Some(node_linker))
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum GetNodeLinkerError {
+    Parse(UnknownNodeLinker),
+    Command(CmdError),
 }
