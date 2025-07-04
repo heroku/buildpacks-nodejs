@@ -55,4 +55,16 @@ source: test_support/src/lib.rs
       Done in <time_elapsed>.
 
   - Done (<time_elapsed>)
+- Pruning dev dependencies
+  - Running `yarn install --production --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline`
+
+      yarn install v1.22.22
+      [1/4] Resolving packages...
+      [2/4] Fetching packages...
+      [3/4] Linking dependencies...
+      [4/4] Building fresh packages...
+      warning Ignored scripts due to flag.
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)

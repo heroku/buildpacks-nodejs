@@ -61,4 +61,5 @@ source: test_support/src/lib.rs
   - ! Not running `heroku-prebuild` as it was disabled by a participating buildpack
   - ! Not running `build` as it was disabled by a participating buildpack
   - ! Not running `heroku-postbuild` as it was disabled by a participating buildpack
+  - Skipping as pruning was disabled by a participating buildpack
 - Done (finished in <time_elapsed>)
