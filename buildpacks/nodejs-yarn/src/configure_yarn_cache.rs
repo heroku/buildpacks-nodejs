@@ -1,4 +1,4 @@
-use crate::yarn::Yarn;
+use crate::yarn::{NodeLinker, Yarn};
 use crate::{cmd, YarnBuildpack, YarnBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
@@ -19,6 +19,7 @@ use std::path::PathBuf;
 pub(crate) fn configure_yarn_cache(
     context: &BuildContext<YarnBuildpack>,
     yarn: &Yarn,
+    node_linker: Option<&NodeLinker>,
     env: &Env,
 ) -> Result<(), libcnb::Error<YarnBuildpackError>> {
     let new_metadata = DepsLayerMetadata {
@@ -31,7 +32,8 @@ pub(crate) fn configure_yarn_cache(
         layer_name!("deps"),
         CachedLayerDefinition {
             build: true,
-            launch: true,
+            // In Plug'n'Play mode, Yarn resolves packages directly from the cache so it must be present at launch
+            launch: matches!(node_linker, Some(NodeLinker::Pnp)),
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|old_metadata: &DepsLayerMetadata, _| {
                 let is_reusable = old_metadata.yarn == new_metadata.yarn

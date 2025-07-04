@@ -1,4 +1,4 @@
-use crate::cmd::YarnVersionError;
+use crate::cmd::{GetNodeLinkerError, YarnVersionError};
 use crate::configure_yarn_cache::DepsLayerError;
 use crate::install_yarn::CliLayerError;
 use crate::YarnBuildpackError;
@@ -52,6 +52,9 @@ fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::YarnDefaultParse(e) => on_yarn_default_parse_error(&e),
         YarnBuildpackError::NodeBuildScriptsMetadata(e) => on_node_build_scripts_metadata_error(e),
         YarnBuildpackError::FetchYarnPackument(e) => on_fetch_yarn_packument_error(&e),
+        YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
+        YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
+        YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
     }
 }
 
@@ -330,9 +333,73 @@ fn on_fetch_yarn_packument_error(error: &PackumentLayerError) -> ErrorMessage {
         .create()
 }
 
+fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
+    let yarn_prune = style::value(error.name());
+    error_message()
+        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header("Failed to prune Yarn dev dependencies")
+        .body(formatdoc! { "
+            The {BUILDPACK_NAME} buildpack uses the command {yarn_prune} to remove your dev dependencies from the production environment. This command \
+            failed and the buildpack cannot continue. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn on_get_node_linker_error(error: &GetNodeLinkerError) -> ErrorMessage {
+    match error {
+        GetNodeLinkerError::Parse(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
+            .header("Failed to parse Yarn's nodeLinker configuration")
+            .body(formatdoc! { "
+                An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
+                Expected - 'pnp', 'node-modules', or 'pnpm'
+                Actual   - '{value}'
+
+                Suggestions:
+                - Run {check_cmd} locally to check your 'nodeLinker' configuration.
+                - Set an explicit 'nodeLinker' configuration in {yarnrc_yml} ({install_modes_url})
+                ",
+                value = e.0,
+                check_cmd = style::command("yarn config get nodeLinker"),
+                yarnrc_yml = style::value(".yarnrc.yml"),
+                install_modes_url = style::url("https://yarnpkg.com/features/linkers")
+            })
+            .create(),
+
+        GetNodeLinkerError::Command(e) => error_message()
+            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+            .header("Failed to read Yarn's nodeLinker configuration")
+            .body(formatdoc! { "
+                An unexpected value was encountered when trying to read Yarn's nodeLinker configuration. This \
+                configuration is read using the command {read_cmd}.
+
+                Suggestions:
+                - Ensure the above command runs locally.
+            ", read_cmd = style::command(e.name()) })
+            .debug_info(e.to_string()).create()
+    }
+}
+
+fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to install Yarn plugin for pruning")
+        .body(formatdoc! { "
+            The {BUILDPACK_NAME} buildpack uses a custom plugin for Yarn to handle pruning \
+            of dev dependencies. An unexpected error was encountered while trying to install it.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::yarn::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;
@@ -493,6 +560,34 @@ mod tests {
     fn test_yarn_fetch_yarn_packument_error() {
         assert_error_snapshot(YarnBuildpackError::FetchYarnPackument(
             PackumentLayerError::ParsePackument(create_json_error()),
+        ));
+    }
+
+    #[test]
+    fn test_yarn_prune_dev_dependencies_error() {
+        assert_error_snapshot(YarnBuildpackError::PruneYarnDevDependencies(
+            create_cmd_error("yarn heroku prune"),
+        ));
+    }
+
+    #[test]
+    fn test_yarn_get_node_linker_parse_error() {
+        assert_error_snapshot(YarnBuildpackError::YarnGetNodeLinker(
+            GetNodeLinkerError::Parse(UnknownNodeLinker("test-linker".to_string())),
+        ));
+    }
+
+    #[test]
+    fn test_yarn_get_node_linker_command_error() {
+        assert_error_snapshot(YarnBuildpackError::YarnGetNodeLinker(
+            GetNodeLinkerError::Command(create_cmd_error("yarn config get nodeLinker")),
+        ));
+    }
+
+    #[test]
+    fn test_yarn_install_prune_plugin_error() {
+        assert_error_snapshot(YarnBuildpackError::InstallPrunePluginError(
+            create_io_error("Out of disk space"),
         ));
     }
 
