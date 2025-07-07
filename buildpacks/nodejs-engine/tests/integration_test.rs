@@ -3,7 +3,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{assert_contains_match, BuildpackReference};
+use libcnb_test::{assert_contains, assert_contains_match, BuildpackReference};
 use test_support::{
     assert_web_response, create_build_snapshot, custom_buildpack, integration_test_with_config,
     nodejs_integration_test, nodejs_integration_test_with_config, set_node_engine,
@@ -94,5 +94,48 @@ fn node_24() {
             create_build_snapshot(&ctx.pack_stderr).assert();
             assert_web_response(&ctx, "node-with-serverjs");
         },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn node_version_configured_using_project_toml() {
+    nodejs_integration_test("./fixtures/project_toml_config", |ctx| {
+        assert_contains!(&ctx.pack_stderr, "Resolved Node.js version: `22.");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn node_version_configured_using_buildplan_metadata() {
+    integration_test_with_config(
+        "./fixtures/buildpack_metadata_config",
+        |_| {},
+        |ctx| {
+            assert_contains!(&ctx.pack_stderr, "Resolved Node.js version: `23.");
+        },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            BuildpackReference::Other(
+                custom_buildpack()
+                    .id("test/configure-node-version")
+                    .detect(indoc! { r#"
+                        #!/usr/bin/env bash
+
+                        build_plan="$2"
+
+                        cat <<EOF >"$build_plan"
+                            [[requires]]
+                            name = "node"
+
+                            [[requires]]
+                            name = "com.heroku.buildpacks.nodejs"
+                            [requires.metadata.runtime]
+                            version = "23.x"
+                        EOF
+                    "# })
+                    .call(),
+            ),
+        ],
     );
 }

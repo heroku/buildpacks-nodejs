@@ -864,6 +864,7 @@ dependencies = [
  "test_support",
  "tokio",
  "toml",
+ "toml_edit",
 ]
 
 [[package]]

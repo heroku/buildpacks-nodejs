@@ -12,6 +12,7 @@ use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
+use libcnb::data::buildpack_plan::BuildpackPlan;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
@@ -28,8 +29,11 @@ use regex as _;
 use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
+use std::path::Path;
+use std::str::FromStr;
 #[cfg(test)]
 use test_support as _;
+use toml_edit::{DocumentMut, TableLike};
 
 mod configure_available_parallelism;
 mod configure_web_env;
@@ -39,6 +43,8 @@ mod install_node;
 const INVENTORY: &str = include_str!("../inventory.toml");
 
 const LTS_VERSION: &str = "22.x";
+
+const CONFIG_NAMESPACE: &str = "com.heroku.buildpacks.nodejs";
 
 struct NodeJsEngineBuildpack;
 
@@ -51,8 +57,10 @@ impl Buildpack for NodeJsEngineBuildpack {
         let mut plan_builder = BuildPlanBuilder::new()
             .provides("node")
             .provides("npm")
+            .provides(CONFIG_NAMESPACE)
             .or()
-            .provides("node");
+            .provides("node")
+            .provides(CONFIG_NAMESPACE);
 
         // If there are common node artifacts, this buildpack should both
         // provide and require node so that it may be used without other
@@ -61,9 +69,12 @@ impl Buildpack for NodeJsEngineBuildpack {
             .map(|name| context.app_dir.join(name))
             .iter()
             .any(|path| path.exists())
+            || project_toml_contains_namespaced_config(&context.app_dir)
         {
             plan_builder = plan_builder.requires("node");
         }
+
+        plan_builder = plan_builder.requires(CONFIG_NAMESPACE);
 
         // This buildpack may provide node when required by other buildpacks,
         // so it always explicitly passes. However, if no other group
@@ -88,9 +99,8 @@ impl Buildpack for NodeJsEngineBuildpack {
         let inv: Inventory<Version, Sha256, Option<()>> =
             toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParse)?;
 
-        let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsEngineBuildpackError::PackageJson)
-            .map(|package_json| package_json.engines.and_then(|e| e.node))?;
+        let requested_version_range =
+            read_node_version_config(&context.app_dir, &context.buildpack_plan)?;
 
         let version_range = if let Some(value) = requested_version_range {
             print::sub_bullet(format!(
@@ -170,3 +180,94 @@ impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackErr
 }
 
 buildpack_main!(NodeJsEngineBuildpack);
+
+fn project_toml_contains_namespaced_config(app_dir: &Path) -> bool {
+    if app_dir.join("project.toml").try_exists().unwrap_or(false) {
+        let contents = std::fs::read_to_string(app_dir.join("project.toml"))
+            .expect("Could not read project.toml file");
+        let project_toml =
+            toml_edit::DocumentMut::from_str(&contents).expect("Could not parse project.toml file");
+        get_buildpack_namespaced_config(&project_toml).is_some()
+    } else {
+        false
+    }
+}
+
+fn read_node_version_config(
+    app_dir: &Path,
+    buildpack_plan: &BuildpackPlan,
+) -> Result<Option<Requirement>, NodeJsEngineBuildpackError> {
+    // package.json is the where we source the requested version from first
+    if app_dir.join("package.json").try_exists().unwrap_or(false) {
+        let requested_version_range = PackageJson::read(app_dir.join("package.json"))
+            .map_err(NodeJsEngineBuildpackError::PackageJson)
+            .map(|package_json| package_json.engines.and_then(|e| e.node))?;
+
+        if requested_version_range.is_some() {
+            return Ok(requested_version_range);
+        }
+    }
+
+    // if that's not available, then we can use project.toml next
+    if app_dir.join("project.toml").try_exists().unwrap_or(false) {
+        let contents = std::fs::read_to_string(app_dir.join("project.toml"))
+            .expect("Could not read project.toml file");
+        let project_toml =
+            toml_edit::DocumentMut::from_str(&contents).expect("Could not parse project.toml file");
+        if let Some(config) = get_buildpack_namespaced_config(&project_toml) {
+            return Ok(get_runtime_version(config));
+        }
+    }
+
+    // finally, lowest-priority is whatever buildpack plans have been contributed
+    let buildpack_plan_configs = buildpack_plan
+        .entries
+        .iter()
+        .filter(|entry| entry.name == CONFIG_NAMESPACE);
+
+    for buildpack_plan_config in buildpack_plan_configs {
+        let toml = toml::to_string(&buildpack_plan_config.metadata)
+            .expect("Buildplan metadata should be serializable to TOML");
+        let doc = toml_edit::DocumentMut::from_str(&toml)
+            .expect("Buildplan metadata should be deserializable from TOML");
+        let config = doc
+            .as_item()
+            .as_table_like()
+            .expect("Buildplan metadata should always be a table");
+        if let Some(requested_version) = get_runtime_version(config) {
+            return Ok(Some(requested_version));
+        }
+    }
+
+    Ok(None)
+}
+
+fn get_buildpack_namespaced_config(doc: &DocumentMut) -> Option<&dyn TableLike> {
+    let mut current_table = doc
+        .as_item()
+        .as_table_like()
+        .expect("The 'project.toml' contents should always be a table");
+    for name in CONFIG_NAMESPACE.split('.') {
+        current_table = match current_table.get(name) {
+            Some(item) => item
+                .as_table_like()
+                .expect("Error parsing namespaced config in project.toml at {name}"),
+            None => return None,
+        };
+    }
+    Some(current_table)
+}
+
+fn get_runtime_version(namespaced_config: &dyn TableLike) -> Option<Requirement> {
+    if let Some(runtime) = namespaced_config
+        .get("runtime")
+        .and_then(|value| value.as_table_like())
+    {
+        runtime
+            .get("version")
+            .and_then(|value| value.as_str())
+            .map(|version| Requirement::parse(version).expect("Could not parse runtime version"))
+    } else {
+        None
+    }
+}

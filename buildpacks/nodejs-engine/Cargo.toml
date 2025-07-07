@@ -21,6 +21,7 @@ serde = "1"
 sha2 = "0.10.9"
 tempfile = "3"
 toml = "0.8"
+toml_edit = "0.22"
 
 [dev-dependencies]
 insta = "1"
