@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- This buildpack now prunes pnpm dev dependencies at the end of its build to reduce the final image size. ([#1126](https://github.com/heroku/buildpacks-nodejs/pull/1126))
+- This buildpack now prunes pnpm dev dependencies at the end of its build to reduce the final image size. ([#1128](https://github.com/heroku/buildpacks-nodejs/pull/1128))
 
 ## [3.6.11] - 2025-07-09
 
