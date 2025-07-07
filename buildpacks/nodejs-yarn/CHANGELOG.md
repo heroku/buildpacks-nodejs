@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - This buildpack now prunes Yarn dev dependencies at the end of its build to reduce the final image size. ([#1136](https://github.com/heroku/buildpacks-nodejs/pull/1136))
 
+### Changed
+
+- The Yarn dependency cache will only be included in the final image when Plug'n'Play mode is enabled. ([#1136](https://github.com/heroku/buildpacks-nodejs/pull/1136))
+
 ## [3.6.11] - 2025-07-09
 
 - No changes.
