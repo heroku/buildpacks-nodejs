@@ -118,6 +118,25 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "${1}➤ YN0000: │ <NODE-GYP BUILD OUTPUT>",
     ));
 
+    // [Yarn] Yarn v1 warning when pruning dev dependencies caused by use of --ignore-scripts flag.
+    //        The warning shows up at random spots (usually after step #3 or #4) in the output so it's
+    //        best to just eliminate it from the output entirely. e.g.;
+    //   - Running `yarn install --production --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline`
+    //
+    //       yarn install v1.22.22
+    //       [1/4] Resolving packages...
+    //       [2/4] Fetching packages...
+    //       [3/4] Linking dependencies...
+    //       [4/4] Building fresh packages...
+    //       warning Ignored scripts due to flag.
+    //       Done in <time_elapsed>.
+    //
+    //   - Done (<time_elapsed>)
+    filters.push((
+        r"( *)warning Ignored scripts due to flag\..*\n(?:.*\n)*? *",
+        "${1}",
+    ));
+
     // [npm] Summary of added packages with no audit information. e.g.;
     // - added 12 packages in 27s
     // - added 3 packages in 1.13ms

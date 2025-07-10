@@ -63,6 +63,19 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn heroku prune`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0000: └ Completed
+      ➤ YN0000: Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 --------------------------------------------- REBUILD ---------------------------------------------
@@ -125,4 +138,17 @@ source: test_support/src/lib.rs
   - Done (<time_elapsed>)
 - Running scripts
   - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn heroku prune`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0000: └ Completed
+      ➤ YN0000: Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)

@@ -3,7 +3,7 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::cmd::YarnVersionError;
+use crate::cmd::{GetNodeLinkerError, YarnVersionError};
 use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
 use crate::install_yarn::{install_yarn, CliLayerError};
 use crate::yarn::Yarn;
@@ -42,6 +42,8 @@ mod install_yarn;
 mod yarn;
 
 const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
+
+const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
 struct YarnBuildpack;
 
@@ -150,13 +152,16 @@ impl Buildpack for YarnBuildpack {
         print::bullet("Setting up yarn dependency cache");
         cmd::yarn_disable_global_cache(&yarn, &env)
             .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
+
         let zero_install = cfg::cache_populated(
             &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
         );
         if zero_install {
             print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
         } else {
-            configure_yarn_cache(&context, &yarn, &env)?;
+            let yarn_node_linker = cmd::yarn_config_get_node_linker(&env, &yarn)
+                .map_err(YarnBuildpackError::YarnGetNodeLinker)?;
+            configure_yarn_cache(&context, &yarn, yarn_node_linker.as_ref(), &env)?;
         }
 
         print::bullet("Installing dependencies");
@@ -177,6 +182,12 @@ impl Buildpack for YarnBuildpack {
                     cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
                 }
             }
+        }
+
+        if node_build_scripts_metadata.skip_pruning == Some(true) {
+            print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
+        } else {
+            yarn_prune_dev_dependencies(&env, &yarn)?;
         }
 
         let mut build_result_builder = BuildResultBuilder::new();
@@ -219,6 +230,9 @@ enum YarnBuildpackError {
     YarnVersionResolve(Requirement),
     YarnDefaultParse(VersionError),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
+    PruneYarnDevDependencies(fun_run::CmdError),
+    YarnGetNodeLinker(GetNodeLinkerError),
+    InstallPrunePluginError(std::io::Error),
 }
 
 impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
@@ -228,3 +242,21 @@ impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
 }
 
 buildpack_main!(YarnBuildpack);
+
+fn yarn_prune_dev_dependencies(env: &Env, yarn: &Yarn) -> Result<(), YarnBuildpackError> {
+    print::bullet("Pruning dev dependencies");
+    match yarn {
+        Yarn::Yarn1 => cmd::yarn_prune(env),
+        Yarn::Yarn2 | Yarn::Yarn3 | Yarn::Yarn4 => {
+            let plugin_source =
+                tempfile::NamedTempFile::with_prefix("plugin-prune-dev-dependencies")
+                    .map_err(YarnBuildpackError::InstallPrunePluginError)?;
+
+            std::fs::write(plugin_source.path(), YARN_PRUNE_PLUGIN_SOURCE)
+                .map_err(YarnBuildpackError::InstallPrunePluginError)?;
+
+            cmd::yarn_prune_with_plugin(env, plugin_source.path())
+        }
+    }
+    .map_err(YarnBuildpackError::PruneYarnDevDependencies)
+}

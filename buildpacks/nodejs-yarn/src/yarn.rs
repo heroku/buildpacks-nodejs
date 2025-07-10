@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -20,3 +21,26 @@ impl Yarn {
         }
     }
 }
+
+#[derive(Debug)]
+pub(crate) enum NodeLinker {
+    Pnp,
+    Pnpm,
+    NodeModules,
+}
+
+impl FromStr for NodeLinker {
+    type Err = UnknownNodeLinker;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "pnp" => Ok(NodeLinker::Pnp),
+            "node-modules" => Ok(NodeLinker::NodeModules),
+            "pnpm" => Ok(NodeLinker::Pnpm),
+            _ => Err(UnknownNodeLinker(value.to_string())),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct UnknownNodeLinker(pub(crate) String);
