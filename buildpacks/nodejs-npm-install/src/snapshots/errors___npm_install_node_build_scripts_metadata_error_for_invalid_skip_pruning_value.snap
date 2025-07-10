@@ -1,5 +1,5 @@
 ---
-source: buildpacks/nodejs-pnpm-install/src/errors.rs
+source: buildpacks/nodejs-npm-install/src/errors.rs
 ---
 ! Invalid build plan metadata
 !
@@ -8,10 +8,10 @@ source: buildpacks/nodejs-pnpm-install/src/errors.rs
 ! Expected metadata format:
 ! [requires.metadata]
 ! enabled = <bool>
+! skip_pruning = <bool>
 !
-! But was:
-! [requires.metadata]
-! enabled = <string>
+! But configured with:
+! skip_pruning = "test" <string>
 !
 ! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
 ! https://github.com/heroku/buildpacks-nodejs/issues

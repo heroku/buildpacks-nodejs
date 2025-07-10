@@ -42,14 +42,15 @@ fn test_npm_install_new_package() {
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
-            add_package_json_dependency(&app_dir, "dotenv", "16.3.1");
+            add_package_json_dependency(&app_dir, "environment", "1.1.0");
             add_lockfile_entry(
                 &app_dir,
-                "dotenv",
+                "environment",
                 json!({
-                    "version": "16.3.1",
-                    "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.3.1.tgz",
-                    "integrity": "sha512-IPzF4w4/Rd94bA9imS68tZBaYyBWSCE47V1RGuMrB94iyTOIEwRmVL2x/4An+6mETpLrKJ5hQkB8W4kFAadeIQ=="
+                    "version": "1.1.0",
+                    "resolved": "https://registry.npmjs.org/environment/-/environment-1.1.0.tgz",
+                    "integrity": "sha512-xUtoPkMggbz0MPyPiIWr1Kp4aeWJjDZ6SMvURhimjdZgsRuDplF5/s9hcgGhyXMhs+6vpnuoiZ2kFiu3FMnS8Q==",
+                    "license": "MIT"
                 })
             );
         });
@@ -223,7 +224,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
 
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
-        let dependencies = json["dependencies"].as_object_mut().unwrap();
-        dependencies.insert(package_name.to_string(), lockfile_entry);
+        let packages = json["packages"].as_object_mut().unwrap();
+        packages.insert(format!("node_modules/{package_name}"), lockfile_entry);
     });
 }

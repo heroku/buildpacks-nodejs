@@ -139,30 +139,51 @@ fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
                 .create()
         }
 
-        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
-            let NodeBuildScriptsMetadataError::InvalidEnabledValue(value) = e;
-            let value_type = value.type_str();
+        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(error) => {
             let requires_metadata = style::value("[requires.metadata]");
             let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-            error_message()
-                .error_type(ErrorType::UserFacing(
-                    SuggestRetryBuild::No,
-                    SuggestSubmitIssue::Yes,
-                ))
-                .header("Invalid build plan metadata")
-                .body(formatdoc! {"
-                    A participating buildpack has set invalid {requires_metadata} for the \
-                    build plan named {buildplan_name}.
 
-                    Expected metadata format:
-                    [requires.metadata]
-                    enabled = <bool>
+            match error {
+                NodeBuildScriptsMetadataError::InvalidEnabledValue(value) => error_message()
+                    .error_type(ErrorType::UserFacing(
+                        SuggestRetryBuild::No,
+                        SuggestSubmitIssue::Yes,
+                    ))
+                    .header("Invalid build plan metadata")
+                    .body(formatdoc! { "
+                        A participating buildpack has set invalid {requires_metadata} for the build plan \
+                        named {buildplan_name}.
+                        
+                        Expected metadata format:
+                        [requires.metadata]
+                        enabled = <bool>
+                        skip_pruning = <bool>
+                        
+                        But configured with:
+                        enabled = {value} <{value_type}>     
+                    ", value_type = value.type_str() })
+                    .create(),
 
-                    But was:
-                    [requires.metadata]
-                    enabled = <{value_type}>
-                "})
-                .create()
+                NodeBuildScriptsMetadataError::InvalidSkipPruningValue(value) => error_message()
+                    .error_type(ErrorType::UserFacing(
+                        SuggestRetryBuild::No,
+                        SuggestSubmitIssue::Yes,
+                    ))
+                    .header("Invalid build plan metadata")
+                    .body(formatdoc! { "
+                        A participating buildpack has set invalid {requires_metadata} for the build plan \
+                        named {buildplan_name}.
+                        
+                        Expected metadata format:
+                        [requires.metadata]
+                        enabled = <bool>
+                        skip_pruning = <bool>
+                        
+                        But configured with:
+                        skip_pruning = {value} <{value_type}>     
+                    ", value_type = value.type_str() })
+                    .create(),
+            }
         }
     }
 }
@@ -180,9 +201,18 @@ mod tests {
     use test_support::test_name;
 
     #[test]
-    fn test_pnpm_install_node_build_scripts_metadata_error() {
+    fn test_pnpm_install_node_build_scripts_metadata_error_for_invalid_enabled_value() {
         assert_error_snapshot(PnpmInstallBuildpackError::NodeBuildScriptsMetadata(
             NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
+                "test".to_string(),
+            )),
+        ));
+    }
+
+    #[test]
+    fn test_pnpm_install_node_build_scripts_metadata_error_for_invalid_skip_pruning_value() {
+        assert_error_snapshot(PnpmInstallBuildpackError::NodeBuildScriptsMetadata(
+            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
                 "test".to_string(),
             )),
         ));
