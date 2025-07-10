@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0] - 2025-07-10
+
 ### Added
 
 - This buildpack now prunes Yarn dev dependencies at the end of its build to reduce the final image size. ([#1136](https://github.com/heroku/buildpacks-nodejs/pull/1136))
@@ -514,7 +516,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.11...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.11...v4.0.0
 [3.6.11]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.10...v3.6.11
 [3.6.10]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.9...v3.6.10
 [3.6.9]: https://github.com/heroku/buildpacks-nodejs/compare/v3.6.8...v3.6.9
