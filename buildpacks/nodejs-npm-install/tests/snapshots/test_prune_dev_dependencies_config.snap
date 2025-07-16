@@ -29,14 +29,12 @@ source: test_support/src/lib.rs
 
   - Done (<time_elapsed>)
 - Running scripts
-  - Not running `heroku-prebuild` as it was disabled by a participating buildpack
-  - Not running `build` as it was disabled by a participating buildpack
-  - Not running `heroku-postbuild` as it was disabled by a participating buildpack
+  - No build scripts found
 - Pruning dev dependencies
-  - Skipping as pruning was disabled by a participating buildpack
+  - Skipping as pruning was disabled in project.toml
 - Configuring default processes
   - Skipping default web process (no start script defined)
 
-! Experimental feature used - buildpack plan configuration (this feature may change unexpectedly in the future)
+! Experimental feature used - project.toml configuration (this feature may change unexpectedly in the future)
 
 - Done (finished in <time_elapsed>)

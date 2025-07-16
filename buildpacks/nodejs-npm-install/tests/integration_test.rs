@@ -222,6 +222,29 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
     );
 }
 
+#[test]
+#[ignore = "integration test"]
+fn test_prune_dev_dependencies_config() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::write(
+                    app_dir.join("project.toml"),
+                    indoc! { "
+                    [com.heroku.buildpacks.nodejs]
+                    actions.prune_dev_dependencies = false
+                " },
+                )
+                .unwrap();
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stderr).assert();
+        },
+    );
+}
+
 fn add_lockfile_entry(app_dir: &Path, package_name: &str, lockfile_entry: serde_json::Value) {
     update_json_file(&app_dir.join("package-lock.json"), |json| {
         let packages = json["packages"].as_object_mut().unwrap();
