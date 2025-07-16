@@ -1,0 +1,11 @@
+---
+source: common/nodejs-utils/src/config.rs
+---
+! Error parsing project.toml with invalid configuration type
+!
+! This buildpack reads the configuration from `project.toml` to complete the build but the configuration value for `prune_dev_dependencies` in the section `[com.heroku.buildpacks.nodejs.actions]` isn't the correct type. The value of this key must be a boolean.
+!
+! Suggestions:
+! - See the TOML documentation for more details on the TOML boolean type at https://toml.io/en/v1.0.0
+!
+! Use the debug information above to troubleshoot and retry your build.
