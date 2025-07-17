@@ -130,6 +130,17 @@ pub fn file_value(value: impl AsRef<Path>) -> String {
     style::value(value.as_ref().to_string_lossy())
 }
 
+// A useful type for when you've got an error type that needs to be shared across multiple
+// buildpacks and you want handle all the ErrorMessage building logic for multiple variants
+// where that error type is declared.
+pub type SharedErrorMessageBuilder = ErrorMessageBuilder<
+    error_message_builder::SetDebugInfo<
+        error_message_builder::SetBody<
+            error_message_builder::SetHeader<error_message_builder::SetErrorType>,
+        >,
+    >,
+>;
+
 #[derive(Debug)]
 pub struct ErrorMessage {
     debug_info: Option<String>,

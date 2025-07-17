@@ -4,6 +4,7 @@ use sha2 as _;
 pub mod application;
 pub mod available_parallelism;
 pub mod buildplan;
+pub mod config;
 pub mod distribution;
 pub mod error_handling;
 pub mod http;

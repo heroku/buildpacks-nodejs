@@ -137,3 +137,26 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
         },
     );
 }
+
+#[test]
+#[ignore = "integration test"]
+fn test_prune_dev_dependencies_config() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::write(
+                    app_dir.join("project.toml"),
+                    indoc! { "
+                    [com.heroku.buildpacks.nodejs]
+                    actions.prune_dev_dependencies = false
+                " },
+                )
+                .unwrap();
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stderr).assert();
+        },
+    );
+}

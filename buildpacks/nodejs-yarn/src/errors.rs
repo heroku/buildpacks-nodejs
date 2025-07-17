@@ -11,7 +11,7 @@ use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::UserFacing;
 use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    ErrorType, SharedErrorMessageBuilder, SuggestRetryBuild, SuggestSubmitIssue,
 };
 use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
@@ -55,6 +55,9 @@ fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
+        YarnBuildpackError::Config(e) => SharedErrorMessageBuilder::from(e)
+            .issues_url(ISSUES_URL.to_string())
+            .create(),
     }
 }
 

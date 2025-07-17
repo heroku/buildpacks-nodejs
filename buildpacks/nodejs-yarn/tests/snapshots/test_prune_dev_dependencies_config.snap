@@ -5,13 +5,13 @@ source: test_support/src/lib.rs
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.17.1`
+  - Resolved Node.js version: `22.17.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.17.1/node-v22.17.1-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.17.0/node-v22.17.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.17.1 (<arch>)`
-  - Installing Node.js `22.17.1 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.17.0 (<arch>)`
+  - Installing Node.js `22.17.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js Corepack
@@ -58,12 +58,10 @@ source: test_support/src/lib.rs
 
   - Done (<time_elapsed>)
 - Running scripts
-  - ! Not running `heroku-prebuild` as it was disabled by a participating buildpack
-  - ! Not running `build` as it was disabled by a participating buildpack
-  - ! Not running `heroku-postbuild` as it was disabled by a participating buildpack
+  - No build scripts found
 - Pruning dev dependencies
-  - Skipping as pruning was disabled by a participating buildpack
+  - Skipping as pruning was disabled in project.toml
 
-! Experimental feature used - buildpack plan configuration (this feature may change unexpectedly in the future)
+! Experimental feature used - project.toml configuration (this feature may change unexpectedly in the future)
 
 - Done (finished in <time_elapsed>)
