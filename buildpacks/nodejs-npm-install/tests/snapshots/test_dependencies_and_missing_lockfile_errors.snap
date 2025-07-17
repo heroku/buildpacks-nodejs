@@ -5,13 +5,13 @@ source: test_support/src/lib.rs
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
-  - Resolved Node.js version: `20.19.3`
+  - Resolved Node.js version: `20.19.4`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.19.3/node-v20.19.3-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v20.19.4/node-v20.19.4-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.19.3 (<arch>)`
-  - Installing Node.js `20.19.3 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.19.4 (<arch>)`
+  - Installing Node.js `20.19.4 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js npm Install

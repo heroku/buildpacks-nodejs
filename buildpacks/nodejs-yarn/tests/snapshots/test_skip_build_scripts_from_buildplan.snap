@@ -5,13 +5,13 @@ source: test_support/src/lib.rs
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.17.0`
+  - Resolved Node.js version: `22.17.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.17.0/node-v22.17.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.17.1/node-v22.17.1-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.17.0 (<arch>)`
-  - Installing Node.js `22.17.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.17.1 (<arch>)`
+  - Installing Node.js `22.17.1 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js Corepack
