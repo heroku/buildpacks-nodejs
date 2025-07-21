@@ -184,23 +184,9 @@ mod tests {
         let config = toml::to_string(&toml! {
             [com.heroku.buildpacks.nodejs.actions]
             some_other_config = "test"
-        })
-        .unwrap();
-        std::fs::write(&project_toml, &config).unwrap();
 
-        assert_eq!(
-            read_prune_dev_dependencies_from_project_toml(&project_toml).unwrap(),
-            None
-        );
-    }
-
-    #[test]
-    fn read_prune_dev_dependencies_config_from_project_toml_when_namespaced_config_is_present() {
-        let app_dir = tempfile::tempdir().unwrap();
-        let project_toml = app_dir.path().join("project.toml");
-        let config = toml::to_string(&toml! {
             [some.other.namespace]
-            some_other_config = "test"
+            prune_dev_dependencies = true
         })
         .unwrap();
         std::fs::write(&project_toml, &config).unwrap();
