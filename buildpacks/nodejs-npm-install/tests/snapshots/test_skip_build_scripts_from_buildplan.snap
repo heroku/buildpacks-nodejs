@@ -37,6 +37,6 @@ source: test_support/src/lib.rs
 - Configuring default processes
   - Skipping default web process (no start script defined)
 
-! Experimental feature used - buildpack plan configuration (this feature may change unexpectedly in the future)
+! Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
 
 - Done (finished in <time_elapsed>)

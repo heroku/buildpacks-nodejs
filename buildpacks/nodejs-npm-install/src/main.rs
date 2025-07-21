@@ -127,14 +127,16 @@ impl Buildpack for NpmInstallBuildpack {
         configure_npm_runtime_env(&context)?;
 
         if prune_dev_dependencies.is_some() {
-            print::warning(indoc! { "\
-                Experimental feature used - project.toml configuration (this feature may change unexpectedly in the future)
+            print::warning(indoc! { "
+                Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+                found in `project.toml`. This feature may change unexpectedly in the future.
             " });
         }
 
         if node_build_scripts_metadata.skip_pruning.is_some() {
-            print::warning(indoc! { "\
-                Experimental feature used - buildpack plan configuration (this feature may change unexpectedly in the future)
+            print::warning(indoc! { "
+                Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+                to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
             " });
         }
 

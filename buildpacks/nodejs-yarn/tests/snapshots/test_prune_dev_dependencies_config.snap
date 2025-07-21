@@ -62,6 +62,6 @@ source: test_support/src/lib.rs
 - Pruning dev dependencies
   - Skipping as pruning was disabled in project.toml
 
-! Experimental feature used - project.toml configuration (this feature may change unexpectedly in the future)
+! Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` found in `project.toml`. This feature may change unexpectedly in the future.
 
 - Done (finished in <time_elapsed>)

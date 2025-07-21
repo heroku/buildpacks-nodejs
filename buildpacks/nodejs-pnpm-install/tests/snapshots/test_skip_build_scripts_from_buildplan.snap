@@ -66,6 +66,6 @@ source: test_support/src/lib.rs
 - Pruning dev dependencies
   - Skipping as pruning was disabled by a participating buildpack
 
-! Experimental feature used - buildpack plan configuration (this feature may change unexpectedly in the future)
+! Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
 
 - Done (finished in <time_elapsed>)
