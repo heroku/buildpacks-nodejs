@@ -75,7 +75,7 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
         match value {
             ConfigError::CheckExists(e) => error_message()
                 .error_type(ErrorType::Internal)
-                .header("Failed to check if project.toml exists")
+                .header("Failed project.toml existence check")
                 .body(formatdoc! { "
                     An unexpected I/O error occurred while checking if {project_toml} exists in the \
                     root of the application.
@@ -95,7 +95,7 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
                 .header("Failed to parse project.toml")
                 .body(formatdoc! { "
-                    This buildpack reads configuration from {project_toml} to complete the build but \
+                    This buildpack reads configuration from {project_toml} to complete the build, but \
                     this file isn't a valid TOML file.
 
                     Suggestions:
@@ -108,7 +108,7 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                 .header("Error parsing project.toml with invalid key")
                 .body(formatdoc! { "
                     This buildpack reads the configuration from {project_toml} to complete \
-                    the build but the configuration for the key {config_table_key} isn't the \
+                    the build, but the configuration for the key {config_table_key} isn't the \
                     correct type. The value of this key must be a TOML table.
 
                     Suggestions:
@@ -122,7 +122,7 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                 .header("Error parsing project.toml with invalid configuration type")
                 .body(formatdoc! { "
                     This buildpack reads the configuration from {project_toml} to complete \
-                    the build but the configuration value for {config_key} in the section \
+                    the build, but the configuration value for {config_key} in the section \
                     {config_table_key} isn't the correct type. The value of this key must be a boolean.
 
                     Suggestions:

@@ -4,7 +4,7 @@ source: common/nodejs-utils/src/config.rs
 - Debug Info:
   - Test I/O Error
 
-! Failed to check if project.toml exists
+! Failed project.toml existence check
 !
 ! An unexpected I/O error occurred while checking if `project.toml` exists in the root of the application.
 !

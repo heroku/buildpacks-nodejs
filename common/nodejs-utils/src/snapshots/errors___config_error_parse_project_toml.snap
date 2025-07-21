@@ -11,7 +11,7 @@ source: common/nodejs-utils/src/config.rs
 
 ! Failed to parse project.toml
 !
-! This buildpack reads configuration from `project.toml` to complete the build but this file isn't a valid TOML file.
+! This buildpack reads configuration from `project.toml` to complete the build, but this file isn't a valid TOML file.
 !
 ! Suggestions:
 ! - Ensure the file follows the TOML format described at https://toml.io/en/v1.0.0
