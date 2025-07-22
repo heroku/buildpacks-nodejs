@@ -18,9 +18,11 @@ use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
+use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
+use indoc::indoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -86,6 +88,9 @@ impl Buildpack for NpmInstallBuildpack {
             .map_err(NpmInstallBuildpackError::PackageJson)?;
         let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
             .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
+        let prune_dev_dependencies =
+            read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
+                .map_err(NpmInstallBuildpackError::Config)?;
 
         application::check_for_singular_lockfile(app_dir)
             .map_err(NpmInstallBuildpackError::Application)?;
@@ -107,7 +112,9 @@ impl Buildpack for NpmInstallBuildpack {
         // configuration mechanism is going to be changed in the near-future but, for now, we'll
         // also attach the pruning opt-out configuration to it.
         print::bullet("Pruning dev dependencies");
-        if let Some(true) = node_build_scripts_metadata.skip_pruning {
+        if prune_dev_dependencies == Some(false) {
+            print::sub_bullet("Skipping as pruning was disabled in project.toml");
+        } else if let Some(true) = node_build_scripts_metadata.skip_pruning {
             print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
         } else {
             print::sub_stream_cmd(npm::Prune { env: &env }.into_command())
@@ -118,6 +125,20 @@ impl Buildpack for NpmInstallBuildpack {
         let build_result = configure_default_processes(&context, &package_json);
 
         configure_npm_runtime_env(&context)?;
+
+        if prune_dev_dependencies.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+                found in `project.toml`. This feature may change unexpectedly in the future.
+            " });
+        }
+
+        if node_build_scripts_metadata.skip_pruning.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+                to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+            " });
+        }
 
         print::all_done(&Some(buildpack_start));
         build_result
@@ -220,6 +241,7 @@ pub(crate) enum NpmInstallBuildpackError {
     PackageJson(PackageJsonError),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneDevDependencies(CmdError),
+    Config(ConfigError),
 }
 
 impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> {

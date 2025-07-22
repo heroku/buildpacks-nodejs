@@ -60,12 +60,10 @@ source: test_support/src/lib.rs
 
   - Done (<time_elapsed>)
 - Running scripts
-  - ! Not running `heroku-prebuild` as it was disabled by a participating buildpack
-  - ! Not running `build` as it was disabled by a participating buildpack
-  - ! Not running `heroku-postbuild` as it was disabled by a participating buildpack
+  - No build scripts found
 - Pruning dev dependencies
-  - Skipping as pruning was disabled by a participating buildpack
+  - Skipping as pruning was disabled in project.toml
 
-! Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+! Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` found in `project.toml`. This feature may change unexpectedly in the future.
 
 - Done (finished in <time_elapsed>)

@@ -8,7 +8,7 @@ use heroku_nodejs_utils::buildplan::{
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
     on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder, ErrorType,
-    SuggestRetryBuild, SuggestSubmitIssue,
+    SharedErrorMessageBuilder, SuggestRetryBuild, SuggestSubmitIssue,
 };
 use indoc::formatdoc;
 use std::io;
@@ -44,6 +44,9 @@ fn on_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
             on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
         }
         NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
+        NpmInstallBuildpackError::Config(e) => SharedErrorMessageBuilder::from(e)
+            .issues_url(ISSUES_URL.to_string())
+            .create(),
     }
 }
 
@@ -207,9 +210,9 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
     let npm_prune = style::value(error.name());
     error_message()
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-        .header("Failed to install Node modules")
+        .header("Failed to prune npm dev dependencies")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses the command {npm_prune} to prune your Node modules for the production environment. This command \
+            The {BUILDPACK_NAME} buildpack uses the command {npm_prune} to remove your dev dependencies from the production environment. This command \
             failed and the buildpack cannot continue. See the log output above for more information.
 
             Suggestions:

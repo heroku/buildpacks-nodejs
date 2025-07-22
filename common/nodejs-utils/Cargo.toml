@@ -37,10 +37,13 @@ tokio-util = { version = "0.7", default-features = false, features = ["compat", 
 toml = "0.8"
 ureq = { version = "3", features = ["json"] }
 url = "2"
+toml_edit = "0.22.27"
 
 [dev-dependencies]
 hyper = "1"
 hyper-util = "0.1"
 http = "1"
+insta = "1"
 tempfile = "3"
+test_support.workspace = true
 wiremock = "0.6"

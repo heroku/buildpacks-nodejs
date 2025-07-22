@@ -7,7 +7,7 @@ use heroku_nodejs_utils::buildplan::{
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
     file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    ErrorType, SharedErrorMessageBuilder, SuggestRetryBuild, SuggestSubmitIssue,
 };
 use indoc::formatdoc;
 
@@ -189,9 +189,9 @@ fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
 
         PnpmInstallBuildpackError::PruneDevDependencies(error) => error_message()
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-            .header("Failed to install Node modules")
+            .header("Failed to prune pnpm dev dependencies")
             .body(formatdoc! { "
-                The {BUILDPACK_NAME} buildpack uses the command {pnpm_prune} to prune your Node modules for the production environment. This command \
+                The {BUILDPACK_NAME} buildpack uses the command {pnpm_prune} to remove your dev dependencies from the production environment. This command \
                 failed and the buildpack cannot continue. See the log output above for more information.
 
                 Suggestions:
@@ -221,7 +221,11 @@ fn on_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
                         .debug_info(e.to_string())
                         .create(),
                 }
-        }
+        },
+
+        PnpmInstallBuildpackError::Config(error) => SharedErrorMessageBuilder::from(error)
+            .issues_url(ISSUES_URL.to_string())
+            .create()
     }
 }
 

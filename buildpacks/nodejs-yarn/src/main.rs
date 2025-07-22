@@ -13,6 +13,7 @@ use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
+use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
 use heroku_nodejs_utils::npmjs_org::{
     packument_layer, resolve_package_packument, PackumentLayerError,
 };
@@ -20,6 +21,7 @@ use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 #[cfg(test)]
 use indoc as _;
+use indoc::indoc;
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -88,6 +90,9 @@ impl Buildpack for YarnBuildpack {
             .map_err(YarnBuildpackError::PackageJson)?;
         let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
             .map_err(YarnBuildpackError::NodeBuildScriptsMetadata)?;
+        let prune_dev_dependencies =
+            read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
+                .map_err(YarnBuildpackError::Config)?;
 
         let yarn_version = match cmd::yarn_version(&env) {
             // Install yarn if it's not present.
@@ -184,7 +189,10 @@ impl Buildpack for YarnBuildpack {
             }
         }
 
-        if node_build_scripts_metadata.skip_pruning == Some(true) {
+        print::bullet("Pruning dev dependencies");
+        if prune_dev_dependencies == Some(false) {
+            print::sub_bullet("Skipping as pruning was disabled in project.toml");
+        } else if node_build_scripts_metadata.skip_pruning == Some(true) {
             print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
         } else {
             yarn_prune_dev_dependencies(&env, &yarn)?;
@@ -203,6 +211,20 @@ impl Buildpack for YarnBuildpack {
                     )
                     .build(),
             );
+        }
+
+        if prune_dev_dependencies.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+                found in `project.toml`. This feature may change unexpectedly in the future.
+            " });
+        }
+
+        if node_build_scripts_metadata.skip_pruning.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+                to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+            " });
         }
 
         print::all_done(&Some(buildpack_start));
@@ -233,6 +255,7 @@ enum YarnBuildpackError {
     PruneYarnDevDependencies(fun_run::CmdError),
     YarnGetNodeLinker(GetNodeLinkerError),
     InstallPrunePluginError(std::io::Error),
+    Config(ConfigError),
 }
 
 impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
@@ -244,7 +267,6 @@ impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
 buildpack_main!(YarnBuildpack);
 
 fn yarn_prune_dev_dependencies(env: &Env, yarn: &Yarn) -> Result<(), YarnBuildpackError> {
-    print::bullet("Pruning dev dependencies");
     match yarn {
         Yarn::Yarn1 => cmd::yarn_prune(env),
         Yarn::Yarn2 | Yarn::Yarn3 | Yarn::Yarn4 => {

@@ -1,0 +1,14 @@
+---
+source: common/nodejs-utils/src/config.rs
+---
+- Debug Info:
+  - Test I/O Error
+
+! Failed to read project.toml
+!
+! This buildpack will read from `project.toml` if the file is present in the root of the application but an unexpected I/O error occurred during this operation.
+!
+! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
+! https://github.com/heroku/buildpacks-nodejs/issues
+!
+! If you're able to reproduce the problem with an example application and the `pack` build tool (https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/), adding that information to the discussion will also help. Once we have more information around the causes of this error we may update this message.

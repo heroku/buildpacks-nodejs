@@ -12,9 +12,10 @@ use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
+use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
-use indoc::formatdoc;
+use indoc::{formatdoc, indoc};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -78,6 +79,9 @@ impl Buildpack for PnpmInstallBuildpack {
             PackageJson::read(&pkg_json_file).map_err(PnpmInstallBuildpackError::PackageJson)?;
         let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
             .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
+        let prune_dev_dependencies =
+            read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
+                .map_err(PnpmInstallBuildpackError::Config)?;
         let has_pnpm_workspace_file = has_pnpm_workspace_file(&context);
 
         print::bullet("Setting up pnpm dependency store");
@@ -115,7 +119,9 @@ impl Buildpack for PnpmInstallBuildpack {
         }
 
         print::bullet("Pruning dev dependencies");
-        if node_build_scripts_metadata.skip_pruning == Some(true) {
+        if prune_dev_dependencies == Some(false) {
+            print::sub_bullet("Skipping as pruning was disabled in project.toml");
+        } else if node_build_scripts_metadata.skip_pruning == Some(true) {
             print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
         } else {
             pnpm_prune_dev_dependencies(
@@ -146,6 +152,20 @@ impl Buildpack for PnpmInstallBuildpack {
             );
         }
 
+        if prune_dev_dependencies.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+                found in `project.toml`. This feature may change unexpectedly in the future.
+            " });
+        }
+
+        if node_build_scripts_metadata.skip_pruning.is_some() {
+            print::warning(indoc! { "
+                Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+                to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+            " });
+        }
+
         print::all_done(&Some(buildpack_start));
         result_builder.build()
     }
@@ -173,6 +193,7 @@ enum PnpmInstallBuildpackError {
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneDevDependencies(fun_run::CmdError),
     PnpmVersion(PnpmVersionError),
+    Config(ConfigError),
 }
 
 impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError> {

@@ -7,9 +7,9 @@ source: buildpacks/nodejs-pnpm-install/src/errors.rs
     stdout: <empty>
     stderr: <empty>
 
-! Failed to install Node modules
+! Failed to prune pnpm dev dependencies
 !
-! The Heroku Node.js pnpm Install buildpack uses the command `pnpm prune --prod --ignore-scripts` to prune your Node modules for the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+! The Heroku Node.js pnpm Install buildpack uses the command `pnpm prune --prod --ignore-scripts` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
 !
 ! Suggestions:
 ! - Ensure that this command runs locally without error (exit status = 0).
