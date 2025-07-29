@@ -11,6 +11,7 @@ anyhow = "1"
 async-trait = "0.1.88"
 bon = "3"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
+clap = { version = "4", default-features = false, features = ["std"] }
 bullet_stream = "0.10"
 futures = { version = "0.3", default-features = false, features = ["io-compat"] }
 http = "1"

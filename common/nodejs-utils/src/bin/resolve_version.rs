@@ -1,7 +1,11 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use heroku_nodejs_utils::{inv::Inventory, vrs::Requirement};
+use heroku_nodejs_utils::vrs::Requirement;
+use heroku_nodejs_utils::vrs::Version;
+use libherokubuildpack::inventory::artifact::{Arch, Os};
+use sha2::Sha256;
+use std::env::consts;
 
 const SUCCESS_EXIT_CODE: i32 = 0;
 const ARGS_EXIT_CODE: i32 = 1;
@@ -29,12 +33,22 @@ fn main() {
         std::process::exit(VERSION_REQS_EXIT_CODE);
     });
 
-    let inv = Inventory::read(filename).unwrap_or_else(|e| {
+    let inv_contents = std::fs::read_to_string(filename).unwrap_or_else(|e| {
         eprintln!("Error reading '{filename}': {e}");
         std::process::exit(INVENTORY_EXIT_CODE);
     });
 
-    let version = inv.resolve(&version_requirements);
+    let inv: libherokubuildpack::inventory::Inventory<Version, Sha256, Option<()>> =
+        toml::from_str(&inv_contents).unwrap_or_else(|e| {
+            eprintln!("Error parsing '{filename}': {e}");
+            std::process::exit(INVENTORY_EXIT_CODE);
+        });
+
+    let version = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
+        (Ok(os), Ok(arch)) => inv.resolve(os, arch, &version_requirements),
+        (_, _) => None,
+    };
+
     if let Some(version) = version {
         println!("{} {}", version.version, version.url);
     } else {
