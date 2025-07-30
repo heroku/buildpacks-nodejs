@@ -22,7 +22,7 @@ const PLATFORM_LINUX_ARM64: &str = "linux-arm64";
 
 /// Updates the local node.js inventory.toml with versions published on nodejs.org.
 fn main() -> Result<()> {
-    let matches = Command::new("nodejs-update-inventory")
+    let matches = Command::new("update_nodejs_inventory")
         .arg(arg!(<inventory_path>))
         .arg(arg!(<changelog_path>))
         .arg(

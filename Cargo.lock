@@ -925,6 +925,7 @@ dependencies = [
  "chrono",
  "clap",
  "futures 0.3.31",
+ "hex",
  "http",
  "hyper",
  "hyper-util",
