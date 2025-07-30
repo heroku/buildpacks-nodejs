@@ -4,7 +4,7 @@
 use heroku_nodejs_utils::vrs::Requirement;
 use heroku_nodejs_utils::vrs::Version;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use sha2::Sha256;
+use sha2::{Digest, Sha256};
 use std::env::consts;
 
 const SUCCESS_EXIT_CODE: i32 = 0;
@@ -50,7 +50,13 @@ fn main() {
     };
 
     if let Some(version) = version {
-        println!("{} {}", version.version, version.url);
+        println!(
+            "{} {} {} {:x}",
+            version.version,
+            version.url,
+            version.checksum.name,
+            Sha256::digest(&version.checksum.value)
+        );
     } else {
         println!("No result");
     }
