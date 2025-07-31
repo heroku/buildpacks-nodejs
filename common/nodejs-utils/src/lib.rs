@@ -1,3 +1,5 @@
+use clap as _;
+use hex as _;
 use keep_a_changelog_file as _;
 use sha2 as _;
 
