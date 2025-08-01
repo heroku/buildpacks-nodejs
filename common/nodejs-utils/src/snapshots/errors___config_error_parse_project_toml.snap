@@ -6,8 +6,7 @@ source: common/nodejs-utils/src/config.rs
       |
     1 | [[artifacts
       |            ^
-    invalid table header
-    expected `.`, `]]`
+    unclosed array table, expected `]]`
 
 ! Failed to parse project.toml
 !

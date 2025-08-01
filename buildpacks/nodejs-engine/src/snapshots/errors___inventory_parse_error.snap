@@ -6,8 +6,7 @@ source: buildpacks/nodejs-engine/src/errors.rs
       |
     1 | [[artifacts
       |            ^
-    invalid table header
-    expected `.`, `]]`
+    unclosed array table, expected `]]`
 
 ! Couldn't parse Node.js inventory
 !
