@@ -7,12 +7,12 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-bullet_stream = "0.10"
+bullet_stream = "0.11"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
-libcnb = { version = "=0.29.0", features = ["trace"] }
+libcnb = { version = "=0.29.1", features = ["trace"] }
 
 [dev-dependencies]
 insta = "1"
-libcnb-test = "=0.29.0"
+libcnb-test = "=0.29.1"
 test_support.workspace = true
