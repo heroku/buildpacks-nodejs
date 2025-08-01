@@ -12,7 +12,7 @@ async-trait = "0.1.88"
 bon = "3"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 clap = { version = "4", default-features = false, features = ["std"] }
-bullet_stream = "0.10"
+bullet_stream = "0.11"
 futures = { version = "0.3", default-features = false, features = ["io-compat"] }
 hex = "0.4"
 http = "1"
@@ -36,10 +36,10 @@ sha2 = "0.10.9"
 thiserror = "2"
 tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "time", "macros"] }
 tokio-util = { version = "0.7", default-features = false, features = ["compat", "io"] }
-toml = "0.8"
+toml = "0.9"
 ureq = { version = "3", features = ["json"] }
 url = "2"
-toml_edit = "0.22.27"
+toml_edit = "0.23.2"
 
 [dev-dependencies]
 hyper = "1"

@@ -7,7 +7,7 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
-bullet_stream = "0.10"
+bullet_stream = "0.11"
 fun_run = "0.6"
 heroku-nodejs-utils.workspace = true
 indoc = "2"
@@ -28,4 +28,4 @@ reqwest-middleware = "0.4"
 test_support.workspace = true
 serde_json = "1"
 tokio = "1"
-toml = "0.8"
+toml = "0.9"
