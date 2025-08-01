@@ -108,7 +108,7 @@ pub(crate) fn install_node(
                     source: e,
                 }
             })?;
-            let _ = timer.done();
+            timer.done();
         }
     }
 
