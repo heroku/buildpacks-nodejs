@@ -18,8 +18,8 @@ hex = "0.4"
 http = "1"
 indoc = "2"
 keep_a_changelog_file = "0.1.0"
-libcnb = "=0.29"
-libcnb-data = "=0.29.0"
+libcnb = "=0.29.1"
+libcnb-data = "=0.29.1"
 libherokubuildpack = { version = "=0.29.1", default-features = false, features = [
     "inventory",
     "inventory-sha2",
