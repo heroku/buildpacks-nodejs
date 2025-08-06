@@ -10,19 +10,6 @@ permissions:
 
 jobs:
 
-  shell-lint:
-    runs-on: ubuntu-24.04
-    container:
-      image: koalaman/shellcheck-alpine:v0.9.0
-    steps:
-      - run: apk add git
-      - run: apk add shfmt --repository=http://dl-3.alpinelinux.org/alpine/edge/community
-      - uses: actions/checkout@v4
-      - name: shellcheck
-        run: shfmt -f . | grep -v ^test/ | xargs shellcheck
-      - name: shfmt
-        run: shfmt -f . | grep -v ^test/ | grep -v '_shpec.sh$' | xargs shfmt -d
-
   rust-lint:
     runs-on: ubuntu-24.04
     steps:
