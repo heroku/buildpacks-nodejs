@@ -1,9 +1,6 @@
-use crate::{distribution::Distribution, s3};
-use anyhow::anyhow;
 use libherokubuildpack::inventory::version::VersionRequirement;
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug)]
@@ -134,51 +131,9 @@ impl fmt::Display for Requirement {
     }
 }
 
-pub(crate) type VersionSet = HashSet<Version>;
-
-impl TryFrom<s3::BucketContent> for VersionSet {
-    type Error = anyhow::Error;
-
-    /// # Failures
-    /// These are the possible errors that can occur when calling this function:
-    ///
-    /// * Regex missing matching captures against `Content#key`
-    /// * `Version::parse` fails to parse the version found in the `Content#key`
-    fn try_from(content: s3::BucketContent) -> Result<Self, Self::Error> {
-        let rex = content
-            .prefix
-            .parse::<Distribution>()?
-            .mirrored_path_regex()?;
-
-        content
-            .contents
-            .iter()
-            .map(|content| {
-                rex.captures(&content.key)
-                    .ok_or(anyhow!(
-                        "Couldn't match the bucket content key to a known format: {}",
-                        content.key
-                    ))
-                    .and_then(|capts| {
-                        capts.name("version").ok_or(anyhow!(
-                            "Couldn't find a version number in the bucket content key: {}",
-                            content.key
-                        ))
-                    })
-                    .and_then(|vrs_match| {
-                        Version::parse(vrs_match.as_str()).map_err(|e| {
-                            anyhow!("Couldn't serialize bucket content key as a Version: {e}")
-                        })
-                    })
-            })
-            .collect()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::Utc;
 
     #[test]
     fn parse_handles_latest() {
@@ -289,31 +244,5 @@ mod tests {
         println!("{result:?}");
 
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn try_from_bucket_content_for_version_set_succeeds() {
-        let content = s3::Content {
-            key: "node/release/darwin-x64/node-v18.10.2-darwin-x64.tar.gz".to_string(),
-            last_modified: Utc::now(),
-            etag: "123abcdefg".to_string(),
-            size: 4_065_868,
-            storage_class: "STANDARD".to_string(),
-        };
-        let bucket_content = s3::BucketContent {
-            prefix: "node".to_string(),
-            contents: vec![content],
-            ..Default::default()
-        };
-
-        let vrs_set = VersionSet::try_from(bucket_content)
-            .expect("Expected to convert bucket content to a version set");
-        println!("vrs_set: {vrs_set:?}");
-
-        let expected = Version::parse("18.10.2").expect("Expected to parse a valid version");
-        let actual = vrs_set
-            .get(&expected)
-            .expect("Expected to find a matching version");
-        assert_eq!(&expected, actual);
     }
 }
