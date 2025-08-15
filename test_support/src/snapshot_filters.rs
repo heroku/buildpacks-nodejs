@@ -27,6 +27,18 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "===> RESTORING\n<restoring-output>\n===> BUILDING",
     ));
 
+    // [pack] Filter out buildpack versions in DETECTING section as these will frequently change
+    // - ===> DETECTING
+    //   3 of 4 buildpacks participating
+    //   heroku/nodejs-engine      4.1.1
+    //   heroku/nodejs-corepack    4.1.1
+    //   heroku/nodejs-npm-install 4.1.1
+    //   ===> RESTORING
+    filters.push((
+        r"heroku/nodejs-(.*)\d+\.\d+\.\d+",
+        "heroku/nodejs-$1<buildpack-version>",
+    ));
+
     // [misc] Filter out architectures from output and download urls. e.g.;
     // - Downloading Node.js `22.14.0 (linux-amd64)`
     // - https://nodejs.org/download/release/v22.14.0/node-v22.14.0-linux-x64.tar.gz
