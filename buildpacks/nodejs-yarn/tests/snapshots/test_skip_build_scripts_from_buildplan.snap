@@ -4,9 +4,9 @@ source: test_support/src/lib.rs
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-heroku/nodejs-engine    4.1.1
-heroku/nodejs-corepack  4.1.1
-heroku/nodejs-yarn      4.1.1
+heroku/nodejs-engine    <buildpack-version>
+heroku/nodejs-corepack  <buildpack-version>
+heroku/nodejs-yarn      <buildpack-version>
 test/skip-build-scripts 0.0.0
 ===> RESTORING
 <restoring-output>

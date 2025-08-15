@@ -5,8 +5,8 @@ source: test_support/src/lib.rs
 Image with name "<image-name>" not found
 ===> DETECTING
 2 of 4 buildpacks participating
-heroku/nodejs-engine      4.1.1
-heroku/nodejs-npm-install 4.1.1
+heroku/nodejs-engine      <buildpack-version>
+heroku/nodejs-npm-install <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
@@ -77,8 +77,8 @@ Successfully built image '<image-name>'
 Restoring data for SBOM from previous image
 ===> DETECTING
 2 of 4 buildpacks participating
-heroku/nodejs-engine      4.1.1
-heroku/nodejs-npm-install 4.1.1
+heroku/nodejs-engine      <buildpack-version>
+heroku/nodejs-npm-install <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING

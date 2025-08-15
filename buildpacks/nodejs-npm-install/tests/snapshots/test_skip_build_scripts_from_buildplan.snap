@@ -5,8 +5,8 @@ source: test_support/src/lib.rs
 Image with name "<image-name>" not found
 ===> DETECTING
 3 of 5 buildpacks participating
-heroku/nodejs-engine      4.1.1
-heroku/nodejs-npm-install 4.1.1
+heroku/nodejs-engine      <buildpack-version>
+heroku/nodejs-npm-install <buildpack-version>
 test/skip-build-scripts   0.0.0
 ===> RESTORING
 <restoring-output>

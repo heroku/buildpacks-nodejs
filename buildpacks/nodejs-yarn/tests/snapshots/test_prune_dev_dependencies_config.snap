@@ -5,9 +5,9 @@ Warning: No schema version declared in project.toml, defaulting to schema versio
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-heroku/nodejs-engine   4.1.1
-heroku/nodejs-corepack 4.1.1
-heroku/nodejs-yarn     4.1.1
+heroku/nodejs-engine   <buildpack-version>
+heroku/nodejs-corepack <buildpack-version>
+heroku/nodejs-yarn     <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
