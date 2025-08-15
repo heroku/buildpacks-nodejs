@@ -13,6 +13,20 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // - *** Images (c23cbcce61fb):
     filters.push((r"Images \([a-z0-9]+\)", "Images (<random-hex>)"));
 
+    // [pack] Filter out RESTORING section as output seems to be non-deterministic
+    // - ===> RESTORING
+    //   Restoring metadata for "heroku/nodejs-engine:dist" from app image
+    //   Restoring metadata for "heroku/nodejs-engine:web_env" from app image
+    //   Restoring metadata for "heroku/nodejs-npm-install:npm_runtime_config" from app image
+    //   Restoring metadata for "heroku/nodejs-npm-install:npm_cache" from cache
+    //   Restoring data for "heroku/nodejs-engine:dist" from cache
+    //   Restoring data for "heroku/nodejs-npm-install:npm_cache" from cache
+    //   ===> BUILDING
+    filters.push((
+        r"===> RESTORING\n(?:.*\n)*?===> BUILDING",
+        "===> RESTORING\n<restoring-output>\n===> BUILDING",
+    ));
+
     // [misc] Filter out architectures from output and download urls. e.g.;
     // - Downloading Node.js `22.14.0 (linux-amd64)`
     // - https://nodejs.org/download/release/v22.14.0/node-v22.14.0-linux-x64.tar.gz

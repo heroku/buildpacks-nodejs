@@ -6,6 +6,7 @@ Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine 4.1.1
 ===> RESTORING
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine
@@ -45,9 +46,7 @@ Restoring data for SBOM from previous image
 ===> DETECTING
 heroku/nodejs-engine 4.1.1
 ===> RESTORING
-Restoring metadata for "heroku/nodejs-engine:dist" from app image
-Restoring metadata for "heroku/nodejs-engine:web_env" from app image
-Restoring data for "heroku/nodejs-engine:dist" from cache
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine

@@ -8,6 +8,7 @@ heroku/nodejs-engine       4.1.1
 heroku/nodejs-corepack     4.1.1
 heroku/nodejs-pnpm-install 4.1.1
 ===> RESTORING
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine
@@ -112,15 +113,7 @@ heroku/nodejs-engine       4.1.1
 heroku/nodejs-corepack     4.1.1
 heroku/nodejs-pnpm-install 4.1.1
 ===> RESTORING
-Restoring metadata for "heroku/nodejs-engine:dist" from app image
-Restoring metadata for "heroku/nodejs-engine:web_env" from app image
-Restoring metadata for "heroku/nodejs-corepack:mgr" from app image
-Restoring metadata for "heroku/nodejs-corepack:shim" from app image
-Restoring metadata for "heroku/nodejs-pnpm-install:addressable" from cache
-Restoring data for "heroku/nodejs-engine:dist" from cache
-Restoring data for "heroku/nodejs-corepack:mgr" from cache
-Restoring data for "heroku/nodejs-corepack:shim" from cache
-Restoring data for "heroku/nodejs-pnpm-install:addressable" from cache
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine

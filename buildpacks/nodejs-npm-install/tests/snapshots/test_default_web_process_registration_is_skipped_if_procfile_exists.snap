@@ -8,6 +8,7 @@ Image with name "<image-name>" not found
 heroku/nodejs-engine      4.1.1
 heroku/nodejs-npm-install 4.1.1
 ===> RESTORING
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine

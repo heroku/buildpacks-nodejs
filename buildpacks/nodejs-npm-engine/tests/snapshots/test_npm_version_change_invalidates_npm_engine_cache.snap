@@ -9,6 +9,7 @@ heroku/nodejs-engine      4.1.1
 heroku/nodejs-npm-engine  4.1.1
 heroku/nodejs-npm-install 4.1.1
 ===> RESTORING
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine
@@ -111,16 +112,7 @@ heroku/nodejs-engine      4.1.1
 heroku/nodejs-npm-engine  4.1.1
 heroku/nodejs-npm-install 4.1.1
 ===> RESTORING
-Restoring metadata for "heroku/nodejs-engine:dist" from app image
-Restoring metadata for "heroku/nodejs-engine:web_env" from app image
-Restoring metadata for "heroku/nodejs-npm-engine:npm_engine" from app image
-Restoring metadata for "heroku/nodejs-npm-engine:npm_packument" from cache
-Restoring metadata for "heroku/nodejs-npm-install:npm_runtime_config" from app image
-Restoring metadata for "heroku/nodejs-npm-install:npm_cache" from cache
-Restoring data for "heroku/nodejs-engine:dist" from cache
-Restoring data for "heroku/nodejs-npm-engine:npm_engine" from cache
-Restoring data for "heroku/nodejs-npm-engine:npm_packument" from cache
-Restoring data for "heroku/nodejs-npm-install:npm_cache" from cache
+<restoring-output>
 ===> BUILDING
 
 ## Heroku Node.js Engine
