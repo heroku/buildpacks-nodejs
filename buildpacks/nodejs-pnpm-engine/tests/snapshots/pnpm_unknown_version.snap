@@ -1,6 +1,15 @@
 ---
 source: test_support/src/lib.rs
 ---
+===> ANALYZING
+Image with name "libcnbtest_jzipnjvpjwse" not found
+===> DETECTING
+heroku/nodejs-engine       4.1.1
+heroku/nodejs-pnpm-engine  4.1.1
+heroku/nodejs-pnpm-install 4.1.1
+===> RESTORING
+===> BUILDING
+
 ## Heroku Node.js Engine
 
 - Checking Node.js version
@@ -32,4 +41,4 @@ source: test_support/src/lib.rs
 ! Then commit the result, and try again.
 
 
-ERROR: failed to build: executing lifecycle: failed with status code: 51
+ERROR: failed to build: exit status 1
