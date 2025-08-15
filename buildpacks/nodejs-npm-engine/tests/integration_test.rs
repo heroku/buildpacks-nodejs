@@ -11,7 +11,7 @@ use test_support::{create_build_snapshot, nodejs_integration_test};
 #[ignore = "integration test"]
 fn npm_engine_install() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
     });
 }
 
@@ -19,10 +19,10 @@ fn npm_engine_install() {
 #[ignore = "integration test"]
 fn test_npm_engine_caching() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -31,7 +31,7 @@ fn test_npm_engine_caching() {
 #[ignore = "integration test"]
 fn test_npm_version_change_invalidates_npm_engine_cache() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
@@ -39,7 +39,7 @@ fn test_npm_version_change_invalidates_npm_engine_cache() {
         });
 
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -48,7 +48,7 @@ fn test_npm_version_change_invalidates_npm_engine_cache() {
 #[ignore = "integration test"]
 fn test_node_version_change_invalidates_npm_engine_cache() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
@@ -56,7 +56,7 @@ fn test_node_version_change_invalidates_npm_engine_cache() {
         });
 
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }

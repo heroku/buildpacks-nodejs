@@ -1,6 +1,16 @@
 ---
 source: test_support/src/lib.rs
 ---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+2 of 4 buildpacks participating
+heroku/nodejs-engine      4.1.1
+heroku/nodejs-npm-install 4.1.1
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
 ## Heroku Node.js Engine
 
 - Checking Node.js version
@@ -31,4 +41,4 @@ source: test_support/src/lib.rs
 ! Ensure the resulting lockfile is committed to the repository, then try again.
 
 
-ERROR: failed to build: executing lifecycle: failed with status code: 51
+ERROR: failed to build: exit status 1

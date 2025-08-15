@@ -1,6 +1,16 @@
 ---
 source: test_support/src/lib.rs
 ---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+2 of 4 buildpacks participating
+heroku/nodejs-engine      4.1.1
+heroku/nodejs-npm-install 4.1.1
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
 ## Heroku Node.js Engine
 
 - Checking Node.js version
@@ -47,8 +57,36 @@ source: test_support/src/lib.rs
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs-engine:available_parallelism'
+Adding layer 'heroku/nodejs-engine:dist'
+Adding layer 'heroku/nodejs-engine:web_env'
+Adding layer 'heroku/nodejs-npm-install:npm_runtime_config'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs-engine:dist'
+Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
+Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
+===> ANALYZING
+Restoring data for SBOM from previous image
+===> DETECTING
+2 of 4 buildpacks participating
+heroku/nodejs-engine      4.1.1
+heroku/nodejs-npm-install 4.1.1
+===> RESTORING
+<restoring-output>
+===> BUILDING
 
 ## Heroku Node.js Engine
 
@@ -92,3 +130,22 @@ source: test_support/src/lib.rs
 - Configuring default processes
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
+===> EXPORTING
+Reusing layer 'heroku/nodejs-engine:available_parallelism'
+Adding layer 'heroku/nodejs-engine:dist'
+Reusing layer 'heroku/nodejs-engine:web_env'
+Reusing layer 'heroku/nodejs-npm-install:npm_runtime_config'
+Reusing layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Reusing layer 'buildpacksio/lifecycle:launcher'
+Reusing layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs-engine:dist'
+Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
+Successfully built image '<image-name>'

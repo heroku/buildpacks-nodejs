@@ -18,7 +18,7 @@ fn corepack_yarn_2() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("yarn --version");
             assert_contains!(output.stdout, "2.4.1");
         },
@@ -37,7 +37,7 @@ fn corepack_yarn_3() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("yarn --version");
             assert_contains!(output.stdout, "3.2.0");
         },
@@ -60,7 +60,7 @@ fn corepack_pnpm_7() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "7.32.3");
         },
@@ -83,7 +83,7 @@ fn corepack_pnpm_8() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "8.4.0");
         },
@@ -106,7 +106,7 @@ fn corepack_npm_8() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("npm --version");
             assert_contains!(output.stdout, "8.19.4");
         },
@@ -129,7 +129,7 @@ fn corepack_npm_10() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             let output = ctx.run_shell_command("npm --version");
             assert_contains!(output.stdout, "10.2.0");
         },

@@ -18,7 +18,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn test_npm_install_with_lockfile() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
     });
 }
 
@@ -26,10 +26,10 @@ fn test_npm_install_with_lockfile() {
 #[ignore = "integration test"]
 fn test_npm_install_caching() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -38,7 +38,7 @@ fn test_npm_install_caching() {
 #[ignore = "integration test"]
 fn test_npm_install_new_package() {
     nodejs_integration_test("./fixtures/npm-project", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
@@ -56,7 +56,7 @@ fn test_npm_install_new_package() {
         });
 
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -74,7 +74,7 @@ fn test_npm_build_scripts() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -91,7 +91,7 @@ fn test_npm_build_scripts_prefers_heroku_build_over_build() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -107,7 +107,7 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -121,7 +121,7 @@ fn test_dependencies_and_missing_lockfile_errors() {
             cfg.expected_pack_result(PackResult::Failure);
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -159,10 +159,10 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
             config.env("npm_config_foreground-scripts", "true");
         },
         |ctx| {
-            let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
             let config = ctx.config.clone();
             ctx.rebuild(config, |ctx| {
-                build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+                build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             });
         },
     );
@@ -181,7 +181,7 @@ fn test_skip_build_scripts_from_buildplan() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
         &[
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
@@ -217,7 +217,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -240,7 +240,7 @@ fn test_prune_dev_dependencies_config() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }

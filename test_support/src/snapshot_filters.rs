@@ -2,6 +2,31 @@
 pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     let mut filters: Vec<(&str, &str)> = vec![];
 
+    // [pack] Filter out image name (https://github.com/heroku/libcnb.rs/blob/main/libcnb-test/src/util.rs#L12). e.g.;
+    // - Image with name "libcnbtest_prkmfnhkvvxu" not found
+    // - Saving libcnbtest_vtekdznblpdd...
+    // - Successfully built image 'libcnbtest_prkmfnhkvvxu'
+    filters.push((r"libcnbtest_[a-z]{12}", "<image-name>"));
+
+    // [pack] Filter out "*** Images" output line. e.g.;
+    // - *** Images (fbc060d7a40f):
+    // - *** Images (c23cbcce61fb):
+    filters.push((r"Images \([a-z0-9]+\)", "Images (<random-hex>)"));
+
+    // [pack] Filter out RESTORING section as output seems to be non-deterministic
+    // - ===> RESTORING
+    //   Restoring metadata for "heroku/nodejs-engine:dist" from app image
+    //   Restoring metadata for "heroku/nodejs-engine:web_env" from app image
+    //   Restoring metadata for "heroku/nodejs-npm-install:npm_runtime_config" from app image
+    //   Restoring metadata for "heroku/nodejs-npm-install:npm_cache" from cache
+    //   Restoring data for "heroku/nodejs-engine:dist" from cache
+    //   Restoring data for "heroku/nodejs-npm-install:npm_cache" from cache
+    //   ===> BUILDING
+    filters.push((
+        r"===> RESTORING\n(?:.*\n)*?===> BUILDING",
+        "===> RESTORING\n<restoring-output>\n===> BUILDING",
+    ));
+
     // [misc] Filter out architectures from output and download urls. e.g.;
     // - Downloading Node.js `22.14.0 (linux-amd64)`
     // - https://nodejs.org/download/release/v22.14.0/node-v22.14.0-linux-x64.tar.gz
