@@ -13,7 +13,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn yarn_1_typescript() {
     nodejs_integration_test("./fixtures/yarn-1-typescript", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-1-typescript");
     });
 }
@@ -22,7 +22,7 @@ fn yarn_1_typescript() {
 #[ignore = "integration test"]
 fn yarn_2_pnp_zero() {
     nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-2-pnp-zero");
     });
 }
@@ -31,7 +31,7 @@ fn yarn_2_pnp_zero() {
 #[ignore = "integration test"]
 fn yarn_2_modules_nonzero() {
     nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-2-modules-nonzero");
     });
 }
@@ -40,7 +40,7 @@ fn yarn_2_modules_nonzero() {
 #[ignore = "integration test"]
 fn yarn_3_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-3-pnp-nonzero");
     });
 }
@@ -49,7 +49,7 @@ fn yarn_3_pnp_nonzero() {
 #[ignore = "integration test"]
 fn yarn_3_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-3-modules-zero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-3-modules-zero");
     });
 }
@@ -58,7 +58,7 @@ fn yarn_3_modules_zero() {
 #[ignore = "integration test"]
 fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
     });
 }
@@ -67,7 +67,7 @@ fn yarn_4_pnp_nonzero() {
 #[ignore = "integration test"]
 fn yarn_4_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-4-modules-zero", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-4-modules-zero");
     });
 }
@@ -76,10 +76,10 @@ fn yarn_4_modules_zero() {
 #[ignore = "integration test"]
 fn test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/yarn-project-with-native-module", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -97,7 +97,7 @@ fn test_skip_build_scripts_from_buildplan() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
         &[
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
@@ -133,7 +133,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -156,7 +156,7 @@ fn test_prune_dev_dependencies_config() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }

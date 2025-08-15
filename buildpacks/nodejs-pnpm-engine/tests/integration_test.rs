@@ -13,7 +13,7 @@ fn pnpm_unknown_version() {
             cfg.expected_pack_result(PackResult::Failure);
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }

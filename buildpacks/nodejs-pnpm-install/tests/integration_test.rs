@@ -13,7 +13,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn pnpm_7_pnp() {
     nodejs_integration_test("./fixtures/pnpm-7-pnp", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "pnpm-7-pnp");
     });
 }
@@ -22,7 +22,7 @@ fn pnpm_7_pnp() {
 #[ignore = "integration test"]
 fn pnpm_8_hoist() {
     nodejs_integration_test("./fixtures/pnpm-8-hoist", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "pnpm-8-hoist");
     });
 }
@@ -31,7 +31,7 @@ fn pnpm_8_hoist() {
 #[ignore = "integration test"]
 fn pnpm_8_nuxt() {
     nodejs_integration_test("./fixtures/pnpm-8-nuxt", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr)
+        create_build_snapshot(&ctx.pack_stdout)
             .filter(
                 r"( *)> nuxt build\n(?:.*\n)*? *\[nitro] ✔ You can preview this build.*",
                 "${1}> nuxt build\n\n${1}<NUXT BUILD OUTPUT>",
@@ -52,10 +52,10 @@ fn pnpm_8_nuxt() {
 #[ignore = "integration test"]
 fn test_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/pnpm-project-with-native-module", |ctx| {
-        let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
-            build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
         });
     });
 }
@@ -73,7 +73,7 @@ fn test_skip_build_scripts_from_buildplan() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
         &[
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
@@ -109,7 +109,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }
@@ -132,7 +132,7 @@ fn test_prune_dev_dependencies_config() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }

@@ -13,7 +13,7 @@ use test_support::{
 #[ignore = "integration test"]
 fn simple_indexjs() {
     nodejs_integration_test("./fixtures/node-with-indexjs", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "node-with-indexjs");
     });
 }
@@ -22,7 +22,7 @@ fn simple_indexjs() {
 #[ignore = "integration test"]
 fn simple_serverjs() {
     nodejs_integration_test("./fixtures/node-with-serverjs", |ctx| {
-        create_build_snapshot(&ctx.pack_stderr).assert();
+        create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "node-with-serverjs");
     });
 }
@@ -38,7 +38,7 @@ fn reinstalls_node_if_version_changes() {
             });
         },
         |ctx| {
-            let build_snapshot = create_build_snapshot(&ctx.pack_stderr);
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
 
             let mut config = ctx.config.clone();
             config.app_dir_preprocessor(|app_dir| {
@@ -46,7 +46,7 @@ fn reinstalls_node_if_version_changes() {
             });
 
             ctx.rebuild(config, |ctx| {
-                build_snapshot.rebuild_output(&ctx.pack_stderr).assert();
+                build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             });
         },
     );
@@ -91,7 +91,7 @@ fn node_24() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stderr).assert();
+            create_build_snapshot(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "node-with-serverjs");
         },
     );
