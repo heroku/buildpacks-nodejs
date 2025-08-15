@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_wkktyahfwpfx" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 2 of 3 buildpacks participating
 heroku/nodejs-engine 4.1.1
@@ -90,11 +90,11 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 Setting default process type 'web'
-Saving libcnbtest_wkktyahfwpfx...
-*** Images (30603949bdc5):
-      libcnbtest_wkktyahfwpfx
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-yarn:deps'
 Adding cache layer 'heroku/nodejs-yarn:dist'
 Adding cache layer 'heroku/nodejs-yarn:yarn_packument'
-Successfully built image 'libcnbtest_wkktyahfwpfx'
+Successfully built image '<image-name>'

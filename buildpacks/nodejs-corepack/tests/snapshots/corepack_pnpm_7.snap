@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_vkdkgofgyugj" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine       4.1.1
 heroku/nodejs-corepack     4.1.1
@@ -95,11 +95,11 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_vkdkgofgyugj...
-*** Images (be0759f80ade):
-      libcnbtest_vkdkgofgyugj
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-corepack:mgr'
 Adding cache layer 'heroku/nodejs-corepack:shim'
 Adding cache layer 'heroku/nodejs-pnpm-install:addressable'
-Successfully built image 'libcnbtest_vkdkgofgyugj'
+Successfully built image '<image-name>'

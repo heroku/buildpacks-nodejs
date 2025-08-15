@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_xwajegvptotn" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 2 of 4 buildpacks participating
 heroku/nodejs-engine      4.1.1
@@ -65,9 +65,9 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 Setting default process type 'web'
-Saving libcnbtest_xwajegvptotn...
-*** Images (ad054db35aaa):
-      libcnbtest_xwajegvptotn
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_xwajegvptotn'
+Successfully built image '<image-name>'

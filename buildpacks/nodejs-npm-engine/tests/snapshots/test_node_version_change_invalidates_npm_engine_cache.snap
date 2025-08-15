@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_cptfoabrnkly" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 3 of 4 buildpacks participating
 heroku/nodejs-engine      4.1.1
@@ -93,14 +93,14 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_cptfoabrnkly...
-*** Images (cac52e6e59d8):
-      libcnbtest_cptfoabrnkly
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-engine:npm_engine'
 Adding cache layer 'heroku/nodejs-npm-engine:npm_packument'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_cptfoabrnkly'
+Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
 ===> ANALYZING
@@ -206,13 +206,13 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_cptfoabrnkly...
-*** Images (a816f98fddc3):
-      libcnbtest_cptfoabrnkly
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Reusing cache layer 'heroku/nodejs-npm-engine:npm_engine'
 Adding cache layer 'heroku/nodejs-npm-engine:npm_engine'
 Reusing cache layer 'heroku/nodejs-npm-engine:npm_packument'
 Adding cache layer 'heroku/nodejs-npm-engine:npm_packument'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_cptfoabrnkly'
+Successfully built image '<image-name>'

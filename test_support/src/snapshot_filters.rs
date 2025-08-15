@@ -11,7 +11,7 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // [pack] Filter out "*** Images" output line. e.g.;
     // - *** Images (fbc060d7a40f):
     // - *** Images (c23cbcce61fb):
-    filters.push((r"Images \([a-z0-9]+\):", "Images (<random-hex>)"));
+    filters.push((r"Images \([a-z0-9]+\)", "Images (<random-hex>)"));
 
     // [misc] Filter out architectures from output and download urls. e.g.;
     // - Downloading Node.js `22.14.0 (linux-amd64)`

@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_lpsrhbizowmu" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 2 of 4 buildpacks participating
 heroku/nodejs-engine      4.1.1
@@ -90,9 +90,9 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_lpsrhbizowmu...
-*** Images (05a7b1906e19):
-      libcnbtest_lpsrhbizowmu
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_lpsrhbizowmu'
+Successfully built image '<image-name>'

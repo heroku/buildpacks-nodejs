@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_tiktqqotxkej" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine   4.1.1
 heroku/nodejs-corepack 4.1.1
@@ -99,11 +99,11 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 Setting default process type 'web'
-Saving libcnbtest_tiktqqotxkej...
-*** Images (9e1da81deaa7):
-      libcnbtest_tiktqqotxkej
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-corepack:mgr'
 Adding cache layer 'heroku/nodejs-corepack:shim'
 Adding cache layer 'heroku/nodejs-yarn:deps'
-Successfully built image 'libcnbtest_tiktqqotxkej'
+Successfully built image '<image-name>'

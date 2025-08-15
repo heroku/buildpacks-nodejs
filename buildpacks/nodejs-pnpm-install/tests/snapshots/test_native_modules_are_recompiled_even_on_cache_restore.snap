@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_toaicdfhdheq" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine       4.1.1
 heroku/nodejs-corepack     4.1.1
@@ -95,14 +95,14 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_toaicdfhdheq...
-*** Images (391149c452f9):
-      libcnbtest_toaicdfhdheq
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-corepack:mgr'
 Adding cache layer 'heroku/nodejs-corepack:shim'
 Adding cache layer 'heroku/nodejs-pnpm-install:addressable'
-Successfully built image 'libcnbtest_toaicdfhdheq'
+Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
 ===> ANALYZING
@@ -196,13 +196,13 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_toaicdfhdheq...
-*** Images (4bd1ae5ba720):
-      libcnbtest_toaicdfhdheq
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Reusing cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-corepack:mgr'
 Reusing cache layer 'heroku/nodejs-corepack:shim'
 Adding cache layer 'heroku/nodejs-corepack:shim'
 Adding cache layer 'heroku/nodejs-pnpm-install:addressable'
-Successfully built image 'libcnbtest_toaicdfhdheq'
+Successfully built image '<image-name>'

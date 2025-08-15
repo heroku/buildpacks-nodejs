@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_dgbaygyfwcjz" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 2 of 4 buildpacks participating
 heroku/nodejs-engine      4.1.1

@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_uspiamqeyqqa" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 3 of 5 buildpacks participating
 heroku/nodejs-engine      4.1.1
@@ -63,9 +63,9 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_uspiamqeyqqa...
-*** Images (08a31fb5cfa5):
-      libcnbtest_uspiamqeyqqa
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_uspiamqeyqqa'
+Successfully built image '<image-name>'

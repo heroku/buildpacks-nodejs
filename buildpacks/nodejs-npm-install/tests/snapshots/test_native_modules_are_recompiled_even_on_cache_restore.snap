@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_cvvwcinmqwwp" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 2 of 4 buildpacks participating
 heroku/nodejs-engine      4.1.1
@@ -69,12 +69,12 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_cvvwcinmqwwp...
-*** Images (850938b88e0f):
-      libcnbtest_cvvwcinmqwwp
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_cvvwcinmqwwp'
+Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
 ===> ANALYZING
@@ -147,9 +147,9 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 no default process type
-Saving libcnbtest_cvvwcinmqwwp...
-*** Images (b2237d197460):
-      libcnbtest_cvvwcinmqwwp
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
 Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
-Successfully built image 'libcnbtest_cvvwcinmqwwp'
+Successfully built image '<image-name>'

@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_jzipnjvpjwse" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine       4.1.1
 heroku/nodejs-pnpm-engine  4.1.1

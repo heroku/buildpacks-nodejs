@@ -2,7 +2,7 @@
 source: test_support/src/lib.rs
 ---
 ===> ANALYZING
-Image with name "libcnbtest_objvwjdsbnfs" not found
+Image with name "<image-name>" not found
 ===> DETECTING
 heroku/nodejs-engine 4.1.1
 ===> RESTORING
@@ -33,11 +33,11 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 Setting default process type 'web'
-Saving libcnbtest_objvwjdsbnfs...
-*** Images (261867e6d668):
-      libcnbtest_objvwjdsbnfs
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
-Successfully built image 'libcnbtest_objvwjdsbnfs'
+Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
 ===> ANALYZING
@@ -75,8 +75,8 @@ Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
 Setting default process type 'web'
-Saving libcnbtest_objvwjdsbnfs...
-*** Images (412374150b98):
-      libcnbtest_objvwjdsbnfs
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
 Adding cache layer 'heroku/nodejs-engine:dist'
-Successfully built image 'libcnbtest_objvwjdsbnfs'
+Successfully built image '<image-name>'
