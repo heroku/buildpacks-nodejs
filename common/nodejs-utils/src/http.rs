@@ -368,10 +368,12 @@ mod test {
         // since this is the only test that sets this env var
         env::remove_var("SSL_CERT_FILE");
 
-        assert!(get("https://self-signed.badssl.com")
-            .max_retries(0)
-            .call_sync()
-            .is_err());
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            assert!(get("https://self-signed.badssl.com")
+                .max_retries(0)
+                .call_sync()
+                .is_err());
+        });
 
         let badssl_self_signed_cert_dir = tempfile::tempdir().unwrap();
         let badssl_self_signed_cert = badssl_self_signed_cert_dir
@@ -409,10 +411,14 @@ mod test {
 
         env::set_var("SSL_CERT_FILE", badssl_self_signed_cert);
 
-        assert!(get("https://self-signed.badssl.com")
-            .max_retries(0)
-            .call_sync()
-            .is_ok());
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            assert!(get("https://self-signed.badssl.com")
+                .max_retries(0)
+                .call_sync()
+                .is_ok());
+        });
+
+        env::remove_var("SSL_CERT_FILE");
     }
 
     #[bon::builder]
