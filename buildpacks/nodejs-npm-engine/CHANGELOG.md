@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Use OS certificate store for HTTP requests when downloading npm. ([#1164](https://github.com/heroku/buildpacks-nodejs/pull/1164))
+
 ## [4.1.2] - 2025-08-15
 
 - No changes.
