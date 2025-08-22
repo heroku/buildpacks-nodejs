@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.3] - 2025-08-22
+
 ### Fixed
 
 - Use OS certificate store for HTTP requests when downloading Node.js. ([#1164](https://github.com/heroku/buildpacks-nodejs/pull/1164))
@@ -923,7 +925,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Parse engines and add them to nodejs.toml ([#25](https://github.com/heroku/nodejs-engine-buildpack/pull/25))
 - Add shellcheck to test suite ([#24](https://github.com/heroku/nodejs-engine-buildpack/pull/24))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.2...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.3...HEAD
+[4.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.1...v4.1.2
 [4.1.1]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/heroku/buildpacks-nodejs/compare/v4.0.1...v4.1.0
