@@ -1,0 +1,8 @@
+[package]
+name = "nodejs"
+rust-version.workspace = true
+edition.workspace = true
+
+[lints]
+workspace = true
+

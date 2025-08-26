@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "buildpacks/nodejs",
     "buildpacks/nodejs-engine",
     "buildpacks/nodejs-corepack",
     "buildpacks/nodejs-npm-engine",
@@ -8,8 +9,8 @@ members = [
     "buildpacks/nodejs-pnpm-engine",
     "buildpacks/nodejs-pnpm-install",
     "buildpacks/nodejs-yarn",
-    "common/nodejs-utils",
-    "test_support",
+    "crates/nodejs-utils",
+    "crates/test_support",
 ]
 
 [workspace.package]
@@ -35,8 +36,8 @@ missing_panics_doc = "allow"
 module_name_repetitions = "allow"
 
 [workspace.dependencies]
-heroku-nodejs-utils = { path = "./common/nodejs-utils" }
-test_support = { path = "./test_support" }
+heroku-nodejs-utils = { path = "./crates/nodejs-utils" }
+test_support = { path = "./crates/test_support" }
 
 [profile.release]
 strip = true
