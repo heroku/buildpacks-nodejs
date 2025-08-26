@@ -152,7 +152,7 @@ fn npm_runtime_settings_are_set() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_native_modules_are_recompiled_even_on_cache_restore() {
+fn test_npm_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project-with-native-module",
         |config| {
@@ -170,7 +170,7 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_skip_build_scripts_from_buildplan() {
+fn test_npm_skip_build_scripts_from_buildplan() {
     integration_test_with_config(
         "./fixtures/npm-project",
         |config| {
@@ -208,7 +208,7 @@ fn test_skip_build_scripts_from_buildplan() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
+fn test_npm_default_web_process_registration_is_skipped_if_procfile_exists() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",
         |config| {
@@ -224,7 +224,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_prune_dev_dependencies_config() {
+fn test_npm_prune_dev_dependencies_config() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",
         |config| {

@@ -50,7 +50,7 @@ fn pnpm_8_nuxt() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_native_modules_are_recompiled_even_on_cache_restore() {
+fn test_pnpm_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/pnpm-project-with-native-module", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
@@ -62,7 +62,7 @@ fn test_native_modules_are_recompiled_even_on_cache_restore() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_skip_build_scripts_from_buildplan() {
+fn test_pnpm_skip_build_scripts_from_buildplan() {
     integration_test_with_config(
         "./fixtures/pnpm-9",
         |config| {
@@ -100,7 +100,7 @@ fn test_skip_build_scripts_from_buildplan() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
+fn test_pnpm_default_web_process_registration_is_skipped_if_procfile_exists() {
     nodejs_integration_test_with_config(
         "./fixtures/pnpm-9",
         |config| {
@@ -116,7 +116,7 @@ fn test_default_web_process_registration_is_skipped_if_procfile_exists() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_prune_dev_dependencies_config() {
+fn test_pnpm_prune_dev_dependencies_config() {
     nodejs_integration_test_with_config(
         "./fixtures/pnpm-9",
         |config| {
