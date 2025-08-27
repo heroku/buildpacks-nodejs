@@ -11,6 +11,7 @@ use super::{cfg, cmd};
 use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -99,11 +100,10 @@ impl Buildpack for CorepackBuildpack {
 
         BuildResultBuilder::new().build()
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: CorepackBuildpackError) -> ErrorMessage {
+    super::errors::on_corepack_error(error)
 }
 
 #[derive(Debug)]

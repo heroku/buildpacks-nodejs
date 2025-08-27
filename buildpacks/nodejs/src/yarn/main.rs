@@ -15,6 +15,7 @@ use heroku_nodejs_utils::buildplan::{
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::npmjs_org::{
     packument_layer, resolve_package_packument, PackumentLayerError,
 };
@@ -226,11 +227,10 @@ impl Buildpack for YarnBuildpack {
         print::all_done(&Some(buildpack_start));
         build_result_builder.build()
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: YarnBuildpackError) -> ErrorMessage {
+    super::errors::on_yarn_error(error)
 }
 
 #[derive(Debug)]

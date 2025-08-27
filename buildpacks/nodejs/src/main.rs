@@ -5,6 +5,7 @@ use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::yarn::main::YarnBuildpackError;
+use heroku_nodejs_utils::error_handling::on_framework_error;
 
 mod corepack;
 mod engine;
@@ -41,7 +42,33 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     }
 
     fn on_error(&self, error: BuildpackError) {
-        todo!()
+        let error_message = match error {
+            libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
+                NodeJsBuildpackError::NodeEngine(error) => {
+                    engine::main::on_error(error);
+                }
+                NodeJsBuildpackError::Corepack(error) => {
+                    corepack::main::on_error(error);
+                }
+                NodeJsBuildpackError::NpmEngine(error) => {
+                    npm_engine::main::on_error(error);
+                }
+                NodeJsBuildpackError::NpmInstall(error) => {
+                    npm_install::main::on_error(error);
+                }
+                NodeJsBuildpackError::PnpmInstall(error) => {
+                    pnpm_install::main::on_error(error);
+                }
+                NodeJsBuildpackError::PnpmEngine(error) => {
+                    pnpm_engine::main::on_error(error);
+                }
+                NodeJsBuildpackError::Yarn(error) => {
+                    yarn::main::on_error(error);
+                }
+            },
+            framework_error => on_framework_error(&framework_error),
+        };
+        bullet_stream::global::print::error(error_message.to_string());
     }
 }
 

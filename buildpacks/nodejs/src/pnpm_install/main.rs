@@ -15,6 +15,7 @@ use heroku_nodejs_utils::buildplan::{
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::{formatdoc, indoc};
@@ -165,11 +166,10 @@ impl Buildpack for PnpmInstallBuildpack {
         print::all_done(&Some(buildpack_start));
         result_builder.build()
     }
+}
 
-    fn on_error(&self, err: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(err);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
+    super::errors::on_pnpm_install_buildpack_error(error)
 }
 
 #[derive(Debug)]

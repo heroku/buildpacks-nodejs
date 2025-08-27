@@ -1,29 +1,11 @@
-use super::PnpmEngineBuildpackError;
+use super::main::PnpmEngineBuildpackError;
 use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{
-    on_framework_error, ErrorMessage, ErrorMessageBuilder, ErrorType, SuggestRetryBuild,
-    SuggestSubmitIssue,
+    error_message, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
 };
 use indoc::formatdoc;
 
-const BUILDPACK_NAME: &str = "Heroku Node.js pnpm Engine";
-
-const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
-
-pub(crate) fn on_error(error: libcnb::Error<PnpmEngineBuildpackError>) -> ErrorMessage {
-    match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
-// Wraps the error_message() builder to preset the issues_url field
-fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
-    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
-}
-
-fn on_buildpack_error(error: PnpmEngineBuildpackError) -> ErrorMessage {
+pub(crate) fn on_pnpm_engine_error(error: PnpmEngineBuildpackError) -> ErrorMessage {
     match error {
         PnpmEngineBuildpackError::CorepackRequired => {
             let corepack_enable = style::command("corepack enable");
@@ -74,8 +56,8 @@ mod tests {
         assert_error_snapshot(PnpmEngineBuildpackError::CorepackRequired);
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<PnpmEngineBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<PnpmEngineBuildpackError>) {
+        let error_message = strip_ansi(on_pnpm_engine_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

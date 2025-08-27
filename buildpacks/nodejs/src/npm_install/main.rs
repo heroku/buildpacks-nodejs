@@ -16,6 +16,7 @@ use heroku_nodejs_utils::buildplan::{
     NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
@@ -140,11 +141,10 @@ impl Buildpack for NpmInstallBuildpack {
         print::all_done(&Some(buildpack_start));
         build_result
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: NpmInstallBuildpackError) -> ErrorMessage {
+    super::errors::on_npm_install_buildpack_error(error)
 }
 
 fn log_npm_version(env: &Env) -> Result<(), NpmInstallBuildpackError> {

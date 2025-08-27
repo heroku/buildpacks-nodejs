@@ -1,37 +1,17 @@
 use super::install_node::DistLayerError;
-use super::NodeJsEngineBuildpackError;
+use super::main::NodeJsEngineBuildpackError;
 use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    SuggestRetryBuild, SuggestSubmitIssue,
+    error_message, file_value, on_package_json_error, ErrorMessage, SuggestRetryBuild,
+    SuggestSubmitIssue,
 };
 use indoc::formatdoc;
-use libcnb::Error;
 
-const BUILDPACK_NAME: &str = "Heroku Node.js Engine buildpack";
-
-const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
-
-pub(crate) fn on_error(error: Error<NodeJsEngineBuildpackError>) -> ErrorMessage {
-    match error {
-        Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
-// Wraps the error_message() builder to preset the issues_url field
-fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
-    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
-}
-
-fn on_buildpack_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
+pub(crate) fn on_nodejs_engine_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
     match error {
         NodeJsEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
-        NodeJsEngineBuildpackError::PackageJson(e) => {
-            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
-        }
+        NodeJsEngineBuildpackError::PackageJson(e) => on_package_json_error(e),
         NodeJsEngineBuildpackError::UnknownVersion(e) => on_unknown_version_error(e),
         NodeJsEngineBuildpackError::DistLayer(e) => on_dist_layer_error(e),
     }
@@ -281,8 +261,8 @@ mod tests {
         });
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<NodeJsEngineBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<NodeJsEngineBuildpackError>) {
+        let error_message = strip_ansi(on_nodejs_engine_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

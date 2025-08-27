@@ -5,6 +5,7 @@
 
 use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use libcnb::build::{BuildContext, BuildResult};
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
@@ -51,11 +52,10 @@ impl Buildpack for PnpmEngineBuildpack {
         // `heroku/nodejs-corepack` instead.
         Err(PnpmEngineBuildpackError::CorepackRequired)?
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: PnpmEngineBuildpackError) -> ErrorMessage {
+    super::errors::on_pnpm_engine_error(error)
 }
 
 #[derive(Debug, Copy, Clone)]

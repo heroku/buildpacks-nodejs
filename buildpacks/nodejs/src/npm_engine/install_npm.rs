@@ -176,8 +176,14 @@ pub(crate) enum NpmInstallError {
     InstallNpm(fun_run::CmdError),
 }
 
-impl From<NpmInstallError> for BuildpackError {
+impl From<NpmInstallError> for NpmEngineBuildpackError {
     fn from(value: NpmInstallError) -> Self {
         NpmEngineBuildpackError::NpmInstall(value).into()
+    }
+}
+
+impl From<NpmInstallError> for BuildpackError {
+    fn from(value: NpmInstallError) -> Self {
+        NpmEngineBuildpackError::from(value).into()
     }
 }

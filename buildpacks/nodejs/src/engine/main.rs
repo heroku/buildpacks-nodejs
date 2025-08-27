@@ -9,6 +9,7 @@ use super::install_node::{install_node, DistLayerError};
 use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
@@ -144,11 +145,10 @@ impl Buildpack for NodeJsEngineBuildpack {
             None => resulter.build(),
         }
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
+    super::errors::on_nodejs_engine_error(error)
 }
 
 #[derive(Debug)]

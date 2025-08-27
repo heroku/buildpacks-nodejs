@@ -1,6 +1,6 @@
 use crate::error_handling::ErrorType::UserFacing;
 use crate::error_handling::{
-    error_message, ErrorType, SharedErrorMessageBuilder, SuggestRetryBuild, SuggestSubmitIssue,
+    error_message, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
 };
 use bullet_stream::style;
 use indoc::formatdoc;
@@ -65,7 +65,7 @@ pub enum ConfigError {
     WrongType,
 }
 
-impl From<ConfigError> for SharedErrorMessageBuilder {
+impl From<ConfigError> for ErrorMessage {
     fn from(value: ConfigError) -> Self {
         let project_toml = style::value("project.toml");
         let toml_spec_url = style::url("https://toml.io/en/v1.0.0");
@@ -80,7 +80,8 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                     An unexpected I/O error occurred while checking if {project_toml} exists in the \
                     root of the application.
                 "})
-                .debug_info(e.to_string()),
+                .debug_info(e.to_string())
+                .create(),
 
             ConfigError::ReadProjectToml(e) => error_message()
                 .error_type(ErrorType::Internal)
@@ -89,7 +90,8 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                     This buildpack will read from {project_toml} if the file is present in the root of \
                     the application but an unexpected I/O error occurred during this operation.
                 "})
-                .debug_info(e.to_string()),
+                .debug_info(e.to_string())
+                .create(),
 
             ConfigError::ParseProjectToml(e) => error_message()
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
@@ -101,7 +103,8 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                     Suggestions:
                     - Ensure the file follows the TOML format described at {toml_spec_url}
                 "})
-                .debug_info(e.to_string()),
+                .debug_info(e.to_string())
+                .create(),
 
             ConfigError::ExpectedTomlTable => error_message()
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
@@ -115,7 +118,8 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                     - See the TOML documentation for more details on the TOML table type at \
                     {toml_spec_url}
                 " })
-                .maybe_debug_info(None::<String>),
+                .maybe_debug_info(None::<String>)
+                .create(),
 
             ConfigError::WrongType => error_message()
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
@@ -129,7 +133,8 @@ impl From<ConfigError> for SharedErrorMessageBuilder {
                     - See the TOML documentation for more details on the TOML boolean type at \
                     {toml_spec_url}
                 " })
-                .maybe_debug_info(None::<String>),
+                .maybe_debug_info(None::<String>)
+                .create(),
         }
     }
 }
@@ -294,14 +299,8 @@ mod tests {
         assert_config_error_snapshot(ConfigError::WrongType);
     }
 
-    fn assert_config_error_snapshot(error: impl Into<SharedErrorMessageBuilder>) {
-        let error_message = strip_ansi(
-            error
-                .into()
-                .issues_url("https://github.com/heroku/buildpacks-nodejs/issues")
-                .create()
-                .to_string(),
-        );
+    fn assert_config_error_snapshot(error: impl Into<ErrorMessage>) {
+        let error_message = strip_ansi(error.into().to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

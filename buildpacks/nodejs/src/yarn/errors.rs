@@ -1,44 +1,27 @@
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::DepsLayerError;
 use super::install_yarn::CliLayerError;
-use super::YarnBuildpackError;
+use super::main::YarnBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
-use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::UserFacing;
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    ErrorType, SharedErrorMessageBuilder, SuggestRetryBuild, SuggestSubmitIssue,
+    error_message, file_value, on_package_json_error, ErrorMessage, ErrorType, SuggestRetryBuild,
+    SuggestSubmitIssue,
 };
 use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 use indoc::formatdoc;
 
-const BUILDPACK_NAME: &str = "Heroku Node.js Yarn";
-
-const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
-
-pub(crate) fn on_error(error: libcnb::Error<YarnBuildpackError>) -> ErrorMessage {
-    match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
-// Wraps the error_message() builder to preset the issues_url field
-fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
-    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
-}
-
-fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
+pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
     match error {
         YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
         YarnBuildpackError::CliLayer(e) => on_cli_layer_error(&e),
         YarnBuildpackError::DepsLayer(e) => on_deps_layer_error(&e),
-        YarnBuildpackError::PackageJson(e) => on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e),
+        YarnBuildpackError::PackageJson(e) => on_package_json_error(e),
         YarnBuildpackError::YarnCacheGet(e) => on_yarn_cache_get_error(&e),
         YarnBuildpackError::YarnDisableGlobalCache(e) => on_yarn_disable_global_cache_error(&e),
         YarnBuildpackError::YarnInstall(e) => on_yarn_install_error(&e),
@@ -55,9 +38,7 @@ fn on_buildpack_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
-        YarnBuildpackError::Config(e) => SharedErrorMessageBuilder::from(e)
-            .issues_url(ISSUES_URL.to_string())
-            .create(),
+        YarnBuildpackError::Config(e) => e.into(),
     }
 }
 
@@ -401,8 +382,8 @@ fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
 
 #[cfg(test)]
 mod tests {
-    use super::yarn::UnknownNodeLinker;
     use super::*;
+    use crate::yarn::main::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;
@@ -594,8 +575,8 @@ mod tests {
         ));
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<YarnBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<YarnBuildpackError>) {
+        let error_message = strip_ansi(on_yarn_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

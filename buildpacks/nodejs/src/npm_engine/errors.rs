@@ -1,38 +1,19 @@
 use super::install_npm::NpmInstallError;
-use super::NpmEngineBuildpackError;
+use super::main::NpmEngineBuildpackError;
 use super::{node, npm};
 use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    file_value, on_framework_error, on_package_json_error, ErrorMessage, ErrorMessageBuilder,
-    SuggestRetryBuild, SuggestSubmitIssue,
+    error_message, file_value, on_package_json_error, ErrorMessage, SuggestRetryBuild,
+    SuggestSubmitIssue,
 };
 use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::Requirement;
 use indoc::formatdoc;
 
-const BUILDPACK_NAME: &str = "Heroku Node.js npm Engine";
-
-const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
-
-pub(crate) fn on_error(error: libcnb::Error<NpmEngineBuildpackError>) -> ErrorMessage {
+pub(crate) fn on_npm_engine_error(error: NpmEngineBuildpackError) -> ErrorMessage {
     match error {
-        libcnb::Error::BuildpackError(e) => on_buildpack_error(e),
-        e => on_framework_error(BUILDPACK_NAME, ISSUES_URL, &e),
-    }
-}
-
-// Wraps the error_message() builder to preset the issues_url field
-fn error_message() -> ErrorMessageBuilder<SetIssuesUrl> {
-    heroku_nodejs_utils::error_handling::error_message().issues_url(ISSUES_URL.to_string())
-}
-
-fn on_buildpack_error(error: NpmEngineBuildpackError) -> ErrorMessage {
-    match error {
-        NpmEngineBuildpackError::PackageJson(e) => {
-            on_package_json_error(BUILDPACK_NAME, ISSUES_URL, e)
-        }
+        NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e),
         NpmEngineBuildpackError::MissingNpmEngineRequirement => {
             on_missing_npm_engine_requirement_error()
         }
@@ -322,8 +303,8 @@ mod tests {
         ));
     }
 
-    fn assert_error_snapshot(error: impl Into<Error<NpmEngineBuildpackError>>) {
-        let error_message = strip_ansi(on_error(error.into()).to_string());
+    fn assert_error_snapshot(error: impl Into<NpmEngineBuildpackError>) {
+        let error_message = strip_ansi(on_npm_engine_error(error.into()).to_string());
         let test_name = format!(
             "errors__{}",
             test_name()

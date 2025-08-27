@@ -5,14 +5,18 @@ use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
-pub fn on_framework_error<E>(buildpack_name: &str, issues_url: &str, error: &E) -> ErrorMessage
+const BUILDPACK_NAME: &str = "Heroku Node.js Buildpack";
+
+const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
+
+pub fn on_framework_error<E>(error: &E) -> ErrorMessage
 where
     E: Display,
 {
-    let issues_url = style::url(issues_url);
+    let issues_url = style::url(ISSUES_URL);
     error_message()
         .error_type(ErrorType::Framework)
-        .header(format!("{buildpack_name} internal error"))
+        .header(format!("{BUILDPACK_NAME} internal error"))
         .body(formatdoc! {"
             The framework used by this buildpack encountered an unexpected error.
 
@@ -24,16 +28,11 @@ where
             {issues_url}
         "})
         .debug_info(error.to_string())
-        .issues_url(issues_url)
         .create()
 }
 
 #[must_use]
-pub fn on_package_json_error(
-    buildpack_name: &str,
-    issues_url: &str,
-    error: PackageJsonError,
-) -> ErrorMessage {
+pub fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
     let package_json = file_value("./package.json");
     let json_spec_url = style::url("https://www.json.org/");
     match error {
@@ -41,28 +40,26 @@ pub fn on_package_json_error(
             .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
             .header(format!("Error reading {package_json}"))
             .body(formatdoc! { "
-                The {buildpack_name} reads from {package_json} to complete the build but \
+                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
                 the file can't be read.
 
                 Suggestions:
                 - Ensure the file has read permissions.
             " })
             .debug_info(e.to_string())
-            .issues_url(issues_url)
             .create(),
 
         PackageJsonError::ParseError(e) => error_message()
             .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
             .header(format!("Error parsing {package_json}"))
             .body(formatdoc! { "
-                The {buildpack_name} reads from {package_json} to complete the build but \
+                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
                 the file isn't valid JSON.
 
                 Suggestions:
                 - Ensure the file follows the JSON format described at {json_spec_url}
             " })
             .debug_info(e.to_string())
-            .issues_url(issues_url)
             .create(),
     }
 }
@@ -73,11 +70,10 @@ pub fn error_message(
     header: String,
     body: String,
     error_type: ErrorType,
-    issues_url: String,
     debug_info: Option<String>,
 ) -> ErrorMessage {
     let mut message_parts = vec![header.trim().to_string(), body.trim().to_string()];
-    let issues_url = style::url(issues_url);
+    let issues_url = style::url(ISSUES_URL);
     let pack = style::value("pack");
     let pack_url =
         style::url("https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/");
@@ -129,17 +125,6 @@ pub fn error_message(
 pub fn file_value(value: impl AsRef<Path>) -> String {
     style::value(value.as_ref().to_string_lossy())
 }
-
-// A useful type for when you've got an error type that needs to be shared across multiple
-// buildpacks and you want handle all the ErrorMessage building logic for multiple variants
-// where that error type is declared.
-pub type SharedErrorMessageBuilder = ErrorMessageBuilder<
-    error_message_builder::SetDebugInfo<
-        error_message_builder::SetBody<
-            error_message_builder::SetHeader<error_message_builder::SetErrorType>,
-        >,
-    >,
->;
 
 #[derive(Debug)]
 pub struct ErrorMessage {

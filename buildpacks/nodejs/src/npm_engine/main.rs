@@ -9,6 +9,7 @@ use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildp
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;
+use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::npmjs_org::{
     packument_layer, resolve_package_packument, PackagePackument, PackumentLayerError,
 };
@@ -95,11 +96,10 @@ impl Buildpack for NpmEngineBuildpack {
         print::all_done(&Some(buildpack_start));
         BuildResultBuilder::new().build()
     }
+}
 
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
-    }
+pub(crate) fn on_error(error: NpmEngineBuildpackError) -> ErrorMessage {
+    super::errors::on_npm_engine_error(error)
 }
 
 fn read_requested_npm_version(
