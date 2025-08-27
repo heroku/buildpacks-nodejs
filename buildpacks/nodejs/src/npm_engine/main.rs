@@ -4,6 +4,8 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use super::install_npm::{install_npm, NpmInstallError};
+use super::{node, npm};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;
@@ -114,9 +116,9 @@ fn read_requested_npm_version(
 }
 
 fn resolve_requested_npm_packument(
-    context: &BuildContext<NpmEngineBuildpack>,
+    context: &BuildpackBuildContext,
     requested_version: &Requirement,
-) -> Result<PackagePackument, libcnb::Error<NpmEngineBuildpackError>> {
+) -> BuildpackResult<PackagePackument> {
     print::sub_bullet(format!(
         "Found {} version {} declared in {}",
         style::value("engines.npm"),
@@ -167,12 +169,6 @@ fn get_npm_version(env: &Env) -> Result<Version, NpmEngineBuildpackError> {
         .map_err(NpmEngineBuildpackError::NpmVersion)
 }
 
-impl From<NpmEngineBuildpackError> for libcnb::Error<NpmEngineBuildpackError> {
-    fn from(value: NpmEngineBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
-    }
-}
-
 buildpack_main!(NpmEngineBuildpack);
 
 #[derive(Debug)]
@@ -184,4 +180,10 @@ pub(crate) enum NpmEngineBuildpackError {
     NpmInstall(NpmInstallError),
     NodeVersion(node::VersionError),
     NpmVersion(npm::VersionError),
+}
+
+impl From<NpmEngineBuildpackError> for BuildpackError {
+    fn from(value: NpmEngineBuildpackError) -> Self {
+        NodeJsBuildpackError::NpmEngine(value).into()
+    }
 }

@@ -1,6 +1,7 @@
-use super::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use super::cmd;
+use super::main::PnpmInstallBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::Env;
@@ -8,9 +9,9 @@ use std::fs::create_dir;
 use std::os::unix::fs::symlink;
 
 pub(crate) fn configure_pnpm_virtual_store_directory(
-    context: &BuildContext<PnpmInstallBuildpack>,
+    context: &BuildpackBuildContext,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+) -> BuildpackResult<()> {
     let virtual_layer = context.uncached_layer(
         layer_name!("virtual"),
         UncachedLayerDefinition {
@@ -34,7 +35,11 @@ pub(crate) fn configure_pnpm_virtual_store_directory(
     // module loader's ancestor directory traversal.
     let from = context.app_dir.join("node_modules");
     let to = virtual_layer.path().join("node_modules");
-    symlink(&from, &to)
-        .map_err(|source| PnpmInstallBuildpackError::CreateSymlink { from, to, source })
-        .map_err(Into::into)
+    symlink(&from, &to).map_err(|source| PnpmInstallBuildpackError::CreateSymlink {
+        from,
+        to,
+        source,
+    })?;
+
+    Ok(())
 }

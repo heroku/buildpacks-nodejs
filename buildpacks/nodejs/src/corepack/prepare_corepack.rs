@@ -1,6 +1,10 @@
+use super::cmd;
+use super::main::CorepackBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use libcnb::build::BuildContext;
+use heroku_nodejs_utils::package_json::PackageManager;
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -9,16 +13,11 @@ use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
-use heroku_nodejs_utils::package_json::PackageManager;
-use heroku_nodejs_utils::vrs::Version;
-
-use super::{cmd, CorepackBuildpack, CorepackBuildpackError};
-
 pub(crate) fn prepare_corepack(
-    context: &BuildContext<CorepackBuildpack>,
+    context: &BuildpackBuildContext,
     package_manager: &PackageManager,
     env: &Env,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+) -> BuildpackResult<()> {
     let new_metadata = ManagerLayerMetadata {
         manager_name: package_manager.name.clone(),
         manager_version: package_manager.version.clone(),
@@ -78,9 +77,9 @@ pub(crate) fn prepare_corepack(
         .read_env()
         .map(|layer_env| layer_env.apply(Scope::Build, env))?;
 
-    cmd::corepack_prepare(&mgr_env)
-        .map_err(CorepackBuildpackError::CorepackPrepare)
-        .map_err(Into::into)
+    cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

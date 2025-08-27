@@ -1,13 +1,9 @@
+use crate::{BuildpackBuildContext, BuildpackResult};
 use libcnb::additional_buildpack_binary_path;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 
-use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
-
-pub(crate) fn configure_web_env(
-    context: &BuildContext<NodeJsEngineBuildpack>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+pub(crate) fn configure_web_env(context: &BuildpackBuildContext) -> BuildpackResult<()> {
     let web_env_layer = context.uncached_layer(
         layer_name!("web_env"),
         UncachedLayerDefinition {

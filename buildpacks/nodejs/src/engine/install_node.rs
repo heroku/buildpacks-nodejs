@@ -1,8 +1,9 @@
+use super::main::NodeJsEngineBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::vrs::Version;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -18,12 +19,10 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 
-use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
-
 pub(crate) fn install_node(
-    context: &BuildContext<NodeJsEngineBuildpack>,
+    context: &BuildpackBuildContext,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+) -> BuildpackResult<()> {
     print::bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {
@@ -174,9 +173,9 @@ pub(crate) enum DistLayerError {
     },
 }
 
-impl From<DistLayerError> for libcnb::Error<NodeJsEngineBuildpackError> {
+impl From<DistLayerError> for BuildpackError {
     fn from(value: DistLayerError) -> Self {
-        libcnb::Error::BuildpackError(NodeJsEngineBuildpackError::DistLayer(value))
+        NodeJsEngineBuildpackError::DistLayer(value).into()
     }
 }
 

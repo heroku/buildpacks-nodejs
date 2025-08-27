@@ -1,11 +1,10 @@
-use super::NpmEngineBuildpack;
-use super::NpmEngineBuildpackError;
+use super::main::NpmEngineBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use heroku_nodejs_utils::vrs::Version;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -17,10 +16,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub(crate) fn install_npm(
-    context: &BuildContext<NpmEngineBuildpack>,
+    context: &BuildpackBuildContext,
     npm_packument: &PackagePackument,
     node_version: &Version,
-) -> Result<(), libcnb::Error<NpmEngineBuildpackError>> {
+) -> BuildpackResult<()> {
     let npm_version = &npm_packument.version;
 
     let new_metadata = NpmEngineLayerMetadata {
@@ -177,8 +176,8 @@ pub(crate) enum NpmInstallError {
     InstallNpm(fun_run::CmdError),
 }
 
-impl From<NpmInstallError> for libcnb::Error<NpmEngineBuildpackError> {
+impl From<NpmInstallError> for BuildpackError {
     fn from(value: NpmInstallError) -> Self {
-        libcnb::Error::BuildpackError(NpmEngineBuildpackError::NpmInstall(value))
+        NpmEngineBuildpackError::NpmInstall(value).into()
     }
 }

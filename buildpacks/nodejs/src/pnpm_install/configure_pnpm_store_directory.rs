@@ -1,6 +1,7 @@
-use super::{cmd, PnpmInstallBuildpack, PnpmInstallBuildpackError};
+use super::cmd;
+use super::main::PnpmInstallBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -9,9 +10,9 @@ use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn configure_pnpm_store_directory(
-    context: &BuildContext<PnpmInstallBuildpack>,
+    context: &BuildpackBuildContext,
     env: &Env,
-) -> Result<(), libcnb::Error<PnpmInstallBuildpackError>> {
+) -> BuildpackResult<()> {
     let new_metadata = AddressableStoreLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
@@ -46,8 +47,9 @@ pub(crate) fn configure_pnpm_store_directory(
     }
 
     cmd::pnpm_set_store_dir(env, &addressable_layer.path())
-        .map_err(PnpmInstallBuildpackError::PnpmSetStoreDir)
-        .map_err(Into::into)
+        .map_err(PnpmInstallBuildpackError::PnpmSetStoreDir)?;
+
+    Ok(())
 }
 
 const LAYER_VERSION: &str = "1";

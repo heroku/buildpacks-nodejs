@@ -1,5 +1,9 @@
+use super::cmd;
+use crate::corepack::main::CorepackBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
-use libcnb::build::BuildContext;
+use heroku_nodejs_utils::package_json::PackageManager;
+use heroku_nodejs_utils::vrs::Version;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -7,17 +11,12 @@ use libcnb::layer::{
 use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
-use heroku_nodejs_utils::package_json::PackageManager;
-use heroku_nodejs_utils::vrs::Version;
-
-use super::{cmd, CorepackBuildpack, CorepackBuildpackError};
-
 pub(crate) fn enable_corepack(
-    context: &BuildContext<CorepackBuildpack>,
+    context: &BuildpackBuildContext,
     corepack_version: &Version,
     package_manager: &PackageManager,
     env: &Env,
-) -> Result<(), libcnb::Error<CorepackBuildpackError>> {
+) -> BuildpackResult<()> {
     let new_metadata = ShimLayerMetadata {
         corepack_version: corepack_version.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -60,8 +59,9 @@ pub(crate) fn enable_corepack(
     }
 
     cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), env)
-        .map_err(CorepackBuildpackError::CorepackEnable)
-        .map_err(Into::into)
+        .map_err(CorepackBuildpackError::CorepackEnable)?;
+
+    Ok(())
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

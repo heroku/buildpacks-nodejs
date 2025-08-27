@@ -6,6 +6,7 @@
 use super::configure_available_parallelism::configure_available_parallelism;
 use super::configure_web_env::configure_web_env;
 use super::install_node::{install_node, DistLayerError};
+use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -151,16 +152,16 @@ impl Buildpack for NodeJsEngineBuildpack {
 }
 
 #[derive(Debug)]
-enum NodeJsEngineBuildpackError {
+pub(crate) enum NodeJsEngineBuildpackError {
     InventoryParse(toml::de::Error),
     PackageJson(PackageJsonError),
     UnknownVersion(String),
     DistLayer(DistLayerError),
 }
 
-impl From<NodeJsEngineBuildpackError> for libcnb::Error<NodeJsEngineBuildpackError> {
+impl From<NodeJsEngineBuildpackError> for BuildpackError {
     fn from(e: NodeJsEngineBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(e)
+        NodeJsBuildpackError::NodeEngine(e).into()
     }
 }
 

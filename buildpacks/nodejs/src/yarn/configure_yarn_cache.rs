@@ -1,5 +1,6 @@
-use super::yarn::{NodeLinker, Yarn};
-use super::{cmd, YarnBuildpack, YarnBuildpackError};
+use super::cmd;
+use super::main::{NodeLinker, Yarn, YarnBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
@@ -17,11 +18,11 @@ use std::path::PathBuf;
 /// scenarios, so the cache is invalidated after a number of builds to prevent
 /// unbound cache growth.
 pub(crate) fn configure_yarn_cache(
-    context: &BuildContext<YarnBuildpack>,
+    context: &BuildpackBuildContext,
     yarn: &Yarn,
     node_linker: Option<&NodeLinker>,
     env: &Env,
-) -> Result<(), libcnb::Error<YarnBuildpackError>> {
+) -> BuildpackResult<()> {
     let new_metadata = DepsLayerMetadata {
         yarn: yarn.clone(),
         layer_version: LAYER_VERSION.to_string(),
@@ -67,8 +68,9 @@ pub(crate) fn configure_yarn_cache(
     }
 
     cmd::yarn_set_cache(yarn, &deps_layer.path().join("cache"), env)
-        .map_err(DepsLayerError::YarnCacheSet)
-        .map_err(Into::into)
+        .map_err(DepsLayerError::YarnCacheSet)?;
+
+    Ok(())
 }
 
 const MAX_CACHE_USAGE_COUNT: f32 = 150.0;
@@ -90,8 +92,8 @@ pub(crate) enum DepsLayerError {
     YarnCacheSet(fun_run::CmdError),
 }
 
-impl From<DepsLayerError> for libcnb::Error<YarnBuildpackError> {
+impl From<DepsLayerError> for BuildpackError {
     fn from(value: DepsLayerError) -> Self {
-        libcnb::Error::BuildpackError(YarnBuildpackError::DepsLayer(value))
+        YarnBuildpackError::DepsLayer(value).into()
     }
 }

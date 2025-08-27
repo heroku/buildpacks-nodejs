@@ -6,6 +6,8 @@
 use super::cmd::PnpmVersionError;
 use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
+use super::{cmd, store};
+use crate::{BuildpackBuildContext, BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
@@ -171,7 +173,7 @@ impl Buildpack for PnpmInstallBuildpack {
 }
 
 #[derive(Debug)]
-enum PnpmInstallBuildpackError {
+pub(crate) enum PnpmInstallBuildpackError {
     BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
     PnpmSetStoreDir(fun_run::CmdError),
@@ -190,9 +192,9 @@ enum PnpmInstallBuildpackError {
     Config(ConfigError),
 }
 
-impl From<PnpmInstallBuildpackError> for libcnb::Error<PnpmInstallBuildpackError> {
+impl From<PnpmInstallBuildpackError> for BuildpackError {
     fn from(e: PnpmInstallBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(e)
+        NodeJsBuildpackError::PnpmInstall(e).into()
     }
 }
 
@@ -256,7 +258,7 @@ fn has_lifecycle_scripts(package_json_file: &Path) -> Result<bool, PackageJsonEr
     )
 }
 
-fn has_pnpm_workspace_file(context: &BuildContext<PnpmInstallBuildpack>) -> bool {
+fn has_pnpm_workspace_file(context: &BuildpackBuildContext) -> bool {
     context.app_dir.join("pnpm-workspace.yaml").exists()
         || context.app_dir.join("pnpm-workspace.yml").exists()
 }

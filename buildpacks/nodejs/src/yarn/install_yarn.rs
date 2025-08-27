@@ -1,8 +1,8 @@
-use super::{YarnBuildpack, YarnBuildpackError};
+use super::main::YarnBuildpackError;
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::npmjs_org::PackagePackument;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -17,9 +17,9 @@ use std::path::PathBuf;
 use tempfile::NamedTempFile;
 
 pub(crate) fn install_yarn(
-    context: &BuildContext<YarnBuildpack>,
+    context: &BuildpackBuildContext,
     yarn_package_packument: &PackagePackument,
-) -> Result<LayerEnv, libcnb::Error<YarnBuildpackError>> {
+) -> BuildpackResult<LayerEnv> {
     let new_metadata = CliLayerMetadata {
         yarn_version: yarn_package_packument.version.to_string(),
         layer_version: LAYER_VERSION.to_string(),
@@ -109,8 +109,8 @@ pub(crate) enum CliLayerError {
     Permissions(std::io::Error),
 }
 
-impl From<CliLayerError> for libcnb::Error<YarnBuildpackError> {
+impl From<CliLayerError> for BuildpackError {
     fn from(value: CliLayerError) -> Self {
-        libcnb::Error::BuildpackError(YarnBuildpackError::CliLayer(value))
+        YarnBuildpackError::CliLayer(value).into()
     }
 }

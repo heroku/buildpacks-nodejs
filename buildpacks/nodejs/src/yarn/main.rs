@@ -6,6 +6,8 @@
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
 use super::install_yarn::{install_yarn, CliLayerError};
+use super::{cfg, cmd};
+use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
@@ -232,7 +234,7 @@ impl Buildpack for YarnBuildpack {
 }
 
 #[derive(Debug)]
-enum YarnBuildpackError {
+pub(crate) enum YarnBuildpackError {
     BuildScript(fun_run::CmdError),
     CliLayer(CliLayerError),
     DepsLayer(DepsLayerError),
@@ -252,9 +254,9 @@ enum YarnBuildpackError {
     Config(ConfigError),
 }
 
-impl From<YarnBuildpackError> for libcnb::Error<YarnBuildpackError> {
+impl From<YarnBuildpackError> for BuildpackError {
     fn from(e: YarnBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(e)
+        NodeJsBuildpackError::Yarn(e).into()
     }
 }
 

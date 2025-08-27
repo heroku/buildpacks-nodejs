@@ -5,6 +5,8 @@
 
 use super::configure_npm_cache_directory::configure_npm_cache_directory;
 use super::configure_npm_runtime_env::configure_npm_runtime_env;
+use super::npm;
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
@@ -197,9 +199,9 @@ fn run_build_scripts(
 }
 
 fn configure_default_processes(
-    context: &BuildContext<NpmInstallBuildpack>,
+    context: &BuildpackBuildContext,
     package_json: &PackageJson,
-) -> Result<BuildResult, libcnb::Error<NpmInstallBuildpackError>> {
+) -> BuildpackResult<BuildResult> {
     if context.app_dir.join("Procfile").exists() {
         print::sub_bullet("Skipping default web process (Procfile detected)");
         BuildResultBuilder::new().build()
@@ -239,9 +241,9 @@ pub(crate) enum NpmInstallBuildpackError {
     Config(ConfigError),
 }
 
-impl From<NpmInstallBuildpackError> for libcnb::Error<NpmInstallBuildpackError> {
+impl From<NpmInstallBuildpackError> for BuildpackError {
     fn from(value: NpmInstallBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
+        NodeJsBuildpackError::NpmInstall(value).into()
     }
 }
 

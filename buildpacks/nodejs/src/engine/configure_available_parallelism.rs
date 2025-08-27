@@ -1,14 +1,13 @@
-use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackResult};
 use heroku_nodejs_utils::available_parallelism::available_parallelism_env;
 use libcnb::additional_buildpack_binary_path;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 
 pub(crate) fn configure_available_parallelism(
-    context: &BuildContext<NodeJsEngineBuildpack>,
-) -> Result<(), libcnb::Error<NodeJsEngineBuildpackError>> {
+    context: &BuildpackBuildContext,
+) -> BuildpackResult<()> {
     let available_parallelism_layer = context.uncached_layer(
         layer_name!("available_parallelism"),
         UncachedLayerDefinition {

@@ -3,6 +3,7 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::{BuildContext, BuildResult};
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -62,9 +63,9 @@ pub(crate) enum PnpmEngineBuildpackError {
     CorepackRequired,
 }
 
-impl From<PnpmEngineBuildpackError> for libcnb::Error<PnpmEngineBuildpackError> {
+impl From<PnpmEngineBuildpackError> for BuildpackError {
     fn from(value: PnpmEngineBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
+        NodeJsBuildpackError::PnpmEngine(value).into()
     }
 }
 

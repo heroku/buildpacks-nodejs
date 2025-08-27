@@ -1,4 +1,5 @@
-use super::PnpmInstallBuildpackError;
+use super::main::PnpmInstallBuildpackError;
+use crate::BuildpackError;
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};
@@ -82,8 +83,8 @@ pub(crate) enum PnpmVersionError {
     Parse(String, VersionError),
 }
 
-impl From<PnpmVersionError> for libcnb::Error<PnpmInstallBuildpackError> {
+impl From<PnpmVersionError> for BuildpackError {
     fn from(value: PnpmVersionError) -> Self {
-        libcnb::Error::BuildpackError(PnpmInstallBuildpackError::PnpmVersion(value))
+        PnpmInstallBuildpackError::PnpmVersion(value).into()
     }
 }

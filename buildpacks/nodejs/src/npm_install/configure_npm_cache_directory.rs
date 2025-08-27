@@ -1,8 +1,8 @@
-use super::NpmInstallBuildpackError;
-use super::{npm, NpmInstallBuildpack};
+use super::main::NpmInstallBuildpackError;
+use super::npm;
+use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use fun_run::CommandWithName;
-use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -11,9 +11,9 @@ use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn configure_npm_cache_directory(
-    context: &BuildContext<NpmInstallBuildpack>,
+    context: &BuildpackBuildContext,
     env: &Env,
-) -> Result<(), libcnb::Error<NpmInstallBuildpackError>> {
+) -> BuildpackResult<()> {
     let new_metadata = NpmCacheLayerMetadata {
         layer_version: LAYER_VERSION.to_string(),
     };
