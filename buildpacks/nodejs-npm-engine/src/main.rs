@@ -1,9 +1,13 @@
 use libcnb::build::{BuildContext, BuildResult};
 use libcnb::detect::{DetectContext, DetectResult};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::Buildpack;
+use libcnb::{buildpack_main, Buildpack};
+
+buildpack_main!(DeprecatedBuildpack);
 
 struct DeprecatedBuildpack;
+
+#[derive(Debug)]
 struct DeprecatedBuildpackError;
 
 impl Buildpack for DeprecatedBuildpack {
