@@ -3,12 +3,7 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-mod errors;
-mod install_npm;
-mod node;
-mod npm;
-
-use crate::install_npm::{install_npm, NpmInstallError};
+use super::install_npm::{install_npm, NpmInstallError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;

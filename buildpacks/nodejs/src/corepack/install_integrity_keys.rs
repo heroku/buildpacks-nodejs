@@ -1,4 +1,4 @@
-use crate::{CorepackBuildpack, CorepackBuildpackError};
+use super::{CorepackBuildpack, CorepackBuildpackError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::indoc;
 use libcnb::build::BuildContext;

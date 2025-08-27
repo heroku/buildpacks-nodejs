@@ -1,5 +1,5 @@
-use crate::cmd::PnpmVersionError;
-use crate::PnpmInstallBuildpackError;
+use super::cmd::PnpmVersionError;
+use super::PnpmInstallBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
     NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,

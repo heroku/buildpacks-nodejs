@@ -3,13 +3,8 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-mod configure_npm_cache_directory;
-mod configure_npm_runtime_env;
-mod errors;
-mod npm;
-
-use crate::configure_npm_cache_directory::configure_npm_cache_directory;
-use crate::configure_npm_runtime_env::configure_npm_runtime_env;
+use super::configure_npm_cache_directory::configure_npm_cache_directory;
+use super::configure_npm_runtime_env::configure_npm_runtime_env;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};

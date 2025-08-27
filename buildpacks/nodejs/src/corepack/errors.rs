@@ -1,5 +1,5 @@
-use crate::cmd::CorepackVersionError;
-use crate::CorepackBuildpackError;
+use super::cmd::CorepackVersionError;
+use super::CorepackBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;

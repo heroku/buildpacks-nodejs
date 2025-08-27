@@ -1,7 +1,7 @@
-use crate::cmd::{GetNodeLinkerError, YarnVersionError};
-use crate::configure_yarn_cache::DepsLayerError;
-use crate::install_yarn::CliLayerError;
-use crate::YarnBuildpackError;
+use super::cmd::{GetNodeLinkerError, YarnVersionError};
+use super::configure_yarn_cache::DepsLayerError;
+use super::install_yarn::CliLayerError;
+use super::YarnBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::buildplan::{
@@ -401,8 +401,8 @@ fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
 
 #[cfg(test)]
 mod tests {
+    use super::yarn::UnknownNodeLinker;
     use super::*;
-    use crate::yarn::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;

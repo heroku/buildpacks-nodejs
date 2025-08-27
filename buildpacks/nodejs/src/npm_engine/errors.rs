@@ -1,6 +1,6 @@
-use crate::install_npm::NpmInstallError;
-use crate::NpmEngineBuildpackError;
-use crate::{node, npm};
+use super::install_npm::NpmInstallError;
+use super::NpmEngineBuildpackError;
+use super::{node, npm};
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
@@ -204,8 +204,8 @@ fn on_fetch_npm_packument_error(error: &PackumentLayerError) -> ErrorMessage {
 
 #[cfg(test)]
 mod tests {
+    use super::NpmEngineBuildpackError;
     use super::*;
-    use crate::NpmEngineBuildpackError;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use heroku_nodejs_utils::package_json::PackageJsonError;

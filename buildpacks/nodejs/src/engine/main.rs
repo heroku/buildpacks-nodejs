@@ -3,9 +3,9 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::configure_available_parallelism::configure_available_parallelism;
-use crate::configure_web_env::configure_web_env;
-use crate::install_node::{install_node, DistLayerError};
+use super::configure_available_parallelism::configure_available_parallelism;
+use super::configure_web_env::configure_web_env;
+use super::install_node::{install_node, DistLayerError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -30,11 +30,6 @@ use sha2::Sha256;
 use std::env::consts;
 #[cfg(test)]
 use test_support as _;
-
-mod configure_available_parallelism;
-mod configure_web_env;
-mod errors;
-mod install_node;
 
 const INVENTORY: &str = include_str!("../inventory.toml");
 

@@ -1,4 +1,4 @@
-use crate::{npm, NpmInstallBuildpackError};
+use super::{npm, NpmInstallBuildpackError};
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::application;

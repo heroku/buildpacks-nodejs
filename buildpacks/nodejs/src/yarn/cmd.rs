@@ -1,4 +1,4 @@
-use crate::yarn::{NodeLinker, UnknownNodeLinker, Yarn};
+use super::yarn::{NodeLinker, UnknownNodeLinker, Yarn};
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 
-use crate::{cmd, CorepackBuildpack, CorepackBuildpackError};
+use super::{cmd, CorepackBuildpack, CorepackBuildpackError};
 
 pub(crate) fn enable_corepack(
     context: &BuildContext<CorepackBuildpack>,

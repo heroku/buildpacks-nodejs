@@ -3,10 +3,10 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::cmd::{GetNodeLinkerError, YarnVersionError};
-use crate::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
-use crate::install_yarn::{install_yarn, CliLayerError};
-use crate::yarn::Yarn;
+use super::cmd::{GetNodeLinkerError, YarnVersionError};
+use super::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
+use super::install_yarn::{install_yarn, CliLayerError};
+use super::yarn::Yarn;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
@@ -35,13 +35,6 @@ use libcnb::{buildpack_main, Buildpack, Env};
 use libcnb_test as _;
 #[cfg(test)]
 use test_support as _;
-
-mod cfg;
-mod cmd;
-mod configure_yarn_cache;
-mod errors;
-mod install_yarn;
-mod yarn;
 
 const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 

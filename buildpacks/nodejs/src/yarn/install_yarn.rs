@@ -1,4 +1,4 @@
-use crate::{YarnBuildpack, YarnBuildpackError};
+use super::{YarnBuildpack, YarnBuildpackError};
 use bullet_stream::global::print;
 use heroku_nodejs_utils::http::{get, ResponseExt};
 use heroku_nodejs_utils::npmjs_org::PackagePackument;

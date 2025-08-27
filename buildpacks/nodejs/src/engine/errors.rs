@@ -1,5 +1,5 @@
-use crate::install_node::DistLayerError;
-use crate::NodeJsEngineBuildpackError;
+use super::install_node::DistLayerError;
+use super::NodeJsEngineBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};

@@ -1,4 +1,4 @@
-use crate::PnpmEngineBuildpackError;
+use super::PnpmEngineBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::error_message_builder::SetIssuesUrl;
 use heroku_nodejs_utils::error_handling::{

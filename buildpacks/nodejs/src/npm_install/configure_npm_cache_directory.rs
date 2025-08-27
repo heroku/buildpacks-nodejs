@@ -1,5 +1,5 @@
-use crate::NpmInstallBuildpackError;
-use crate::{npm, NpmInstallBuildpack};
+use super::NpmInstallBuildpackError;
+use super::{npm, NpmInstallBuildpack};
 use bullet_stream::global::print;
 use fun_run::CommandWithName;
 use libcnb::build::BuildContext;

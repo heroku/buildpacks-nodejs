@@ -1,5 +1,5 @@
-use crate::yarn::{NodeLinker, Yarn};
-use crate::{cmd, YarnBuildpack, YarnBuildpackError};
+use super::yarn::{NodeLinker, Yarn};
+use super::{cmd, YarnBuildpack, YarnBuildpackError};
 use bullet_stream::global::print;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;

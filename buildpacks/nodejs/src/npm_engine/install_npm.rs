@@ -1,5 +1,5 @@
-use crate::NpmEngineBuildpack;
-use crate::NpmEngineBuildpackError;
+use super::NpmEngineBuildpack;
+use super::NpmEngineBuildpackError;
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::http::{get, ResponseExt};

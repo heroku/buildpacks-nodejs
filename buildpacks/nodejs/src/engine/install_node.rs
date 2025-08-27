@@ -18,7 +18,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tempfile::NamedTempFile;
 
-use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
 pub(crate) fn install_node(
     context: &BuildContext<NodeJsEngineBuildpack>,

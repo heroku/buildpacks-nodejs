@@ -3,8 +3,6 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-mod errors;
-
 use bullet_stream::global::print;
 use libcnb::build::{BuildContext, BuildResult};
 use libcnb::data::build_plan::BuildPlanBuilder;

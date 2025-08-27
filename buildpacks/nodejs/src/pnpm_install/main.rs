@@ -3,9 +3,9 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::cmd::PnpmVersionError;
-use crate::configure_pnpm_store_directory::configure_pnpm_store_directory;
-use crate::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
+use super::cmd::PnpmVersionError;
+use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
+use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
@@ -30,12 +30,6 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 #[cfg(test)]
 use test_support as _;
-
-mod cmd;
-mod configure_pnpm_store_directory;
-mod configure_pnpm_virtual_store_directory;
-mod errors;
-mod store;
 
 struct PnpmInstallBuildpack;
 

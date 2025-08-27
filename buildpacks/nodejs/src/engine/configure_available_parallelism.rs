@@ -1,4 +1,4 @@
-use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 use heroku_nodejs_utils::available_parallelism::available_parallelism_env;
 use libcnb::additional_buildpack_binary_path;
 use libcnb::build::BuildContext;

@@ -1,5 +1,5 @@
-use crate::NpmInstallBuildpack;
-use crate::NpmInstallBuildpackError;
+use super::NpmInstallBuildpack;
+use super::NpmInstallBuildpackError;
 use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;

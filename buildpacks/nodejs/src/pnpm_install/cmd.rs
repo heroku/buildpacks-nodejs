@@ -1,4 +1,4 @@
-use crate::PnpmInstallBuildpackError;
+use super::PnpmInstallBuildpackError;
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use heroku_nodejs_utils::vrs::{Version, VersionError};

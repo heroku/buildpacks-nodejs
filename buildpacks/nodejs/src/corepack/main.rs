@@ -3,10 +3,10 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::cmd::CorepackVersionError;
-use crate::enable_corepack::enable_corepack;
-use crate::install_integrity_keys::install_integrity_keys;
-use crate::prepare_corepack::prepare_corepack;
+use super::cmd::CorepackVersionError;
+use super::enable_corepack::enable_corepack;
+use super::install_integrity_keys::install_integrity_keys;
+use super::prepare_corepack::prepare_corepack;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
@@ -23,13 +23,6 @@ use opentelemetry::KeyValue;
 use std::path::PathBuf;
 #[cfg(test)]
 use test_support as _;
-
-mod cfg;
-mod cmd;
-mod enable_corepack;
-mod errors;
-mod install_integrity_keys;
-mod prepare_corepack;
 
 buildpack_main!(CorepackBuildpack);
 

@@ -3,7 +3,7 @@ use libcnb::build::BuildContext;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 
-use crate::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
+use super::{NodeJsEngineBuildpack, NodeJsEngineBuildpackError};
 
 pub(crate) fn configure_web_env(
     context: &BuildContext<NodeJsEngineBuildpack>,
