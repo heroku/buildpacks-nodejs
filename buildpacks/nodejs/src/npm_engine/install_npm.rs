@@ -181,7 +181,7 @@ pub(crate) enum NpmInstallError {
 
 impl From<NpmInstallError> for NpmEngineBuildpackError {
     fn from(value: NpmInstallError) -> Self {
-        NpmEngineBuildpackError::NpmInstall(value).into()
+        NpmEngineBuildpackError::NpmInstall(value)
     }
 }
 

@@ -48,7 +48,6 @@ mod tests {
     use super::*;
     use bullet_stream::strip_ansi;
     use insta::{assert_snapshot, with_settings};
-    use libcnb::Error;
     use test_support::test_name;
 
     #[test]

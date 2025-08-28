@@ -15,11 +15,11 @@ impl Buildpack for DeprecatedBuildpack {
     type Metadata = GenericMetadata;
     type Error = DeprecatedBuildpackError;
 
-    fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
+    fn detect(&self, _context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
         todo!("should deprecation message be handled here or in build?")
     }
 
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+    fn build(&self, _context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
         todo!("should deprecation message be handled here or in detect?")
     }
 }

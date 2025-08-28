@@ -27,6 +27,7 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use toml::Table;
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
     Ok(context.app_dir.join("pnpm-lock.yaml").exists())
 }
@@ -44,11 +45,11 @@ pub(crate) fn build(
     let prune_dev_dependencies =
         read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
             .map_err(PnpmInstallBuildpackError::Config)?;
-    let has_pnpm_workspace_file = has_pnpm_workspace_file(&context);
+    let has_pnpm_workspace_file = has_pnpm_workspace_file(context);
 
     print::bullet("Setting up pnpm dependency store");
-    configure_pnpm_store_directory(&context, &env)?;
-    configure_pnpm_virtual_store_directory(&context, &env)?;
+    configure_pnpm_store_directory(context, &env)?;
+    configure_pnpm_virtual_store_directory(context, &env)?;
 
     print::bullet("Installing dependencies");
     cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;

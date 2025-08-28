@@ -44,7 +44,7 @@ pub(crate) fn build(
     let existing_npm_version = get_npm_version(&env)?;
 
     print::bullet("Determining npm package information");
-    let npm_package_packument = resolve_requested_npm_packument(&context, &requested_npm_version)?;
+    let npm_package_packument = resolve_requested_npm_packument(context, &requested_npm_version)?;
 
     print::bullet("Installing npm");
     if existing_npm_version == npm_package_packument.version {

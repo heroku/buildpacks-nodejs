@@ -53,7 +53,7 @@ pub(crate) fn build(
 
     print::bullet("Installing node modules");
     log_npm_version(&env)?;
-    configure_npm_cache_directory(&context, &env)?;
+    configure_npm_cache_directory(context, &env)?;
     run_npm_install(&env)?;
 
     print::bullet("Running scripts");
@@ -79,9 +79,9 @@ pub(crate) fn build(
 
     print::bullet("Configuring default processes");
     let build_result_builder =
-        configure_default_processes(&context, build_result_builder, &package_json);
+        configure_default_processes(context, build_result_builder, &package_json);
 
-    configure_npm_runtime_env(&context)?;
+    configure_npm_runtime_env(context)?;
 
     if prune_dev_dependencies.is_some() {
         print::warning(indoc! { "

@@ -35,6 +35,7 @@ const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
     Ok(context.app_dir.join("yarn.lock").exists())
 }
@@ -82,7 +83,7 @@ pub(crate) fn build(
             };
 
             let yarn_packument = packument_layer(
-                &context,
+                context,
                 yarn_package_name,
                 YarnBuildpackError::FetchYarnPackument,
             )?;
@@ -98,7 +99,7 @@ pub(crate) fn build(
             ));
 
             print::bullet("Installing yarn CLI");
-            let yarn_env = install_yarn(&context, &yarn_package_packument)?;
+            let yarn_env = install_yarn(context, &yarn_package_packument)?;
             env = yarn_env.apply(Scope::Build, &env);
 
             cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
@@ -125,7 +126,7 @@ pub(crate) fn build(
     } else {
         let yarn_node_linker = cmd::yarn_config_get_node_linker(&env, &yarn)
             .map_err(YarnBuildpackError::YarnGetNodeLinker)?;
-        configure_yarn_cache(&context, &yarn, yarn_node_linker.as_ref(), &env)?;
+        configure_yarn_cache(context, &yarn, yarn_node_linker.as_ref(), &env)?;
     }
 
     print::bullet("Installing dependencies");

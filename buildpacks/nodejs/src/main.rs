@@ -12,6 +12,10 @@ use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::DetectResultBuilder;
 use libcnb::{buildpack_main, Env};
+#[cfg(test)]
+use libcnb_test as _;
+#[cfg(test)]
+use regex as _;
 
 mod corepack;
 mod engine;

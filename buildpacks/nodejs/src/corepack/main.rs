@@ -55,7 +55,7 @@ pub(crate) fn build(
         package_manager = style::value(pkg_mgr.to_string()),
     ));
 
-    env = enable_corepack(context, &corepack_version, &pkg_mgr, env)?;
+    env = enable_corepack(context, &corepack_version, &pkg_mgr, &env)?;
     env = install_integrity_keys(context, &corepack_version, env)?;
     env = prepare_corepack(context, &pkg_mgr, env)?;
 

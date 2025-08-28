@@ -178,7 +178,7 @@ pub(crate) enum DistLayerError {
 
 impl From<DistLayerError> for NodeJsEngineBuildpackError {
     fn from(value: DistLayerError) -> Self {
-        NodeJsEngineBuildpackError::DistLayer(value).into()
+        NodeJsEngineBuildpackError::DistLayer(value)
     }
 }
 

@@ -211,7 +211,6 @@ mod tests {
     use heroku_nodejs_utils::package_manager::PackageManager;
     use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
-    use libcnb::Error;
     use std::process::Command;
     use test_support::test_name;
 

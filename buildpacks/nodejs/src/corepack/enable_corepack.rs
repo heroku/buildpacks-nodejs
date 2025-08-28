@@ -16,7 +16,7 @@ pub(crate) fn enable_corepack(
     context: &BuildpackBuildContext,
     corepack_version: &Version,
     package_manager: &PackageManager,
-    env: Env,
+    env: &Env,
 ) -> BuildpackResult<Env> {
     let new_metadata = ShimLayerMetadata {
         corepack_version: corepack_version.clone(),
@@ -59,10 +59,10 @@ pub(crate) fn enable_corepack(
         }
     }
 
-    cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), &env)
+    cmd::corepack_enable(&package_manager.name, &shim_layer.path().join("bin"), env)
         .map_err(CorepackBuildpackError::CorepackEnable)?;
 
-    Ok(shim_layer.read_env()?.apply(Scope::Build, &env))
+    Ok(shim_layer.read_env()?.apply(Scope::Build, env))
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

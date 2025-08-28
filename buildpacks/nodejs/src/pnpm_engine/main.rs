@@ -8,6 +8,7 @@ use heroku_nodejs_utils::error_handling::ErrorMessage;
 use libcnb::build::BuildResultBuilder;
 use libcnb::Env;
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
     // pass detect if a `pnpm-lock.yaml` is found
     Ok(context.app_dir.join("pnpm-lock.yaml").exists())
