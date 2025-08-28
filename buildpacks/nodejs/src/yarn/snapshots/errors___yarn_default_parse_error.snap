@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: buildpacks/nodejs/src/yarn/errors.rs
 ---
 - Debug Info:
   - Failed to parse version.
 
 ! Failed to parse default Yarn version
 !
-! The Heroku Node.js Yarn buildpack was unable to parse the default Yarn version.
+! The Heroku Node.js buildpack was unable to parse the default Yarn version.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues

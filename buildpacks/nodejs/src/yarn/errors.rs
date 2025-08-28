@@ -53,7 +53,7 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
         .header("Failed to execute build script")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack allows customization of the build process by executing the following scripts \
+            The {BUILDPACK_NAME} allows customization of the build process by executing the following scripts \
             if they are defined in {package_json}:
             - {heroku_prebuild} 
             - {heroku_build} or {build} 
@@ -150,7 +150,7 @@ fn on_yarn_cache_get_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::Internal)
         .header("Failed to read configured Yarn cache directory")
         .body(formatdoc! {"
-            The {BUILDPACK_NAME} buildpack was unable to read the configuration for the Yarn cache directory.
+            The {BUILDPACK_NAME} was unable to read the configuration for the Yarn cache directory.
         "})
         .debug_info(error.to_string())
         .create()
@@ -161,7 +161,7 @@ fn on_yarn_disable_global_cache_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::Internal)
         .header("Failed to disable Yarn global cache")
         .body(formatdoc! {"
-            The {BUILDPACK_NAME} buildpack was unable to disable the Yarn global cache.
+            The {BUILDPACK_NAME} was unable to disable the Yarn global cache.
         "})
         .debug_info(error.to_string())
         .create()
@@ -176,7 +176,7 @@ fn on_yarn_install_error(error: &CmdError) -> ErrorMessage {
         ))
         .header("Failed to install Node modules")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses the command {yarn_install} to install your Node modules. This command \
+            The {BUILDPACK_NAME} uses the command {yarn_install} to install your Node modules. This command \
             failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
 
             Suggestions:
@@ -218,7 +218,7 @@ fn on_yarn_version_unsupported_error(version: u64) -> ErrorMessage {
         ))
         .header("Unsupported Yarn version")
         .body(formatdoc! {"
-            The {BUILDPACK_NAME} buildpack does not support Yarn version {version}.
+            The {BUILDPACK_NAME} does not support Yarn version {version}.
 
             Suggestions:
             - Update your package.json to specify a supported Yarn version.
@@ -253,7 +253,7 @@ fn on_yarn_default_parse_error(error: &VersionError) -> ErrorMessage {
         .error_type(ErrorType::Internal)
         .header("Failed to parse default Yarn version")
         .body(formatdoc! {"
-            The {BUILDPACK_NAME} buildpack was unable to parse the default Yarn version.
+            The {BUILDPACK_NAME} was unable to parse the default Yarn version.
         "})
         .debug_info(error.to_string())
         .create()
@@ -323,7 +323,7 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
         .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to prune Yarn dev dependencies")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses the command {yarn_prune} to remove your dev dependencies from the production environment. This command \
+            The {BUILDPACK_NAME} uses the command {yarn_prune} to remove your dev dependencies from the production environment. This command \
             failed and the buildpack cannot continue. See the log output above for more information.
 
             Suggestions:
@@ -373,7 +373,7 @@ fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
         .error_type(ErrorType::Internal)
         .header("Failed to install Yarn plugin for pruning")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses a custom plugin for Yarn to handle pruning \
+            The {BUILDPACK_NAME} uses a custom plugin for Yarn to handle pruning \
             of dev dependencies. An unexpected error was encountered while trying to install it.
         " })
         .debug_info(error.to_string())

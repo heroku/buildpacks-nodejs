@@ -1,5 +1,5 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: buildpacks/nodejs/src/yarn/errors.rs
 ---
 - Debug Info:
   - Command failed `yarn heroku prune`
@@ -9,7 +9,7 @@ source: buildpacks/nodejs-yarn/src/errors.rs
 
 ! Failed to prune Yarn dev dependencies
 !
-! The Heroku Node.js Yarn buildpack uses the command `yarn heroku prune` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+! The Heroku Node.js buildpack uses the command `yarn heroku prune` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
 !
 ! Suggestions:
 ! - Ensure that this command runs locally without error (exit status = 0).

@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-npm-install/src/errors.rs
+source: buildpacks/nodejs/src/npm_install/errors.rs
 ---
 - Debug Info:
   - test I/O error blah
 
 ! Unable to complete buildpack detection
 !
-! An unexpected error occurred while determining if the Heroku Node.js npm Install buildpack should be run for this application. See the log output above for more information.
+! An unexpected error occurred while determining if the Heroku Node.js buildpack should be run for this application. See the log output above for more information.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues

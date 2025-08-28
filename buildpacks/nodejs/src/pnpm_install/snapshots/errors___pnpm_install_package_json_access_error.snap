@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-pnpm-install/src/errors.rs
+source: buildpacks/nodejs/src/pnpm_install/errors.rs
 ---
 - Debug Info:
   - test I/O error blah
 
 ! Error reading `./package.json`
 !
-! The Heroku Node.js pnpm Install reads from `./package.json` to complete the build but the file can't be read.
+! The Heroku Node.js buildpack reads from `./package.json` to complete the build but the file can't be read.
 !
 ! Suggestions:
 ! - Ensure the file has read permissions.

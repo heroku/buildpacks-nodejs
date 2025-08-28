@@ -1,5 +1,5 @@
 ---
-source: buildpacks/nodejs-npm-install/src/errors.rs
+source: buildpacks/nodejs/src/npm_install/errors.rs
 ---
 - Debug Info:
   - Command failed `npm run build`
@@ -9,7 +9,7 @@ source: buildpacks/nodejs-npm-install/src/errors.rs
 
 ! Failed to execute build script
 !
-! The Heroku Node.js npm Install buildpack allows customization of the build process by executing the following scripts if they are defined in `package.json`:
+! The Heroku Node.js buildpack allows customization of the build process by executing the following scripts if they are defined in `package.json`:
 ! - `heroku-prebuild` 
 ! - `heroku-build` or `build` 
 ! - `heroku-postbuild`

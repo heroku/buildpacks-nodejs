@@ -115,7 +115,7 @@ fn on_npm_install_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to install Node modules")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses the command {npm_install} to install your Node modules. This command \
+            The {BUILDPACK_NAME} uses the command {npm_install} to install your Node modules. This command \
             failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
 
             Suggestions:
@@ -137,7 +137,7 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
         .header("Failed to execute build script")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack allows customization of the build process by executing the following scripts \
+            The {BUILDPACK_NAME} allows customization of the build process by executing the following scripts \
             if they are defined in {package_json}:
             - {heroku_prebuild} 
             - {heroku_build} or {build} 
@@ -179,7 +179,7 @@ fn on_detect_error(error: &io::Error) -> ErrorMessage {
         .error_type(ErrorType::Internal)
         .header("Unable to complete buildpack detection")
         .body(formatdoc! { "
-            An unexpected error occurred while determining if the {BUILDPACK_NAME} buildpack should be \
+            An unexpected error occurred while determining if the {BUILDPACK_NAME} should be \
             run for this application. See the log output above for more information.
         "})
         .debug_info(error.to_string())
@@ -192,7 +192,7 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to prune npm dev dependencies")
         .body(formatdoc! { "
-            The {BUILDPACK_NAME} buildpack uses the command {npm_prune} to remove your dev dependencies from the production environment. This command \
+            The {BUILDPACK_NAME} uses the command {npm_prune} to remove your dev dependencies from the production environment. This command \
             failed and the buildpack cannot continue. See the log output above for more information.
 
             Suggestions:

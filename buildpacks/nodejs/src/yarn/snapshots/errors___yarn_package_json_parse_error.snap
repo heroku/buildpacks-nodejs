@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: buildpacks/nodejs/src/yarn/errors.rs
 ---
 - Debug Info:
   - key must be a string at line 1 column 2
 
 ! Error parsing `./package.json`
 !
-! The Heroku Node.js Yarn reads from `./package.json` to complete the build but the file isn't valid JSON.
+! The Heroku Node.js buildpack reads from `./package.json` to complete the build but the file isn't valid JSON.
 !
 ! Suggestions:
 ! - Ensure the file follows the JSON format described at https://www.json.org/

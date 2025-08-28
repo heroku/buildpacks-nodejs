@@ -1,5 +1,5 @@
 ---
-source: buildpacks/nodejs-npm-install/src/errors.rs
+source: buildpacks/nodejs/src/npm_install/errors.rs
 ---
 - Debug Info:
   - Command failed `npm prune --production`
@@ -9,7 +9,7 @@ source: buildpacks/nodejs-npm-install/src/errors.rs
 
 ! Failed to prune npm dev dependencies
 !
-! The Heroku Node.js npm Install buildpack uses the command `npm prune --production` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+! The Heroku Node.js buildpack uses the command `npm prune --production` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
 !
 ! Suggestions:
 ! - Ensure that this command runs locally without error (exit status = 0).
