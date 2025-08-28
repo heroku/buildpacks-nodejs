@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 pub(crate) fn prepare_corepack(
     context: &BuildpackBuildContext,
     package_manager: &PackageManager,
-    env: &Env,
-) -> BuildpackResult<()> {
+    mut env: Env,
+) -> BuildpackResult<Env> {
     let new_metadata = ManagerLayerMetadata {
         manager_name: package_manager.name.clone(),
         manager_version: package_manager.version.clone(),
@@ -73,13 +73,13 @@ pub(crate) fn prepare_corepack(
         }
     }
 
-    let mgr_env = manager_layer
+    env = manager_layer
         .read_env()
-        .map(|layer_env| layer_env.apply(Scope::Build, env))?;
+        .map(|layer_env| layer_env.apply(Scope::Build, &env))?;
 
-    cmd::corepack_prepare(&mgr_env).map_err(CorepackBuildpackError::CorepackPrepare)?;
+    cmd::corepack_prepare(&env).map_err(CorepackBuildpackError::CorepackPrepare)?;
 
-    Ok(())
+    Ok(env)
 }
 
 #[derive(Deserialize, Serialize, Clone, PartialEq)]

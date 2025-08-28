@@ -5,7 +5,7 @@ use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
-const BUILDPACK_NAME: &str = "Heroku Node.js Buildpack";
+pub const BUILDPACK_NAME: &str = "Heroku Node.js Buildpack";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 

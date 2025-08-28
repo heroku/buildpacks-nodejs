@@ -6,145 +6,89 @@
 use super::configure_available_parallelism::configure_available_parallelism;
 use super::configure_web_env::configure_web_env;
 use super::install_node::{install_node, DistLayerError};
-use crate::{BuildpackError, NodeJsBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
-use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
-use libcnb::data::build_plan::BuildPlanBuilder;
+use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::GenericMetadata;
-use libcnb::generic::GenericPlatform;
-use libcnb::{buildpack_main, Buildpack};
-#[cfg(test)]
-use libcnb_test as _;
+use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
-#[cfg(test)]
-use regex as _;
-#[cfg(test)]
-use serde_json as _;
 use sha2::Sha256;
 use std::env::consts;
-#[cfg(test)]
-use test_support as _;
 
-const INVENTORY: &str = include_str!("../inventory.toml");
+const INVENTORY: &str = include_str!("../../../../inventory/nodejs.toml");
 
 const LTS_VERSION: &str = "22.x";
 
-struct NodeJsEngineBuildpack;
+pub(crate) fn build(
+    context: &BuildpackBuildContext,
+    mut env: Env,
+    mut build_result_builder: BuildResultBuilder,
+) -> BuildpackResult<(Env, BuildResultBuilder)> {
+    print::bullet("Checking Node.js version");
 
-impl Buildpack for NodeJsEngineBuildpack {
-    type Platform = GenericPlatform;
-    type Metadata = GenericMetadata;
-    type Error = NodeJsEngineBuildpackError;
+    let inv: Inventory<Version, Sha256, Option<()>> =
+        toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParse)?;
 
-    fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        let mut plan_builder = BuildPlanBuilder::new()
-            .provides("node")
-            .provides("npm")
-            .or()
-            .provides("node");
+    let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
+        .map_err(NodeJsEngineBuildpackError::PackageJson)
+        .map(|package_json| package_json.engines.and_then(|e| e.node))?;
 
-        // If there are common node artifacts, this buildpack should both
-        // provide and require node so that it may be used without other
-        // buildpacks.
-        if ["package.json", "index.js", "server.js"]
-            .map(|name| context.app_dir.join(name))
-            .iter()
-            .any(|path| path.exists())
-        {
-            plan_builder = plan_builder.requires("node");
-        }
-
-        // This buildpack may provide node when required by other buildpacks,
-        // so it always explicitly passes. However, if no other group
-        // buildpacks require node, group detection will fail.
-        DetectResultBuilder::pass()
-            .build_plan(plan_builder.build())
-            .build()
-    }
-
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let buildpack_start = print::buildpack(
-            context
-                .buildpack_descriptor
-                .buildpack
-                .name
-                .as_ref()
-                .expect("The buildpack.toml should have a 'name' field set"),
-        );
-
-        print::bullet("Checking Node.js version");
-
-        let inv: Inventory<Version, Sha256, Option<()>> =
-            toml::from_str(INVENTORY).map_err(NodeJsEngineBuildpackError::InventoryParse)?;
-
-        let requested_version_range = PackageJson::read(context.app_dir.join("package.json"))
-            .map_err(NodeJsEngineBuildpackError::PackageJson)
-            .map(|package_json| package_json.engines.and_then(|e| e.node))?;
-
-        let version_range = if let Some(value) = requested_version_range {
-            print::sub_bullet(format!(
-                "Detected Node.js version range: {}",
-                style::value(value.to_string())
-            ));
-            value
-        } else {
-            print::sub_bullet(format!(
-                "Node.js version not specified, using {}",
-                style::value(LTS_VERSION)
-            ));
-            Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
-        };
-
-        let target_artifact = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
-            (Ok(os), Ok(arch)) => inv.resolve(os, arch, &version_range),
-            (_, _) => None,
-        }
-        .ok_or(NodeJsEngineBuildpackError::UnknownVersion(
-            version_range.to_string(),
-        ))?;
-
+    let version_range = if let Some(value) = requested_version_range {
         print::sub_bullet(format!(
-            "Resolved Node.js version: {}",
-            style::value(target_artifact.version.to_string())
+            "Detected Node.js version range: {}",
+            style::value(value.to_string())
         ));
+        value
+    } else {
+        print::sub_bullet(format!(
+            "Node.js version not specified, using {}",
+            style::value(LTS_VERSION)
+        ));
+        Requirement::parse(LTS_VERSION).expect("The default Node.js version should be valid")
+    };
 
-        install_node(&context, target_artifact)?;
-        configure_web_env(&context)?;
-        configure_available_parallelism(&context)?;
+    let target_artifact = match (consts::OS.parse::<Os>(), consts::ARCH.parse::<Arch>()) {
+        (Ok(os), Ok(arch)) => inv.resolve(os, arch, &version_range),
+        (_, _) => None,
+    }
+    .ok_or(NodeJsEngineBuildpackError::UnknownVersion(
+        version_range.to_string(),
+    ))?;
 
-        let launchjs = ["server.js", "index.js"]
-            .map(|name| context.app_dir.join(name))
-            .iter()
-            .find(|path| path.exists())
-            .map(|path| {
-                LaunchBuilder::new()
-                    .process(
-                        ProcessBuilder::new(
-                            process_type!("web"),
-                            ["node", &path.to_string_lossy()],
-                        )
+    print::sub_bullet(format!(
+        "Resolved Node.js version: {}",
+        style::value(target_artifact.version.to_string())
+    ));
+
+    env = install_node(context, &env, target_artifact)?;
+    configure_web_env(context)?;
+    configure_available_parallelism(context)?;
+
+    let launchjs = ["server.js", "index.js"]
+        .map(|name| context.app_dir.join(name))
+        .iter()
+        .find(|path| path.exists())
+        .map(|path| {
+            LaunchBuilder::new()
+                .process(
+                    ProcessBuilder::new(process_type!("web"), ["node", &path.to_string_lossy()])
                         .default(true)
                         .build(),
-                    )
-                    .build()
-            });
+                )
+                .build()
+        });
 
-        print::all_done(&Some(buildpack_start));
-
-        let resulter = BuildResultBuilder::new();
-        match launchjs {
-            Some(l) => resulter.launch(l).build(),
-            None => resulter.build(),
-        }
+    if let Some(launchjs) = launchjs {
+        build_result_builder = build_result_builder.launch(launchjs);
     }
+
+    Ok((env, build_result_builder))
 }
 
 pub(crate) fn on_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
@@ -164,5 +108,3 @@ impl From<NodeJsEngineBuildpackError> for BuildpackError {
         NodeJsBuildpackError::NodeEngine(e).into()
     }
 }
-
-buildpack_main!(NodeJsEngineBuildpack);

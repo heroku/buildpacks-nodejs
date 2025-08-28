@@ -3,55 +3,24 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use crate::{BuildpackError, NodeJsBuildpackError};
-use bullet_stream::global::print;
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use heroku_nodejs_utils::error_handling::ErrorMessage;
-use libcnb::build::{BuildContext, BuildResult};
-use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::{buildpack_main, Buildpack};
-#[cfg(test)]
-use libcnb_test as _;
-#[cfg(test)]
-use test_support as _;
+use libcnb::build::BuildResultBuilder;
+use libcnb::Env;
 
-struct PnpmEngineBuildpack;
+pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
+    // pass detect if a `pnpm-lock.yaml` is found
+    Ok(context.app_dir.join("pnpm-lock.yaml").exists())
+}
 
-impl Buildpack for PnpmEngineBuildpack {
-    type Platform = GenericPlatform;
-    type Metadata = GenericMetadata;
-    type Error = PnpmEngineBuildpackError;
-
-    fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        // pass detect if a `pnpm-lock.yaml` is found
-        if context.app_dir.join("pnpm-lock.yaml").exists() {
-            return DetectResultBuilder::pass()
-                .build_plan(
-                    BuildPlanBuilder::new()
-                        .provides("pnpm")
-                        .requires("node")
-                        .build(),
-                )
-                .build();
-        }
-        DetectResultBuilder::fail().build()
-    }
-
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        print::buildpack(
-            context
-                .buildpack_descriptor
-                .buildpack
-                .name
-                .as_ref()
-                .expect("The buildpack.toml should have a 'name' field set"),
-        );
-
-        // This buildpack does not install pnpm yet, suggest using
-        // `heroku/nodejs-corepack` instead.
-        Err(PnpmEngineBuildpackError::CorepackRequired)?
-    }
+pub(crate) fn build(
+    _context: &BuildpackBuildContext,
+    _env: Env,
+    _build_result_builder: BuildResultBuilder,
+) -> BuildpackResult<(Env, BuildResultBuilder)> {
+    // This buildpack does not install pnpm yet, suggest using
+    // `heroku/nodejs-corepack` instead.
+    Err(PnpmEngineBuildpackError::CorepackRequired)?
 }
 
 pub(crate) fn on_error(error: PnpmEngineBuildpackError) -> ErrorMessage {
@@ -68,5 +37,3 @@ impl From<PnpmEngineBuildpackError> for BuildpackError {
         NodeJsBuildpackError::PnpmEngine(value).into()
     }
 }
-
-buildpack_main!(PnpmEngineBuildpack);

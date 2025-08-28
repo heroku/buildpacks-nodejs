@@ -7,165 +7,132 @@ use super::cmd::PnpmVersionError;
 use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use super::{cmd, store};
-use crate::{BuildpackBuildContext, BuildpackError, NodeJsBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
 };
 use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::{formatdoc, indoc};
-use libcnb::build::{BuildContext, BuildResult, BuildResultBuilder};
-use libcnb::data::build_plan::BuildPlanBuilder;
+use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::data::store::Store;
-use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
-use libcnb::generic::{GenericMetadata, GenericPlatform};
-use libcnb::{buildpack_main, Buildpack, Env};
-#[cfg(test)]
-use libcnb_test as _;
+use libcnb::Env;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-#[cfg(test)]
-use test_support as _;
+use toml::Table;
 
-struct PnpmInstallBuildpack;
+pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
+    Ok(context.app_dir.join("pnpm-lock.yaml").exists())
+}
 
-impl Buildpack for PnpmInstallBuildpack {
-    type Platform = GenericPlatform;
-    type Metadata = GenericMetadata;
-    type Error = PnpmInstallBuildpackError;
+pub(crate) fn build(
+    context: &BuildpackBuildContext,
+    env: Env,
+    mut build_result_builder: BuildResultBuilder,
+) -> BuildpackResult<(Env, BuildResultBuilder)> {
+    let pkg_json_file = context.app_dir.join("package.json");
+    let pkg_json =
+        PackageJson::read(&pkg_json_file).map_err(PnpmInstallBuildpackError::PackageJson)?;
+    let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
+        .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
+    let prune_dev_dependencies =
+        read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
+            .map_err(PnpmInstallBuildpackError::Config)?;
+    let has_pnpm_workspace_file = has_pnpm_workspace_file(&context);
 
-    fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        if context.app_dir.join("pnpm-lock.yaml").exists() {
-            DetectResultBuilder::pass()
-                .build_plan(
-                    BuildPlanBuilder::new()
-                        .provides("node_modules")
-                        .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                        .requires("node")
-                        .requires("pnpm")
-                        .requires("node_modules")
-                        .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-                        .build(),
-                )
-                .build()
-        } else {
-            DetectResultBuilder::fail().build()
-        }
+    print::bullet("Setting up pnpm dependency store");
+    configure_pnpm_store_directory(&context, &env)?;
+    configure_pnpm_virtual_store_directory(&context, &env)?;
+
+    print::bullet("Installing dependencies");
+    cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
+
+    let pnpm_version = cmd::pnpm_version(&env)?;
+
+    let mut metadata = if let Some(store) = &context.store {
+        store.metadata.clone()
+    } else {
+        Table::new()
+    };
+    let cache_use_count = store::read_cache_use_count(&metadata);
+    if store::should_prune_cache(cache_use_count) {
+        print::bullet("Pruning unused dependencies from pnpm content-addressable store");
+        cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
     }
+    store::set_cache_use_count(&mut metadata, cache_use_count + 1);
 
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        let buildpack_start = print::buildpack(
-            context
-                .buildpack_descriptor
-                .buildpack
-                .name
-                .as_ref()
-                .expect("The buildpack should have a name"),
-        );
-
-        let env = Env::from_current();
-        let pkg_json_file = context.app_dir.join("package.json");
-        let pkg_json =
-            PackageJson::read(&pkg_json_file).map_err(PnpmInstallBuildpackError::PackageJson)?;
-        let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
-            .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
-        let prune_dev_dependencies =
-            read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
-                .map_err(PnpmInstallBuildpackError::Config)?;
-        let has_pnpm_workspace_file = has_pnpm_workspace_file(&context);
-
-        print::bullet("Setting up pnpm dependency store");
-        configure_pnpm_store_directory(&context, &env)?;
-        configure_pnpm_virtual_store_directory(&context, &env)?;
-
-        print::bullet("Installing dependencies");
-        cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
-
-        let pnpm_version = cmd::pnpm_version(&env)?;
-
-        let mut metadata = context.store.unwrap_or_default().metadata;
-        let cache_use_count = store::read_cache_use_count(&metadata);
-        if store::should_prune_cache(cache_use_count) {
-            print::bullet("Pruning unused dependencies from pnpm content-addressable store");
-            cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
-        }
-        store::set_cache_use_count(&mut metadata, cache_use_count + 1);
-
-        print::bullet("Running scripts");
-        let scripts = pkg_json.build_scripts();
-        if scripts.is_empty() {
-            print::sub_bullet("No build scripts found");
-        } else {
-            for script in scripts {
-                if let Some(false) = node_build_scripts_metadata.enabled {
-                    print::sub_bullet(format!(
-                        "! Not running {script} as it was disabled by a participating buildpack",
-                        script = style::value(&script)
-                    ));
-                } else {
-                    cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
-                }
+    print::bullet("Running scripts");
+    let scripts = pkg_json.build_scripts();
+    if scripts.is_empty() {
+        print::sub_bullet("No build scripts found");
+    } else {
+        for script in scripts {
+            if let Some(false) = node_build_scripts_metadata.enabled {
+                print::sub_bullet(format!(
+                    "! Not running {script} as it was disabled by a participating buildpack",
+                    script = style::value(&script)
+                ));
+            } else {
+                cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
             }
         }
-
-        print::bullet("Pruning dev dependencies");
-        if prune_dev_dependencies == Some(false) {
-            print::sub_bullet("Skipping as pruning was disabled in project.toml");
-        } else if node_build_scripts_metadata.skip_pruning == Some(true) {
-            print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
-        } else {
-            pnpm_prune_dev_dependencies(
-                &env,
-                &pnpm_version,
-                Requirement::parse(">8.15.6")
-                    .expect("Should be valid range")
-                    .satisfies(&pnpm_version),
-                has_lifecycle_scripts(&pkg_json_file)
-                    .map_err(PnpmInstallBuildpackError::PackageJson)?,
-                has_pnpm_workspace_file,
-            )?;
-        }
-
-        let mut result_builder = BuildResultBuilder::new().store(Store { metadata });
-
-        if context.app_dir.join("Procfile").exists() {
-            print::bullet("Skipping default web process (Procfile detected)");
-        } else if pkg_json.has_start_script() {
-            result_builder = result_builder.launch(
-                LaunchBuilder::new()
-                    .process(
-                        ProcessBuilder::new(process_type!("web"), ["pnpm", "start"])
-                            .default(true)
-                            .build(),
-                    )
-                    .build(),
-            );
-        }
-
-        if prune_dev_dependencies.is_some() {
-            print::warning(indoc! { "
-                Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
-                found in `project.toml`. This feature may change unexpectedly in the future.
-            " });
-        }
-
-        if node_build_scripts_metadata.skip_pruning.is_some() {
-            print::warning(indoc! { "
-                Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
-                to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
-            " });
-        }
-
-        print::all_done(&Some(buildpack_start));
-        result_builder.build()
     }
+
+    print::bullet("Pruning dev dependencies");
+    if prune_dev_dependencies == Some(false) {
+        print::sub_bullet("Skipping as pruning was disabled in project.toml");
+    } else if node_build_scripts_metadata.skip_pruning == Some(true) {
+        print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
+    } else {
+        pnpm_prune_dev_dependencies(
+            &env,
+            &pnpm_version,
+            Requirement::parse(">8.15.6")
+                .expect("Should be valid range")
+                .satisfies(&pnpm_version),
+            has_lifecycle_scripts(&pkg_json_file)
+                .map_err(PnpmInstallBuildpackError::PackageJson)?,
+            has_pnpm_workspace_file,
+        )?;
+    }
+
+    build_result_builder = build_result_builder.store(Store { metadata });
+
+    if context.app_dir.join("Procfile").exists() {
+        print::bullet("Skipping default web process (Procfile detected)");
+    } else if pkg_json.has_start_script() {
+        build_result_builder = build_result_builder.launch(
+            LaunchBuilder::new()
+                .process(
+                    ProcessBuilder::new(process_type!("web"), ["pnpm", "start"])
+                        .default(true)
+                        .build(),
+                )
+                .build(),
+        );
+    }
+
+    if prune_dev_dependencies.is_some() {
+        print::warning(indoc! { "
+            Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+            found in `project.toml`. This feature may change unexpectedly in the future.
+        " });
+    }
+
+    if node_build_scripts_metadata.skip_pruning.is_some() {
+        print::warning(indoc! { "
+            Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+            to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+        " });
+    }
+
+    Ok((env, build_result_builder))
 }
 
 pub(crate) fn on_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
@@ -197,8 +164,6 @@ impl From<PnpmInstallBuildpackError> for BuildpackError {
         NodeJsBuildpackError::PnpmInstall(e).into()
     }
 }
-
-buildpack_main!(PnpmInstallBuildpack);
 
 fn pnpm_prune_dev_dependencies(
     env: &Env,

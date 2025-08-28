@@ -1,5 +1,5 @@
 use super::main::NodeJsEngineBuildpackError;
-use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::http::{get, ResponseExt};
@@ -8,6 +8,8 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::Scope;
+use libcnb::Env;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;
@@ -21,8 +23,9 @@ use tempfile::NamedTempFile;
 
 pub(crate) fn install_node(
     context: &BuildpackBuildContext,
+    env: &Env,
     distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
-) -> BuildpackResult<()> {
+) -> BuildpackResult<Env> {
     print::bullet("Installing Node.js distribution");
 
     let new_metadata = DistLayerMetadata {
@@ -111,7 +114,7 @@ pub(crate) fn install_node(
         }
     }
 
-    Ok(())
+    Ok(distribution_layer.read_env()?.apply(Scope::Build, env))
 }
 
 fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {

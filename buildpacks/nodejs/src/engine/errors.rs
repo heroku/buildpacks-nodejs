@@ -4,7 +4,7 @@ use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
     error_message, file_value, on_package_json_error, ErrorMessage, SuggestRetryBuild,
-    SuggestSubmitIssue,
+    SuggestSubmitIssue, BUILDPACK_NAME,
 };
 use indoc::formatdoc;
 

@@ -1,5 +1,5 @@
 use super::main::NpmEngineBuildpackError;
-use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
 use heroku_nodejs_utils::http::{get, ResponseExt};
@@ -9,6 +9,8 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use libcnb::layer_env::Scope;
+use libcnb::Env;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -17,9 +19,10 @@ use std::process::Command;
 
 pub(crate) fn install_npm(
     context: &BuildpackBuildContext,
+    env: &Env,
     npm_packument: &PackagePackument,
     node_version: &Version,
-) -> BuildpackResult<()> {
+) -> BuildpackResult<Env> {
     let npm_version = &npm_packument.version;
 
     let new_metadata = NpmEngineLayerMetadata {
@@ -78,7 +81,7 @@ pub(crate) fn install_npm(
         }
     }
 
-    Ok(())
+    Ok(npm_engine_layer.read_env()?.apply(Scope::Build, env))
 }
 
 fn download_and_unpack_release(

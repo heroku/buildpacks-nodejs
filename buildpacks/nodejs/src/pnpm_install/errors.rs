@@ -6,7 +6,7 @@ use heroku_nodejs_utils::buildplan::{
 };
 use heroku_nodejs_utils::error_handling::{
     error_message, file_value, on_package_json_error, ErrorMessage, ErrorType, SuggestRetryBuild,
-    SuggestSubmitIssue,
+    SuggestSubmitIssue, BUILDPACK_NAME,
 };
 use indoc::formatdoc;
 

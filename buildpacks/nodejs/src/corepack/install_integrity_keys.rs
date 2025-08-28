@@ -4,11 +4,13 @@ use indoc::indoc;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
+use libcnb::Env;
 
 pub(super) fn install_integrity_keys(
     context: &BuildpackBuildContext,
     corepack_version: &Version,
-) -> BuildpackResult<()> {
+    env: Env,
+) -> BuildpackResult<Env> {
     // This is a workaround for Node versions that bundle a version of Corepack that is affected by
     // recent changes to npm's public signing keys:
     // * Corepack versions before 0.27.0 don't verify the integrity signatures from npm
@@ -17,7 +19,7 @@ pub(super) fn install_integrity_keys(
         Requirement::parse(">= 0.27.0 || < 0.31.0").expect("This should be a valid range");
 
     if !patchable_corepack_versions.satisfies(corepack_version) {
-        return Ok(());
+        return Ok(env);
     }
 
     let corepack_integrity_keys_layer = context.uncached_layer(
@@ -53,9 +55,13 @@ pub(super) fn install_integrity_keys(
     "#};
 
     corepack_integrity_keys_layer.write_env(LayerEnv::new().chainable_insert(
-        Scope::Build,
+        Scope::All,
         ModificationBehavior::Override,
         "COREPACK_INTEGRITY_KEYS",
         integrity_keys,
-    ))
+    ))?;
+
+    Ok(corepack_integrity_keys_layer
+        .read_env()?
+        .apply(Scope::Build, &env))
 }
