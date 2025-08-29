@@ -6,7 +6,6 @@ use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
-use heroku_nodejs_utils::buildplan::NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME;
 use heroku_nodejs_utils::error_handling::on_framework_error;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
@@ -45,17 +44,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     ) -> libcnb::Result<libcnb::detect::DetectResult, NodeJsBuildpackError> {
         let buildpack_id = context.buildpack_descriptor.buildpack.id.to_string();
 
+        // provide heroku/nodejs for other buildpacks to use
         let mut buildplan_builder = BuildPlanBuilder::new().provides(&buildpack_id);
 
-        // TODO: deprecate these from being used as buildplans
-        buildplan_builder = buildplan_builder
-            .provides(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME)
-            .requires(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-
         // If there are common node artifacts, this buildpack should both
-        // provide and require node so that it may be used without other
-        // buildpacks.
-        if ["package.json", "server.js"]
+        // provide and require heroku/nodejs so that it may be used as
+        // a standalone buildpack
+        if ["package.json", "server.js", "index.js"]
             .map(|name| context.app_dir.join(name))
             .iter()
             .any(|path| path.exists())
@@ -94,6 +89,9 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     pnpm_install::main::build(&context, env, build_result_builder)?;
             } else if yarn::main::detect(&context)? {
                 (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
+            } else if npm_install::main::detect(&context)? {
+                (_, build_result_builder) =
+                    npm_install::main::build(&context, env, build_result_builder)?;
             }
         } else if npm_install::main::detect(&context)? {
             if npm_engine::main::detect(&context)? {
@@ -131,7 +129,8 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             },
             framework_error => on_framework_error(&framework_error),
         };
-        print::error(error_message.to_string());
+        print::plain(error_message.to_string());
+        eprintln!();
     }
 }
 
