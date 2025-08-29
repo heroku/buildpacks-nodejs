@@ -76,8 +76,8 @@ pub(crate) fn install_npm(
                 &downloaded_package_path,
                 &npm_engine_layer.path(),
             )?;
-            remove_existing_npm_installation(&npm_cli_script)?;
-            install_npm_package(&npm_cli_script, &downloaded_package_path)?;
+            remove_existing_npm_installation(&npm_cli_script, env)?;
+            install_npm_package(&npm_cli_script, &downloaded_package_path, env)?;
         }
     }
 
@@ -104,7 +104,10 @@ fn download_and_unpack_release(
     Ok(())
 }
 
-fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmInstallError> {
+fn remove_existing_npm_installation(
+    npm_cli_script: &Path,
+    env: &Env,
+) -> Result<(), NpmInstallError> {
     print::sub_bullet("Removing npm bundled with Node.js");
     Command::new("node")
         .args([
@@ -114,12 +117,17 @@ fn remove_existing_npm_installation(npm_cli_script: &Path) -> Result<(), NpmInst
             "-gf",
             "--loglevel=silent",
         ])
+        .envs(env)
         .named_output()
         .map_err(NpmInstallError::RemoveExistingNpmInstall)
         .map(|_| ())
 }
 
-fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmInstallError> {
+fn install_npm_package(
+    npm_cli_script: &Path,
+    package: &Path,
+    env: &Env,
+) -> Result<(), NpmInstallError> {
     print::sub_bullet("Installing requested npm");
     Command::new("node")
         .args([
@@ -128,6 +136,7 @@ fn install_npm_package(npm_cli_script: &Path, package: &Path) -> Result<(), NpmI
             "-gf",
             &package.to_string_lossy(),
         ])
+        .envs(env)
         .named_output()
         .and_then(NamedOutput::nonzero_captured)
         .map_err(NpmInstallError::InstallNpm)
