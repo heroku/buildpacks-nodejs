@@ -897,6 +897,8 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 name = "heroku-nodejs-corepack-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -904,6 +906,8 @@ dependencies = [
 name = "heroku-nodejs-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -911,6 +915,8 @@ dependencies = [
 name = "heroku-nodejs-pnpm-install-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -957,6 +963,8 @@ dependencies = [
 name = "heroku-nodejs-yarn-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -964,6 +972,8 @@ dependencies = [
 name = "heroku-npm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -971,6 +981,8 @@ dependencies = [
 name = "heroku-npm-install-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
@@ -978,6 +990,8 @@ dependencies = [
 name = "heroku-pnpm-engine-buildpack"
 version = "0.0.0"
 dependencies = [
+ "bullet_stream",
+ "indoc",
  "libcnb",
 ]
 
