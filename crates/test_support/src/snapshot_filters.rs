@@ -30,13 +30,14 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // [pack] Filter out buildpack versions in DETECTING section as these will frequently change
     // - ===> DETECTING
     //   3 of 4 buildpacks participating
+    //   heroku/nodejs             4.1.1
     //   heroku/nodejs-engine      4.1.1
     //   heroku/nodejs-corepack    4.1.1
     //   heroku/nodejs-npm-install 4.1.1
     //   ===> RESTORING
     filters.push((
-        r"heroku/nodejs-(.*)\d+\.\d+\.\d+",
-        "heroku/nodejs-$1<buildpack-version>",
+        r"heroku/nodejs(.*)\d+\.\d+\.\d+",
+        "heroku/nodejs$1<buildpack-version>",
     ));
 
     // [misc] Filter out architectures from output and download urls. e.g.;
