@@ -1,36 +1,30 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-heroku/nodejs-engine   <buildpack-version>
-heroku/nodejs-corepack <buildpack-version>
-heroku/nodejs-yarn     <buildpack-version>
+heroku/nodejs <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.19.0`
+  - Resolved Node.js version: `22.18.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.18.0/node-v22.18.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.19.0 (<arch>)`
-  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Corepack
-
-- Using Corepack version `0.34.0`
+  - Extracting Node.js `22.18.0 (<arch>)`
+  - Installing Node.js `22.18.0 (<arch>)` ... (<time_elapsed>)
+- Using Corepack version `0.33.0`
 - Found `packageManager` set to `yarn@4.2.2` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs-corepack/shim/bin yarn`
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
 - Installing `yarn@4.2.2`
   - Creating Corepack package manager
   - Running `corepack prepare`
@@ -38,10 +32,6 @@ heroku/nodejs-yarn     <buildpack-version>
       Preparing yarn@4.2.2...
 
   - Done (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Yarn
-
 - Yarn CLI operating in yarn 4.2.2 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
@@ -49,9 +39,9 @@ heroku/nodejs-yarn     <buildpack-version>
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
 
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
 
   - Done (<time_elapsed>)
 - Installing dependencies
@@ -84,12 +74,12 @@ heroku/nodejs-yarn     <buildpack-version>
 - Skipping default web process (Procfile detected)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
-Adding layer 'heroku/nodejs-engine:available_parallelism'
-Adding layer 'heroku/nodejs-engine:dist'
-Adding layer 'heroku/nodejs-engine:web_env'
-Adding layer 'heroku/nodejs-corepack:mgr'
-Adding layer 'heroku/nodejs-corepack:shim'
-Adding layer 'heroku/nodejs-yarn:deps'
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:deps'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:mgr'
+Adding layer 'heroku/nodejs:shim'
+Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -101,8 +91,8 @@ no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs-engine:dist'
-Adding cache layer 'heroku/nodejs-corepack:mgr'
-Adding cache layer 'heroku/nodejs-corepack:shim'
-Adding cache layer 'heroku/nodejs-yarn:deps'
+Adding cache layer 'heroku/nodejs:deps'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:mgr'
+Adding cache layer 'heroku/nodejs:shim'
 Successfully built image '<image-name>'

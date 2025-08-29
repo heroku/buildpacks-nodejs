@@ -1,31 +1,25 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-2 of 3 buildpacks participating
-heroku/nodejs-engine <buildpack-version>
-heroku/nodejs-yarn   <buildpack-version>
+heroku/nodejs <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.19.0`
+  - Resolved Node.js version: `22.18.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.18.0/node-v22.18.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.19.0 (<arch>)`
-  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js Yarn
-
+  - Extracting Node.js `22.18.0 (<arch>)`
+  - Installing Node.js `22.18.0 (<arch>)` ... (<time_elapsed>)
 - Detecting yarn CLI version to install
   - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
@@ -43,9 +37,9 @@ heroku/nodejs-yarn   <buildpack-version>
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs-yarn/deps/cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
 
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs-yarn/deps/cache'
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
 
   - Done (<time_elapsed>)
 - Installing dependencies
@@ -77,10 +71,10 @@ heroku/nodejs-yarn   <buildpack-version>
   - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
-Adding layer 'heroku/nodejs-engine:available_parallelism'
-Adding layer 'heroku/nodejs-engine:dist'
-Adding layer 'heroku/nodejs-engine:web_env'
-Adding layer 'heroku/nodejs-yarn:dist'
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:dist-yarn'
+Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -93,8 +87,8 @@ Setting default process type 'web'
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs-engine:dist'
-Adding cache layer 'heroku/nodejs-yarn:deps'
-Adding cache layer 'heroku/nodejs-yarn:dist'
-Adding cache layer 'heroku/nodejs-yarn:yarnpkg_cli-dist_packument'
+Adding cache layer 'heroku/nodejs:deps'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:dist-yarn'
+Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

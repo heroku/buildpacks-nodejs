@@ -1,17 +1,15 @@
 ---
-source: test_support/src/lib.rs
+source: crates/test_support/src/lib.rs
 ---
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-2 of 4 buildpacks participating
-heroku/nodejs-engine      <buildpack-version>
-heroku/nodejs-npm-install <buildpack-version>
+heroku/nodejs <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
@@ -22,10 +20,6 @@ heroku/nodejs-npm-install <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `20.19.4 (<arch>)`
   - Installing Node.js `20.19.4 (<arch>)` ... (<time_elapsed>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Install
-
 - Installing node modules
   - Using npm version `10.8.2`
   - Creating npm cache
@@ -58,10 +52,10 @@ heroku/nodejs-npm-install <buildpack-version>
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
-Adding layer 'heroku/nodejs-engine:available_parallelism'
-Adding layer 'heroku/nodejs-engine:dist'
-Adding layer 'heroku/nodejs-engine:web_env'
-Adding layer 'heroku/nodejs-npm-install:npm_runtime_config'
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:npm_runtime_config'
+Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -73,32 +67,26 @@ no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs-engine:dist'
-Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:npm_cache'
 Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
 ===> ANALYZING
 Restoring data for SBOM from previous image
 ===> DETECTING
-2 of 4 buildpacks participating
-heroku/nodejs-engine      <buildpack-version>
-heroku/nodejs-npm-install <buildpack-version>
+heroku/nodejs <buildpack-version>
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
 
-## Heroku Node.js Engine
+## Heroku Node.js
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
   - Resolved Node.js version: `20.19.4`
 - Installing Node.js distribution
   - Reusing Node.js 20.19.4 (<arch>)
-- Done (finished in <time_elapsed>)
-
-## Heroku Node.js npm Install
-
 - Installing node modules
   - Using npm version `10.8.2`
   - Restoring npm cache
@@ -131,10 +119,10 @@ heroku/nodejs-npm-install <buildpack-version>
   - Skipping default web process (no start script defined)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
-Reusing layer 'heroku/nodejs-engine:available_parallelism'
-Adding layer 'heroku/nodejs-engine:dist'
-Reusing layer 'heroku/nodejs-engine:web_env'
-Reusing layer 'heroku/nodejs-npm-install:npm_runtime_config'
+Reusing layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:npm_runtime_config'
+Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
@@ -146,6 +134,6 @@ no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs-engine:dist'
-Adding cache layer 'heroku/nodejs-npm-install:npm_cache'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:npm_cache'
 Successfully built image '<image-name>'
