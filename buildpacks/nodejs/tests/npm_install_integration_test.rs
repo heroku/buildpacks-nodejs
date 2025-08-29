@@ -114,20 +114,6 @@ fn test_npm_start_script_creates_a_web_process_launcher() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_dependencies_and_missing_lockfile_errors() {
-    nodejs_integration_test_with_config(
-        "./fixtures/dependencies-missing-lockfile",
-        |cfg| {
-            cfg.expected_pack_result(PackResult::Failure);
-        },
-        |ctx| {
-            create_build_snapshot(&ctx.pack_stdout).assert();
-        },
-    );
-}
-
-#[test]
-#[ignore = "integration test"]
 fn detect_rejects_non_npm_project() {
     nodejs_integration_test_with_config(
         "./fixtures/empty",

@@ -6,7 +6,6 @@ use regex as _;
 use sha2 as _;
 use ureq as _;
 
-pub mod application;
 pub mod available_parallelism;
 pub mod buildplan;
 pub mod config;

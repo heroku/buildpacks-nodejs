@@ -10,7 +10,6 @@ use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildp
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
-use heroku_nodejs_utils::application;
 use heroku_nodejs_utils::buildplan::{
     read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
 };
@@ -47,9 +46,6 @@ pub(crate) fn build(
     let prune_dev_dependencies =
         read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
             .map_err(NpmInstallBuildpackError::Config)?;
-
-    application::check_for_singular_lockfile(app_dir)
-        .map_err(NpmInstallBuildpackError::Application)?;
 
     print::bullet("Installing node modules");
     log_npm_version(&env)?;
@@ -185,7 +181,6 @@ fn configure_default_processes(
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
-    Application(application::Error),
     BuildScript(CmdError),
     Detect(io::Error),
     NpmInstall(CmdError),

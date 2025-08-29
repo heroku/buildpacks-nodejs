@@ -9,8 +9,6 @@ pub enum PackageManager {
 }
 
 impl PackageManager {
-    const VALUES: [Self; 3] = [Self::Npm, Self::Pnpm, Self::Yarn];
-
     #[must_use]
     pub fn lockfile(&self) -> PathBuf {
         match self {
@@ -18,10 +16,6 @@ impl PackageManager {
             PackageManager::Pnpm => PathBuf::from("pnpm-lock.yaml"),
             PackageManager::Yarn => PathBuf::from("yarn.lock"),
         }
-    }
-
-    pub(crate) fn iterator() -> impl Iterator<Item = PackageManager> {
-        Self::VALUES.iter().copied()
     }
 }
 
