@@ -15,13 +15,13 @@ heroku/nodejs-npm-install <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
-  - Resolved Node.js version: `22.18.0`
+  - Resolved Node.js version: `22.19.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.18.0/node-v22.18.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.18.0 (<arch>)`
-  - Installing Node.js `22.18.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.19.0 (<arch>)`
+  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js npm Install
@@ -87,9 +87,9 @@ heroku/nodejs-npm-install <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
-  - Resolved Node.js version: `22.18.0`
+  - Resolved Node.js version: `22.19.0`
 - Installing Node.js distribution
-  - Reusing Node.js 22.18.0 (<arch>)
+  - Reusing Node.js 22.19.0 (<arch>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js npm Install
