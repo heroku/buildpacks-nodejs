@@ -28,7 +28,7 @@ pub(crate) fn install_yarn(
     };
 
     let dist_layer = context.cached_layer(
-        layer_name!("dist"),
+        layer_name!("dist-yarn"),
         CachedLayerDefinition {
             build: true,
             launch: true,
