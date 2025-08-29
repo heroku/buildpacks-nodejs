@@ -16,18 +16,18 @@ test/skip-build-scripts    0.0.0
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.18.0`
+  - Resolved Node.js version: `22.19.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.18.0/node-v22.18.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.18.0 (<arch>)`
-  - Installing Node.js `22.18.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.19.0 (<arch>)`
+  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js Corepack
 
-- Using Corepack version `0.33.0`
+- Using Corepack version `0.34.0`
 - Found `packageManager` set to `pnpm@9.11.0+sha512.0a203ffaed5a3f63242cd064c8fb5892366c103e328079318f78062f24ea8c9d50bc6a47aa3567cabefd824d170e78fa2745ed1f16b132e16436146b7688f19b` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims

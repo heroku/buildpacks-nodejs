@@ -15,13 +15,13 @@ heroku/nodejs-yarn   <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.18.0`
+  - Resolved Node.js version: `22.19.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.18.0/node-v22.18.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.18.0 (<arch>)`
-  - Installing Node.js `22.18.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.19.0 (<arch>)`
+  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 
 ## Heroku Node.js Yarn
