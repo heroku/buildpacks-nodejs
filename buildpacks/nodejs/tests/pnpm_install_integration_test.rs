@@ -87,7 +87,7 @@ fn test_pnpm_skip_build_scripts_from_buildplan() {
                         
                         cat <<EOF >"$build_plan"
                             [[requires]]
-                            name = "node_build_scripts"
+                            name = "heroku/nodejs"
                             [requires.metadata]
                             enabled = false
                         EOF

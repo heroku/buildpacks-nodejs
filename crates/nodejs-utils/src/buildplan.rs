@@ -6,7 +6,7 @@ pub struct NodeBuildScriptsMetadata {
     pub skip_pruning: Option<bool>,
 }
 
-pub const NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME: &str = "node_build_scripts";
+pub const NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME: &str = "heroku/nodejs";
 const NODE_BUILD_SCRIPTS_METADATA_ENABLED_KEY: &str = "enabled";
 const NODE_BUILD_SCRIPTS_METADATA_SKIP_PRUNING_KEY: &str = "skip_pruning";
 

@@ -1,9 +1,9 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: buildpacks/nodejs/src/yarn/errors.rs
 ---
 ! Invalid build plan metadata
 !
-! A participating buildpack has set invalid `[requires.metadata]` for the build plan named `node_build_scripts`.
+! A participating buildpack has set invalid `[requires.metadata]` for the build plan named `heroku/nodejs`.
 !
 ! Expected metadata format:
 ! [requires.metadata]
