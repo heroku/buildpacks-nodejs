@@ -81,34 +81,38 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         (env, build_result_builder) = engine::main::build(&context, env, build_result_builder)?;
 
-        if corepack::main::detect(&context)? {
+        // reproduces the group order detection logic from
+        // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml
+        if detect_corepack_pnpm_install_group(&context)? {
             (env, build_result_builder) =
                 corepack::main::build(&context, env, build_result_builder)?;
-            if pnpm_install::main::detect(&context)? {
-                (_, build_result_builder) =
-                    pnpm_install::main::build(&context, env, build_result_builder)?;
-            } else if yarn::main::detect(&context)? {
-                (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
-            } else if npm_install::main::detect(&context)? {
-                (_, build_result_builder) =
-                    npm_install::main::build(&context, env, build_result_builder)?;
+            (_, build_result_builder) =
+                pnpm_install::main::build(&context, env, build_result_builder)?;
+        } else if detect_pnpm_engine_pnpm_install_group(&context)? {
+            (env, build_result_builder) =
+                pnpm_engine::main::build(&context, env, build_result_builder)?;
+            (_, build_result_builder) =
+                pnpm_install::main::build(&context, env, build_result_builder)?;
+        } else if detect_corepack_yarn_group(&context)? {
+            // corepack is optional for this group
+            if corepack::main::detect(&context)? {
+                (env, build_result_builder) =
+                    corepack::main::build(&context, env, build_result_builder)?;
             }
-        } else if npm_install::main::detect(&context)? {
+            (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
+        } else if detect_corepack_npm_engine_npm_install_group(&context)? {
+            // corepack is optional for this group
+            if corepack::main::detect(&context)? {
+                (env, build_result_builder) =
+                    corepack::main::build(&context, env, build_result_builder)?;
+            }
+            // npm engine is optional for this group
             if npm_engine::main::detect(&context)? {
                 (env, build_result_builder) =
                     npm_engine::main::build(&context, env, build_result_builder)?;
             }
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;
-        } else if pnpm_install::main::detect(&context)? {
-            if pnpm_engine::main::detect(&context)? {
-                (env, build_result_builder) =
-                    pnpm_engine::main::build(&context, env, build_result_builder)?;
-            }
-            (_, build_result_builder) =
-                pnpm_install::main::build(&context, env, build_result_builder)?;
-        } else if yarn::main::detect(&context)? {
-            (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
         }
 
         print::all_done(&Some(buildpack_start));
@@ -132,6 +136,70 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         print::plain(error_message.to_string());
         eprintln!();
     }
+}
+
+// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
+//
+// [[order.group]]
+// id = "heroku/nodejs-engine"
+//
+// [[order.group]]
+// id = "heroku/nodejs-corepack"
+//
+// [[order.group]]
+// id = "heroku/nodejs-pnpm-install"
+fn detect_corepack_pnpm_install_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
+    Ok(corepack::main::detect(ctx)? && pnpm_install::main::detect(ctx)?)
+}
+
+// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
+//
+// [order.group]]
+// id = "heroku/nodejs-engine"
+//
+// [[order.group]]
+// id = "heroku/nodejs-pnpm-engine"
+//
+// [[order.group]]
+// id = "heroku/nodejs-pnpm-install"
+fn detect_pnpm_engine_pnpm_install_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
+    Ok(pnpm_engine::main::detect(ctx)? && pnpm_install::main::detect(ctx)?)
+}
+
+// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
+//
+// [[order.group]]
+// id = "heroku/nodejs-engine"
+//
+// [[order.group]]
+// id = "heroku/nodejs-corepack"
+// optional = true
+//
+// [[order.group]]
+// id = "heroku/nodejs-yarn"
+fn detect_corepack_yarn_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
+    yarn::main::detect(ctx)
+}
+
+// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
+//
+// [[order.group]]
+// id = "heroku/nodejs-engine"
+//
+// [[order.group]]
+// id = "heroku/nodejs-corepack"
+// optional = true
+//
+// [[order.group]]
+// id = "heroku/nodejs-npm-engine"
+// optional = true
+//
+// [[order.group]]
+// id = "heroku/nodejs-npm-install"
+fn detect_corepack_npm_engine_npm_install_group(
+    ctx: &BuildpackBuildContext,
+) -> BuildpackResult<bool> {
+    npm_install::main::detect(ctx)
 }
 
 #[derive(Debug)]
