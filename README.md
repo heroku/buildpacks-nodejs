@@ -10,13 +10,16 @@ for Node.js applications. These buildpacks build Node.js application source code
 into application images with minimal configuration.
 
 > [!IMPORTANT]
-> This is a collection of [Cloud Native Buildpacks][cnb], and is a component of the [Heroku Cloud Native Buildpacks][heroku-buildpacks] project, which is in preview. If you are instead looking for the Heroku Classic Buildpack for Node.js (for use on the Heroku platform), you may find it [here][classic-buildpack].
-
+> This is a collection of [Cloud Native Buildpacks][cnb], and is a component of 
+> the [Heroku Cloud Native Buildpacks][heroku-buildpacks] project, which is in preview. 
+> If you are instead looking for the Heroku Classic Buildpack for Node.js (for use on 
+> the Heroku platform), you may find it [here][classic-buildpack].
 
 ## Usage
 
 > [!NOTE]
-> Before getting started, ensure you have the `pack` CLI installed. Installation instructions are available [here][pack-install].
+> Before getting started, ensure you have the `pack` CLI installed. Installation 
+> instructions are available [here][pack-install].
 
 To build a Node.js application codebase into a production image:
 
@@ -26,17 +29,16 @@ $ pack build sample-app --builder heroku/builder:24
 ```
 
 Then run the image:
+
 ```bash
 docker run --rm -it -e "PORT=8080" -p 8080:8080 sample-app
 ```
 
 ## Application Requirements
 
-The `heroku/nodejs` buildpack requires a valid `package.json` to be present
-to build.
+The `heroku/nodejs` buildpack requires a valid `package.json` to be present to build.
 
-In order to install dependencies, a vaild `npm`, `yarn`, or `pnpm` lockfile must
-be present.
+In order to install dependencies, a valid `npm`, `yarn`, or `pnpm` lockfile must be present.
 
 ## Configuration
 
@@ -44,13 +46,12 @@ be present.
 
 To select a Node.js version, specify it via `engines.node` in `package.json`.
 
-For example, to select the latest releasse in the Node.js 20 line, modify your
-`package.json` like this:
+For example, to select the latest release of Node.js version 22, modify your `package.json` like this:
 
 ```
 {
   "engines": {
-    "node": "20.x"
+    "node": "22.x"
   }
 }
 ```
@@ -60,29 +61,10 @@ This field supports the same semantic versioning syntax as `package.json`.
 If no Node.js version is specified, the latest LTS version will be used.
 We highly suggest specifying a version to prevent surprise changes.
 
-## Included Buildpacks
-
-This repository contains multiple buildpacks:
-
-| ID                           | Name                        | Readme                                             |
-|------------------------------|-----------------------------|----------------------------------------------------|
-| `heroku/nodejs`              | Node.js Composite Buildpack | [Readme](meta-buildpacks/nodejs/README.md)         |
-| `heroku/nodejs-engine`       | Node.js Engine Buildpack    | [Readme](buildpacks/nodejs-engine/README.md)       |
-| `heroku/nodejs-corepack`     | Corepack Buildpack          | [Readme](buildpacks/nodejs-corepack/README.md)     |
-| `heroku/nodejs-npm-engine`   | npm Engine Buildpack        | [Readme](buildpacks/nodejs-npm-engine/README.md)   |
-| `heroku/nodejs-npm-install`  | npm Install Buildpack       | [Readme](buildpacks/nodejs-npm-install/README.md)  |
-| `heroku/nodejs-pnpm-install` | pnpm install Buildpack      | [Readme](buildpacks/nodejs-pnpm-install/README.md) |
-| `heroku/nodejs-yarn`         | Yarn Buildpack              | [Readme](buildpacks/nodejs-yarn/README.md)         |
-
-
-The `heroku/nodejs` composite buildpack is the recommended buildpack for most
-users and applications. It is a composite buildpack that contains the
-functionality of the independent buildpacks.
-
 ## Contributing
 
-Issues and pull requests are welcome. See our [contributing guidelines](./CONTRIBUTING.md) if you would like to help.
-
+Issues and pull requests are welcome. See our [contributing guidelines](./CONTRIBUTING.md) if you 
+would like to help.
 
 [ci-badge]: https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml
