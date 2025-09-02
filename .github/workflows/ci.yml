@@ -81,7 +81,7 @@ jobs:
             | sort \
             | uniq \
             | jq -nRc '[inputs] 
-                | map({ dir: ., name: split("/") | last | split("nodejs-") | last } 
+                | map({ dir: ., name: split("/") | last | split("nodejs-") | last | if (. == ".") then "nodejs" else . end } 
                 | [
                   . + { builder_tag: 22, arch: "amd64" },
                   . + { builder_tag: 24, arch: "amd64" },
