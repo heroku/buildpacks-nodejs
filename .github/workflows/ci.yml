@@ -80,14 +80,14 @@ jobs:
             find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
             | sort \
             | uniq \
-            | jq -nRc '[inputs] 
-                | map({ dir: ., name: split("/") | last | split("nodejs-") | last | if (. == ".") then "nodejs" else . end } 
-                | [
-                  . + { builder_tag: 22, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "amd64" },
-                  . + { builder_tag: 24, arch: "arm64" } 
-                ]) 
-                | flatten' \
+            | jq -nRc '[inputs] | map({ 
+                dir: ., 
+                name: (split("/") | last | split("nodejs-") | last | if (. == ".") then "nodejs" else . end) 
+              } | [
+                . + { builder_tag: 22, arch: "amd64" },
+                . + { builder_tag: 24, arch: "amd64" },
+                . + { builder_tag: 24, arch: "arm64" } 
+              ]) | flatten' \
           )" >> $GITHUB_OUTPUT
 
   rust-integration-test:
