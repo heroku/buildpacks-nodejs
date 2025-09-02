@@ -1,0 +1,93 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
+  - Resolved Node.js version: `22.19.0`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.19.0 (<arch>)`
+  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
+- Installing node modules
+  - Using npm version `10.9.3`
+  - Creating npm cache
+  - Configuring npm cache directory
+  - Running `npm ci`
+
+
+      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - Running `npm run heroku-prebuild`
+
+
+      > npm-project@1.0.0 heroku-prebuild
+      > echo 'executed heroku-prebuild'
+
+      executed heroku-prebuild
+
+  - Done (<time_elapsed>)
+  - Running `npm run build`
+
+
+      > npm-project@1.0.0 build
+      > echo 'executed build'
+
+      executed build
+
+  - Done (<time_elapsed>)
+  - Running `npm run heroku-postbuild`
+
+
+      > npm-project@1.0.0 heroku-postbuild
+      > echo 'executed heroku-postbuild'
+
+      executed heroku-postbuild
+
+  - Done (<time_elapsed>)
+- Pruning dev dependencies
+  - Running `npm prune`
+
+
+      up to date, audited <N> packages in <time_elapsed>
+
+      found 0 vulnerabilities
+
+  - Done (<time_elapsed>)
+- Configuring default processes
+  - Skipping default web process (no start script defined)
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:npm_runtime_config'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:npm_cache'
+Successfully built image '<image-name>'

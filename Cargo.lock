@@ -1708,7 +1708,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nodejs"
+name = "nodejs-buildpack"
 version = "0.0.0"
 dependencies = [
  "bullet_stream",
