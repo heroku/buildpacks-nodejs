@@ -18,7 +18,7 @@ fn test_nodejs_engine_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-engine` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-engine` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-engine` should now require `heroku/nodejs` instead.
@@ -46,7 +46,7 @@ fn test_nodejs_corepack_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-corepack` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-corepack` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-corepack` should now require `heroku/nodejs` instead.
@@ -74,7 +74,7 @@ fn test_nodejs_npm_engine_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-npm-engine` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-npm-engine` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-npm-engine` should now require `heroku/nodejs` instead.
@@ -102,7 +102,7 @@ fn test_nodejs_npm_install_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-npm-install` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-npm-install` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-npm-install` should now require `heroku/nodejs` instead.
@@ -130,7 +130,7 @@ fn test_nodejs_pnpm_engine_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-pnpm-engine` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-pnpm-engine` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-pnpm-engine` should now require `heroku/nodejs` instead.
@@ -158,7 +158,7 @@ fn test_nodejs_pnpm_install_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-pnpm-install` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-pnpm-install` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-pnpm-install` should now require `heroku/nodejs` instead.
@@ -186,7 +186,7 @@ fn test_nodejs_yarn_is_deprecated() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-yarn` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-yarn` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-yarn` should now require `heroku/nodejs` instead.
@@ -214,7 +214,7 @@ fn test_deprecated_buildpacks_required_in_build_plan() {
             assert_contains!(
                 ctx.pack_stdout,
                 indoc! { "
-                    ! Usage of `heroku/nodejs-engine` is deprecated and will no longer be supported beyond v4.1.3.
+                    ! Usage of `heroku/nodejs-engine` is deprecated and will no longer be supported beyond v4.1.4.
                     !
                     ! Equivalent functionality is now provided by the `heroku/nodejs` buildpack:
                     ! - Buildpacks authors that previously required `heroku/nodejs-engine` should now require `heroku/nodejs` instead.

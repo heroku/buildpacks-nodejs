@@ -23,7 +23,7 @@ impl Buildpack for DeprecatedBuildpack {
         let replacement_buildpack_id = style::value("heroku/nodejs");
         let project_toml = style::value("project.toml");
         print::error(formatdoc! { "
-            Usage of {buildpack_id} is deprecated and will no longer be supported beyond v4.1.3.
+            Usage of {buildpack_id} is deprecated and will no longer be supported beyond v4.1.4.
 
             Equivalent functionality is now provided by the {replacement_buildpack_id} buildpack:
             - Buildpacks authors that previously required {buildpack_id} should now require {replacement_buildpack_id} instead.
