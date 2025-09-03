@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2025-09-03
+
+### Deprecated
+
+- Deprecated buildpack in favor of `heroku/nodejs`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
+
 ## [4.1.4] - 2025-08-29
 
 - No changes.
@@ -544,7 +550,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Changelog entry for first release ([#1](https://github.com/heroku/nodejs-yarn-buildpack/pull/1))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.4...v5.0.0
 [4.1.4]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.3...v4.1.4
 [4.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.1...v4.1.2
