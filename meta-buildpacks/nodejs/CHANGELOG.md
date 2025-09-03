@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2025-09-03
+
+### Changed
+
+- Updated `heroku/nodejs-corepack` to `5.0.0`.
+- Updated `heroku/nodejs-engine` to `5.0.0`.
+- Updated `heroku/nodejs-npm-engine` to `5.0.0`.
+- Updated `heroku/nodejs-npm-install` to `5.0.0`.
+- Updated `heroku/nodejs-pnpm-engine` to `5.0.0`.
+- Updated `heroku/nodejs-pnpm-install` to `5.0.0`.
+- Updated `heroku/nodejs-yarn` to `5.0.0`.
+
 ## [4.1.4] - 2025-08-29
 
 ### Changed
@@ -1269,7 +1281,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Package meta buildpack with latest releases of buildpacks while testing against unreleased.
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.4...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.4...v5.0.0
 [4.1.4]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.3...v4.1.4
 [4.1.3]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.2...v4.1.3
 [4.1.2]: https://github.com/heroku/buildpacks-nodejs/compare/v4.1.1...v4.1.2
