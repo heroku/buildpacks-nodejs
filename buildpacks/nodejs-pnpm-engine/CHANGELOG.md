@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [5.0.0] - 2025-09-03
 
-- No changes.
+### Deprecated
+
+- Deprecated buildpack in favor of `heroku/nodejs`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
 ## [4.1.4] - 2025-08-29
 
