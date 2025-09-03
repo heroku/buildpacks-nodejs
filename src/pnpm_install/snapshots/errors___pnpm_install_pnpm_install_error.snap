@@ -1,0 +1,18 @@
+---
+source: buildpacks/nodejs/src/pnpm_install/errors.rs
+---
+- Debug Info:
+  - Command failed `pnpm install`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
+
+! Failed to install Node modules
+!
+! The Heroku Node.js buildpack uses the command `pnpm install` to install your Node modules. This command failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+!
+! Suggestions:
+! - Ensure that this command runs locally without error (exit status = 0).
+! - Check the status of the upstream Node module repository service at https://status.npmjs.org/
+!
+! Use the debug information above to troubleshoot and retry your build.

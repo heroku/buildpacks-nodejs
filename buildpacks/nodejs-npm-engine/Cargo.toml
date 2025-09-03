@@ -8,21 +8,5 @@ workspace = true
 
 [dependencies]
 bullet_stream = "0.11"
-fun_run = "0.6"
-heroku-nodejs-utils.workspace = true
-indoc = "2"
 libcnb = { version = "=0.29.1", features = ["trace"] }
-libherokubuildpack = { version = "=0.29.1", default-features = false, features = [
-    "download",
-    "tar",
-] }
-serde = "1"
-
-[dev-dependencies]
-insta = "1"
-libcnb-test = "=0.29.1"
-reqwest = "0.12"
-reqwest-middleware = "0.4"
-serde_json = "1"
-test_support.workspace = true
-tokio = "1"
+indoc = "2"

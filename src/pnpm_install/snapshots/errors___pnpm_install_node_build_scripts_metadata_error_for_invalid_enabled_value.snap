@@ -1,0 +1,17 @@
+---
+source: buildpacks/nodejs/src/pnpm_install/errors.rs
+---
+! Invalid build plan metadata
+!
+! A participating buildpack has set invalid `[requires.metadata]` for the build plan named `heroku/nodejs`.
+!
+! Expected metadata format:
+! [requires.metadata]
+! enabled = <bool>
+! skip_pruning = <bool>
+!
+! But configured with:
+! enabled = "test" <string>
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

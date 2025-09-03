@@ -1,0 +1,18 @@
+---
+source: buildpacks/nodejs/src/engine/errors.rs
+---
+- Debug Info:
+  - TOML parse error at line 1, column 12
+      |
+    1 | [[artifacts
+      |            ^
+    unclosed array table, expected `]]`
+
+! Couldn't parse Node.js inventory
+!
+! The Heroku Node.js buildpack embeds the content of the `./inventory.toml` found in this buildpack's repository into its binary to look up and resolve Node.js versions but the content isn't valid TOML.
+!
+! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
+! https://github.com/heroku/buildpacks-nodejs/issues
+!
+! If you're able to reproduce the problem with an example application and the `pack` build tool (https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/), adding that information to the discussion will also help. Once we have more information around the causes of this error we may update this message.

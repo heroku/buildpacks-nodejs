@@ -1,0 +1,95 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Detected Node.js version range: `>=16.0.0 <17.0.0-0`
+  - Resolved Node.js version: `16.20.2`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `16.20.2 (<arch>)`
+  - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
+- Detecting yarn CLI version to install
+  - No yarn engine range detected in package.json, using default (1.22.x)
+  - GET https://registry.npmjs.org/yarn ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved yarn CLI version: 1.22.22
+- Installing yarn CLI
+  - GET https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Extracting yarn 1.22.22
+  - Installing yarn 1.22.22
+- Yarn CLI operating in yarn 1.22.22 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set cache-folder /layers/heroku_nodejs/deps/cache`
+
+      yarn config v1.22.22
+      success Set "cache-folder" to "/layers/heroku_nodejs/deps/cache".
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install "--production=false" --frozen-lockfile`
+
+      yarn install v1.22.22
+      [1/5] Validating package.json...
+      [2/5] Resolving packages...
+      [3/5] Fetching packages...
+      [4/5] Linking dependencies...
+      [5/5] Building fresh packages...
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - Running `yarn run build`
+
+      yarn run v1.22.22
+      $ tsc
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Pruning dev dependencies
+  - Running `yarn install --production --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline`
+
+      yarn install v1.22.22
+      [1/4] Resolving packages...
+      [2/4] Fetching packages...
+      [3/4] Linking dependencies...
+      [4/4] Building fresh packages...
+      Done in <time_elapsed>.
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:dist-yarn'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding layer 'buildpacksio/lifecycle:process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Setting default process type 'web'
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:deps'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:dist-yarn'
+Adding cache layer 'heroku/nodejs:yarn_packument'
+Successfully built image '<image-name>'

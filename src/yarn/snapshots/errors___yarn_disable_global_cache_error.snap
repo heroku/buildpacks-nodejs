@@ -1,0 +1,17 @@
+---
+source: buildpacks/nodejs/src/yarn/errors.rs
+---
+- Debug Info:
+  - Command failed `yarn config set enableGlobalCache false`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
+
+! Failed to disable Yarn global cache
+!
+! The Heroku Node.js buildpack was unable to disable the Yarn global cache.
+!
+! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
+! https://github.com/heroku/buildpacks-nodejs/issues
+!
+! If you're able to reproduce the problem with an example application and the `pack` build tool (https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/), adding that information to the discussion will also help. Once we have more information around the causes of this error we may update this message.

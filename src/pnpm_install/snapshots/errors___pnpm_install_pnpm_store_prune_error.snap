@@ -1,0 +1,17 @@
+---
+source: buildpacks/nodejs/src/pnpm_install/errors.rs
+---
+- Debug Info:
+  - Command failed `pnpm prune`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
+
+! Failed to prune packages from the store directory
+!
+! The Heroku Node.js buildpack periodically cleans up the store directory to remove packages that are no longer in use from the cache. An unexpected error occurred during this operation.
+!
+! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
+! https://github.com/heroku/buildpacks-nodejs/issues
+!
+! If you're able to reproduce the problem with an example application and the `pack` build tool (https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/), adding that information to the discussion will also help. Once we have more information around the causes of this error we may update this message.

@@ -1,0 +1,17 @@
+---
+source: buildpacks/nodejs/src/pnpm_install/errors.rs
+---
+- Debug Info:
+  - Command failed `pnpm prune --prod --ignore-scripts`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
+
+! Failed to prune pnpm dev dependencies
+!
+! The Heroku Node.js buildpack uses the command `pnpm prune --prod --ignore-scripts` to remove your dev dependencies from the production environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+!
+! Suggestions:
+! - Ensure that this command runs locally without error (exit status = 0).
+!
+! Use the debug information above to troubleshoot and retry your build.

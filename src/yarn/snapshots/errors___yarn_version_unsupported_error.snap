@@ -1,0 +1,12 @@
+---
+source: buildpacks/nodejs/src/yarn/errors.rs
+---
+! Unsupported Yarn version
+!
+! The Heroku Node.js buildpack does not support Yarn version 0.
+!
+! Suggestions:
+! - Update your package.json to specify a supported Yarn version.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

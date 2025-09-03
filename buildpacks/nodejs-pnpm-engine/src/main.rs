@@ -1,73 +1,40 @@
-// cargo-llvm-cov sets the coverage_nightly attribute when instrumenting our code. In that case,
-// we enable https://doc.rust-lang.org/beta/unstable-book/language-features/coverage-attribute.html
-// to be able selectively opt out of coverage for functions/lines/modules.
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
-
-mod errors;
-
 use bullet_stream::global::print;
+use bullet_stream::style;
+use indoc::formatdoc;
 use libcnb::build::{BuildContext, BuildResult};
-use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::{DetectContext, DetectResult, DetectResultBuilder};
 use libcnb::generic::{GenericMetadata, GenericPlatform};
 use libcnb::{buildpack_main, Buildpack};
-#[cfg(test)]
-use libcnb_test as _;
-#[cfg(test)]
-use test_support as _;
 
-struct PnpmEngineBuildpack;
+buildpack_main!(DeprecatedBuildpack);
 
-impl Buildpack for PnpmEngineBuildpack {
+struct DeprecatedBuildpack;
+
+#[derive(Debug)]
+struct DeprecatedBuildpackError;
+
+impl Buildpack for DeprecatedBuildpack {
     type Platform = GenericPlatform;
     type Metadata = GenericMetadata;
-    type Error = PnpmEngineBuildpackError;
+    type Error = DeprecatedBuildpackError;
 
     fn detect(&self, context: DetectContext<Self>) -> libcnb::Result<DetectResult, Self::Error> {
-        // pass detect if a `pnpm-lock.yaml` is found
-        if context.app_dir.join("pnpm-lock.yaml").exists() {
-            return DetectResultBuilder::pass()
-                .build_plan(
-                    BuildPlanBuilder::new()
-                        .provides("pnpm")
-                        .requires("node")
-                        .build(),
-                )
-                .build();
-        }
+        let buildpack_id = style::value(context.buildpack_descriptor.buildpack.id.to_string());
+        let replacement_buildpack_id = style::value("heroku/nodejs");
+        let project_toml = style::value("project.toml");
+        print::error(formatdoc! { "
+            Usage of {buildpack_id} is deprecated and will no longer be supported beyond v4.1.4.
+
+            Equivalent functionality is now provided by the {replacement_buildpack_id} buildpack:
+            - Buildpacks authors that previously required {buildpack_id} should now require {replacement_buildpack_id} instead.
+            - Users with a {project_toml} file that lists {buildpack_id} should now use {replacement_buildpack_id} instead.
+
+            If you have any questions, please file an issue at https://github.com/heroku/buildpacks-nodejs/issues/new.
+        " });
         DetectResultBuilder::fail().build()
     }
 
-    fn build(&self, context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
-        print::buildpack(
-            context
-                .buildpack_descriptor
-                .buildpack
-                .name
-                .as_ref()
-                .expect("The buildpack.toml should have a 'name' field set"),
-        );
-
-        // This buildpack does not install pnpm yet, suggest using
-        // `heroku/nodejs-corepack` instead.
-        Err(PnpmEngineBuildpackError::CorepackRequired)?
-    }
-
-    fn on_error(&self, error: libcnb::Error<Self::Error>) {
-        let error_message = errors::on_error(error);
-        eprintln!("\n{error_message}");
+    fn build(&self, _context: BuildContext<Self>) -> libcnb::Result<BuildResult, Self::Error> {
+        unimplemented!("This will never run since detect is configured to always fail.");
     }
 }
-
-#[derive(Debug, Copy, Clone)]
-pub(crate) enum PnpmEngineBuildpackError {
-    CorepackRequired,
-}
-
-impl From<PnpmEngineBuildpackError> for libcnb::Error<PnpmEngineBuildpackError> {
-    fn from(value: PnpmEngineBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
-    }
-}
-
-buildpack_main!(PnpmEngineBuildpack);

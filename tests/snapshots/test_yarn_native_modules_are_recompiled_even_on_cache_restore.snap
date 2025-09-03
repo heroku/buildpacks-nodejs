@@ -1,0 +1,203 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.19.0`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v22.19.0/node-v22.19.0-<arch>.tar.gz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `22.19.0 (<arch>)`
+  - Installing Node.js `22.19.0 (<arch>)` ... (<time_elapsed>)
+- Using Corepack version `0.34.0`
+- Found `packageManager` set to `yarn@4.2.2` in `package.json`
+- Enabling Corepack
+  - Creating Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
+- Installing `yarn@4.2.2`
+  - Creating Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing yarn@4.2.2...
+
+  - Done (<time_elapsed>)
+- Yarn CLI operating in yarn 4.2.2 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set enableGlobalCache false`
+
+      ➤ YN0000: Successfully set enableGlobalCache to false
+
+  - Done (<time_elapsed>)
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
+
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: · Yarn 4.2.2
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
+      ➤ YN0000: │ <NODE-GYP BUILD OUTPUT> 
+      ➤ YN0000: └ Completed
+      ➤ YN0000: · Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn heroku prune`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0000: └ Completed
+      ➤ YN0000: Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:deps'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:mgr'
+Adding layer 'heroku/nodejs:shim'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:deps'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:mgr'
+Adding cache layer 'heroku/nodejs:shim'
+Successfully built image '<image-name>'
+
+--------------------------------------------- REBUILD ---------------------------------------------
+===> ANALYZING
+Restoring data for SBOM from previous image
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `22.x`
+  - Resolved Node.js version: `22.19.0`
+- Installing Node.js distribution
+  - Reusing Node.js 22.19.0 (<arch>)
+- Using Corepack version `0.34.0`
+- Found `packageManager` set to `yarn@4.2.2` in `package.json`
+- Enabling Corepack
+  - Restoring Corepack shims
+  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
+- Installing `yarn@4.2.2`
+  - Restoring Corepack package manager
+  - Running `corepack prepare`
+
+      Preparing yarn@4.2.2...
+
+  - Done (<time_elapsed>)
+- Yarn CLI operating in yarn 4.2.2 mode.
+- Setting up yarn dependency cache
+  - Running `yarn config set enableGlobalCache false`
+
+      ➤ YN0000: Successfully set enableGlobalCache to false
+
+  - Done (<time_elapsed>)
+  - Restoring yarn dependency cache
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
+
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: · Yarn 4.2.2
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
+      ➤ YN0000: │ <NODE-GYP BUILD OUTPUT> 
+      ➤ YN0000: └ Completed
+      ➤ YN0000: · Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn heroku prune`
+
+      ➤ YN0000: ┌ Resolution step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Fetch step
+      ➤ YN0000: └ Completed
+      ➤ YN0000: ┌ Link step
+      ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
+      ➤ YN0000: └ Completed
+      ➤ YN0000: Done with warnings in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Reusing layer 'heroku/nodejs:available_parallelism'
+Reusing layer 'heroku/nodejs:deps'
+Reusing layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:mgr'
+Reusing layer 'heroku/nodejs:shim'
+Reusing layer 'heroku/nodejs:web_env'
+Reusing layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Reusing layer 'buildpacksio/lifecycle:launcher'
+Reusing layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Reusing cache layer 'heroku/nodejs:deps'
+Adding cache layer 'heroku/nodejs:deps'
+Reusing cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:dist'
+Reusing cache layer 'heroku/nodejs:mgr'
+Adding cache layer 'heroku/nodejs:mgr'
+Reusing cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:shim'
+Successfully built image '<image-name>'
