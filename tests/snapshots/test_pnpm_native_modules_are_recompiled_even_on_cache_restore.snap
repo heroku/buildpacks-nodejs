@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
-  - Resolved Node.js version: `20.19.4`
+  - Resolved Node.js version: `20.19.5`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.19.4/node-v20.19.4-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v20.19.5/node-v20.19.5-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.19.4 (<arch>)`
-  - Installing Node.js `20.19.4 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.32.0`
+  - Extracting Node.js `20.19.5 (<arch>)`
+  - Installing Node.js `20.19.5 (<arch>)` ... (<time_elapsed>)
+- Using Corepack version `0.33.0`
 - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
 - Enabling Corepack
   - Creating Corepack shims
@@ -108,10 +108,10 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `>=20.0.0 <21.0.0-0`
-  - Resolved Node.js version: `20.19.4`
+  - Resolved Node.js version: `20.19.5`
 - Installing Node.js distribution
-  - Reusing Node.js 20.19.4 (<arch>)
-- Using Corepack version `0.32.0`
+  - Reusing Node.js 20.19.5 (<arch>)
+- Using Corepack version `0.33.0`
 - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
 - Enabling Corepack
   - Restoring Corepack shims
