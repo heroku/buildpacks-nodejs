@@ -37,13 +37,6 @@ tokio = "1"
 [workspace]
 resolver = "2"
 members = [
-    "buildpacks/nodejs-engine",
-    "buildpacks/nodejs-corepack",
-    "buildpacks/nodejs-npm-engine",
-    "buildpacks/nodejs-npm-install",
-    "buildpacks/nodejs-pnpm-engine",
-    "buildpacks/nodejs-pnpm-install",
-    "buildpacks/nodejs-yarn",
     "crates/nodejs-utils",
     "crates/test_support",
 ]

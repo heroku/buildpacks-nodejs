@@ -63,43 +63,19 @@ jobs:
           path: "target/llvm-cov/html"
           if-no-files-found: "error"
 
-  find-libcnb-buildpacks:
-    name: Find libcnb buildpacks
-    runs-on: ubuntu-24.04
-    outputs:
-      libcnb-buildpacks: ${{ steps.find-buildpack-dirs.outputs.buildpacks }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-      - id: find-buildpack-dirs
-        name: Find libcnb buildpack directories
-        run: |
-          echo "buildpacks=$( \
-            find . -type d -execdir test -e "{}/buildpack.toml" -a -e "{}/Cargo.toml" \; -print \
-            | sort \
-            | uniq \
-            | jq -nRc '[inputs] | map({ 
-                dir: ., 
-                name: (split("/") | last | split("nodejs-") | last | if (. == ".") then "nodejs" else . end) 
-              } | [
-                . + { builder_tag: 22, arch: "amd64" },
-                . + { builder_tag: 24, arch: "amd64" },
-                . + { builder_tag: 24, arch: "arm64" } 
-              ]) | flatten' \
-          )" >> $GITHUB_OUTPUT
-
   rust-integration-test:
-    name: ${{ matrix.name }} (${{ matrix.builder_tag }}, ${{ matrix.arch }})
+    name: Integration (${{ matrix.builder }}, ${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     env:
-      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:${{ matrix.builder_tag }}
-    needs: find-libcnb-buildpacks
+      INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.find-libcnb-buildpacks.outputs.libcnb-buildpacks) }}
+        builder: ["builder:24", "builder:22"]
+        arch: ["amd64", "arm64"]
+        exclude:
+          - builder: "builder:22"
+            arch: "arm64"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,5 +100,5 @@ jobs:
           docker pull "${RUN_IMAGE}"
       - name: Run integration tests
         working-directory: ${{ matrix.dir }}
-        run: cargo test --locked -- --ignored --test-threads 16
+        run: cargo test --locked -- --ignored --test-threads $(($(nproc)+1))
 
