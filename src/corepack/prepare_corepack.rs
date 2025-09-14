@@ -5,12 +5,12 @@ use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn prepare_corepack(

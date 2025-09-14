@@ -1,10 +1,10 @@
 use crate::{BuildpackBuildContext, BuildpackResult};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::indoc;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
-use libcnb::Env;
 
 pub(super) fn install_integrity_keys(
     context: &BuildpackBuildContext,

@@ -10,7 +10,7 @@ use heroku_nodejs_utils::error_handling::on_framework_error;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::DetectResultBuilder;
-use libcnb::{buildpack_main, Env};
+use libcnb::{Env, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]

@@ -4,30 +4,30 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
-use super::configure_yarn_cache::{configure_yarn_cache, DepsLayerError};
-use super::install_yarn::{install_yarn, CliLayerError};
+use super::configure_yarn_cache::{DepsLayerError, configure_yarn_cache};
+use super::install_yarn::{CliLayerError, install_yarn};
 use super::{cfg, cmd};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::buildplan::{
-    read_node_build_scripts_metadata, NodeBuildScriptsMetadataError,
+    NodeBuildScriptsMetadataError, read_node_build_scripts_metadata,
 };
-use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
+use heroku_nodejs_utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::npmjs_org::{
-    packument_layer, resolve_package_packument, PackumentLayerError,
+    PackumentLayerError, packument_layer, resolve_package_packument,
 };
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 #[cfg(test)]
 use indoc as _;
 use indoc::indoc;
+use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::layer_env::Scope;
-use libcnb::Env;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
@@ -61,7 +61,9 @@ pub(crate) fn build(
 
             let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
                 None => {
-                    print::sub_bullet(format!("No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"));
+                    print::sub_bullet(format!(
+                        "No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"
+                    ));
                     Requirement::parse(DEFAULT_YARN_REQUIREMENT)
                         .map_err(YarnBuildpackError::YarnDefaultParse)?
                 }

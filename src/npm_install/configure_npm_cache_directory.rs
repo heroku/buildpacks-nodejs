@@ -3,11 +3,11 @@ use super::npm;
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use fun_run::CommandWithName;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn configure_npm_cache_directory(

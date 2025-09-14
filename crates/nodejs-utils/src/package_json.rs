@@ -1,5 +1,5 @@
 use crate::vrs::{Requirement, Version};
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::fs::File;

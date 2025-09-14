@@ -5,19 +5,19 @@
 
 use super::configure_available_parallelism::configure_available_parallelism;
 use super::configure_web_env::configure_web_env;
-use super::install_node::{install_node, DistLayerError};
+use super::install_node::{DistLayerError, install_node};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
+use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use libcnb::Env;
-use libherokubuildpack::inventory::artifact::{Arch, Os};
 use libherokubuildpack::inventory::Inventory;
+use libherokubuildpack::inventory::artifact::{Arch, Os};
 use sha2::Sha256;
 use std::env::consts;
 

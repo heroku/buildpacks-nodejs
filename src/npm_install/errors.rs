@@ -3,11 +3,11 @@ use super::npm;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::buildplan::{
-    NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError,
 };
 use heroku_nodejs_utils::error_handling::{
-    error_message, on_package_json_error, ErrorMessage, ErrorType, SuggestRetryBuild,
-    SuggestSubmitIssue, BUILDPACK_NAME,
+    BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
+    on_package_json_error,
 };
 use indoc::formatdoc;
 use std::io;

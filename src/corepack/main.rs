@@ -13,8 +13,8 @@ use bullet_stream::global::print;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use libcnb::build::BuildResultBuilder;
 use libcnb::Env;
+use libcnb::build::BuildResultBuilder;
 use std::path::PathBuf;
 
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {

@@ -4,12 +4,12 @@ use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use heroku_nodejs_utils::package_json::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use libcnb::Env;
 use serde::{Deserialize, Serialize};
 
 pub(crate) fn enable_corepack(

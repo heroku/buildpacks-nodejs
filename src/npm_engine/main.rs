@@ -3,7 +3,7 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use super::install_npm::{install_npm, NpmInstallError};
+use super::install_npm::{NpmInstallError, install_npm};
 use super::{node, npm};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
@@ -11,12 +11,12 @@ use bullet_stream::style;
 use fun_run::CommandWithName;
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::npmjs_org::{
-    packument_layer, resolve_package_packument, PackagePackument, PackumentLayerError,
+    PackagePackument, PackumentLayerError, packument_layer, resolve_package_packument,
 };
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::vrs::{Requirement, Version};
-use libcnb::build::BuildResultBuilder;
 use libcnb::Env;
+use libcnb::build::BuildResultBuilder;
 use std::path::Path;
 use std::process::Command;
 

@@ -1,6 +1,6 @@
 use crate::error_handling::ErrorType::UserFacing;
 use crate::error_handling::{
-    error_message, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use bullet_stream::style;
 use indoc::formatdoc;

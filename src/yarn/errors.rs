@@ -5,12 +5,12 @@ use super::main::YarnBuildpackError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use heroku_nodejs_utils::buildplan::{
-    NodeBuildScriptsMetadataError, NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME,
+    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError,
 };
 use heroku_nodejs_utils::error_handling::ErrorType::UserFacing;
 use heroku_nodejs_utils::error_handling::{
-    error_message, file_value, on_package_json_error, ErrorMessage, ErrorType, SuggestRetryBuild,
-    SuggestSubmitIssue, BUILDPACK_NAME,
+    BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
+    file_value, on_package_json_error,
 };
 use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::{Requirement, VersionError};
@@ -229,7 +229,9 @@ fn on_yarn_version_unsupported_error(version: u64) -> ErrorMessage {
 fn on_yarn_version_resolve_error(requirement: &Requirement) -> ErrorMessage {
     let requested_version = style::value(requirement.to_string());
     let yarn_releases_url = style::url("https://github.com/yarnpkg/berry/releases");
-    let inventory_url = style::url("https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-yarn/inventory.toml");
+    let inventory_url = style::url(
+        "https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-yarn/inventory.toml",
+    );
     let package_json = style::value("package.json");
     let engines_key = style::value("engines.yarn");
     error_message()

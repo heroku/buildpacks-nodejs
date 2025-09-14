@@ -3,8 +3,8 @@ use super::main::NodeJsEngineBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    error_message, file_value, on_package_json_error, ErrorMessage, SuggestRetryBuild,
-    SuggestSubmitIssue, BUILDPACK_NAME,
+    BUILDPACK_NAME, ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+    on_package_json_error,
 };
 use indoc::formatdoc;
 
@@ -35,7 +35,9 @@ fn on_unknown_version_error(version: String) -> ErrorMessage {
     let node_releases_url = style::url(format!(
         "https://github.com/nodejs/node/releases?q=v{version}&expanded=true"
     ));
-    let inventory_url = style::url("https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-engine/inventory.toml");
+    let inventory_url = style::url(
+        "https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-engine/inventory.toml",
+    );
     let version = style::value(version);
     error_message()
         .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))

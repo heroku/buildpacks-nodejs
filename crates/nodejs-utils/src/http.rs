@@ -3,13 +3,13 @@ use futures::stream::TryStreamExt;
 use http::{Extensions, HeaderMap};
 use reqwest::{IntoUrl, Request, Response};
 use reqwest_middleware::{ClientBuilder, Middleware, Next};
-use reqwest_retry::policies::ExponentialBackoff;
 use reqwest_retry::RetryTransientMiddleware;
+use reqwest_retry::policies::ExponentialBackoff;
 use std::io;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering::SeqCst;
-use std::sync::LazyLock;
 use std::time::Duration;
 use tokio::runtime::Runtime;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
@@ -366,13 +366,18 @@ mod test {
     fn test_self_signed_cert() {
         // this is technically not thread-safe but should be okay for now
         // since this is the only test that sets this env var
-        env::remove_var("SSL_CERT_FILE");
+        #[allow(unsafe_code)]
+        unsafe {
+            env::remove_var("SSL_CERT_FILE");
+        };
 
         global::with_locked_writer(Vec::<u8>::new(), || {
-            assert!(get("https://self-signed.badssl.com")
-                .max_retries(0)
-                .call_sync()
-                .is_err());
+            assert!(
+                get("https://self-signed.badssl.com")
+                    .max_retries(0)
+                    .call_sync()
+                    .is_err()
+            );
         });
 
         let badssl_self_signed_cert_dir = tempfile::tempdir().unwrap();
@@ -409,16 +414,24 @@ mod test {
         )
         .unwrap();
 
-        env::set_var("SSL_CERT_FILE", badssl_self_signed_cert);
+        #[allow(unsafe_code)]
+        unsafe {
+            env::set_var("SSL_CERT_FILE", badssl_self_signed_cert);
+        };
 
         global::with_locked_writer(Vec::<u8>::new(), || {
-            assert!(get("https://self-signed.badssl.com")
-                .max_retries(0)
-                .call_sync()
-                .is_ok());
+            assert!(
+                get("https://self-signed.badssl.com")
+                    .max_retries(0)
+                    .call_sync()
+                    .is_ok()
+            );
         });
 
-        env::remove_var("SSL_CERT_FILE");
+        #[allow(unsafe_code)]
+        unsafe {
+            env::remove_var("SSL_CERT_FILE");
+        };
     }
 
     #[bon::builder]
@@ -490,7 +503,11 @@ mod test {
     fn assert_log_contains_matches(log: &[u8], matchers: &[Regex]) {
         let output = strip_ansi(String::from_utf8_lossy(log));
         let actual_lines = output.lines().map(str::trim).collect::<Vec<_>>();
-        assert_eq!(matchers.len(), actual_lines.len(), "Expected matchers does not match length of actual logged lines\nMatchers:\n{matchers:?}\nLines: {actual_lines:?}");
+        assert_eq!(
+            matchers.len(),
+            actual_lines.len(),
+            "Expected matchers does not match length of actual logged lines\nMatchers:\n{matchers:?}\nLines: {actual_lines:?}"
+        );
         actual_lines
             .iter()
             .zip(matchers.iter())
