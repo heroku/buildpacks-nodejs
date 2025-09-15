@@ -1,0 +1,3 @@
+[profile.default]
+retries = 3
+slow-timeout = "3m"
