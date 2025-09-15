@@ -69,7 +69,7 @@ pub enum NodeBuildScriptsMetadataError {
 mod test {
     use super::*;
     use libcnb_data::buildpack_plan::{BuildpackPlan, Entry};
-    use toml::{toml, Table};
+    use toml::{Table, toml};
 
     #[test]
     fn read_node_build_scripts_when_buildpack_plan_contains_no_entries() {

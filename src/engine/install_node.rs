@@ -2,14 +2,14 @@ use super::main::NodeJsEngineBuildpackError;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::http::{get, ResponseExt};
+use heroku_nodejs_utils::http::{ResponseExt, get};
 use heroku_nodejs_utils::vrs::Version;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use libcnb::Env;
 use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::tar::decompress_tarball;

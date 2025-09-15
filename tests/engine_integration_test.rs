@@ -3,7 +3,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{assert_contains_match, BuildpackReference};
+use libcnb_test::{BuildpackReference, assert_contains_match};
 use test_support::{
     assert_web_response, create_build_snapshot, custom_buildpack, integration_test_with_config,
     nodejs_integration_test, nodejs_integration_test_with_config, set_node_engine,

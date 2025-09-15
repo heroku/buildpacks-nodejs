@@ -1,12 +1,12 @@
-use crate::http::{get, ResponseExt};
+use crate::http::{ResponseExt, get};
 use crate::vrs::{Requirement, Version};
 use bullet_stream::global::print;
 use http::{HeaderMap, HeaderValue, StatusCode};
+use libcnb::Buildpack;
 use libcnb::build::BuildContext;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libcnb::Buildpack;
 use libcnb_data::layer::{LayerName, LayerNameError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -79,15 +79,15 @@ where
 
     let mut headers = HeaderMap::new();
     if let Some(packument_metadata) = &packument_metadata {
-        if let Some(etag) = &packument_metadata.etag {
-            if let Ok(etag) = HeaderValue::from_str(etag) {
-                headers.insert("If-None-Match", etag);
-            }
+        if let Some(etag) = &packument_metadata.etag
+            && let Ok(etag) = HeaderValue::from_str(etag)
+        {
+            headers.insert("If-None-Match", etag);
         }
-        if let Some(last_modified) = &packument_metadata.last_modified {
-            if let Ok(last_modified) = HeaderValue::from_str(last_modified) {
-                headers.insert("If-Modified-Since", last_modified);
-            }
+        if let Some(last_modified) = &packument_metadata.last_modified
+            && let Ok(last_modified) = HeaderValue::from_str(last_modified)
+        {
+            headers.insert("If-Modified-Since", last_modified);
         }
     }
 

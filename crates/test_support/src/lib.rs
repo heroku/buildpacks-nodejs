@@ -6,13 +6,13 @@ mod test_arch;
 mod test_builder;
 
 use crate::snapshot_filters::create_snapshot_filters;
-use crate::test_arch::{get_test_arch, TestArch};
+use crate::test_arch::{TestArch, get_test_arch};
 use crate::test_builder::get_test_builder;
 use insta::{assert_snapshot, with_settings};
 use libcnb::data::buildpack_id;
 use libcnb_test::{
-    assert_contains, BuildConfig, BuildpackReference, ContainerConfig, ContainerContext,
-    TestContext, TestRunner,
+    BuildConfig, BuildpackReference, ContainerConfig, ContainerContext, TestContext, TestRunner,
+    assert_contains,
 };
 use std::net::SocketAddr;
 use std::path::{Path, PathBuf};

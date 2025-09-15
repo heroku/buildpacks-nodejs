@@ -2,15 +2,15 @@ use super::main::NpmEngineBuildpackError;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
-use heroku_nodejs_utils::http::{get, ResponseExt};
+use heroku_nodejs_utils::http::{ResponseExt, get};
 use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use heroku_nodejs_utils::vrs::Version;
+use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use libcnb::Env;
 use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
 use std::fs::File;

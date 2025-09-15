@@ -11,18 +11,18 @@ use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::{CmdError, CommandWithName, NamedOutput};
 use heroku_nodejs_utils::buildplan::{
-    read_node_build_scripts_metadata, NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError,
+    NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError, read_node_build_scripts_metadata,
 };
-use heroku_nodejs_utils::config::{read_prune_dev_dependencies_from_project_toml, ConfigError};
+use heroku_nodejs_utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
 use heroku_nodejs_utils::error_handling::ErrorMessage;
 use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
 use heroku_nodejs_utils::package_manager::PackageManager;
 use heroku_nodejs_utils::vrs::Version;
 use indoc::indoc;
+use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use libcnb::Env;
 use std::io;
 
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {

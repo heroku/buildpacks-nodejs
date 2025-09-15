@@ -5,7 +5,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{assert_contains, BuildpackReference, PackResult};
+use libcnb_test::{BuildpackReference, PackResult, assert_contains};
 use serde_json::json;
 use std::path::Path;
 use test_support::{

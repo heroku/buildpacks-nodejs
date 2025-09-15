@@ -1,7 +1,7 @@
 use super::main::YarnBuildpackError;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
-use heroku_nodejs_utils::http::{get, ResponseExt};
+use heroku_nodejs_utils::http::{ResponseExt, get};
 use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use libcnb::data::layer_name;
 use libcnb::layer::{

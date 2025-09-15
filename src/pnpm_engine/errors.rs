@@ -1,7 +1,7 @@
 use super::main::PnpmEngineBuildpackError;
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::{
-    error_message, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue,
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use indoc::formatdoc;
 

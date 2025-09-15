@@ -4,8 +4,8 @@ use super::{node, npm};
 use bullet_stream::style;
 use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
 use heroku_nodejs_utils::error_handling::{
-    error_message, file_value, on_package_json_error, ErrorMessage, SuggestRetryBuild,
-    SuggestSubmitIssue,
+    ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+    on_package_json_error,
 };
 use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
 use heroku_nodejs_utils::vrs::Requirement;
@@ -44,7 +44,9 @@ fn on_npm_version_resolve_error(requirement: &Requirement) -> ErrorMessage {
     let npm = style::value("npm");
     let requested_version = style::value(requirement.to_string());
     let npm_releases_url = style::url("https://www.npmjs.com/package/npm?activeTab=versions");
-    let inventory_url = style::url("https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-npm-engine/inventory.toml");
+    let inventory_url = style::url(
+        "https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-npm-engine/inventory.toml",
+    );
     let npm_show_command = style::value(format!("npm show 'npm@{requirement}' versions"));
     let package_json = style::value("package.json");
     let engines_key = style::value("engines.npm");

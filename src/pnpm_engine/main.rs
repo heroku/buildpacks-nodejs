@@ -5,8 +5,8 @@
 
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use heroku_nodejs_utils::error_handling::ErrorMessage;
-use libcnb::build::BuildResultBuilder;
 use libcnb::Env;
+use libcnb::build::BuildResultBuilder;
 
 #[allow(clippy::unnecessary_wraps)]
 pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {

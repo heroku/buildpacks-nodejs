@@ -2,11 +2,11 @@
 #![allow(unused_crate_dependencies)]
 
 use anyhow::{Context, Result};
-use clap::{arg, ArgAction, Command};
+use clap::{ArgAction, Command, arg};
 use keep_a_changelog_file::{ChangeGroup, Changelog};
+use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::inventory::artifact::{Arch, Artifact, Os};
 use libherokubuildpack::inventory::checksum::Checksum;
-use libherokubuildpack::inventory::Inventory;
 use node_semver::Version;
 use serde::Deserialize;
 use sha2::Sha256;

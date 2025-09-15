@@ -1,6 +1,6 @@
 use crate::error_handling::ErrorType::UserFacing;
 use crate::package_json::PackageJsonError;
-use bullet_stream::{style, Print};
+use bullet_stream::{Print, style};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
 use std::path::Path;

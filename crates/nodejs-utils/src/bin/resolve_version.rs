@@ -1,7 +1,7 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use clap::{arg, value_parser, Command};
+use clap::{Command, arg, value_parser};
 use heroku_nodejs_utils::vrs::Requirement;
 use heroku_nodejs_utils::vrs::Version;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
