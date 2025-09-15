@@ -9,18 +9,21 @@ permissions:
   contents: read
 
 jobs:
-
   rust-lint:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
       - name: Update Rust toolchain
         run: rustup update
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
       - name: Clippy
         run: cargo clippy --all-targets --locked -- --deny warnings
+
       - name: rustfmt
         run: cargo fmt -- --check
 
@@ -28,11 +31,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
       - name: Update Rust toolchain
         run: rustup update
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
       - name: Run unit tests
         run: cargo test --locked
 
@@ -43,19 +49,24 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with:
           submodules: true
+
       - name: Install nightly Rust toolchain
         run: rustup install nightly
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@d31232495ad76f47aad66e3501e47780b49f0f3e # v2.57.5
         with:
           tool: cargo-llvm-cov
+
       - name: Run unit tests and generate coverage report
         run: cargo +nightly llvm-cov --locked --html
+
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -66,8 +77,10 @@ jobs:
   rust-integration-test:
     name: Integration (${{ matrix.builder }}, ${{ matrix.arch }})
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
     env:
       INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -76,21 +89,34 @@ jobs:
         exclude:
           - builder: "builder:22"
             arch: "arm64"
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
       - name: Install musl-tools
         run: sudo apt-get install musl-tools -y --no-install-recommends
+
       - name: Update Rust toolchain
         run: rustup update
+
       - name: Install Rust linux-musl target
         run: rustup target add ${{ matrix.arch == 'arm64' && 'aarch64-unknown-linux-musl' || 'x86_64-unknown-linux-musl' }}
+
       - name: Rust Cache
         uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@8203df0b7ac31e358daa391b1949da5650e7f4f0 # v5.9.3
+
+      - name: Install Nextest
+        uses: taiki-e/install-action@133a13585eb96b576726757d256e9531cd6dddf2 # v2.58.32
+        with:
+          tool: nextest
+
       - name: Pull builder image
         run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
       - name: Pull run image
         run: |
           RUN_IMAGE=$(
@@ -98,7 +124,6 @@ jobs:
             | jq --exit-status --raw-output '.stack.runImage.image'
           )
           docker pull "${RUN_IMAGE}"
-      - name: Run integration tests
-        working-directory: ${{ matrix.dir }}
-        run: cargo test --locked -- --ignored --test-threads $(($(nproc)+1))
 
+      - name: Run integration tests
+        run: cargo nextest run --run-ignored only --locked
