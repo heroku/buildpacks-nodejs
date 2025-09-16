@@ -1,0 +1,3 @@
+[alias]
+update-nodejs-inventory = "run --package xtask-update-nodejs-inventory -- ./inventory/nodejs.toml ./CHANGELOG.md"
+integration-test = "nextest run --run-ignored only --locked"

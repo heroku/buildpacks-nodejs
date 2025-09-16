@@ -62,7 +62,7 @@ jobs:
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            cargo run --package heroku-nodejs-utils --bin update_node_inventory ./inventory/nodejs.toml ./CHANGELOG.md
+            cargo update-node-inventory
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
 
