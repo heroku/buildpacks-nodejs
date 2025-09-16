@@ -12,21 +12,49 @@ jobs:
   update-nodejs-inventory:
     name: Update Node.js Inventory
     runs-on: pub-hk-ubuntu-24.04-ip
+    env:
+      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:24
+
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
         id: generate-token
         with:
           app-id: ${{ vars.LINGUIST_GH_APP_ID }}
           private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
 
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools -y --no-install-recommends
 
       - name: Update Rust toolchain
         run: rustup update
 
+      - name: Install Rust linux-musl target
+        run: rustup target add x86_64-unknown-linux-musl
+
       - name: Rust cache
         uses: Swatinem/rust-cache@98c8021b550208e191a6a3145459bfc9fb29c4c0 # v2.8.0
+
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@8203df0b7ac31e358daa391b1949da5650e7f4f0 # v5.9.3
+
+      - name: Install Nextest
+        uses: taiki-e/install-action@133a13585eb96b576726757d256e9531cd6dddf2 # v2.58.32
+        with:
+          tool: nextest
+
+      - name: Pull builder image
+        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
+      - name: Pull run image
+        run: |
+          RUN_IMAGE=$(
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
+            | jq --exit-status --raw-output '.stack.runImage.image'
+          )
+          docker pull "${RUN_IMAGE}"
 
       - name: Rebuild Inventory
         id: rebuild-inventory
@@ -37,6 +65,14 @@ jobs:
             cargo run --package heroku-nodejs-utils --bin update_node_inventory ./inventory/nodejs.toml ./CHANGELOG.md
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
+
+      - name: Rebuild Snapshots
+        env:
+          # this will prevent a snapshot difference from failing a test
+          INSTA_FORCE_PASS: 1
+          # this will force all snapshot differences to be accepted
+          INSTA_UPDATE: force
+        run: cargo nextest run --run-ignored only --locked
 
       - name: Create Pull Request
         id: pr
