@@ -62,7 +62,7 @@ jobs:
           delimiter="$(openssl rand -hex 8)"
           {
             echo "msg<<${delimiter}"
-            cargo update-node-inventory
+            cargo update-nodejs-inventory
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
 
