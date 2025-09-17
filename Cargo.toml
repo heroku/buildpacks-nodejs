@@ -39,6 +39,7 @@ resolver = "2"
 members = [
     "crates/nodejs-utils",
     "crates/test_support",
+    "crates/xtask-update-nodejs-inventory"
 ]
 
 [workspace.package]
