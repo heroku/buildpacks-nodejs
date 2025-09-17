@@ -83,10 +83,11 @@ async fn main() {
 /// - `linux-x64` and `linux-arm64` in our CNBs
 /// - `linux-x64` in our classic buildpacks
 #[derive(Debug, Clone, ValueEnum)]
-#[clap(rename_all = "kebab-case")]
 pub(crate) enum SupportedNodeReleasePlatform {
-    LinuxX64,   // becomes "linux-x64"
-    LinuxArm64, // becomes "linux-arm64"
+    #[clap(name = "linux-x64")]
+    LinuxX64,
+    #[clap(name = "linux-arm64")]
+    LinuxArm64,
 }
 
 impl SupportedNodeReleasePlatform {
@@ -113,8 +114,9 @@ impl SupportedNodeReleasePlatform {
 /// The format of the changelog in the classic buildpack *should* be in "Keep a Changelog" format,
 /// but it's technically not. The CNB changelog does adhere to the strict version of the format.
 #[derive(Debug, Clone, ValueEnum)]
-#[clap(rename_all = "kebab-case")]
 pub(crate) enum OutputFormat {
-    Classic,        // becomes "classic"
-    KeepAChangelog, // becomes "keep-a-changelog"
+    #[clap(name = "classic")]
+    Classic,
+    #[clap(name = "keep-a-changelog")]
+    KeepAChangelog,
 }
