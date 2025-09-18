@@ -62,7 +62,6 @@ unwrap_used = "warn"
 enum_variant_names = "allow"
 missing_errors_doc = "allow"
 missing_panics_doc = "allow"
-module_name_repetitions = "allow"
 
 [workspace.dependencies]
 heroku-nodejs-utils = { path = "./crates/nodejs-utils" }
