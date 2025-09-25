@@ -1,10 +1,6 @@
-use anyhow as _;
 use clap as _;
 use hex as _;
-use keep_a_changelog_file as _;
-use regex as _;
 use sha2 as _;
-use ureq as _;
 
 pub mod available_parallelism;
 pub mod buildplan;
