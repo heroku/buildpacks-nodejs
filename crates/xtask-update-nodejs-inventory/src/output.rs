@@ -189,7 +189,10 @@ fn write_classic_changelog_format(
     // insert a single trailing blank line
     changelog.insert(index + lines_of_content, String::new());
 
-    fs::write(changelog_path, changelog.join("\n")).unwrap_or_else(|_| {
+    // ensure that the final changelog ends with a single trailing blank line
+    let changelog_contents = format!("{}\n", changelog.join("\n").trim_end());
+
+    fs::write(changelog_path, changelog_contents).unwrap_or_else(|_| {
         panic!(
             "Failed to write to changelog at '{}'",
             changelog_path.display()
