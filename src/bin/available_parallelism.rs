@@ -1,7 +1,7 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use heroku_nodejs_utils::available_parallelism::available_parallelism_env;
+use available_parallelism::available_parallelism_env;
 use libcnb::data::exec_d::ExecDProgramOutputKey;
 use libcnb::exec_d::write_exec_d_program_output;
 use std::collections::HashMap;

@@ -188,6 +188,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
+name = "available-parallelism"
+version = "0.1.0"
+
+[[package]]
 name = "backtrace"
 version = "0.3.75"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2322,6 +2326,7 @@ dependencies = [
 name = "nodejs-buildpack"
 version = "0.0.0"
 dependencies = [
+ "available-parallelism",
  "bullet_stream",
  "fun_run",
  "heroku-nodejs-utils",
