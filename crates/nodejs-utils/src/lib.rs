@@ -1,4 +1,3 @@
-pub mod available_parallelism;
 pub mod buildplan;
 pub mod config;
 pub mod error_handling;
