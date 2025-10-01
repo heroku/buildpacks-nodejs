@@ -1,8 +1,8 @@
 use super::main::YarnBuildpackError;
+use crate::utils::http::{ResponseExt, get};
+use crate::utils::npmjs_org::PackagePackument;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
-use heroku_nodejs_utils::http::{ResponseExt, get};
-use heroku_nodejs_utils::npmjs_org::PackagePackument;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -103,7 +103,7 @@ pub(crate) struct CliLayerMetadata {
 #[derive(Debug)]
 pub(crate) enum CliLayerError {
     TempFile(std::io::Error),
-    Download(heroku_nodejs_utils::http::Error),
+    Download(crate::utils::http::Error),
     Untar(PathBuf, std::io::Error),
     Installation(std::io::Error),
     Permissions(std::io::Error),

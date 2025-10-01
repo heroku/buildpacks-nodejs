@@ -1,6 +1,5 @@
-use crate::vrs::{Requirement, Version};
+use crate::utils::vrs::{Requirement, Version};
 use serde::{Deserialize, Deserializer, de};
-use std::collections::HashMap;
 use std::fmt::Display;
 use std::fs::File;
 use std::io::BufReader;
@@ -9,56 +8,40 @@ use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct PackageJson {
-    pub name: Option<String>,
-    pub version: Option<Version>,
-    pub engines: Option<Engines>,
-    pub scripts: Option<Scripts>,
-    pub main: Option<String>,
-    pub dependencies: Option<HashMap<String, String>>,
-    #[serde(rename = "devDependencies")]
-    pub dev_dependencies: Option<HashMap<String, String>>,
+pub(crate) struct PackageJson {
+    pub(crate) engines: Option<Engines>,
+    pub(crate) scripts: Option<Scripts>,
     #[serde(
         default,
         deserialize_with = "deserialize_package_manager",
         rename = "packageManager"
     )]
-    pub package_manager: Option<PackageManager>,
-}
-
-impl PackageJson {
-    #[must_use]
-    pub fn has_dependencies(&self) -> bool {
-        [self.dependencies.as_ref(), self.dev_dependencies.as_ref()]
-            .iter()
-            .any(|dep_group| dep_group.is_some_and(|deps| !deps.is_empty()))
-    }
+    pub(crate) package_manager: Option<PackageManager>,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct Engines {
-    pub node: Option<Requirement>,
-    pub npm: Option<Requirement>,
-    pub pnpm: Option<Requirement>,
-    pub yarn: Option<Requirement>,
+pub(crate) struct Engines {
+    pub(crate) node: Option<Requirement>,
+    pub(crate) npm: Option<Requirement>,
+    pub(crate) yarn: Option<Requirement>,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
-pub struct Scripts {
-    pub start: Option<String>,
-    pub build: Option<String>,
+pub(crate) struct Scripts {
+    pub(crate) start: Option<String>,
+    pub(crate) build: Option<String>,
     #[serde(rename = "heroku-prebuild")]
-    pub heroku_prebuild: Option<String>,
+    pub(crate) heroku_prebuild: Option<String>,
     #[serde(rename = "heroku-build")]
-    pub heroku_build: Option<String>,
+    pub(crate) heroku_build: Option<String>,
     #[serde(rename = "heroku-postbuild")]
-    pub heroku_postbuild: Option<String>,
+    pub(crate) heroku_postbuild: Option<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct PackageManager {
-    pub name: String,
-    pub version: Version,
+pub(crate) struct PackageManager {
+    pub(crate) name: String,
+    pub(crate) version: Version,
 }
 
 impl Display for PackageManager {
@@ -68,7 +51,7 @@ impl Display for PackageManager {
 }
 
 #[derive(Error, Debug)]
-pub enum PackageJsonError {
+pub(crate) enum PackageJsonError {
     #[error("Could not read package.json. {0}")]
     AccessError(std::io::Error),
     #[error("Could not parse package.json. {0}")]
@@ -83,7 +66,7 @@ impl PackageJson {
     /// * Invalid/malformed JSON
     /// * Path does not exist or is unreadable
     /// * Version strings are invalid/malformed
-    pub fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
+    pub(crate) fn read<P: AsRef<Path>>(path: P) -> Result<Self, PackageJsonError> {
         let file = File::open(path).map_err(PackageJsonError::AccessError)?;
         let rdr = BufReader::new(file);
         serde_json::from_reader(rdr).map_err(PackageJsonError::ParseError)
@@ -91,7 +74,7 @@ impl PackageJson {
 
     #[must_use]
     /// Fetches the build scripts from a `PackageJson` and returns them in priority order
-    pub fn build_scripts(&self) -> Vec<String> {
+    pub(crate) fn build_scripts(&self) -> Vec<String> {
         let mut scripts = vec![];
         if let Some(s) = &self.scripts {
             if s.heroku_prebuild.is_some() {
@@ -111,7 +94,7 @@ impl PackageJson {
 
     #[must_use]
     /// Determines if a given `PackageJson` has a start script defined
-    pub fn has_start_script(&self) -> bool {
+    pub(crate) fn has_start_script(&self) -> bool {
         self.scripts
             .as_ref()
             .is_some_and(|scripts| scripts.start.is_some())
@@ -160,18 +143,16 @@ mod tests {
     fn read_empty_package() {
         let mut f = Builder::new().tempfile().unwrap();
         write!(f, "{{ }}").unwrap();
-        let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(pkg.name, None);
-        assert_eq!(pkg.version, None);
+        let pkg = PackageJson::read(f.path());
+        assert!(pkg.is_ok());
     }
 
     #[test]
     fn read_valid_package() {
         let mut f = Builder::new().tempfile().unwrap();
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
-        let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(pkg.name.unwrap(), "foo");
-        assert_eq!(pkg.version.unwrap().to_string(), "0.0.0");
+        let pkg = PackageJson::read(f.path());
+        assert!(pkg.is_ok());
     }
 
     #[test]

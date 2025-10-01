@@ -5,7 +5,7 @@ use std::process::Command;
 #[derive(Debug)]
 pub(crate) enum VersionError {
     Command(CmdError),
-    Parse(String, heroku_nodejs_utils::vrs::VersionError),
+    Parse(String, crate::utils::vrs::VersionError),
 }
 
 pub(crate) struct Version<'a> {

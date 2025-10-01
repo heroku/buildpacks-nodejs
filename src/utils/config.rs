@@ -1,5 +1,5 @@
-use crate::error_handling::ErrorType::UserFacing;
-use crate::error_handling::{
+use crate::utils::error_handling::ErrorType::UserFacing;
+use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use bullet_stream::style;
@@ -11,7 +11,7 @@ use toml_edit::TableLike;
 const CONFIG_NAMESPACE: [&str; 5] = ["com", "heroku", "buildpacks", "nodejs", "actions"];
 const PRUNE_DEV_DEPENDENCY_CONFIG: &str = "prune_dev_dependencies";
 
-pub fn read_prune_dev_dependencies_from_project_toml(
+pub(crate) fn read_prune_dev_dependencies_from_project_toml(
     project_toml_path: &Path,
 ) -> Result<Option<bool>, ConfigError> {
     let project_toml_exists = project_toml_path
@@ -57,7 +57,7 @@ fn get_buildpack_namespaced_config(
 }
 
 #[derive(Debug)]
-pub enum ConfigError {
+pub(crate) enum ConfigError {
     CheckExists(std::io::Error),
     ReadProjectToml(std::io::Error),
     ParseProjectToml(toml_edit::TomlError),

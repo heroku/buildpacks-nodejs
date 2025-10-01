@@ -7,19 +7,15 @@ use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::{DepsLayerError, configure_yarn_cache};
 use super::install_yarn::{CliLayerError, install_yarn};
 use super::{cfg, cmd};
+use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
+use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
+use crate::utils::error_handling::ErrorMessage;
+use crate::utils::npmjs_org::{PackumentLayerError, packument_layer, resolve_package_packument};
+use crate::utils::package_json::{PackageJson, PackageJsonError};
+use crate::utils::vrs::{Requirement, VersionError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::buildplan::{
-    NodeBuildScriptsMetadataError, read_node_build_scripts_metadata,
-};
-use heroku_nodejs_utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
-use heroku_nodejs_utils::error_handling::ErrorMessage;
-use heroku_nodejs_utils::npmjs_org::{
-    PackumentLayerError, packument_layer, resolve_package_packument,
-};
-use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::{Requirement, VersionError};
 #[cfg(test)]
 use indoc as _;
 use indoc::indoc;

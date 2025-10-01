@@ -1,7 +1,7 @@
+use crate::utils::vrs::{Version, VersionError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;
-use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
 use std::{path::Path, process::Command};
 

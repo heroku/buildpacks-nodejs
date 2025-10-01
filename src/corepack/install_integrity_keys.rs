@@ -1,5 +1,5 @@
+use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult};
-use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::indoc;
 use libcnb::Env;
 use libcnb::data::layer_name;

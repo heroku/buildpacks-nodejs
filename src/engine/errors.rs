@@ -1,11 +1,11 @@
 use super::install_node::DistLayerError;
 use super::main::NodeJsEngineBuildpackError;
-use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
+use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
     on_package_json_error,
 };
+use bullet_stream::style;
 use indoc::formatdoc;
 
 pub(crate) fn on_nodejs_engine_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
@@ -172,8 +172,8 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
     use bullet_stream::strip_ansi;
-    use heroku_nodejs_utils::package_json::PackageJsonError;
     use insta::{assert_snapshot, with_settings};
     use test_support::test_name;
 
@@ -215,7 +215,7 @@ mod tests {
             .to_string();
         assert_error_snapshot(DistLayerError::Download {
             src_url: url.clone(),
-            source: heroku_nodejs_utils::http::Error::Request(url, create_reqwest_error()),
+            source: crate::utils::http::Error::Request(url, create_reqwest_error()),
         });
     }
 

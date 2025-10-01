@@ -1,4 +1,4 @@
-use heroku_nodejs_utils::{package_json::PackageJson, vrs::Requirement};
+use crate::utils::{package_json::PackageJson, vrs::Requirement};
 use std::path::Path;
 
 /// Reads parsed `engines.yarn` requirement from a `PackageJson`.

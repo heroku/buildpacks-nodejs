@@ -1,8 +1,8 @@
 use super::main::PnpmEngineBuildpackError;
-use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
+use bullet_stream::style;
 use indoc::formatdoc;
 
 pub(crate) fn on_pnpm_engine_error(error: PnpmEngineBuildpackError) -> ErrorMessage {

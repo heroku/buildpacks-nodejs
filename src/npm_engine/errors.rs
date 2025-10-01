@@ -1,14 +1,14 @@
 use super::install_npm::NpmInstallError;
 use super::main::NpmEngineBuildpackError;
 use super::{node, npm};
-use bullet_stream::style;
-use heroku_nodejs_utils::error_handling::ErrorType::{Internal, UserFacing};
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
+use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
     on_package_json_error,
 };
-use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
-use heroku_nodejs_utils::vrs::Requirement;
+use crate::utils::npmjs_org::PackumentLayerError;
+use crate::utils::vrs::Requirement;
+use bullet_stream::style;
 use indoc::formatdoc;
 
 pub(crate) fn on_npm_engine_error(error: NpmEngineBuildpackError) -> ErrorMessage {
@@ -189,10 +189,10 @@ fn on_fetch_npm_packument_error(error: &PackumentLayerError) -> ErrorMessage {
 mod tests {
     use super::NpmEngineBuildpackError;
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
+    use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
-    use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
@@ -226,10 +226,7 @@ mod tests {
     #[test]
     fn test_npm_engine_npm_install_download_error() {
         assert_error_snapshot(NpmInstallError::Download(
-            heroku_nodejs_utils::http::Error::Request(
-                "https://test/error".into(),
-                create_reqwest_error(),
-            ),
+            crate::utils::http::Error::Request("https://test/error".into(), create_reqwest_error()),
         ));
     }
 

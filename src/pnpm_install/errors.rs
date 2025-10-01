@@ -1,13 +1,11 @@
 use super::cmd::PnpmVersionError;
 use super::main::PnpmInstallBuildpackError;
-use bullet_stream::style;
-use heroku_nodejs_utils::buildplan::{
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError,
-};
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
+use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
 };
+use bullet_stream::style;
 use indoc::formatdoc;
 
 #[allow(clippy::too_many_lines)]
@@ -213,10 +211,10 @@ pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
+    use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
-    use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use std::io;
     use std::process::Command;

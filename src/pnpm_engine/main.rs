@@ -3,8 +3,8 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use crate::utils::error_handling::ErrorMessage;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
-use heroku_nodejs_utils::error_handling::ErrorMessage;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 
