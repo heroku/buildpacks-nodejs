@@ -1,15 +1,14 @@
-use crate::error_handling::ErrorType::UserFacing;
-use crate::package_json::PackageJsonError;
+use crate::utils::package_json::PackageJsonError;
 use bullet_stream::{Print, style};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
 use std::path::Path;
 
-pub const BUILDPACK_NAME: &str = "Heroku Node.js buildpack";
+pub(crate) const BUILDPACK_NAME: &str = "Heroku Node.js buildpack";
 
 const ISSUES_URL: &str = "https://github.com/heroku/buildpacks-nodejs/issues";
 
-pub fn on_framework_error<E>(error: &E) -> ErrorMessage
+pub(crate) fn on_framework_error<E>(error: &E) -> ErrorMessage
 where
     E: Display,
 {
@@ -32,12 +31,15 @@ where
 }
 
 #[must_use]
-pub fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
+pub(crate) fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
     let package_json = file_value("./package.json");
     let json_spec_url = style::url("https://www.json.org/");
     match error {
         PackageJsonError::AccessError(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::Yes,
+                SuggestSubmitIssue::No,
+            ))
             .header(format!("Error reading {package_json}"))
             .body(formatdoc! { "
                 The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
@@ -50,7 +52,10 @@ pub fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
             .create(),
 
         PackageJsonError::ParseError(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+            .error_type(ErrorType::UserFacing(
+                SuggestRetryBuild::Yes,
+                SuggestSubmitIssue::No,
+            ))
             .header(format!("Error parsing {package_json}"))
             .body(formatdoc! { "
                 The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
@@ -66,7 +71,7 @@ pub fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
 
 #[bon::builder(finish_fn = create, on(String, into), state_mod(vis = "pub"))]
 #[allow(clippy::needless_pass_by_value)]
-pub fn error_message(
+pub(crate) fn error_message(
     header: String,
     body: String,
     error_type: ErrorType,
@@ -122,12 +127,12 @@ pub fn error_message(
     }
 }
 
-pub fn file_value(value: impl AsRef<Path>) -> String {
+pub(crate) fn file_value(value: impl AsRef<Path>) -> String {
     style::value(value.as_ref().to_string_lossy())
 }
 
 #[derive(Debug)]
-pub struct ErrorMessage {
+pub(crate) struct ErrorMessage {
     debug_info: Option<String>,
     message: String,
 }
@@ -147,20 +152,20 @@ impl Display for ErrorMessage {
 }
 
 #[derive(Debug, PartialEq)]
-pub enum ErrorType {
+pub(crate) enum ErrorType {
     Framework,
     Internal,
     UserFacing(SuggestRetryBuild, SuggestSubmitIssue),
 }
 
 #[derive(Debug, PartialEq)]
-pub enum SuggestRetryBuild {
+pub(crate) enum SuggestRetryBuild {
     Yes,
     No,
 }
 
 #[derive(Debug, PartialEq)]
-pub enum SuggestSubmitIssue {
+pub(crate) enum SuggestSubmitIssue {
     Yes,
     No,
 }

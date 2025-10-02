@@ -1,14 +1,12 @@
 use super::main::NpmInstallBuildpackError;
 use super::npm;
-use bullet_stream::style;
-use fun_run::CmdError;
-use heroku_nodejs_utils::buildplan::{
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError,
-};
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
+use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     on_package_json_error,
 };
+use bullet_stream::style;
+use fun_run::CmdError;
 use indoc::formatdoc;
 use std::io;
 
@@ -181,10 +179,10 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
+    use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::CommandWithName;
-    use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;

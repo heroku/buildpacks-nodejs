@@ -21,7 +21,7 @@ const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(10);
 const DEFAULT_RETRIES: u32 = 5;
 
 #[bon::builder]
-pub async fn get<U>(
+pub(crate) async fn get<U>(
     #[builder(start_fn)] //
     url: U,
     headers: Option<HeaderMap>,
@@ -71,7 +71,7 @@ where
     U: IntoUrl + std::fmt::Display + Clone,
     State: get_builder::State,
 {
-    pub fn call_sync(self) -> Result<Response, Error>
+    pub(crate) fn call_sync(self) -> Result<Response, Error>
     where
         State: get_builder::IsComplete,
     {
@@ -80,18 +80,16 @@ where
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum Error {
+pub(crate) enum Error {
     #[error("Request to `{0}` failed\nError: {1}")]
     Request(String, reqwest_middleware::Error),
-    #[error("Reading response from request to `{0}` failed\nError: {1}")]
-    ReadResponse(String, reqwest_middleware::Error),
     #[error("Could not open file at `{0}` for download of `{1}`\nError: {2}")]
     OpenFile(PathBuf, String, io::Error),
     #[error("Could not write to file at `{0}` for download of `{1}`\nError: {2}")]
     WriteFile(PathBuf, String, io::Error),
 }
 
-pub trait ResponseExt {
+pub(crate) trait ResponseExt {
     #[allow(async_fn_in_trait)]
     async fn download_to_file(self, download_to: impl AsRef<Path>) -> Result<(), Error>;
     fn download_to_file_sync(self, download_to: impl AsRef<Path>) -> Result<(), Error>;

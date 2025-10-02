@@ -5,16 +5,16 @@
 
 use super::install_npm::{NpmInstallError, install_npm};
 use super::{node, npm};
+use crate::utils::error_handling::ErrorMessage;
+use crate::utils::npmjs_org::{
+    PackagePackument, PackumentLayerError, packument_layer, resolve_package_packument,
+};
+use crate::utils::package_json::{PackageJson, PackageJsonError};
+use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;
-use heroku_nodejs_utils::error_handling::ErrorMessage;
-use heroku_nodejs_utils::npmjs_org::{
-    PackagePackument, PackumentLayerError, packument_layer, resolve_package_packument,
-};
-use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::{Requirement, Version};
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use std::path::Path;

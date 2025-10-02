@@ -1387,39 +1387,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
-name = "heroku-nodejs-utils"
-version = "0.0.0"
-dependencies = [
- "async-trait",
- "bon",
- "bullet_stream",
- "futures 0.3.31",
- "http",
- "hyper",
- "hyper-util",
- "indoc",
- "insta",
- "libcnb",
- "libcnb-data",
- "libherokubuildpack",
- "node-semver",
- "regex",
- "reqwest",
- "reqwest-middleware",
- "reqwest-retry",
- "serde",
- "serde_json",
- "tempfile",
- "test_support",
- "thiserror 2.0.16",
- "tokio",
- "tokio-util",
- "toml 0.9.5",
- "toml_edit 0.23.4",
- "wiremock",
-]
-
-[[package]]
 name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2112,7 +2079,6 @@ dependencies = [
  "tar",
  "thiserror 2.0.16",
  "toml 0.9.5",
- "ureq",
 ]
 
 [[package]]
@@ -2326,25 +2292,36 @@ dependencies = [
 name = "nodejs-buildpack"
 version = "0.0.0"
 dependencies = [
+ "async-trait",
  "available-parallelism",
+ "bon",
  "bullet_stream",
  "fun_run",
- "heroku-nodejs-utils",
+ "futures 0.3.31",
+ "http",
+ "hyper",
+ "hyper-util",
  "indoc",
  "insta",
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
+ "node-semver",
  "regex",
  "reqwest",
  "reqwest-middleware",
+ "reqwest-retry",
  "serde",
  "serde_json",
  "sha2",
  "tempfile",
  "test_support",
+ "thiserror 2.0.16",
  "tokio",
+ "tokio-util",
  "toml 0.9.5",
+ "toml_edit 0.23.4",
+ "wiremock",
 ]
 
 [[package]]
@@ -3262,7 +3239,7 @@ dependencies = [
  "openssl-probe",
  "rustls-pki-types",
  "schannel",
- "security-framework 3.4.0",
+ "security-framework 3.5.1",
 ]
 
 [[package]]
@@ -3360,9 +3337,9 @@ dependencies = [
 
 [[package]]
 name = "security-framework"
-version = "3.4.0"
+version = "3.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60b369d18893388b345804dc0007963c99b7d665ae71d275812d828c6f089640"
+checksum = "b3297343eaf830f66ede390ea39da1d462b6b0c1b000f420d0a83f898bbbe6ef"
 dependencies = [
  "bitflags 2.9.4",
  "core-foundation 0.10.1",

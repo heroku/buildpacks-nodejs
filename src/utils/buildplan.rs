@@ -1,16 +1,16 @@
-use libcnb_data::buildpack_plan::BuildpackPlan;
+use libcnb::data::buildpack_plan::BuildpackPlan;
 
 #[derive(Debug, Default, PartialEq)]
-pub struct NodeBuildScriptsMetadata {
-    pub enabled: Option<bool>,
-    pub skip_pruning: Option<bool>,
+pub(crate) struct NodeBuildScriptsMetadata {
+    pub(crate) enabled: Option<bool>,
+    pub(crate) skip_pruning: Option<bool>,
 }
 
-pub const NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME: &str = "heroku/nodejs";
+pub(crate) const NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME: &str = "heroku/nodejs";
 const NODE_BUILD_SCRIPTS_METADATA_ENABLED_KEY: &str = "enabled";
 const NODE_BUILD_SCRIPTS_METADATA_SKIP_PRUNING_KEY: &str = "skip_pruning";
 
-pub fn read_node_build_scripts_metadata(
+pub(crate) fn read_node_build_scripts_metadata(
     buildpack_plan: &BuildpackPlan,
 ) -> Result<NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError> {
     buildpack_plan
@@ -60,7 +60,7 @@ pub fn read_node_build_scripts_metadata(
 }
 
 #[derive(Debug)]
-pub enum NodeBuildScriptsMetadataError {
+pub(crate) enum NodeBuildScriptsMetadataError {
     InvalidEnabledValue(toml::Value),
     InvalidSkipPruningValue(toml::Value),
 }
@@ -68,7 +68,7 @@ pub enum NodeBuildScriptsMetadataError {
 #[cfg(test)]
 mod test {
     use super::*;
-    use libcnb_data::buildpack_plan::{BuildpackPlan, Entry};
+    use libcnb::data::buildpack_plan::{BuildpackPlan, Entry};
     use toml::{Table, toml};
 
     #[test]

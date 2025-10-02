@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug)]
-pub struct VersionError(String);
+pub(crate) struct VersionError(String);
 impl Error for VersionError {}
 impl fmt::Display for VersionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -14,7 +14,7 @@ impl fmt::Display for VersionError {
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(try_from = "String")]
-pub struct Version(NSVersion);
+pub(crate) struct Version(NSVersion);
 
 impl Version {
     /// Parses a Node.js semver string as a `Version`.
@@ -22,7 +22,7 @@ impl Version {
     /// # Errors
     ///
     /// Invalid Node.js semver strings will return a `VersionError`
-    pub fn parse(version: &str) -> Result<Self, VersionError> {
+    pub(crate) fn parse(version: &str) -> Result<Self, VersionError> {
         let trimmed = version.trim();
         match NSVersion::parse(trimmed) {
             Ok(v) => Ok(Version(v)),
@@ -32,20 +32,8 @@ impl Version {
 
     /// Returns the major version identifier.
     #[must_use]
-    pub fn major(&self) -> u64 {
+    pub(crate) fn major(&self) -> u64 {
         self.0.major
-    }
-
-    /// Returns the minor version identifier.
-    #[must_use]
-    pub fn minor(&self) -> u64 {
-        self.0.minor
-    }
-
-    /// Returns the patch version identifier.
-    #[must_use]
-    pub fn patch(&self) -> u64 {
-        self.0.patch
     }
 }
 
@@ -71,7 +59,7 @@ impl fmt::Display for Version {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
-pub struct Requirement(Range);
+pub(crate) struct Requirement(Range);
 
 impl VersionRequirement<Version> for Requirement {
     fn satisfies(&self, version: &Version) -> bool {
@@ -90,7 +78,7 @@ impl Requirement {
     /// # Errors
     ///
     /// Invalid version strings wil return a `VersionErr`
-    pub fn parse(requirement: &str) -> Result<Self, VersionError> {
+    pub(crate) fn parse(requirement: &str) -> Result<Self, VersionError> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
             return Ok(Requirement(Range::any()));
@@ -108,12 +96,12 @@ impl Requirement {
     }
 
     #[must_use]
-    pub fn satisfies(&self, ver: &Version) -> bool {
+    pub(crate) fn satisfies(&self, ver: &Version) -> bool {
         self.0.satisfies(&ver.0)
     }
 
     #[must_use]
-    pub fn allows_any(&self, other: &Requirement) -> bool {
+    pub(crate) fn allows_any(&self, other: &Requirement) -> bool {
         self.0.allows_any(&other.0)
     }
 }

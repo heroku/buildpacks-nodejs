@@ -1,10 +1,10 @@
 use super::cmd;
 use super::main::CorepackBuildpackError;
+use crate::utils::package_json::PackageManager;
+use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::package_json::PackageManager;
-use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{

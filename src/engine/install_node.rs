@@ -1,9 +1,9 @@
 use super::main::NodeJsEngineBuildpackError;
+use crate::utils::http::{ResponseExt, get};
+use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::http::{ResponseExt, get};
-use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -152,7 +152,7 @@ pub(crate) enum DistLayerError {
     TempFile(std::io::Error),
     Download {
         src_url: String,
-        source: heroku_nodejs_utils::http::Error,
+        source: crate::utils::http::Error,
     },
     Untar {
         src_path: PathBuf,

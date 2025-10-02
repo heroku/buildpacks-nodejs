@@ -1,13 +1,13 @@
-use crate::http::{ResponseExt, get};
-use crate::vrs::{Requirement, Version};
+use crate::utils::http::{ResponseExt, get};
+use crate::utils::vrs::{Requirement, Version};
 use bullet_stream::global::print;
 use http::{HeaderMap, HeaderValue, StatusCode};
 use libcnb::Buildpack;
 use libcnb::build::BuildContext;
+use libcnb::data::layer::{LayerName, LayerNameError};
 use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use libcnb_data::layer::{LayerName, LayerNameError};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -23,7 +23,7 @@ struct PackumentMetadata {
     last_modified: Option<String>,
 }
 
-pub fn packument_layer<B, E>(
+pub(crate) fn packument_layer<B, E>(
     context: &BuildContext<B>,
     package_name: impl AsRef<str>,
     on_error: impl Fn(PackumentLayerError) -> E,
@@ -137,11 +137,11 @@ fn parse_packument(packument_path: &Path) -> Result<Packument, PackumentLayerErr
 }
 
 #[derive(Debug, Error)]
-pub enum PackumentLayerError {
+pub(crate) enum PackumentLayerError {
     #[error("Packument layer name error:\n{0}")]
     InvalidLayerName(LayerNameError),
     #[error("Packument request error:\n{0}")]
-    FetchPackument(crate::http::Error),
+    FetchPackument(crate::utils::http::Error),
     #[error("Packument read error:\n{0}")]
     ReadPackument(std::io::Error),
     #[error("Packument parse error:\n{0}")]
@@ -149,23 +149,23 @@ pub enum PackumentLayerError {
 }
 
 #[derive(Deserialize, Clone)]
-pub struct Packument {
-    pub versions: HashMap<Version, PackagePackument>,
+pub(crate) struct Packument {
+    pub(crate) versions: HashMap<Version, PackagePackument>,
 }
 
 #[derive(Deserialize, Clone)]
-pub struct PackagePackument {
-    pub version: Version,
-    pub dist: PackagePackumentDist,
+pub(crate) struct PackagePackument {
+    pub(crate) version: Version,
+    pub(crate) dist: PackagePackumentDist,
 }
 
 #[derive(Deserialize, Clone)]
-pub struct PackagePackumentDist {
-    pub tarball: String,
+pub(crate) struct PackagePackumentDist {
+    pub(crate) tarball: String,
 }
 
 #[must_use]
-pub fn resolve_package_packument(
+pub(crate) fn resolve_package_packument(
     packument: &Packument,
     requirement: &Requirement,
 ) -> Option<PackagePackument> {

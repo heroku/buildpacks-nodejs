@@ -1,4 +1,4 @@
-use heroku_nodejs_utils::package_json::PackageJson;
+use crate::utils::package_json::PackageJson;
 
 /// Return the package manager name from package.json if it's present and
 /// supported.
@@ -13,7 +13,7 @@ pub(crate) fn get_supported_package_manager(pkg_json: &PackageJson) -> Option<St
 #[cfg(test)]
 mod tests {
     use super::*;
-    use heroku_nodejs_utils::{package_json::PackageManager, vrs::Version};
+    use crate::utils::{package_json::PackageManager, vrs::Version};
 
     #[test]
     fn test_get_supported_package_manager_yarn() {

@@ -1,7 +1,7 @@
 use super::main::{NodeLinker, UnknownNodeLinker, Yarn};
+use crate::utils::vrs::{Version, VersionError};
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
-use heroku_nodejs_utils::vrs::{Version, VersionError};
 use libcnb::Env;
 use std::{
     path::{Path, PathBuf},

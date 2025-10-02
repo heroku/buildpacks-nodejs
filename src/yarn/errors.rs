@@ -2,18 +2,16 @@ use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::DepsLayerError;
 use super::install_yarn::CliLayerError;
 use super::main::YarnBuildpackError;
-use bullet_stream::style;
-use fun_run::CmdError;
-use heroku_nodejs_utils::buildplan::{
-    NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError,
-};
-use heroku_nodejs_utils::error_handling::ErrorType::UserFacing;
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
+use crate::utils::error_handling::ErrorType::UserFacing;
+use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
 };
-use heroku_nodejs_utils::npmjs_org::PackumentLayerError;
-use heroku_nodejs_utils::vrs::{Requirement, VersionError};
+use crate::utils::npmjs_org::PackumentLayerError;
+use crate::utils::vrs::{Requirement, VersionError};
+use bullet_stream::style;
+use fun_run::CmdError;
 use indoc::formatdoc;
 
 pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
@@ -385,11 +383,11 @@ fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
+    use crate::utils::vrs::Version;
     use crate::yarn::main::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
-    use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::vrs::Version;
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
@@ -411,10 +409,7 @@ mod tests {
     #[test]
     fn test_yarn_cli_layer_download_error() {
         assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Download(
-            heroku_nodejs_utils::http::Error::Request(
-                "https://test/error".into(),
-                create_reqwest_error(),
-            ),
+            crate::utils::http::Error::Request("https://test/error".into(), create_reqwest_error()),
         )));
     }
 

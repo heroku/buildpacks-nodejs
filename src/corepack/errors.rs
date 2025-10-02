@@ -1,11 +1,11 @@
 use super::cmd::CorepackVersionError;
 use super::main::CorepackBuildpackError;
-use bullet_stream::style;
-use fun_run::CmdError;
-use heroku_nodejs_utils::error_handling::{
+use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
     on_package_json_error,
 };
+use bullet_stream::style;
+use fun_run::CmdError;
 use indoc::formatdoc;
 use std::path::Path;
 
@@ -120,10 +120,10 @@ fn on_package_manager_missing_error() -> ErrorMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::package_json::PackageJsonError;
+    use crate::utils::vrs::{Version, VersionError};
     use bullet_stream::strip_ansi;
     use fun_run::CommandWithName;
-    use heroku_nodejs_utils::package_json::PackageJsonError;
-    use heroku_nodejs_utils::vrs::{Version, VersionError};
     use insta::{assert_snapshot, with_settings};
     use std::path::PathBuf;
     use std::process::Command;

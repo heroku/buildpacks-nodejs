@@ -4,9 +4,9 @@ use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
+use crate::utils::error_handling::on_framework_error;
 use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
-use heroku_nodejs_utils::error_handling::on_framework_error;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::detect::DetectResultBuilder;
@@ -22,6 +22,7 @@ mod npm_engine;
 mod npm_install;
 mod pnpm_engine;
 mod pnpm_install;
+mod utils;
 mod yarn;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;

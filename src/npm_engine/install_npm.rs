@@ -1,10 +1,10 @@
 use super::main::NpmEngineBuildpackError;
+use crate::utils::http::{ResponseExt, get};
+use crate::utils::npmjs_org::PackagePackument;
+use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use fun_run::{CommandWithName, NamedOutput};
-use heroku_nodejs_utils::http::{ResponseExt, get};
-use heroku_nodejs_utils::npmjs_org::PackagePackument;
-use heroku_nodejs_utils::vrs::Version;
 use libcnb::Env;
 use libcnb::data::layer_name;
 use libcnb::layer::{
@@ -181,7 +181,7 @@ pub(crate) struct NpmEngineLayerMetadata {
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallError {
-    Download(heroku_nodejs_utils::http::Error),
+    Download(crate::utils::http::Error),
     OpenTarball(PathBuf, std::io::Error),
     DecompressTarball(PathBuf, std::io::Error),
     RemoveExistingNpmInstall(fun_run::CmdError),

@@ -7,16 +7,14 @@ use super::cmd::PnpmVersionError;
 use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use super::{cmd, store};
+use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
+use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
+use crate::utils::error_handling::ErrorMessage;
+use crate::utils::package_json::{PackageJson, PackageJsonError};
+use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use heroku_nodejs_utils::buildplan::{
-    NodeBuildScriptsMetadataError, read_node_build_scripts_metadata,
-};
-use heroku_nodejs_utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
-use heroku_nodejs_utils::error_handling::ErrorMessage;
-use heroku_nodejs_utils::package_json::{PackageJson, PackageJsonError};
-use heroku_nodejs_utils::vrs::{Requirement, Version};
 use indoc::{formatdoc, indoc};
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
