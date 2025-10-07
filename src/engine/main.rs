@@ -3,8 +3,6 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use super::configure_available_parallelism::configure_available_parallelism;
-use super::configure_web_env::configure_web_env;
 use super::install_node::{DistLayerError, install_node};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
@@ -67,8 +65,6 @@ pub(crate) fn build(
     ));
 
     env = install_node(context, &env, target_artifact)?;
-    configure_web_env(context)?;
-    configure_available_parallelism(context)?;
 
     let launchjs = ["server.js", "index.js"]
         .map(|name| context.app_dir.join(name))

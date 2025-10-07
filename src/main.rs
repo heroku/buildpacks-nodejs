@@ -9,8 +9,9 @@ use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
+use libcnb::data::layer_name;
 use libcnb::detect::DetectResultBuilder;
-use libcnb::{Env, buildpack_main};
+use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
 #[cfg(test)]
@@ -81,6 +82,26 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let mut env = Env::from_current();
 
         (env, build_result_builder) = engine::main::build(&context, env, build_result_builder)?;
+
+        // TODO: this code could be moved to the start of the build execution but will remain here until the package managers are cleaned up
+        utils::runtime_env::register_execd_script(
+            &context,
+            layer_name!("web_env"),
+            additional_buildpack_binary_path!("web_env"),
+        )?;
+
+        utils::runtime_env::register_execd_script(
+            &context,
+            layer_name!("available_parallelism"),
+            additional_buildpack_binary_path!("available_parallelism"),
+        )?;
+
+        utils::build_env::set_default_env_var(
+            &context,
+            &mut env,
+            available_parallelism::env_name(),
+            available_parallelism::env_value(),
+        )?;
 
         // reproduces the group order detection logic from
         // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml
