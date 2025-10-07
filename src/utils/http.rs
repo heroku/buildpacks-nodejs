@@ -1,3 +1,4 @@
+use crate::utils::async_runtime::ASYNC_RUNTIME;
 use bullet_stream::style;
 use futures::stream::TryStreamExt;
 use http::{Extensions, HeaderMap};
@@ -7,18 +8,16 @@ use reqwest_retry::RetryTransientMiddleware;
 use reqwest_retry::policies::ExponentialBackoff;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::sync::LazyLock;
 use std::sync::atomic::AtomicU32;
 use std::sync::atomic::Ordering::SeqCst;
 use std::time::Duration;
-use tokio::runtime::Runtime;
-use tokio_util::compat::FuturesAsyncReadCompatExt;
+use tokio_util::io::StreamReader;
 
-const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
-const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(10);
+pub(crate) const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(10);
 
-const DEFAULT_RETRIES: u32 = 5;
+pub(crate) const DEFAULT_RETRIES: u32 = 5;
 
 #[bon::builder]
 pub(crate) async fn get<U>(
@@ -102,11 +101,7 @@ impl ResponseExt for Response {
 
         let timer = bullet_stream::global::print::sub_start_timer("Downloading");
 
-        let mut reader = FuturesAsyncReadCompatExt::compat(
-            self.bytes_stream()
-                .map_err(io::Error::other)
-                .into_async_read(),
-        );
+        let mut reader = StreamReader::new(self.bytes_stream().map_err(io::Error::other));
 
         let mut writer = tokio::fs::File::options()
             .write(true)
@@ -183,14 +178,6 @@ impl Middleware for RetryLoggingMiddleware {
         response
     }
 }
-
-static ASYNC_RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
-    tokio::runtime::Builder::new_multi_thread()
-        .enable_io()
-        .enable_time()
-        .build()
-        .expect("Should be able to construct the Async Runtime")
-});
 
 #[cfg(test)]
 mod test {

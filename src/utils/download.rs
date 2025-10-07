@@ -1,0 +1,198 @@
+use crate::utils;
+use crate::utils::async_runtime::ASYNC_RUNTIME;
+use async_compression::tokio::bufread::GzipDecoder;
+use bullet_stream::global::print;
+use futures::StreamExt;
+use futures::stream::TryStreamExt;
+use sha2::{Digest, Sha256};
+use std::io;
+use std::path::{Path, PathBuf};
+use std::time::Duration;
+use tokio::fs::File as AsyncFile;
+use tokio::io::{AsyncWriteExt, BufReader as AsyncBufReader, copy as async_copy};
+use tokio_util::compat::FuturesAsyncReadCompatExt;
+use tokio_util::io::InspectReader;
+
+pub(crate) fn download_sync<'a, T>(downloader: T) -> Result<(), DownloaderError>
+where
+    T: Downloader<'a>,
+{
+    ASYNC_RUNTIME.block_on(async { download(downloader).await })
+}
+
+#[allow(clippy::too_many_lines)]
+pub(crate) async fn download<'a, T>(downloader: T) -> Result<(), DownloaderError>
+where
+    T: Downloader<'a>,
+{
+    let response = utils::http::get(downloader.source_url())
+        .connect_timeout(downloader.connect_timeout())
+        .read_timeout(downloader.read_timeout())
+        .max_retries(downloader.max_retries())
+        .call()
+        .await
+        .map_err(|e| DownloaderError::Request {
+            url: downloader.source_url().to_string(),
+            source: e,
+        })?;
+
+    let timer = print::sub_start_timer("Downloading");
+
+    let checksum_type = downloader.checksum_validator();
+
+    #[allow(clippy::manual_map)]
+    let mut hasher = match checksum_type {
+        Some(ChecksumValidator::Sha256(_)) => Some(Sha256::new()),
+        None => None,
+    };
+
+    // ensure the writer is dropped in this scope so the InspectReader is dropped and is no longer borrowing the hash digest
+    {
+        let mut inspectable_reader = AsyncBufReader::new(
+            // the inspect reader lets us pipe this decompressed output to both the output file and the hash digest
+            InspectReader::new(
+                // and we need to convert the http stream into an async reader
+                FuturesAsyncReadCompatExt::compat(
+                    response
+                        .bytes_stream()
+                        .map_err(io::Error::other)
+                        .into_async_read(),
+                ),
+                |bytes| {
+                    if let Some(hasher) = &mut hasher {
+                        hasher.update(bytes);
+                    }
+                },
+            ),
+        );
+
+        let create_write_error = |e| DownloaderError::Write {
+            url: downloader.source_url().to_string(),
+            destination: downloader.destination().to_path_buf(),
+            source: e,
+        };
+
+        match downloader.extractor() {
+            Some(Extractor::Gzip(options)) => {
+                let mut reader = GzipDecoder::new(inspectable_reader);
+                // Enable/Disable support for multistream gz files. In this mode, the reader expects the input to
+                // be a sequence of individually gzipped data streams, each with its own header and trailer,
+                // ending at EOF. This is standard behavior for gzip readers.
+                reader.multiple_members(options.multiple_members);
+                let mut tar_archive = tokio_tar::Archive::new(reader);
+                let mut entries = tar_archive.entries().map_err(create_write_error)?;
+                while let Some(entry) = entries.next().await {
+                    let mut entry = entry.map_err(create_write_error)?;
+                    let path = entry.path().map_err(create_write_error)?;
+                    let stripped_path = path
+                        .components()
+                        .skip(options.strip_components)
+                        .collect::<PathBuf>();
+                    if stripped_path.components().count() > 0 {
+                        entry
+                            .unpack(downloader.destination().join(stripped_path))
+                            .await
+                            .map_err(create_write_error)?;
+                    }
+                }
+            }
+            None => {
+                let mut writer = AsyncFile::create(downloader.destination())
+                    .await
+                    .map_err(create_write_error)?;
+                async_copy(&mut inspectable_reader, &mut writer)
+                    .await
+                    .map_err(create_write_error)?;
+                writer.flush().await.map_err(create_write_error)?;
+            }
+        }
+    }
+
+    timer.done();
+
+    if let Some(hasher) = hasher.take() {
+        match checksum_type {
+            Some(ChecksumValidator::Sha256(expected_value)) => {
+                let actual_checksum = hasher.finalize();
+                if expected_value != actual_checksum.to_vec() {
+                    Err(DownloaderError::ChecksumMismatch {
+                        url: downloader.source_url().to_string(),
+                        expected_checksum: hex::encode(expected_value),
+                        actual_checksum: format!("{actual_checksum:x}"),
+                    })?;
+                }
+            }
+            None => {}
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) trait Downloader<'a> {
+    fn source_url(&self) -> &str;
+
+    fn destination(&self) -> &Path;
+
+    fn checksum_validator(&self) -> Option<ChecksumValidator<'a>> {
+        None
+    }
+
+    fn extractor(&self) -> Option<Extractor> {
+        None
+    }
+
+    fn connect_timeout(&self) -> Duration {
+        crate::utils::http::DEFAULT_CONNECT_TIMEOUT
+    }
+
+    fn read_timeout(&self) -> Duration {
+        crate::utils::http::DEFAULT_READ_TIMEOUT
+    }
+
+    fn max_retries(&self) -> u32 {
+        crate::utils::http::DEFAULT_RETRIES
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum Extractor {
+    Gzip(GzipOptions),
+}
+
+#[derive(Debug)]
+pub(crate) struct GzipOptions {
+    pub(crate) multiple_members: bool,
+    pub(crate) strip_components: usize,
+}
+
+impl Default for GzipOptions {
+    fn default() -> Self {
+        Self {
+            multiple_members: true,
+            strip_components: 0,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum ChecksumValidator<'a> {
+    Sha256(&'a [u8]),
+}
+
+pub(crate) enum DownloaderError {
+    Request {
+        url: String,
+        source: utils::http::Error,
+    },
+    Write {
+        url: String,
+        destination: PathBuf,
+        source: io::Error,
+    },
+    ChecksumMismatch {
+        url: String,
+        expected_checksum: String,
+        actual_checksum: String,
+    },
+}

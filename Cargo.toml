@@ -7,12 +7,14 @@ edition.workspace = true
 workspace = true
 
 [dependencies]
+async-compression = { version = "0.4", default-features = false, features = ["tokio", "gzip"] }
 async-trait = "0.1"
 available-parallelism.workspace = true
 bon = "3"
 bullet_stream = "0.11"
 fun_run = "0.6"
 futures = { version = "0.3", default-features = false, features = ["io-compat"] }
+hex = "0.4"
 http = "1"
 indoc = "2"
 libcnb = { version = "=0.29.1", features = ["trace"] }
@@ -32,6 +34,7 @@ sha2 = "0.10.9"
 tempfile = "3"
 thiserror = "2"
 tokio = { version = "1", default-features = false, features = ["rt-multi-thread", "time", "macros"] }
+tokio-tar = "0.3"
 tokio-util = { version = "0.7", default-features = false, features = ["compat", "io"] }
 toml = "0.9"
 toml_edit = "0.23"

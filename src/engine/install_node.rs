@@ -1,5 +1,7 @@
 use super::main::NodeJsEngineBuildpackError;
-use crate::utils::http::{ResponseExt, get};
+use crate::utils::download::{
+    ChecksumValidator, Downloader, DownloaderError, Extractor, GzipOptions, download_sync,
+};
 use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
@@ -10,16 +12,10 @@ use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use libherokubuildpack::fs::move_directory_contents;
 use libherokubuildpack::inventory::artifact::Artifact;
-use libherokubuildpack::tar::decompress_tarball;
 use serde::{Deserialize, Serialize};
-use sha2::digest::Output;
-use sha2::{Digest, Sha256};
-use std::fs;
-use std::io::Read;
+use sha2::Sha256;
 use std::path::{Path, PathBuf};
-use tempfile::NamedTempFile;
 
 pub(crate) fn install_node(
     context: &BuildpackBuildContext,
@@ -58,84 +54,74 @@ pub(crate) fn install_node(
             print::sub_bullet(format!("Reusing Node.js {version_tag}"));
         }
         LayerState::Empty { .. } => {
-            distribution_layer.write_metadata(new_metadata)?;
-
-            let node_tgz = NamedTempFile::new().map_err(DistLayerError::TempFile)?;
-
-            get(&distribution_artifact.url)
-                .call_sync()
-                .and_then(|res| res.download_to_file_sync(node_tgz.path()))
-                .map_err(|e| DistLayerError::Download {
-                    src_url: distribution_artifact.url.clone(),
-                    source: e,
-                })?;
-
-            print::sub_bullet("Verifying checksum");
-            let digest = sha256(node_tgz.path()).map_err(|e| DistLayerError::ReadTempFile {
-                path: node_tgz.path().to_path_buf(),
-                source: e,
-            })?;
-            if distribution_artifact.checksum.value != digest.to_vec() {
-                Err(DistLayerError::ChecksumVerification {
-                    url: distribution_artifact.url.clone(),
-                    expected: format!(
-                        "{:x}",
-                        Sha256::digest(&distribution_artifact.checksum.value)
-                    ),
-                    actual: format!("{digest:x}"),
-                })?;
-            }
-
-            print::sub_bullet(format!("Extracting Node.js {}", style::value(&version_tag)));
-            let node_tgz_path = node_tgz.path().to_path_buf();
-            decompress_tarball(&mut node_tgz.into_file(), distribution_layer.path()).map_err(
-                |e| DistLayerError::Untar {
-                    src_path: node_tgz_path,
-                    dst_path: distribution_layer.path().clone(),
-                    source: e,
+            download_sync(NodejsArtifactDownloader {
+                source: distribution_artifact,
+                destination: distribution_layer.path(),
+            })
+            .map_err(|e| match e {
+                DownloaderError::Request { url, source } => DistLayerError::Download {
+                    src_url: url,
+                    source,
                 },
-            )?;
-
-            let timer = print::sub_start_timer(format!(
-                "Installing Node.js {}",
-                style::value(&version_tag)
-            ));
-            let dist_name = extract_tarball_prefix(&distribution_artifact.url)
-                .ok_or_else(|| DistLayerError::TarballPrefix(distribution_artifact.url.clone()))?;
-            let dist_path = distribution_layer.path().join(dist_name);
-            move_directory_contents(&dist_path, distribution_layer.path()).map_err(|e| {
-                DistLayerError::Installation {
-                    src_path: dist_path,
-                    dst_path: distribution_layer.path(),
-                    source: e,
-                }
+                DownloaderError::Write {
+                    url,
+                    destination,
+                    source,
+                } => DistLayerError::Installation {
+                    url,
+                    dst_path: destination,
+                    source,
+                },
+                DownloaderError::ChecksumMismatch {
+                    url,
+                    expected_checksum,
+                    actual_checksum,
+                } => DistLayerError::ChecksumVerification {
+                    url,
+                    actual: actual_checksum,
+                    expected: expected_checksum,
+                },
             })?;
-            timer.done();
+
+            // TODO: this output is meant to match the existing test fixtures but it should be
+            //       changed to just output "Installed Node.js version: {}" in the future.
+            let version_info = style::value(version_tag);
+            print::sub_bullet("Verifying checksum");
+            print::sub_bullet(format!("Extracting Node.js {version_info}"));
+            print::sub_start_timer(format!("Installing Node.js {version_info}")).done();
+            distribution_layer.write_metadata(new_metadata)?;
         }
     }
 
     Ok(distribution_layer.read_env()?.apply(Scope::Build, env))
 }
 
-fn sha256(path: impl AsRef<Path>) -> Result<Output<Sha256>, std::io::Error> {
-    let mut file = fs::File::open(path.as_ref())?;
-    let mut buffer = [0x00; 10 * 1024];
-    let mut sha256: Sha256 = Sha256::default();
+pub(crate) type NodejsArtifact = Artifact<Version, Sha256, Option<()>>;
 
-    let mut read = file.read(&mut buffer)?;
-    while read > 0 {
-        Digest::update(&mut sha256, &buffer[..read]);
-        read = file.read(&mut buffer)?;
-    }
-
-    Ok(sha256.finalize())
+struct NodejsArtifactDownloader<'a> {
+    source: &'a NodejsArtifact,
+    destination: PathBuf,
 }
 
-fn extract_tarball_prefix(url: &str) -> Option<&str> {
-    url.rfind('/').and_then(|last_slash| {
-        url.rfind(".tar.gz")
-            .map(|tar_gz_index| &url[last_slash + 1..tar_gz_index])
-    })
+impl<'a> Downloader<'a> for NodejsArtifactDownloader<'a> {
+    fn source_url(&self) -> &str {
+        &self.source.url
+    }
+
+    fn destination(&self) -> &Path {
+        &self.destination
+    }
+
+    fn checksum_validator(&self) -> Option<ChecksumValidator<'a>> {
+        Some(ChecksumValidator::Sha256(&self.source.checksum.value))
+    }
+
+    fn extractor(&self) -> Option<Extractor> {
+        Some(Extractor::Gzip(GzipOptions {
+            strip_components: 1,
+            ..GzipOptions::default()
+        }))
+    }
 }
 
 const LAYER_VERSION: &str = "1";
@@ -149,19 +135,12 @@ pub(crate) struct DistLayerMetadata {
 
 #[derive(Debug)]
 pub(crate) enum DistLayerError {
-    TempFile(std::io::Error),
     Download {
         src_url: String,
         source: crate::utils::http::Error,
     },
-    Untar {
-        src_path: PathBuf,
-        dst_path: PathBuf,
-        source: std::io::Error,
-    },
-    TarballPrefix(String),
     Installation {
-        src_path: PathBuf,
+        url: String,
         dst_path: PathBuf,
         source: std::io::Error,
     },
@@ -169,10 +148,6 @@ pub(crate) enum DistLayerError {
         url: String,
         expected: String,
         actual: String,
-    },
-    ReadTempFile {
-        path: PathBuf,
-        source: std::io::Error,
     },
 }
 

@@ -56,16 +56,6 @@ fn on_unknown_version_error(version: String) -> ErrorMessage {
 #[allow(clippy::too_many_lines)]
 fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
     match error {
-        DistLayerError::TempFile(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-            .header("Failed to create temporary download file")
-            .body(formatdoc! { "
-                The {BUILDPACK_NAME} downloads the target Node.js distribution to a temporary file \
-                before installation but an unexpected error occurred.
-            "})
-            .debug_info(e.to_string())
-            .create(),
-
         DistLayerError::Download { src_url, source } => {
             let nodejs_status_url = style::url("https://status.nodejs.org/");
             let src_url = style::url(src_url);
@@ -85,48 +75,19 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
                 .create()
         }
 
-        DistLayerError::Untar {
-            src_path,
-            dst_path,
-            source,
-        } => {
-            let src_path = file_value(src_path);
-            let dst_path = file_value(dst_path);
-            error_message()
-                .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-                .header("Failed to unpack Node.js distribution")
-                .body(formatdoc! {"
-                    An unexpected I/O error occurred while trying to unpack from {src_path} to {dst_path}.
-                "})
-                .debug_info(source.to_string())
-                .create()
-        }
-
-        DistLayerError::TarballPrefix(url) => {
-            let url = style::url(url);
-            error_message()
-                .error_type(Internal)
-                .header("Could not determine tarball extraction directory")
-                .body(formatdoc! {"
-                    An unexpected error occurred while trying to determine the name of the tarball \
-                    extraction directory from {url}.
-                "})
-                .create()
-        }
-
         DistLayerError::Installation {
-            src_path,
+            url,
             dst_path,
             source,
         } => {
-            let src_path = file_value(src_path);
+            let url = style::url(url);
             let dst_path = file_value(dst_path);
             error_message()
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
                 .header("Failed to copy Node.js distribution contents")
                 .body(formatdoc! {"
                     An unexpected I/O error occurred while copying the contents of the Node.js \
-                    distribution from {src_path} to the installation directory at {dst_path}. 
+                    distribution from {url} to the installation directory at {dst_path}.
                 "})
                 .debug_info(source.to_string())
                 .create()
@@ -151,19 +112,6 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
                     - Expected: {expected}
                     - Actual: {actual}    
                 "})
-                .create()
-        }
-
-        DistLayerError::ReadTempFile { path, source } => {
-            let path = file_value(path);
-            error_message()
-                .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-                .header("Failed to read downloaded Node.js distribution")
-                .body(formatdoc! {"
-                    An unexpected I/O error occurred while trying to read the downloaded Node.js \
-                    distribution from {path}.
-                "})
-                .debug_info(source.to_string())
                 .create()
         }
     }
@@ -205,11 +153,6 @@ mod tests {
     }
 
     #[test]
-    fn test_dist_layer_temp_file_error() {
-        assert_error_snapshot(DistLayerError::TempFile(create_io_error("Disk full")));
-    }
-
-    #[test]
     fn test_dist_layer_download_error() {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
             .to_string();
@@ -220,26 +163,10 @@ mod tests {
     }
 
     #[test]
-    fn test_dist_layer_untar_error() {
-        assert_error_snapshot(DistLayerError::Untar {
-            src_path: "/tmp/some-temp-file".into(),
-            dst_path: "/layers/buildpack/some-layer-dir".into(),
-            source: create_io_error("permission denied"),
-        });
-    }
-
-    #[test]
-    fn test_dist_layer_tarball_prefix_error() {
-        assert_error_snapshot(DistLayerError::TarballPrefix(
-            "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-                .to_string(),
-        ));
-    }
-
-    #[test]
     fn test_dist_layer_installation_error() {
         assert_error_snapshot(DistLayerError::Installation {
-            src_path: "/tmp/path-to-src".into(),
+            url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                .into(),
             dst_path: "/layers/buildpack/path-to-dst".into(),
             source: create_io_error("unexpected end of file"),
         });
@@ -252,14 +179,6 @@ mod tests {
                 .into(),
             expected: "d41d8cd98f00b204e9800998ecf8427e".into(),
             actual: "e62ff0123a74adfc6903d59a449cbdb0".into(),
-        });
-    }
-
-    #[test]
-    fn test_dist_layer_read_temp_file_error() {
-        assert_error_snapshot(DistLayerError::ReadTempFile {
-            path: "/tmp/path-to-src".into(),
-            source: create_io_error("read-only filesystem or storage medium"),
         });
     }
 
