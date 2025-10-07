@@ -1,5 +1,4 @@
 use crate::corepack::main::CorepackBuildpackError;
-use crate::engine::main::NodeJsEngineBuildpackError;
 use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
@@ -19,7 +18,6 @@ use libcnb_test as _;
 use regex as _;
 
 mod corepack;
-mod engine;
 mod npm_engine;
 mod npm_install;
 mod package_json;
@@ -91,7 +89,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             .and_then(runtime::resolve_runtime)
             .inspect(runtime::log_resolved_runtime)?;
 
-        env = engine::main::build(&context, env, resolved_runtime)?;
+        runtime::install_runtime(&context, &mut env, resolved_runtime)?;
 
         // TODO: this code could be moved to the start of the build execution but will remain here until the package managers are cleaned up
         utils::runtime_env::register_execd_script(
@@ -175,7 +173,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::NodeEngine(error) => engine::main::on_error(error),
                 NodeJsBuildpackError::Corepack(error) => corepack::main::on_error(error),
                 NodeJsBuildpackError::NpmEngine(error) => npm_engine::main::on_error(error),
                 NodeJsBuildpackError::NpmInstall(error) => npm_install::main::on_error(error),
@@ -257,7 +254,6 @@ fn detect_corepack_npm_engine_npm_install_group(
 
 #[derive(Debug)]
 enum NodeJsBuildpackError {
-    NodeEngine(NodeJsEngineBuildpackError),
     Corepack(CorepackBuildpackError),
     NpmEngine(NpmEngineBuildpackError),
     NpmInstall(NpmInstallBuildpackError),

@@ -4,10 +4,11 @@ use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::vrs::Requirement;
-use crate::{BuildpackResult, package_json};
+use crate::{BuildpackBuildContext, BuildpackResult, package_json, runtimes};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use indoc::formatdoc;
+use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use std::env::consts;
 use std::path::Path;
@@ -99,6 +100,20 @@ fn unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessage {
             - Check if this buildpack includes the requested Node.js version in its inventory file at {inventory_url}
         "})
         .create()
+}
+
+pub(crate) fn install_runtime(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
+    resolved_runtime: ResolvedRuntime,
+) -> BuildpackResult<()> {
+    match resolved_runtime {
+        ResolvedRuntime::Nodejs(artifact) => {
+            // TODO: confirm installation and version by calling `node --version`
+            runtimes::nodejs::install(context, env, &artifact)?;
+            Ok(())
+        }
+    }
 }
 
 #[cfg(test)]

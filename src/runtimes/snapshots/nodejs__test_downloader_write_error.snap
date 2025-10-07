@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-engine/src/errors.rs
+source: src/runtimes/nodejs.rs
 ---
 - Debug Info:
-  - read-only filesystem or storage medium
+  - test I/O error
 
-! Failed to read downloaded Node.js distribution
+! Failed to copy Node.js distribution contents
 !
-! An unexpected I/O error occurred while trying to read the downloaded Node.js distribution from `/tmp/path-to-src`.
+! An unexpected I/O error occurred while writing the contents of the Node.js distribution from https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz to the installation directory at `/layers/heroku_nodejs/nodejs`.
 !
 ! Use the debug information above to troubleshoot and retry your build.
 !
