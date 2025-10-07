@@ -9,7 +9,8 @@ use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
-use libcnb::data::layer_name;
+use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::{layer_name, process_type};
 use libcnb::detect::DetectResultBuilder;
 use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
@@ -81,7 +82,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
 
-        (env, build_result_builder) = engine::main::build(&context, env, build_result_builder)?;
+        env = engine::main::build(&context, env)?;
 
         // TODO: this code could be moved to the start of the build execution but will remain here until the package managers are cleaned up
         utils::runtime_env::register_execd_script(
@@ -102,6 +103,26 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             available_parallelism::env_name(),
             available_parallelism::env_value(),
         )?;
+
+        // TODO: this code should be moved to the end of the build execution but can't until the package managers are cleaned up
+        if let Some(path) = ["server.js", "index.js"]
+            .map(|name| context.app_dir.join(name))
+            .iter()
+            .find(|path| path.exists())
+        {
+            build_result_builder = build_result_builder.launch(
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(
+                            process_type!("web"),
+                            ["node", &path.to_string_lossy()],
+                        )
+                        .default(true)
+                        .build(),
+                    )
+                    .build(),
+            );
+        }
 
         // reproduces the group order detection logic from
         // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml

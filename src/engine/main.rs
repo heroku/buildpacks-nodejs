@@ -11,9 +11,6 @@ use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildp
 use bullet_stream::global::print;
 use bullet_stream::style;
 use libcnb::Env;
-use libcnb::build::BuildResultBuilder;
-use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::process_type;
 use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use sha2::Sha256;
@@ -23,11 +20,7 @@ const INVENTORY: &str = include_str!("../../inventory/nodejs.toml");
 
 const LTS_VERSION: &str = "22.x";
 
-pub(crate) fn build(
-    context: &BuildpackBuildContext,
-    mut env: Env,
-    mut build_result_builder: BuildResultBuilder,
-) -> BuildpackResult<(Env, BuildResultBuilder)> {
+pub(crate) fn build(context: &BuildpackBuildContext, mut env: Env) -> BuildpackResult<Env> {
     print::bullet("Checking Node.js version");
 
     let inv: Inventory<Version, Sha256, Option<()>> =
@@ -66,25 +59,7 @@ pub(crate) fn build(
 
     env = install_node(context, &env, target_artifact)?;
 
-    let launchjs = ["server.js", "index.js"]
-        .map(|name| context.app_dir.join(name))
-        .iter()
-        .find(|path| path.exists())
-        .map(|path| {
-            LaunchBuilder::new()
-                .process(
-                    ProcessBuilder::new(process_type!("web"), ["node", &path.to_string_lossy()])
-                        .default(true)
-                        .build(),
-                )
-                .build()
-        });
-
-    if let Some(launchjs) = launchjs {
-        build_result_builder = build_result_builder.launch(launchjs);
-    }
-
-    Ok((env, build_result_builder))
+    Ok(env)
 }
 
 pub(crate) fn on_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
