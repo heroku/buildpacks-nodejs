@@ -1,4 +1,5 @@
 use crate::utils::package_json::PackageJsonError;
+use crate::{BuildpackError, NodeJsBuildpackError};
 use bullet_stream::{Print, style};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
@@ -148,6 +149,12 @@ impl Display for ErrorMessage {
         }
         let output = log.error(&self.message);
         write!(f, "{}", String::from_utf8_lossy(&output))
+    }
+}
+
+impl From<ErrorMessage> for BuildpackError {
+    fn from(value: ErrorMessage) -> Self {
+        libcnb::Error::BuildpackError(NodeJsBuildpackError::Message(value))
     }
 }
 

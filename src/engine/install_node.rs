@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 pub(crate) fn install_node(
     context: &BuildpackBuildContext,
     env: &Env,
-    distribution_artifact: &Artifact<Version, Sha256, Option<()>>,
+    distribution_artifact: &NodejsArtifact,
 ) -> BuildpackResult<Env> {
     print::bullet("Installing Node.js distribution");
 

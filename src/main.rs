@@ -4,7 +4,7 @@ use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
-use crate::utils::error_handling::on_framework_error;
+use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
 use libcnb::build::BuildResultBuilder;
@@ -22,8 +22,11 @@ mod corepack;
 mod engine;
 mod npm_engine;
 mod npm_install;
+mod package_json;
 mod pnpm_engine;
 mod pnpm_install;
+mod runtime;
+mod runtimes;
 mod utils;
 mod yarn;
 
@@ -82,7 +85,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
 
-        env = engine::main::build(&context, env)?;
+        print::bullet("Checking Node.js version");
+        let resolved_runtime = runtime::determine_runtime(&context.app_dir)
+            .inspect(runtime::log_requested_runtime)
+            .and_then(runtime::resolve_runtime)
+            .inspect(runtime::log_resolved_runtime)?;
+
+        env = engine::main::build(&context, env, resolved_runtime)?;
 
         // TODO: this code could be moved to the start of the build execution but will remain here until the package managers are cleaned up
         utils::runtime_env::register_execd_script(
@@ -173,6 +182,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmEngine(error) => pnpm_engine::main::on_error(error),
                 NodeJsBuildpackError::Yarn(error) => yarn::main::on_error(error),
+                NodeJsBuildpackError::Message(error) => error,
             },
             framework_error => on_framework_error(&framework_error),
         };
@@ -254,6 +264,7 @@ enum NodeJsBuildpackError {
     PnpmInstall(PnpmInstallBuildpackError),
     PnpmEngine(PnpmEngineBuildpackError),
     Yarn(YarnBuildpackError),
+    Message(ErrorMessage),
 }
 
 impl From<NodeJsBuildpackError> for BuildpackError {

@@ -1,56 +1,16 @@
 use super::install_node::DistLayerError;
 use super::main::NodeJsEngineBuildpackError;
-use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
+use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
-    BUILDPACK_NAME, ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
-    on_package_json_error,
+    ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
 use bullet_stream::style;
 use indoc::formatdoc;
 
 pub(crate) fn on_nodejs_engine_error(error: NodeJsEngineBuildpackError) -> ErrorMessage {
     match error {
-        NodeJsEngineBuildpackError::InventoryParse(e) => on_inventory_parse_error(&e),
-        NodeJsEngineBuildpackError::PackageJson(e) => on_package_json_error(e),
-        NodeJsEngineBuildpackError::UnknownVersion(e) => on_unknown_version_error(e),
         NodeJsEngineBuildpackError::DistLayer(e) => on_dist_layer_error(e),
     }
-}
-
-fn on_inventory_parse_error(error: &toml::de::Error) -> ErrorMessage {
-    let inventory_file = file_value("./inventory.toml");
-    error_message()
-        .error_type(Internal)
-        .header("Couldn't parse Node.js inventory")
-        .body(formatdoc! {"
-            The {BUILDPACK_NAME} embeds the content of the {inventory_file} found in this buildpack's \
-            repository into its binary to look up and resolve Node.js versions but the content isn't \
-            valid TOML.
-        "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_unknown_version_error(version: String) -> ErrorMessage {
-    let node_releases_url = style::url(format!(
-        "https://github.com/nodejs/node/releases?q=v{version}&expanded=true"
-    ));
-    let inventory_url = style::url(
-        "https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-engine/inventory.toml",
-    );
-    let version = style::value(version);
-    error_message()
-        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-        .header(format!("Unknown Node.js version: {version}"))
-        .body(formatdoc! {"
-            The Node.js version provided could not be resolved to a known release in this buildpack's \
-            inventory of Node.js releases.
-            
-            Suggestions:
-            - Confirm if this is a valid Node.js release at {node_releases_url}
-            - Check if this buildpack includes the requested Node.js version in its inventory file at {inventory_url}     
-        "})
-        .create()
 }
 
 #[allow(clippy::too_many_lines)]
@@ -120,37 +80,9 @@ fn on_dist_layer_error(error: DistLayerError) -> ErrorMessage {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::package_json::PackageJsonError;
     use bullet_stream::strip_ansi;
     use insta::{assert_snapshot, with_settings};
     use test_support::test_name;
-
-    #[test]
-    fn test_inventory_parse_error() {
-        assert_error_snapshot(NodeJsEngineBuildpackError::InventoryParse(
-            create_toml_error(),
-        ));
-    }
-
-    #[test]
-    fn test_package_json_access_error() {
-        assert_error_snapshot(NodeJsEngineBuildpackError::PackageJson(
-            PackageJsonError::AccessError(create_io_error("test I/O error blah")),
-        ));
-    }
-    #[test]
-    fn test_package_json_parse_error() {
-        assert_error_snapshot(NodeJsEngineBuildpackError::PackageJson(
-            PackageJsonError::ParseError(create_json_error()),
-        ));
-    }
-
-    #[test]
-    fn test_unknown_version_error() {
-        assert_error_snapshot(NodeJsEngineBuildpackError::UnknownVersion(
-            "0.0.0".to_string(),
-        ));
-    }
 
     #[test]
     fn test_dist_layer_download_error() {
@@ -202,14 +134,6 @@ mod tests {
 
     fn create_io_error(text: &str) -> std::io::Error {
         std::io::Error::other(text)
-    }
-
-    fn create_toml_error() -> toml::de::Error {
-        toml::from_str::<toml::Table>("[[artifacts").unwrap_err()
-    }
-
-    fn create_json_error() -> serde_json::error::Error {
-        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
     }
 
     fn create_reqwest_error() -> reqwest_middleware::Error {

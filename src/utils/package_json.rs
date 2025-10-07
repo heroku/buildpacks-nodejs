@@ -21,7 +21,6 @@ pub(crate) struct PackageJson {
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub(crate) struct Engines {
-    pub(crate) node: Option<Requirement>,
     pub(crate) npm: Option<Requirement>,
     pub(crate) yarn: Option<Requirement>,
 }
@@ -153,24 +152,6 @@ mod tests {
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
         let pkg = PackageJson::read(f.path());
         assert!(pkg.is_ok());
-    }
-
-    #[test]
-    fn read_valid_package_with_node_engine() {
-        let mut f = Builder::new().tempfile().unwrap();
-        write!(
-            f,
-            "{{
-            \"name\": \"foo\",
-            \"version\": \"0.0.0\",
-            \"engines\": {{
-                \"node\": \"16.0.0\"
-            }}
-        }}"
-        )
-        .unwrap();
-        let pkg = PackageJson::read(f.path()).unwrap();
-        assert_eq!(&pkg.engines.unwrap().node.unwrap().to_string(), "16.0.0");
     }
 
     #[test]
