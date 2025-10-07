@@ -1,5 +1,4 @@
 use crate::{BuildpackBuildContext, BuildpackResult};
-use available_parallelism::available_parallelism_env;
 use libcnb::additional_buildpack_binary_path;
 use libcnb::data::layer_name;
 use libcnb::layer::UncachedLayerDefinition;
@@ -16,15 +15,12 @@ pub(crate) fn configure_available_parallelism(
         },
     )?;
 
-    let (available_parallelism_env_key, available_parallelism_env_value) =
-        available_parallelism_env();
-
     // set for the build time env (for webpack plugins or other tools that spin up processes)
     available_parallelism_layer.write_env(LayerEnv::new().chainable_insert(
         Scope::Build,
         ModificationBehavior::Override,
-        available_parallelism_env_key,
-        available_parallelism_env_value,
+        available_parallelism::env_name(),
+        available_parallelism::env_value(),
     ))?;
 
     // set for the run time env
