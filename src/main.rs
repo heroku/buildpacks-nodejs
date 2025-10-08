@@ -83,8 +83,11 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
 
+        let package_json =
+            package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
+
         print::bullet("Checking Node.js version");
-        let resolved_runtime = runtime::determine_runtime(&context.app_dir)
+        let resolved_runtime = Ok(runtime::determine_runtime(&package_json))
             .inspect(runtime::log_requested_runtime)
             .and_then(runtime::resolve_runtime)
             .inspect(runtime::log_resolved_runtime)?;
