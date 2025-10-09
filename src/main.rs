@@ -1,7 +1,7 @@
 use crate::corepack::main::CorepackBuildpackError;
 use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
-use crate::package_manager::{RequestedNpm, RequestedPackageManager};
+use crate::package_manager::{RequestedPackageManager, ResolvedPackageManager};
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
@@ -23,6 +23,7 @@ mod npm_engine;
 mod npm_install;
 mod package_json;
 mod package_manager;
+mod package_managers;
 mod pnpm_engine;
 mod pnpm_install;
 mod runtime;
@@ -69,6 +70,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             .build()
     }
 
+    #[allow(clippy::too_many_lines)]
     fn build(
         &self,
         context: BuildpackBuildContext,
@@ -168,18 +170,24 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 && matches!(requested_package_manager, RequestedPackageManager::Npm(_))
             {
                 print::bullet("Determining npm package information");
-                package_manager::log_requested_package_manager(&requested_package_manager);
-                match requested_package_manager {
-                    RequestedPackageManager::Npm(requested_npm) => match requested_npm {
-                        RequestedNpm::NpmEngine(requirement) => {
-                            (env, build_result_builder) = npm_engine::main::build(
-                                &context,
-                                env,
-                                build_result_builder,
-                                &requirement,
-                            )?;
-                        }
-                    },
+                let resolved_package_manager = Ok(requested_package_manager)
+                    .inspect(package_manager::log_requested_package_manager)
+                    .and_then(|requested_package_manager| {
+                        package_manager::resolve_package_manager(
+                            &context,
+                            &requested_package_manager,
+                        )
+                    })
+                    .inspect(package_manager::log_resolved_package_manager)?;
+                match resolved_package_manager {
+                    ResolvedPackageManager::Npm(_, npm_package_packument) => {
+                        (env, build_result_builder) = npm_engine::main::build(
+                            &context,
+                            env,
+                            build_result_builder,
+                            &npm_package_packument,
+                        )?;
+                    }
                 }
             }
             (_, build_result_builder) =
