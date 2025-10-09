@@ -14,7 +14,6 @@ pub(crate) enum RequestedPackageManager {
 
 // TODO: support `packageManager` field
 // TODO: support `devEngines` field
-#[allow(dead_code)]
 pub(crate) enum RequestedNpm {
     NpmEngine(Requirement),
 }
