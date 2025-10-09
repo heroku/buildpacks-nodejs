@@ -181,8 +181,10 @@ pub(crate) enum SuggestSubmitIssue {
 pub(crate) mod test_util {
     use crate::utils::error_handling::ErrorMessage;
     use bullet_stream::strip_ansi;
+    use fun_run::{CmdError, CommandWithName};
     use insta::{assert_snapshot, with_settings};
     use std::path::PathBuf;
+    use std::process::Command;
     use test_support::test_name;
 
     pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
@@ -216,5 +218,12 @@ pub(crate) mod test_util {
 
     pub(crate) fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
+
+    pub(crate) fn create_cmd_error(command: impl Into<String>) -> CmdError {
+        Command::new("false")
+            .named(command.into())
+            .named_output()
+            .unwrap_err()
     }
 }

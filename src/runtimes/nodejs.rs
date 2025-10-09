@@ -1,14 +1,15 @@
 use crate::utils::download::{
     ChecksumValidator, Downloader, DownloaderError, Extractor, GzipOptions, download_sync,
 };
-use crate::utils::error_handling::ErrorType::UserFacing;
+use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
-use crate::utils::vrs::{Requirement, Version};
+use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use fun_run::CommandWithName;
 use indoc::formatdoc;
 use libcnb::Env;
 use libcnb::data::layer_name;
@@ -21,6 +22,7 @@ use libherokubuildpack::inventory::artifact::Artifact;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::LazyLock;
 
 pub(crate) static NODEJS_INVENTORY: LazyLock<NodejsInventory> = LazyLock::new(|| {
@@ -212,11 +214,45 @@ impl From<NodejsArtifact> for NodejsLayerMetadata {
     }
 }
 
+pub(crate) fn get_node_version(env: &Env) -> BuildpackResult<Version> {
+    Command::new("node")
+        .envs(env)
+        .arg("--version")
+        .named_output()
+        .try_into()
+        .map_err(|e| create_get_node_version_command_error(&e).into())
+}
+
+fn create_get_node_version_command_error(error: &VersionCommandError) -> ErrorMessage {
+    match error {
+        VersionCommandError::Command(e) => error_message()
+            .error_type(Internal)
+            .header("Failed to determine Node.js version")
+            .body(formatdoc! { "
+                An unexpected error occurred while attempting to determine the current Node.js version \
+                from the system.
+            " })
+            .debug_info(e.to_string())
+            .create(),
+
+        VersionCommandError::Parse(stdout, e) => error_message()
+            .error_type(Internal)
+            .header("Failed to parse Node.js version")
+            .body(formatdoc! { "
+                An unexpected error occurred while parsing Node.js version information from '{stdout}'.
+            " })
+            .debug_info(e.to_string())
+            .create()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::utils;
-    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_reqwest_error};
+    use crate::utils::error_handling::test_util::{
+        assert_error_snapshot, create_cmd_error, create_reqwest_error,
+    };
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
         checksum::Checksum,
@@ -301,6 +337,23 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                 actual_checksum: "e62ff0123a74adfc6903d59a449cbdb0".into(),
                 expected_checksum: "d41d8cd98f00b204e9800998ecf8427e".into(),
             },
+        ));
+    }
+
+    #[test]
+    fn test_get_node_version_parse_error() {
+        assert_error_snapshot(&create_get_node_version_command_error(
+            &VersionCommandError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
+    }
+
+    #[test]
+    fn test_get_node_version_command_error() {
+        assert_error_snapshot(&create_get_node_version_command_error(
+            &VersionCommandError::Command(create_cmd_error("node --version")),
         ));
     }
 }

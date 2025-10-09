@@ -1,7 +1,6 @@
 use super::install_npm::NpmInstallError;
 use super::main::NpmEngineBuildpackError;
-use super::{node, npm};
-use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
+use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -11,8 +10,6 @@ use indoc::formatdoc;
 pub(crate) fn on_npm_engine_error(error: NpmEngineBuildpackError) -> ErrorMessage {
     match error {
         NpmEngineBuildpackError::NpmInstall(e) => on_npm_install_error(e),
-        NpmEngineBuildpackError::NodeVersion(e) => on_node_version_error(e),
-        NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e),
     }
 }
 
@@ -72,57 +69,10 @@ fn on_npm_install_error(error: NpmInstallError) -> ErrorMessage {
     }
 }
 
-fn on_node_version_error(error: node::VersionError) -> ErrorMessage {
-    match error {
-        node::VersionError::Command(e) => error_message()
-            .error_type(Internal)
-            .header("Failed to determine Node.js version")
-            .body(formatdoc! { "
-                An unexpected error occurred while attempting to determine the current Node.js version \
-                from the system.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        node::VersionError::Parse(stdout, e) => error_message()
-            .error_type(Internal)
-            .header("Failed to parse Node.js version")
-            .body(formatdoc! { "
-                An unexpected error occurred while parsing Node.js version information from '{stdout}'.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
-}
-
-fn on_npm_version_error(error: npm::VersionError) -> ErrorMessage {
-    match error {
-        npm::VersionError::Command(e) => error_message()
-            .error_type(Internal)
-            .header("Failed to determine npm version")
-            .body(formatdoc! { "
-                An unexpected error occurred while attempting to determine the current npm version \
-                from the system.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        npm::VersionError::Parse(stdout, e) => error_message()
-            .error_type(Internal)
-            .header("Failed to parse npm version")
-            .body(formatdoc! { "
-                An unexpected error occurred while parsing npm version information from '{stdout}'.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::NpmEngineBuildpackError;
     use super::*;
-    use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use insta::{assert_snapshot, with_settings};
@@ -164,40 +114,6 @@ mod tests {
         assert_error_snapshot(NpmInstallError::InstallNpm(create_cmd_error(
             "npm -g install /layers/npm/install/package",
         )));
-    }
-
-    #[test]
-    fn test_npm_engine_node_version_command_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::NodeVersion(
-            node::VersionError::Command(create_cmd_error("node --version")),
-        ));
-    }
-
-    #[test]
-    fn test_npm_engine_node_version_parse_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::NodeVersion(
-            node::VersionError::Parse(
-                "not.a.version".into(),
-                Version::parse("not.a.version").unwrap_err(),
-            ),
-        ));
-    }
-
-    #[test]
-    fn test_npm_engine_npm_version_command_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::NpmVersion(
-            npm::VersionError::Command(create_cmd_error("npm --version")),
-        ));
-    }
-
-    #[test]
-    fn test_npm_engine_npm_version_parse_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::NpmVersion(
-            npm::VersionError::Parse(
-                "not.a.version".into(),
-                Version::parse("not.a.version").unwrap_err(),
-            ),
-        ));
     }
 
     fn assert_error_snapshot(error: impl Into<NpmEngineBuildpackError>) {

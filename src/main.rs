@@ -181,11 +181,15 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     .inspect(package_manager::log_resolved_package_manager)?;
                 match resolved_package_manager {
                     ResolvedPackageManager::Npm(_, npm_package_packument) => {
+                        let node_version = runtimes::nodejs::get_node_version(&env)?;
+                        let bundled_npm_version = package_managers::npm::get_version(&env)?;
                         (env, build_result_builder) = npm_engine::main::build(
                             &context,
                             env,
                             build_result_builder,
                             &npm_package_packument,
+                            &node_version,
+                            &bundled_npm_version,
                         )?;
                     }
                 }
