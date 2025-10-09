@@ -21,7 +21,6 @@ pub(crate) struct PackageJson {
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub(crate) struct Engines {
-    pub(crate) npm: Option<Requirement>,
     pub(crate) yarn: Option<Requirement>,
 }
 

@@ -4,7 +4,6 @@ use super::{node, npm};
 use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
-    on_package_json_error,
 };
 use crate::utils::npm_registry::PackumentLayerError;
 use crate::utils::vrs::Requirement;
@@ -13,10 +12,6 @@ use indoc::formatdoc;
 
 pub(crate) fn on_npm_engine_error(error: NpmEngineBuildpackError) -> ErrorMessage {
     match error {
-        NpmEngineBuildpackError::PackageJson(e) => on_package_json_error(e),
-        NpmEngineBuildpackError::MissingNpmEngineRequirement => {
-            on_missing_npm_engine_requirement_error()
-        }
         NpmEngineBuildpackError::NpmVersionResolve(requirement) => {
             on_npm_version_resolve_error(&requirement)
         }
@@ -25,19 +20,6 @@ pub(crate) fn on_npm_engine_error(error: NpmEngineBuildpackError) -> ErrorMessag
         NpmEngineBuildpackError::NpmVersion(e) => on_npm_version_error(e),
         NpmEngineBuildpackError::FetchNpmPackument(e) => on_fetch_npm_packument_error(&e),
     }
-}
-
-fn on_missing_npm_engine_requirement_error() -> ErrorMessage {
-    let engines_key = style::value("engines.npm");
-    let package_json = style::value("package.json");
-    error_message()
-        .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
-        .header(format!("Missing {engines_key} key in {package_json}"))
-        .body(formatdoc! { "
-            This buildpack requires the `engines.npm` key to determine which engine versions to \
-            install.
-        " })
-        .create()
 }
 
 fn on_npm_version_resolve_error(requirement: &Requirement) -> ErrorMessage {
@@ -189,32 +171,12 @@ fn on_fetch_npm_packument_error(error: &PackumentLayerError) -> ErrorMessage {
 mod tests {
     use super::NpmEngineBuildpackError;
     use super::*;
-    use crate::utils::package_json::PackageJsonError;
     use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_npm_engine_package_json_access_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::PackageJson(
-            PackageJsonError::AccessError(create_io_error("test I/O error blah")),
-        ));
-    }
-
-    #[test]
-    fn test_npm_engine_package_json_parse_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::PackageJson(
-            PackageJsonError::ParseError(create_json_error()),
-        ));
-    }
-
-    #[test]
-    fn test_npm_engine_missing_npm_engine_requirement_error() {
-        assert_error_snapshot(NpmEngineBuildpackError::MissingNpmEngineRequirement);
-    }
 
     #[test]
     fn test_npm_engine_npm_version_resolve_error() {
@@ -321,10 +283,6 @@ mod tests {
 
     fn create_io_error(text: &str) -> std::io::Error {
         std::io::Error::other(text)
-    }
-
-    fn create_json_error() -> serde_json::error::Error {
-        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
     }
 
     fn create_cmd_error(command: impl Into<String>) -> CmdError {

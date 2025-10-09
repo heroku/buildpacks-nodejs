@@ -1,6 +1,7 @@
 use crate::corepack::main::CorepackBuildpackError;
 use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
+use crate::package_manager::{RequestedNpm, RequestedPackageManager};
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
@@ -21,6 +22,7 @@ mod corepack;
 mod npm_engine;
 mod npm_install;
 mod package_json;
+mod package_manager;
 mod pnpm_engine;
 mod pnpm_install;
 mod runtime;
@@ -134,6 +136,8 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             );
         }
 
+        let requested_package_manager = package_manager::determine_package_manager(&package_json);
+
         // reproduces the group order detection logic from
         // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml
         if detect_corepack_pnpm_install_group(&context)? {
@@ -160,9 +164,23 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     corepack::main::build(&context, env, build_result_builder)?;
             }
             // npm engine is optional for this group
-            if npm_engine::main::detect(&context)? {
-                (env, build_result_builder) =
-                    npm_engine::main::build(&context, env, build_result_builder)?;
+            if let Some(requested_package_manager) = requested_package_manager
+                && matches!(requested_package_manager, RequestedPackageManager::Npm(_))
+            {
+                print::bullet("Determining npm package information");
+                package_manager::log_requested_package_manager(&requested_package_manager);
+                match requested_package_manager {
+                    RequestedPackageManager::Npm(requested_npm) => match requested_npm {
+                        RequestedNpm::NpmEngine(requirement) => {
+                            (env, build_result_builder) = npm_engine::main::build(
+                                &context,
+                                env,
+                                build_result_builder,
+                                &requirement,
+                            )?;
+                        }
+                    },
+                }
             }
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;

@@ -10,11 +10,21 @@ pub(crate) struct PackageJson(serde_json::Value);
 
 impl PackageJson {
     pub(crate) fn node_engine(&self) -> Option<Result<Requirement, VersionError>> {
-        self.0
-            .get("engines")
+        self.engines()
             .and_then(|engines| engines.get("node"))
             .and_then(|node| node.as_str())
             .map(Requirement::parse)
+    }
+
+    pub(crate) fn npm_engine(&self) -> Option<Requirement> {
+        self.engines()
+            .and_then(|engines| engines.get("npm"))
+            .and_then(|node| node.as_str())
+            .and_then(|node| Requirement::parse(node).ok())
+    }
+
+    fn engines(&self) -> Option<&serde_json::Value> {
+        self.0.get("engines")
     }
 }
 
