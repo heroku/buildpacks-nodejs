@@ -84,16 +84,57 @@ where
                 while let Some(entry) = entries.next().await {
                     let mut entry = entry.map_err(create_write_error)?;
                     let path = entry.path().map_err(create_write_error)?;
-                    let stripped_path = path
-                        .components()
+
+                    // Get the path components
+                    let path_components: Vec<_> = path.components().collect();
+
+                    // Skip if we don't have enough components after stripping
+                    if path_components.len() <= options.strip_components {
+                        continue;
+                    }
+
+                    // Skip if the path contains '..' or is absolute
+                    if path_components.iter().any(|c| {
+                        matches!(
+                            c,
+                            std::path::Component::ParentDir | std::path::Component::RootDir
+                        )
+                    }) {
+                        continue;
+                    }
+
+                    // Build the stripped path
+                    let stripped_path: PathBuf = path_components
+                        .into_iter()
                         .skip(options.strip_components)
-                        .collect::<PathBuf>();
-                    if stripped_path.components().count() > 0 {
-                        entry
-                            .unpack(downloader.destination().join(stripped_path))
+                        .collect();
+
+                    // Skip empty paths
+                    if stripped_path.components().count() == 0 {
+                        continue;
+                    }
+
+                    // Skip excluded paths
+                    let exclude = &options.exclude;
+                    if exclude(&stripped_path) {
+                        continue;
+                    }
+
+                    let entry_type = entry.header().entry_type();
+                    let dest_path = downloader.destination().join(&stripped_path);
+
+                    // Create parent directories for regular files and symlinks
+                    if (entry_type.is_file()
+                        || entry_type.is_symlink()
+                        || entry_type.is_hard_link())
+                        && let Some(parent) = dest_path.parent()
+                    {
+                        tokio::fs::create_dir_all(parent)
                             .await
                             .map_err(create_write_error)?;
                     }
+
+                    entry.unpack(dest_path).await.map_err(create_write_error)?;
                 }
             }
             None => {
@@ -160,10 +201,20 @@ pub(crate) enum Extractor {
     Gzip(GzipOptions),
 }
 
-#[derive(Debug)]
 pub(crate) struct GzipOptions {
     pub(crate) multiple_members: bool,
     pub(crate) strip_components: usize,
+    pub(crate) exclude: Box<dyn Fn(&Path) -> bool>,
+}
+
+impl std::fmt::Debug for GzipOptions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GzipOptions")
+            .field("multiple_members", &self.multiple_members)
+            .field("strip_components", &self.strip_components)
+            .field("exclude", &"<closure>")
+            .finish()
+    }
 }
 
 impl Default for GzipOptions {
@@ -171,6 +222,7 @@ impl Default for GzipOptions {
         Self {
             multiple_members: true,
             strip_components: 0,
+            exclude: Box::new(|_| false),
         }
     }
 }
@@ -180,6 +232,7 @@ pub(crate) enum ChecksumValidator<'a> {
     Sha256(&'a [u8]),
 }
 
+#[derive(Debug)]
 pub(crate) enum DownloaderError {
     Request {
         url: String,
