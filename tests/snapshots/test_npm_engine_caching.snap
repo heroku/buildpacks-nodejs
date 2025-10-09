@@ -157,6 +157,7 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:npm_engine'
 Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
@@ -173,6 +174,8 @@ Saving <image-name>...
 Reusing cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:npm_cache'
+Reusing cache layer 'heroku/nodejs:npm_engine'
+Adding cache layer 'heroku/nodejs:npm_engine'
 Reusing cache layer 'heroku/nodejs:npm_packument'
 Adding cache layer 'heroku/nodejs:npm_packument'
 Successfully built image '<image-name>'

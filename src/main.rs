@@ -1,7 +1,6 @@
 use crate::corepack::main::CorepackBuildpackError;
-use crate::npm_engine::main::NpmEngineBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
-use crate::package_manager::{RequestedPackageManager, ResolvedPackageManager};
+use crate::package_manager::RequestedPackageManager;
 use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
@@ -15,11 +14,8 @@ use libcnb::detect::DetectResultBuilder;
 use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
-#[cfg(test)]
-use regex as _;
 
 mod corepack;
-mod npm_engine;
 mod npm_install;
 mod package_json;
 mod package_manager;
@@ -170,7 +166,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 && matches!(requested_package_manager, RequestedPackageManager::Npm(_))
             {
                 print::bullet("Determining npm package information");
-                let resolved_package_manager = Ok(requested_package_manager)
+                Ok(requested_package_manager)
                     .inspect(package_manager::log_requested_package_manager)
                     .and_then(|requested_package_manager| {
                         package_manager::resolve_package_manager(
@@ -178,21 +174,14 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                             &requested_package_manager,
                         )
                     })
-                    .inspect(package_manager::log_resolved_package_manager)?;
-                match resolved_package_manager {
-                    ResolvedPackageManager::Npm(_, npm_package_packument) => {
-                        let node_version = runtimes::nodejs::get_node_version(&env)?;
-                        let bundled_npm_version = package_managers::npm::get_version(&env)?;
-                        (env, build_result_builder) = npm_engine::main::build(
+                    .inspect(package_manager::log_resolved_package_manager)
+                    .and_then(|resolved_package_manager| {
+                        package_manager::install_package_manager(
                             &context,
-                            env,
-                            build_result_builder,
-                            &npm_package_packument,
-                            &node_version,
-                            &bundled_npm_version,
-                        )?;
-                    }
-                }
+                            &mut env,
+                            &resolved_package_manager,
+                        )
+                    })?;
             }
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;
@@ -207,7 +196,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
                 NodeJsBuildpackError::Corepack(error) => corepack::main::on_error(error),
-                NodeJsBuildpackError::NpmEngine(error) => npm_engine::main::on_error(error),
                 NodeJsBuildpackError::NpmInstall(error) => npm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmEngine(error) => pnpm_engine::main::on_error(error),
@@ -288,7 +276,6 @@ fn detect_corepack_npm_engine_npm_install_group(
 #[derive(Debug)]
 enum NodeJsBuildpackError {
     Corepack(CorepackBuildpackError),
-    NpmEngine(NpmEngineBuildpackError),
     NpmInstall(NpmInstallBuildpackError),
     PnpmInstall(PnpmInstallBuildpackError),
     PnpmEngine(PnpmEngineBuildpackError),

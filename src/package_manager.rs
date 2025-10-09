@@ -1,10 +1,12 @@
 use crate::package_json::PackageJson;
 use crate::package_managers::npm;
+use crate::runtimes::nodejs;
 use crate::utils::npm_registry::PackagePackument;
 use crate::utils::vrs::Requirement;
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use libcnb::Env;
 
 pub(crate) enum RequestedPackageManager {
     Npm(RequestedNpm),
@@ -70,6 +72,31 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 style::value(requested_version.to_string()),
                 style::value(npm_package_packument.version.to_string())
             ));
+        }
+    }
+}
+
+pub(crate) fn install_package_manager(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
+    resolved_package_manager: &ResolvedPackageManager,
+) -> BuildpackResult<()> {
+    print::bullet("Installing npm");
+    match resolved_package_manager {
+        ResolvedPackageManager::Npm(_, npm_package_packument) => {
+            let npm_version = &npm_package_packument.version;
+            let node_version = nodejs::get_node_version(env)?;
+            let bundled_npm_version = npm::get_version(env)?;
+            if bundled_npm_version == npm_package_packument.version {
+                print::sub_bullet("Requested npm version is already installed");
+            } else {
+                npm::install_npm(context, env, npm_package_packument, &node_version)?;
+            }
+            print::sub_bullet(format!(
+                "Successfully installed {}",
+                style::value(format!("npm@{npm_version}")),
+            ));
+            Ok(())
         }
     }
 }

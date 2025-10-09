@@ -157,6 +157,7 @@ pub(crate) struct Packument {
 pub(crate) struct PackagePackument {
     pub(crate) version: Version,
     pub(crate) dist: PackagePackumentDist,
+    pub(crate) bin: Option<HashMap<String, String>>,
 }
 
 #[derive(Deserialize, Clone)]
