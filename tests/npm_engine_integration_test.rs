@@ -3,9 +3,13 @@
 // Required due to: https://github.com/rust-lang/rust-clippy/issues/11119
 #![allow(clippy::unwrap_used)]
 
+use libcnb_test::assert_contains;
 use std::fs;
 use std::path::Path;
-use test_support::{create_build_snapshot, nodejs_integration_test};
+use test_support::{
+    create_build_snapshot, nodejs_integration_test, nodejs_integration_test_with_config,
+    set_package_manager,
+};
 
 #[test]
 #[ignore = "integration test"]
@@ -13,6 +17,24 @@ fn npm_engine_install() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();
     });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn npm_package_manager_install() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_package_manager(&app_dir, "npm@10.2.0");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            let output = ctx.run_shell_command("npm --version");
+            assert_contains!(output.stdout, "10.2.0");
+        },
+    );
 }
 
 #[test]

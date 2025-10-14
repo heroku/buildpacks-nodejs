@@ -1,4 +1,4 @@
-use crate::package_json::PackageJson;
+use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::npm;
 use crate::runtimes::nodejs;
 use crate::utils::npm_registry::PackagePackument;
@@ -12,10 +12,10 @@ pub(crate) enum RequestedPackageManager {
     Npm(RequestedNpm),
 }
 
-// TODO: support `packageManager` field
 // TODO: support `devEngines` field
 pub(crate) enum RequestedNpm {
     NpmEngine(Requirement),
+    PackageManager(PackageManagerField),
 }
 
 pub(crate) fn determine_package_manager(
@@ -23,10 +23,18 @@ pub(crate) fn determine_package_manager(
 ) -> Option<RequestedPackageManager> {
     // TODO: this will eventually need to check for lockfiles to determine the package manager
     //       but due to how this is currently being called, only npm can be returned
-    package_json
-        .npm_engine()
-        .map(RequestedNpm::NpmEngine)
-        .map(RequestedPackageManager::Npm)
+    if let Some(Ok(package_manager_field)) = package_json.package_manager()
+        && package_manager_field.name == PackageManagerFieldPackageManager::Npm
+    {
+        Some(RequestedPackageManager::Npm(RequestedNpm::PackageManager(
+            package_manager_field,
+        )))
+    } else {
+        package_json
+            .npm_engine()
+            .map(RequestedNpm::NpmEngine)
+            .map(RequestedPackageManager::Npm)
+    }
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
@@ -38,6 +46,14 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
                 style::value(requirement.to_string()),
                 style::value("package.json")
             )),
+            RequestedNpm::PackageManager(package_manager_field) => {
+                let package_manager = style::value("packageManager");
+                let package_json = style::value("package.json");
+                let value = style::value(package_manager_field.to_string());
+                print::sub_bullet(format!(
+                    "Found {package_manager} set to {value} in {package_json}"
+                ));
+            }
         },
     }
 }
@@ -56,6 +72,15 @@ pub(crate) fn resolve_package_manager(
                 npm::resolve_npm_package_packument(context, requirement).map(
                     |npm_package_packument| {
                         ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
+                    },
+                )
+            }
+            RequestedNpm::PackageManager(package_manager_field) => {
+                let requirement = Requirement::parse(&package_manager_field.version.to_string())
+                    .expect("Exact version string should be a valid requirement range");
+                npm::resolve_npm_package_packument(context, &requirement).map(
+                    |npm_package_packument| {
+                        ResolvedPackageManager::Npm(requirement, npm_package_packument)
                     },
                 )
             }

@@ -12,7 +12,7 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Node.js version not specified, using `22.x`
+  - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
   - Resolved Node.js version: `22.20.0`
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v22.20.0/node-v22.20.0-<arch>.tar.gz ... (OK)
@@ -20,20 +20,19 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `22.20.0 (<arch>)`
   - Installing Node.js `22.20.0 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.34.0`
-- Found `packageManager` set to `npm@8.19.4` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin npm`
-- Installing `npm@8.19.4`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing npm@8.19.4...
-
-  - Done (<time_elapsed>)
+- Determining npm package information
+  - Found `packageManager` set to `npm@10.2.0` in `package.json`
+  - GET https://registry.npmjs.org/npm ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved npm version `10.2.0` to `10.2.0`
+- Installing npm
+  - GET https://registry.npmjs.org/npm/-/npm-10.2.0.tgz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Removing npm bundled with Node.js
+  - Installing requested npm
+  - Successfully installed `npm@10.2.0`
 - Installing node modules
-  - Using npm version `8.19.4`
+  - Using npm version `10.2.0`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -61,9 +60,8 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
+Adding layer 'heroku/nodejs:npm_engine'
 Adding layer 'heroku/nodejs:npm_runtime_config'
-Adding layer 'heroku/nodejs:shim'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
@@ -77,7 +75,7 @@ Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
 Adding cache layer 'heroku/nodejs:npm_cache'
-Adding cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:npm_engine'
+Adding cache layer 'heroku/nodejs:npm_packument'
 Successfully built image '<image-name>'

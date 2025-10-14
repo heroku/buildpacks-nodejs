@@ -4,7 +4,7 @@ use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct VersionError(String);
 impl Error for VersionError {}
 impl fmt::Display for VersionError {

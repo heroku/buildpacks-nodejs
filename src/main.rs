@@ -156,33 +156,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             }
             (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
         } else if detect_corepack_npm_engine_npm_install_group(&context)? {
-            // corepack is optional for this group
-            if corepack::main::detect(&context)? {
-                (env, build_result_builder) =
-                    corepack::main::build(&context, env, build_result_builder)?;
-            }
-            // npm engine is optional for this group
             if let Some(requested_package_manager) = requested_package_manager
                 && matches!(requested_package_manager, RequestedPackageManager::Npm(_))
             {
                 print::bullet("Determining npm package information");
-                Ok(requested_package_manager)
-                    .inspect(package_manager::log_requested_package_manager)
-                    .and_then(|requested_package_manager| {
-                        package_manager::resolve_package_manager(
-                            &context,
-                            &requested_package_manager,
-                        )
-                    })
-                    .inspect(package_manager::log_resolved_package_manager)
-                    .and_then(|resolved_package_manager| {
-                        package_manager::install_package_manager(
-                            &context,
-                            &mut env,
-                            &resolved_package_manager,
-                        )
-                    })?;
+                env = install_package_manager(&context, env, requested_package_manager)?;
             }
+            // install dependencies
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;
         }
@@ -207,6 +187,23 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         print::plain(error_message.to_string());
         eprintln!();
     }
+}
+
+fn install_package_manager(
+    context: &BuildpackBuildContext,
+    mut env: Env,
+    requested_package_manager: RequestedPackageManager,
+) -> BuildpackResult<Env> {
+    Ok(requested_package_manager)
+        .inspect(package_manager::log_requested_package_manager)
+        .and_then(|requested_package_manager| {
+            package_manager::resolve_package_manager(context, &requested_package_manager)
+        })
+        .inspect(package_manager::log_resolved_package_manager)
+        .and_then(|resolved_package_manager| {
+            package_manager::install_package_manager(context, &mut env, &resolved_package_manager)
+        })?;
+    Ok(env)
 }
 
 // The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
