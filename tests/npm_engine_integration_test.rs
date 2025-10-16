@@ -16,6 +16,11 @@ use test_support::{
 fn npm_engine_install() {
     nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();
+        // verify that the `npm_engine` layer comes before the `dist` layer in the PATH
+        assert_contains!(
+            ctx.run_shell_command("env").stdout,
+            "PATH=/layers/heroku_nodejs/npm_engine/bin:/layers/heroku_nodejs/dist/bin"
+        );
     });
 }
 
