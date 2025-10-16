@@ -21,14 +21,14 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `22.20.0 (<arch>)`
   - Installing Node.js `22.20.0 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
-  - Found `packageManager` set to `pnpm@8.4.0` in `package.json`
+  - Found `engines.pnpm` version `7.32.3` declared in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Resolved pnpm version `8.4.0` to `8.4.0`
+  - Resolved pnpm version `7.32.3` to `7.32.3`
 - Installing pnpm
-  - GET https://registry.npmjs.org/pnpm/-/pnpm-8.4.0.tgz ... (OK)
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-7.32.3.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Successfully installed `pnpm@8.4.0`
+  - Successfully installed `pnpm@7.32.3`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
@@ -36,14 +36,14 @@ heroku/nodejs <buildpack-version>
   - Running `pnpm install --frozen-lockfile`
 
       Lockfile is up to date, resolution step is skipped
-      Packages: +57
-      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Packages: +2
+      ++
       Packages are hard linked from the content-addressable store to the virtual store.
         Content-addressable store is at: /layers/heroku_nodejs/addressable/v3
         Virtual store is at:             ../layers/heroku_nodejs/virtual/store
 
       dependencies:
-      + express 4.18.2
+      + debug 4.3.4
 
       Done in <time_elapsed>
 
@@ -78,11 +78,10 @@ Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
 Adding layer 'buildpacksio/lifecycle:config'
-Adding layer 'buildpacksio/lifecycle:process-types'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
-Setting default process type 'web'
+no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>

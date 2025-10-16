@@ -25,6 +25,13 @@ impl PackageJson {
             .map(Requirement::parse)
     }
 
+    pub(crate) fn pnpm_engine(&self) -> Option<Result<Requirement, VersionError>> {
+        self.engines()
+            .and_then(|val| val.get("pnpm"))
+            .and_then(|val| val.as_str())
+            .map(Requirement::parse)
+    }
+
     fn engines(&self) -> Option<&serde_json::Value> {
         self.0.get("engines")
     }

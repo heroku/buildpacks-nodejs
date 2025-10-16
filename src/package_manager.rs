@@ -1,5 +1,5 @@
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
-use crate::package_managers::npm;
+use crate::package_managers::{npm, pnpm};
 use crate::runtimes::nodejs;
 use crate::utils::npm_registry::PackagePackument;
 use crate::utils::vrs::Requirement;
@@ -11,6 +11,7 @@ use libcnb::Env;
 // TODO: support `devEngines` field
 pub(crate) enum RequestedPackageManager {
     NpmEngine(Requirement),
+    PnpmEngine(Requirement),
     PackageManager(PackageManagerField),
 }
 
@@ -21,6 +22,17 @@ impl RequestedPackageManager {
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
                     name: PackageManagerFieldPackageManager::Npm,
+                    ..
+                })
+            )
+    }
+
+    pub(crate) fn is_pnpm(&self) -> bool {
+        matches!(self, RequestedPackageManager::PnpmEngine(_))
+            || matches!(
+                self,
+                RequestedPackageManager::PackageManager(PackageManagerField {
+                    name: PackageManagerFieldPackageManager::Pnpm,
                     ..
                 })
             )
@@ -38,6 +50,10 @@ pub(crate) fn determine_package_manager(
         ));
     }
 
+    if let Some(Ok(requirement)) = package_json.pnpm_engine() {
+        return Some(RequestedPackageManager::PnpmEngine(requirement));
+    }
+
     if let Some(Ok(requirement)) = package_json.npm_engine() {
         return Some(RequestedPackageManager::NpmEngine(requirement));
     }
@@ -50,6 +66,12 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
         RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",
             style::value("engines.npm"),
+            style::value(requirement.to_string()),
+            style::value("package.json")
+        )),
+        RequestedPackageManager::PnpmEngine(requirement) => print::sub_bullet(format!(
+            "Found {} version {} declared in {}",
+            style::value("engines.pnpm"),
             style::value(requirement.to_string()),
             style::value("package.json")
         )),
@@ -66,6 +88,7 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 
 pub(crate) enum ResolvedPackageManager {
     Npm(Requirement, PackagePackument),
+    Pnpm(Requirement, PackagePackument),
 }
 
 pub(crate) fn resolve_package_manager(
@@ -78,6 +101,13 @@ pub(crate) fn resolve_package_manager(
                 ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
             })
         }
+        RequestedPackageManager::PnpmEngine(requirement) => {
+            pnpm::resolve_pnpm_package_packument(context, requirement).map(
+                |pnpm_package_packument| {
+                    ResolvedPackageManager::Pnpm(requirement.clone(), pnpm_package_packument)
+                },
+            )
+        }
         RequestedPackageManager::PackageManager(package_manager_field) => {
             let requirement = Requirement::parse(&package_manager_field.version.to_string())
                 .expect("Exact version string should be a valid requirement range");
@@ -89,7 +119,14 @@ pub(crate) fn resolve_package_manager(
                         },
                     )
                 }
-                _ => unreachable!(
+                PackageManagerFieldPackageManager::Pnpm => {
+                    pnpm::resolve_pnpm_package_packument(context, &requirement).map(
+                        |pnpm_package_packument| {
+                            ResolvedPackageManager::Pnpm(requirement, pnpm_package_packument)
+                        },
+                    )
+                }
+                PackageManagerFieldPackageManager::Yarn => unreachable!(
                     "This code path will not be reachable until further refactorings are made"
                 ),
             }
@@ -104,6 +141,13 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 "Resolved npm version {} to {}",
                 style::value(requested_version.to_string()),
                 style::value(npm_package_packument.version.to_string())
+            ));
+        }
+        ResolvedPackageManager::Pnpm(requested_version, pnpm_package_packument) => {
+            print::sub_bullet(format!(
+                "Resolved pnpm version {} to {}",
+                style::value(requested_version.to_string()),
+                style::value(pnpm_package_packument.version.to_string())
             ));
         }
     }
@@ -128,6 +172,17 @@ pub(crate) fn install_package_manager(
             print::sub_bullet(format!(
                 "Successfully installed {}",
                 style::value(format!("npm@{npm_version}")),
+            ));
+            Ok(())
+        }
+        ResolvedPackageManager::Pnpm(_, pnpm_package_packument) => {
+            print::bullet("Installing pnpm");
+            let pnpm_version = &pnpm_package_packument.version;
+            let node_version = nodejs::get_node_version(env)?;
+            pnpm::install_pnpm(context, env, pnpm_package_packument, &node_version)?;
+            print::sub_bullet(format!(
+                "Successfully installed {}",
+                style::value(format!("pnpm@{pnpm_version}")),
             ));
             Ok(())
         }

@@ -20,18 +20,15 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `20.19.5 (<arch>)`
   - Installing Node.js `20.19.5 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.33.0`
-- Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin pnpm`
-- Installing `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b...
-
-  - Done (<time_elapsed>)
+- Determining pnpm package information
+  - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
+  - GET https://registry.npmjs.org/pnpm ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved pnpm version `9.1.1` to `9.1.1`
+- Installing pnpm
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-9.1.1.tgz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Successfully installed `pnpm@9.1.1`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
@@ -74,8 +71,7 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
-Adding layer 'heroku/nodejs:shim'
+Adding layer 'heroku/nodejs:pnpm'
 Adding layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
@@ -91,8 +87,8 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:addressable'
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
-Adding cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:pnpm'
+Adding cache layer 'heroku/nodejs:pnpm_packument'
 Successfully built image '<image-name>'
 
 --------------------------------------------- REBUILD ---------------------------------------------
@@ -111,18 +107,14 @@ heroku/nodejs <buildpack-version>
   - Resolved Node.js version: `20.19.5`
 - Installing Node.js distribution
   - Reusing Node.js 20.19.5 (<arch>)
-- Using Corepack version `0.33.0`
-- Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
-- Enabling Corepack
-  - Restoring Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin pnpm`
-- Installing `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b`
-  - Restoring Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b...
-
-  - Done (<time_elapsed>)
+- Determining pnpm package information
+  - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
+  - GET https://registry.npmjs.org/pnpm ... (Not Modified)
+  - Using cached packument for pnpm
+  - Resolved pnpm version `9.1.1` to `9.1.1`
+- Installing pnpm
+  - Using cached version of pnpm
+  - Successfully installed `pnpm@9.1.1`
 - Setting up pnpm dependency store
   - Restoring pnpm content-addressable store from cache
   - Creating pnpm virtual store
@@ -157,8 +149,7 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
-Reusing layer 'heroku/nodejs:shim'
+Adding layer 'heroku/nodejs:pnpm'
 Adding layer 'heroku/nodejs:virtual'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
@@ -175,7 +166,7 @@ Saving <image-name>...
 Adding cache layer 'heroku/nodejs:addressable'
 Reusing cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
-Reusing cache layer 'heroku/nodejs:shim'
-Adding cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:pnpm'
+Reusing cache layer 'heroku/nodejs:pnpm_packument'
+Adding cache layer 'heroku/nodejs:pnpm_packument'
 Successfully built image '<image-name>'

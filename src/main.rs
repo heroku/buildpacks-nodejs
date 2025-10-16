@@ -1,7 +1,6 @@
 use crate::corepack::main::CorepackBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::package_manager::RequestedPackageManager;
-use crate::pnpm_engine::main::PnpmEngineBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use crate::yarn::main::YarnBuildpackError;
@@ -20,7 +19,6 @@ mod npm_install;
 mod package_json;
 mod package_manager;
 mod package_managers;
-mod pnpm_engine;
 mod pnpm_install;
 mod runtime;
 mod runtimes;
@@ -138,14 +136,16 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         // reproduces the group order detection logic from
         // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml
-        if detect_corepack_pnpm_install_group(&context)? {
-            (env, build_result_builder) =
-                corepack::main::build(&context, env, build_result_builder)?;
-            (_, build_result_builder) =
-                pnpm_install::main::build(&context, env, build_result_builder)?;
-        } else if detect_pnpm_engine_pnpm_install_group(&context)? {
-            (env, build_result_builder) =
-                pnpm_engine::main::build(&context, env, build_result_builder)?;
+        if pnpm_install::main::detect(&context)?
+            && requested_package_manager
+                .as_ref()
+                .is_some_and(RequestedPackageManager::is_pnpm)
+        {
+            print::bullet("Determining pnpm package information");
+            if let Some(requested_package_manager) = requested_package_manager {
+                env = install_package_manager(&context, env, requested_package_manager)?;
+            }
+            // install dependencies
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder)?;
         } else if detect_corepack_yarn_group(&context)? {
@@ -178,7 +178,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 NodeJsBuildpackError::Corepack(error) => corepack::main::on_error(error),
                 NodeJsBuildpackError::NpmInstall(error) => npm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
-                NodeJsBuildpackError::PnpmEngine(error) => pnpm_engine::main::on_error(error),
                 NodeJsBuildpackError::Yarn(error) => yarn::main::on_error(error),
                 NodeJsBuildpackError::Message(error) => error,
             },
@@ -213,34 +212,6 @@ fn install_package_manager(
 //
 // [[order.group]]
 // id = "heroku/nodejs-corepack"
-//
-// [[order.group]]
-// id = "heroku/nodejs-pnpm-install"
-fn detect_corepack_pnpm_install_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    Ok(corepack::main::detect(ctx)? && pnpm_install::main::detect(ctx)?)
-}
-
-// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
-//
-// [order.group]]
-// id = "heroku/nodejs-engine"
-//
-// [[order.group]]
-// id = "heroku/nodejs-pnpm-engine"
-//
-// [[order.group]]
-// id = "heroku/nodejs-pnpm-install"
-fn detect_pnpm_engine_pnpm_install_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    Ok(pnpm_engine::main::detect(ctx)? && pnpm_install::main::detect(ctx)?)
-}
-
-// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
-//
-// [[order.group]]
-// id = "heroku/nodejs-engine"
-//
-// [[order.group]]
-// id = "heroku/nodejs-corepack"
 // optional = true
 //
 // [[order.group]]
@@ -254,7 +225,6 @@ enum NodeJsBuildpackError {
     Corepack(CorepackBuildpackError),
     NpmInstall(NpmInstallBuildpackError),
     PnpmInstall(PnpmInstallBuildpackError),
-    PnpmEngine(PnpmEngineBuildpackError),
     Yarn(YarnBuildpackError),
     Message(ErrorMessage),
 }

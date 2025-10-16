@@ -179,6 +179,20 @@ pub fn set_node_engine(app_dir: &Path, version_range: &str) {
     });
 }
 
+pub fn set_pnpm_engine(app_dir: &Path, version_range: &str) {
+    update_package_json(app_dir, |package_json| {
+        package_json
+            .entry("engines")
+            .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+            .as_object_mut()
+            .unwrap()
+            .insert(
+                "pnpm".to_string(),
+                serde_json::Value::String(version_range.to_string()),
+            );
+    });
+}
+
 pub fn set_package_manager(app_dir: &Path, package_manager: &str) {
     update_package_json(app_dir, |package_json| {
         package_json.insert(

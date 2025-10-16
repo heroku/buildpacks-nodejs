@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for the `engines.pnpm` field in `package.json` to declare pnpm as the package manager.
+
+### Changed
+
+- The `corepack` tool will no longer be used to install pnpm. Usage of the `packageManager` field in `package.json` to declare pnpm as the package manager is still supported. 
+
 ## [5.1.3] - 2025-10-09
 
 ### Added
