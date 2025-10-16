@@ -215,14 +215,13 @@ impl From<NodejsArtifact> for NodejsLayerMetadata {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bullet_stream::strip_ansi;
-    use insta::{assert_snapshot, with_settings};
+    use crate::utils;
+    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_reqwest_error};
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
         checksum::Checksum,
     };
     use std::str::FromStr;
-    use test_support::test_name;
 
     fn create_nodejs_artifact(version: &str) -> NodejsArtifact {
         NodejsArtifact {
@@ -275,26 +274,26 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
     }
 
     #[test]
-    fn test_downloader_request_error() {
+    fn download_request_error() {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
         assert_error_snapshot(&create_downloader_error(DownloaderError::Request {
             url: url.to_string(),
-            source: crate::utils::http::Error::Request(url.to_string(), create_reqwest_error()),
+            source: utils::http::Error::Request(url.to_string(), create_reqwest_error()),
         }));
     }
 
     #[test]
-    fn test_downloader_write_error() {
+    fn download_write_error() {
         assert_error_snapshot(&create_downloader_error(DownloaderError::Write {
             url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
                 .into(),
             destination: "/layers/heroku_nodejs/nodejs".into(),
-            source: create_io_error("test I/O error"),
+            source: std::io::Error::other("test I/O error"),
         }));
     }
 
     #[test]
-    fn test_downloader_checksum_error() {
+    fn download_checksum_error() {
         assert_error_snapshot(&create_downloader_error(
             DownloaderError::ChecksumMismatch {
                 url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
@@ -303,28 +302,5 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                 expected_checksum: "d41d8cd98f00b204e9800998ecf8427e".into(),
             },
         ));
-    }
-
-    fn assert_error_snapshot(error: &ErrorMessage) {
-        let error_message = strip_ansi(error.to_string());
-        let test_name = format!("nodejs__{}", test_name().split("::").last().unwrap());
-        with_settings!({
-            prepend_module_to_snapshot => false,
-            omit_expression => true,
-        }, {
-            assert_snapshot!(test_name, error_message);
-        });
-    }
-
-    fn create_io_error(text: &str) -> std::io::Error {
-        std::io::Error::other(text)
-    }
-
-    fn create_reqwest_error() -> reqwest_middleware::Error {
-        tokio::runtime::Runtime::new().unwrap().block_on(async {
-            reqwest_middleware::Error::Reqwest(
-                reqwest::get("https://test/error").await.unwrap_err(),
-            )
-        })
     }
 }

@@ -176,3 +176,45 @@ pub(crate) enum SuggestSubmitIssue {
     Yes,
     No,
 }
+
+#[cfg(test)]
+pub(crate) mod test_util {
+    use crate::utils::error_handling::ErrorMessage;
+    use bullet_stream::strip_ansi;
+    use insta::{assert_snapshot, with_settings};
+    use std::path::PathBuf;
+    use test_support::test_name;
+
+    pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
+        let error_message = strip_ansi(error.to_string());
+        let test_name = test_name()
+            .replace("::", "_")
+            .replace("_tests", "")
+            .replace("_test", "");
+        let snapshot_path = std::env::var("CARGO_MANIFEST_DIR")
+            .map(PathBuf::from)
+            .expect(
+                "The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests",
+            )
+            .join("src/__snapshots");
+        with_settings!({
+            prepend_module_to_snapshot => false,
+            omit_expression => true,
+            snapshot_path => snapshot_path,
+        }, {
+            assert_snapshot!(test_name, error_message);
+        });
+    }
+
+    pub(crate) fn create_reqwest_error() -> reqwest_middleware::Error {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            reqwest_middleware::Error::Reqwest(
+                reqwest::get("https://test/error").await.unwrap_err(),
+            )
+        })
+    }
+
+    pub(crate) fn create_json_error() -> serde_json::error::Error {
+        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
+}

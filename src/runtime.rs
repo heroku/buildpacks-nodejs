@@ -68,7 +68,7 @@ pub(crate) fn resolve_runtime(
 fn resolve_nodejs_runtime(requirement: &Requirement) -> BuildpackResult<ResolvedRuntime> {
     let artifact = NODEJS_INVENTORY
         .resolve(*OS, *ARCH, requirement)
-        .ok_or(unknown_nodejs_version_error(requirement))?;
+        .ok_or(create_unknown_nodejs_version_error(requirement))?;
     Ok(ResolvedRuntime::Nodejs(artifact.clone()))
 }
 
@@ -81,7 +81,7 @@ pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
     }
 }
 
-fn unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessage {
+fn create_unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessage {
     let node_releases_url = style::url(format!(
         "https://github.com/nodejs/node/releases?q=\"v{requirement}\"&expanded=true"
     ));
@@ -119,25 +119,12 @@ pub(crate) fn install_runtime(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bullet_stream::strip_ansi;
-    use insta::{assert_snapshot, with_settings};
-    use test_support::test_name;
+    use crate::utils::error_handling::test_util::assert_error_snapshot;
 
     #[test]
-    fn test_unknown_nodejs_version_error_message() {
-        assert_error_snapshot(&unknown_nodejs_version_error(
+    fn unknown_nodejs_version_error() {
+        assert_error_snapshot(&create_unknown_nodejs_version_error(
             &Requirement::parse("0.0.0").unwrap(),
         ));
-    }
-
-    fn assert_error_snapshot(error: &ErrorMessage) {
-        let error_message = strip_ansi(error.to_string());
-        let test_name = format!("runtime__{}", test_name().split("::").last().unwrap());
-        with_settings!({
-            prepend_module_to_snapshot => false,
-            omit_expression => true,
-        }, {
-            assert_snapshot!(test_name, error_message);
-        });
     }
 }

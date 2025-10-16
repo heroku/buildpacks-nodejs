@@ -72,10 +72,8 @@ fn package_json_parse_error_message(path: &Path, error: &serde_json::Error) -> E
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bullet_stream::strip_ansi;
-    use insta::{assert_snapshot, with_settings};
+    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_json_error};
     use serde_json::json;
-    use test_support::test_name;
 
     #[test]
     fn read_valid_package_with_node_engine() {
@@ -91,7 +89,7 @@ mod tests {
     }
 
     #[test]
-    fn test_read_error_message() {
+    fn read_error_message() {
         assert_error_snapshot(&package_json_read_error_message(
             Path::new("./package.json"),
             &std::io::Error::other("test I/O error blah"),
@@ -99,25 +97,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_error_message() {
+    fn parse_error_message() {
         assert_error_snapshot(&package_json_parse_error_message(
             Path::new("./package.json"),
             &create_json_error(),
         ));
-    }
-
-    fn assert_error_snapshot(error: &ErrorMessage) {
-        let error_message = strip_ansi(error.to_string());
-        let test_name = format!("package_json__{}", test_name().split("::").last().unwrap());
-        with_settings!({
-            prepend_module_to_snapshot => false,
-            omit_expression => true,
-        }, {
-            assert_snapshot!(test_name, error_message);
-        });
-    }
-
-    fn create_json_error() -> serde_json::error::Error {
-        serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
     }
 }
