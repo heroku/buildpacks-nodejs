@@ -8,14 +8,23 @@ use bullet_stream::global::print;
 use bullet_stream::style;
 use libcnb::Env;
 
-pub(crate) enum RequestedPackageManager {
-    Npm(RequestedNpm),
-}
-
 // TODO: support `devEngines` field
-pub(crate) enum RequestedNpm {
+pub(crate) enum RequestedPackageManager {
     NpmEngine(Requirement),
     PackageManager(PackageManagerField),
+}
+
+impl RequestedPackageManager {
+    pub(crate) fn is_npm(&self) -> bool {
+        matches!(self, RequestedPackageManager::NpmEngine(_))
+            || matches!(
+                self,
+                RequestedPackageManager::PackageManager(PackageManagerField {
+                    name: PackageManagerFieldPackageManager::Npm,
+                    ..
+                })
+            )
+    }
 }
 
 pub(crate) fn determine_package_manager(
@@ -23,38 +32,35 @@ pub(crate) fn determine_package_manager(
 ) -> Option<RequestedPackageManager> {
     // TODO: this will eventually need to check for lockfiles to determine the package manager
     //       but due to how this is currently being called, only npm can be returned
-    if let Some(Ok(package_manager_field)) = package_json.package_manager()
-        && package_manager_field.name == PackageManagerFieldPackageManager::Npm
-    {
-        Some(RequestedPackageManager::Npm(RequestedNpm::PackageManager(
+    if let Some(Ok(package_manager_field)) = package_json.package_manager() {
+        return Some(RequestedPackageManager::PackageManager(
             package_manager_field,
-        )))
-    } else {
-        package_json
-            .npm_engine()
-            .map(RequestedNpm::NpmEngine)
-            .map(RequestedPackageManager::Npm)
+        ));
     }
+
+    if let Some(Ok(requirement)) = package_json.npm_engine() {
+        return Some(RequestedPackageManager::NpmEngine(requirement));
+    }
+
+    None
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
     match requested_package_manager {
-        RequestedPackageManager::Npm(requested_npm) => match requested_npm {
-            RequestedNpm::NpmEngine(requirement) => print::sub_bullet(format!(
-                "Found {} version {} declared in {}",
-                style::value("engines.npm"),
-                style::value(requirement.to_string()),
+        RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
+            "Found {} version {} declared in {}",
+            style::value("engines.npm"),
+            style::value(requirement.to_string()),
+            style::value("package.json")
+        )),
+        RequestedPackageManager::PackageManager(package_manager_field) => {
+            print::sub_bullet(format!(
+                "Found {} set to {} in {}",
+                style::value("packageManager"),
+                style::value(package_manager_field.to_string()),
                 style::value("package.json")
-            )),
-            RequestedNpm::PackageManager(package_manager_field) => {
-                let package_manager = style::value("packageManager");
-                let package_json = style::value("package.json");
-                let value = style::value(package_manager_field.to_string());
-                print::sub_bullet(format!(
-                    "Found {package_manager} set to {value} in {package_json}"
-                ));
-            }
-        },
+            ));
+        }
     }
 }
 
@@ -67,24 +73,27 @@ pub(crate) fn resolve_package_manager(
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
-        RequestedPackageManager::Npm(requested_npm) => match requested_npm {
-            RequestedNpm::NpmEngine(requirement) => {
-                npm::resolve_npm_package_packument(context, requirement).map(
-                    |npm_package_packument| {
-                        ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
-                    },
-                )
+        RequestedPackageManager::NpmEngine(requirement) => {
+            npm::resolve_npm_package_packument(context, requirement).map(|npm_package_packument| {
+                ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
+            })
+        }
+        RequestedPackageManager::PackageManager(package_manager_field) => {
+            let requirement = Requirement::parse(&package_manager_field.version.to_string())
+                .expect("Exact version string should be a valid requirement range");
+            match package_manager_field.name {
+                PackageManagerFieldPackageManager::Npm => {
+                    npm::resolve_npm_package_packument(context, &requirement).map(
+                        |npm_package_packument| {
+                            ResolvedPackageManager::Npm(requirement, npm_package_packument)
+                        },
+                    )
+                }
+                _ => unreachable!(
+                    "This code path will not be reachable until further refactorings are made"
+                ),
             }
-            RequestedNpm::PackageManager(package_manager_field) => {
-                let requirement = Requirement::parse(&package_manager_field.version.to_string())
-                    .expect("Exact version string should be a valid requirement range");
-                npm::resolve_npm_package_packument(context, &requirement).map(
-                    |npm_package_packument| {
-                        ResolvedPackageManager::Npm(requirement, npm_package_packument)
-                    },
-                )
-            }
-        },
+        }
     }
 }
 
@@ -105,9 +114,9 @@ pub(crate) fn install_package_manager(
     env: &mut Env,
     resolved_package_manager: &ResolvedPackageManager,
 ) -> BuildpackResult<()> {
-    print::bullet("Installing npm");
     match resolved_package_manager {
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
+            print::bullet("Installing npm");
             let npm_version = &npm_package_packument.version;
             let node_version = nodejs::get_node_version(env)?;
             let bundled_npm_version = npm::get_version(env)?;

@@ -18,11 +18,11 @@ impl PackageJson {
             .map(Requirement::parse)
     }
 
-    pub(crate) fn npm_engine(&self) -> Option<Requirement> {
+    pub(crate) fn npm_engine(&self) -> Option<Result<Requirement, VersionError>> {
         self.engines()
             .and_then(|engines| engines.get("npm"))
             .and_then(|node| node.as_str())
-            .and_then(|node| Requirement::parse(node).ok())
+            .map(Requirement::parse)
     }
 
     fn engines(&self) -> Option<&serde_json::Value> {

@@ -155,9 +155,9 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     corepack::main::build(&context, env, build_result_builder)?;
             }
             (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
-        } else if detect_corepack_npm_engine_npm_install_group(&context)? {
+        } else if npm_install::main::detect(&context)? {
             if let Some(requested_package_manager) = requested_package_manager
-                && matches!(requested_package_manager, RequestedPackageManager::Npm(_))
+                && requested_package_manager.is_npm()
             {
                 print::bullet("Determining npm package information");
                 env = install_package_manager(&context, env, requested_package_manager)?;
@@ -247,27 +247,6 @@ fn detect_pnpm_engine_pnpm_install_group(ctx: &BuildpackBuildContext) -> Buildpa
 // id = "heroku/nodejs-yarn"
 fn detect_corepack_yarn_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
     yarn::main::detect(ctx)
-}
-
-// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
-//
-// [[order.group]]
-// id = "heroku/nodejs-engine"
-//
-// [[order.group]]
-// id = "heroku/nodejs-corepack"
-// optional = true
-//
-// [[order.group]]
-// id = "heroku/nodejs-npm-engine"
-// optional = true
-//
-// [[order.group]]
-// id = "heroku/nodejs-npm-install"
-fn detect_corepack_npm_engine_npm_install_group(
-    ctx: &BuildpackBuildContext,
-) -> BuildpackResult<bool> {
-    npm_install::main::detect(ctx)
 }
 
 #[derive(Debug)]
