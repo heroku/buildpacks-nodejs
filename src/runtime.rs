@@ -27,8 +27,8 @@ pub(crate) enum RequestedRuntime {
 pub(crate) fn determine_runtime(app_dir: &Path) -> BuildpackResult<RequestedRuntime> {
     let package_json = package_json::PackageJson::try_from(app_dir.join("package.json"))?;
     let requested_node_version = match package_json.node_engine() {
-        Some(version) => RequestedRuntime::NodeJsEngine(version),
-        None => RequestedRuntime::NodeJsDefault,
+        Some(Ok(version)) => RequestedRuntime::NodeJsEngine(version),
+        _ => RequestedRuntime::NodeJsDefault,
     };
     Ok(requested_node_version)
 }

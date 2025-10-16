@@ -1,7 +1,7 @@
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
-use crate::utils::vrs::Requirement;
+use crate::utils::vrs::{Requirement, VersionError};
 use bullet_stream::style;
 use indoc::formatdoc;
 use std::path::{Path, PathBuf};
@@ -9,12 +9,12 @@ use std::path::{Path, PathBuf};
 pub(crate) struct PackageJson(serde_json::Value);
 
 impl PackageJson {
-    pub(crate) fn node_engine(&self) -> Option<Requirement> {
+    pub(crate) fn node_engine(&self) -> Option<Result<Requirement, VersionError>> {
         self.0
             .get("engines")
             .and_then(|engines| engines.get("node"))
             .and_then(|node| node.as_str())
-            .and_then(|node| Requirement::parse(node).ok())
+            .map(Requirement::parse)
     }
 }
 
@@ -83,7 +83,7 @@ mod tests {
             }
         }));
         assert_eq!(
-            package_json.node_engine().unwrap().to_string(),
+            package_json.node_engine().unwrap().unwrap().to_string(),
             Requirement::parse("16.0.0").unwrap().to_string()
         );
     }
