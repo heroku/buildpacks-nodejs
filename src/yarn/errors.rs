@@ -8,8 +8,7 @@ use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
 };
-use crate::utils::npm_registry::PackumentLayerError;
-use crate::utils::vrs::{Requirement, VersionError};
+use crate::utils::vrs::VersionError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use indoc::formatdoc;
@@ -27,12 +26,8 @@ pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::YarnVersionUnsupported(version) => {
             on_yarn_version_unsupported_error(version)
         }
-        YarnBuildpackError::YarnVersionResolve(requirement) => {
-            on_yarn_version_resolve_error(&requirement)
-        }
         YarnBuildpackError::YarnDefaultParse(e) => on_yarn_default_parse_error(&e),
         YarnBuildpackError::NodeBuildScriptsMetadata(e) => on_node_build_scripts_metadata_error(e),
-        YarnBuildpackError::FetchYarnPackument(e) => on_fetch_yarn_packument_error(&e),
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
@@ -224,30 +219,6 @@ fn on_yarn_version_unsupported_error(version: u64) -> ErrorMessage {
         .create()
 }
 
-fn on_yarn_version_resolve_error(requirement: &Requirement) -> ErrorMessage {
-    let requested_version = style::value(requirement.to_string());
-    let yarn_releases_url = style::url("https://github.com/yarnpkg/berry/releases");
-    let inventory_url = style::url(
-        "https://github.com/heroku/buildpacks-nodejs/blob/main/buildpacks/nodejs-yarn/inventory.toml",
-    );
-    let package_json = style::value("package.json");
-    let engines_key = style::value("engines.yarn");
-    error_message()
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-        .header(format!("Error resolving requested Yarn version {requested_version}"))
-        .body(formatdoc! { "
-            The requested Yarn version could not be resolved to a known release in this buildpack's \
-            inventory of Yarn releases.
-            
-            Suggestions:
-            - Confirm if this is a valid Yarn release at {yarn_releases_url}
-            - Check if this buildpack includes the requested Yarn version in its inventory file at {inventory_url}
-            - Update the {engines_key} field in {package_json} to a single version or version range that \
-            includes a published Yarn version.
-        " })
-        .create()
-}
-
 fn on_yarn_default_parse_error(error: &VersionError) -> ErrorMessage {
     error_message()
         .error_type(ErrorType::Internal)
@@ -298,23 +269,6 @@ fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) ->
             ", value_type = value.type_str() })
             .create(),
     }
-}
-
-fn on_fetch_yarn_packument_error(error: &PackumentLayerError) -> ErrorMessage {
-    let yarn = style::value("Yarn");
-    let npm_status_url = style::url("https://status.npmjs.org/");
-    error_message()
-        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-        .header(format!("Failed to load available {yarn} versions"))
-        .body(formatdoc! { "
-            An unexpected error occurred while loading the available {yarn} versions. This error can \
-            occur due to an unstable network connection or an issue with the npm registry.
-
-            Suggestions:
-            - Check the npm status page for any ongoing incidents ({npm_status_url})
-        "})
-        .debug_info(error.to_string())
-        .create()
 }
 
 fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
@@ -507,13 +461,6 @@ mod tests {
     }
 
     #[test]
-    fn test_yarn_version_resolve_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnVersionResolve(
-            Requirement::parse("1.2.3").unwrap(),
-        ));
-    }
-
-    #[test]
     fn test_yarn_default_parse_error() {
         assert_error_snapshot(YarnBuildpackError::YarnDefaultParse(create_version_error()));
     }
@@ -533,13 +480,6 @@ mod tests {
             NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
                 "test".to_string(),
             )),
-        ));
-    }
-
-    #[test]
-    fn test_yarn_fetch_yarn_packument_error() {
-        assert_error_snapshot(YarnBuildpackError::FetchYarnPackument(
-            PackumentLayerError::ParsePackument(create_json_error()),
         ));
     }
 

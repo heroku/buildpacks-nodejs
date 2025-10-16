@@ -28,8 +28,6 @@ heroku/nodejs <buildpack-version>
 - Installing npm
   - GET https://registry.npmjs.org/npm/-/npm-10.2.0.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Removing npm bundled with Node.js
-  - Installing requested npm
   - Successfully installed `npm@10.2.0`
 - Installing node modules
   - Using npm version `10.2.0`

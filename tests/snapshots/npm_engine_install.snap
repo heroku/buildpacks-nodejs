@@ -28,8 +28,6 @@ heroku/nodejs <buildpack-version>
 - Installing npm
   - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Removing npm bundled with Node.js
-  - Installing requested npm
   - Successfully installed `npm@9.6.6`
 - Installing node modules
   - Using npm version `9.6.6`

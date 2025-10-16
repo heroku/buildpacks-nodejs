@@ -10,7 +10,7 @@ use super::{cfg, cmd};
 use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
 use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
 use crate::utils::error_handling::ErrorMessage;
-use crate::utils::npm_registry::{PackumentLayerError, packument_layer, resolve_package_packument};
+use crate::utils::npm_registry::{packument_layer, resolve_package_packument};
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::utils::vrs::{Requirement, VersionError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
@@ -22,7 +22,7 @@ use indoc::indoc;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::process_type;
+use libcnb::data::{layer_name, process_type};
 use libcnb::layer_env::Scope;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -74,22 +74,20 @@ pub(crate) fn build(
             // Yarn 2+ (aka: "berry") is hosted under a different npm package.
             let yarn_berry_range =
                 Requirement::parse(">=2").expect("Yarn berry requirement range should be valid");
-            let yarn_package_name = if requested_yarn_cli_range.allows_any(&yarn_berry_range) {
-                "@yarnpkg/cli-dist"
-            } else {
-                "yarn"
-            };
+            let (yarn_layer_name, yarn_package_name) =
+                if requested_yarn_cli_range.allows_any(&yarn_berry_range) {
+                    (
+                        layer_name!("yarnpkg_cli-dist_packument"),
+                        "@yarnpkg/cli-dist",
+                    )
+                } else {
+                    (layer_name!("yarn_packument"), "yarn")
+                };
 
-            let yarn_packument = packument_layer(
-                context,
-                yarn_package_name,
-                YarnBuildpackError::FetchYarnPackument,
-            )?;
+            let yarn_packument = packument_layer(yarn_layer_name, context, yarn_package_name)?;
 
             let yarn_package_packument =
-                resolve_package_packument(&yarn_packument, &requested_yarn_cli_range).ok_or(
-                    YarnBuildpackError::YarnVersionResolve(requested_yarn_cli_range),
-                )?;
+                resolve_package_packument(&yarn_packument, &requested_yarn_cli_range)?;
 
             print::sub_bullet(format!(
                 "Resolved yarn CLI version: {}",
@@ -196,14 +194,12 @@ pub(crate) enum YarnBuildpackError {
     BuildScript(fun_run::CmdError),
     CliLayer(CliLayerError),
     DepsLayer(DepsLayerError),
-    FetchYarnPackument(PackumentLayerError),
     PackageJson(PackageJsonError),
     YarnCacheGet(fun_run::CmdError),
     YarnDisableGlobalCache(fun_run::CmdError),
     YarnInstall(fun_run::CmdError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),
-    YarnVersionResolve(Requirement),
     YarnDefaultParse(VersionError),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneYarnDevDependencies(fun_run::CmdError),

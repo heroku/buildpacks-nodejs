@@ -28,8 +28,6 @@ heroku/nodejs <buildpack-version>
 - Installing npm
   - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Removing npm bundled with Node.js
-  - Installing requested npm
   - Successfully installed `npm@9.6.6`
 - Installing node modules
   - Using npm version `9.6.6`
@@ -114,11 +112,9 @@ heroku/nodejs <buildpack-version>
   - Using cached packument for npm
   - Resolved npm version `9.6.5` to `9.6.5`
 - Installing npm
-  - Invalidating cached npm (npm version changed)
+  - Invalidating cached npm (version changed)
   - GET https://registry.npmjs.org/npm/-/npm-9.6.5.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Removing npm bundled with Node.js
-  - Installing requested npm
   - Successfully installed `npm@9.6.5`
 - Installing node modules
   - Using npm version `9.6.5`
