@@ -6,7 +6,7 @@
 use super::install_npm::{NpmInstallError, install_npm};
 use super::{node, npm};
 use crate::utils::error_handling::ErrorMessage;
-use crate::utils::npmjs_org::{
+use crate::utils::npm_registry::{
     PackagePackument, PackumentLayerError, packument_layer, resolve_package_packument,
 };
 use crate::utils::package_json::{PackageJson, PackageJsonError};

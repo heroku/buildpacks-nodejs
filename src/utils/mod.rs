@@ -5,7 +5,7 @@ pub(crate) mod config;
 pub(crate) mod download;
 pub(crate) mod error_handling;
 pub(crate) mod http;
-pub(crate) mod npmjs_org;
+pub(crate) mod npm_registry;
 pub(crate) mod package_json;
 pub(crate) mod runtime_env;
 pub(crate) mod vrs;

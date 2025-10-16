@@ -1,6 +1,6 @@
 use super::main::YarnBuildpackError;
 use crate::utils::http::{ResponseExt, get};
-use crate::utils::npmjs_org::PackagePackument;
+use crate::utils::npm_registry::PackagePackument;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;
 use libcnb::data::layer_name;

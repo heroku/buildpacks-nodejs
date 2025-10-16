@@ -6,7 +6,7 @@ use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
     on_package_json_error,
 };
-use crate::utils::npmjs_org::PackumentLayerError;
+use crate::utils::npm_registry::PackumentLayerError;
 use crate::utils::vrs::Requirement;
 use bullet_stream::style;
 use indoc::formatdoc;

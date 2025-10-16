@@ -1,6 +1,6 @@
 use super::main::NpmEngineBuildpackError;
 use crate::utils::http::{ResponseExt, get};
-use crate::utils::npmjs_org::PackagePackument;
+use crate::utils::npm_registry::PackagePackument;
 use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult};
 use bullet_stream::global::print;

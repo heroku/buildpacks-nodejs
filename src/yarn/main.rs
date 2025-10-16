@@ -10,7 +10,7 @@ use super::{cfg, cmd};
 use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
 use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
 use crate::utils::error_handling::ErrorMessage;
-use crate::utils::npmjs_org::{PackumentLayerError, packument_layer, resolve_package_packument};
+use crate::utils::npm_registry::{PackumentLayerError, packument_layer, resolve_package_packument};
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::utils::vrs::{Requirement, VersionError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};

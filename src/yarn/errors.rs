@@ -8,7 +8,7 @@ use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
 };
-use crate::utils::npmjs_org::PackumentLayerError;
+use crate::utils::npm_registry::PackumentLayerError;
 use crate::utils::vrs::{Requirement, VersionError};
 use bullet_stream::style;
 use fun_run::CmdError;
