@@ -5,29 +5,21 @@
 
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::{DepsLayerError, configure_yarn_cache};
-use super::install_yarn::{CliLayerError, install_yarn};
 use super::{cfg, cmd};
 use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
 use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
 use crate::utils::error_handling::ErrorMessage;
-use crate::utils::npm_registry::{packument_layer, resolve_package_packument};
 use crate::utils::package_json::{PackageJson, PackageJsonError};
-use crate::utils::vrs::{Requirement, VersionError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
-#[cfg(test)]
-use indoc as _;
 use indoc::indoc;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
-use libcnb::data::{layer_name, process_type};
-use libcnb::layer_env::Scope;
+use libcnb::data::process_type;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-
-const DEFAULT_YARN_REQUIREMENT: &str = "1.22.x";
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
@@ -39,7 +31,7 @@ pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
 #[allow(clippy::too_many_lines)]
 pub(crate) fn build(
     context: &BuildpackBuildContext,
-    mut env: Env,
+    env: Env,
     mut build_result_builder: BuildResultBuilder,
 ) -> BuildpackResult<(Env, BuildResultBuilder)> {
     let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
@@ -50,60 +42,7 @@ pub(crate) fn build(
         read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
             .map_err(YarnBuildpackError::Config)?;
 
-    let yarn_version = match cmd::yarn_version(&env) {
-        // Install yarn if it's not present.
-        Err(YarnVersionError::Command(_)) => {
-            print::bullet("Detecting yarn CLI version to install");
-
-            let requested_yarn_cli_range = match cfg::requested_yarn_range(&pkg_json) {
-                None => {
-                    print::sub_bullet(format!(
-                        "No yarn engine range detected in package.json, using default ({DEFAULT_YARN_REQUIREMENT})"
-                    ));
-                    Requirement::parse(DEFAULT_YARN_REQUIREMENT)
-                        .map_err(YarnBuildpackError::YarnDefaultParse)?
-                }
-                Some(requirement) => {
-                    print::sub_bullet(format!(
-                        "Detected yarn engine version range {requirement} in package.json"
-                    ));
-                    requirement
-                }
-            };
-
-            // Yarn 2+ (aka: "berry") is hosted under a different npm package.
-            let yarn_berry_range =
-                Requirement::parse(">=2").expect("Yarn berry requirement range should be valid");
-            let (yarn_layer_name, yarn_package_name) =
-                if requested_yarn_cli_range.allows_any(&yarn_berry_range) {
-                    (
-                        layer_name!("yarnpkg_cli-dist_packument"),
-                        "@yarnpkg/cli-dist",
-                    )
-                } else {
-                    (layer_name!("yarn_packument"), "yarn")
-                };
-
-            let yarn_packument = packument_layer(yarn_layer_name, context, yarn_package_name)?;
-
-            let yarn_package_packument =
-                resolve_package_packument(&yarn_packument, &requested_yarn_cli_range)?;
-
-            print::sub_bullet(format!(
-                "Resolved yarn CLI version: {}",
-                yarn_package_packument.version
-            ));
-
-            print::bullet("Installing yarn CLI");
-            let yarn_env = install_yarn(context, &yarn_package_packument)?;
-            env = yarn_env.apply(Scope::Build, &env);
-
-            cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?
-        }
-        // Use the existing yarn installation if it is present.
-        Ok(version) => version,
-        err => err.map_err(YarnBuildpackError::YarnVersionDetect)?,
-    };
+    let yarn_version = cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
 
     let yarn = Yarn::from_major(yarn_version.major())
         .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
@@ -192,7 +131,6 @@ pub(crate) fn on_error(error: YarnBuildpackError) -> ErrorMessage {
 #[derive(Debug)]
 pub(crate) enum YarnBuildpackError {
     BuildScript(fun_run::CmdError),
-    CliLayer(CliLayerError),
     DepsLayer(DepsLayerError),
     PackageJson(PackageJsonError),
     YarnCacheGet(fun_run::CmdError),
@@ -200,7 +138,6 @@ pub(crate) enum YarnBuildpackError {
     YarnInstall(fun_run::CmdError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),
-    YarnDefaultParse(VersionError),
     NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneYarnDevDependencies(fun_run::CmdError),
     YarnGetNodeLinker(GetNodeLinkerError),

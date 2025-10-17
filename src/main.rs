@@ -130,7 +130,8 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             );
         }
 
-        let requested_package_manager = package_manager::determine_package_manager(&package_json);
+        let requested_package_manager =
+            package_manager::determine_package_manager(&context.app_dir, &package_json);
 
         // reproduces the group order detection logic from
         // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml

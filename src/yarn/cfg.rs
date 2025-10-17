@@ -1,13 +1,4 @@
-use crate::utils::{package_json::PackageJson, vrs::Requirement};
 use std::path::Path;
-
-/// Reads parsed `engines.yarn` requirement from a `PackageJson`.
-pub(crate) fn requested_yarn_range(pkg_json: &PackageJson) -> Option<Requirement> {
-    pkg_json
-        .engines
-        .as_ref()
-        .and_then(|engines| engines.yarn.clone())
-}
 
 /// A yarn cache is populated if it exists, and has non-hidden files.
 pub(crate) fn cache_populated(cache_path: &Path) -> bool {

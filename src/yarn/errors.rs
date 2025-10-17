@@ -1,6 +1,5 @@
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::DepsLayerError;
-use super::install_yarn::CliLayerError;
 use super::main::YarnBuildpackError;
 use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
 use crate::utils::error_handling::ErrorType::UserFacing;
@@ -8,7 +7,6 @@ use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
 };
-use crate::utils::vrs::VersionError;
 use bullet_stream::style;
 use fun_run::CmdError;
 use indoc::formatdoc;
@@ -16,7 +14,6 @@ use indoc::formatdoc;
 pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
     match error {
         YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
-        YarnBuildpackError::CliLayer(e) => on_cli_layer_error(&e),
         YarnBuildpackError::DepsLayer(e) => on_deps_layer_error(&e),
         YarnBuildpackError::PackageJson(e) => on_package_json_error(e),
         YarnBuildpackError::YarnCacheGet(e) => on_yarn_cache_get_error(&e),
@@ -26,7 +23,6 @@ pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::YarnVersionUnsupported(version) => {
             on_yarn_version_unsupported_error(version)
         }
-        YarnBuildpackError::YarnDefaultParse(e) => on_yarn_default_parse_error(&e),
         YarnBuildpackError::NodeBuildScriptsMetadata(e) => on_node_build_scripts_metadata_error(e),
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
@@ -59,60 +55,6 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
         "})
         .debug_info(error.to_string())
         .create()
-}
-
-fn on_cli_layer_error(error: &CliLayerError) -> ErrorMessage {
-    match error {
-        CliLayerError::TempFile(e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Failed to open temporary file")
-            .body(formatdoc! {"
-                An unexpected I/O error occurred while downloading the Yarn package manager into a \
-                temporary directory. 
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        CliLayerError::Download(e) => error_message()
-            .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-            .header("Failed to download Yarn")
-            .body(formatdoc! {"
-                    An unexpected error occurred while downloading the Yarn package manager. This error can \
-                    occur due to an unstable network connection or an issue with the upstream repository.
-
-                    Suggestions:
-                    - Check the npm status page for any ongoing incidents ({npm_status_url})
-                ", npm_status_url = style::url("https://status.npmjs.org/") })
-            .debug_info(e.to_string())
-            .create(),
-
-        CliLayerError::Untar(path, e) => error_message()
-            .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-            .header("Failed to extract the downloaded Yarn package file")
-            .body(formatdoc! {"
-                An unexpected I/O occurred while extracting the contents of the downloaded Yarn package file at {path}.
-            ", path = file_value(path) })
-            .debug_info(e.to_string())
-            .create(),
-
-        CliLayerError::Installation(e) => error_message()
-            .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-            .header("Failed to install the downloaded Yarn package")
-            .body(formatdoc! {"
-                An unexpected error occurred while installing the downloaded Yarn package.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        CliLayerError::Permissions(e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Permissions error for Yarn installation")
-            .body(formatdoc! {"
-                An unexpected I/O error occurred while setting permissions on the Yarn package manager installation.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
 }
 
 fn on_deps_layer_error(error: &DepsLayerError) -> ErrorMessage {
@@ -216,17 +158,6 @@ fn on_yarn_version_unsupported_error(version: u64) -> ErrorMessage {
             Suggestions:
             - Update your package.json to specify a supported Yarn version.
         "})
-        .create()
-}
-
-fn on_yarn_default_parse_error(error: &VersionError) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Failed to parse default Yarn version")
-        .body(formatdoc! {"
-            The {BUILDPACK_NAME} was unable to parse the default Yarn version.
-        "})
-        .debug_info(error.to_string())
         .create()
 }
 
@@ -338,7 +269,7 @@ fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
 mod tests {
     use super::*;
     use crate::utils::package_json::PackageJsonError;
-    use crate::utils::vrs::Version;
+    use crate::utils::vrs::{Version, VersionError};
     use crate::yarn::main::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
@@ -350,42 +281,6 @@ mod tests {
     fn test_yarn_build_script_error() {
         assert_error_snapshot(YarnBuildpackError::BuildScript(create_cmd_error(
             "yarn run build",
-        )));
-    }
-
-    #[test]
-    fn test_yarn_cli_layer_temp_file_error() {
-        assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::TempFile(
-            create_io_error("Disk full"),
-        )));
-    }
-
-    #[test]
-    fn test_yarn_cli_layer_download_error() {
-        assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Download(
-            crate::utils::http::Error::Request("https://test/error".into(), create_reqwest_error()),
-        )));
-    }
-
-    #[test]
-    fn test_yarn_cli_layer_untar_error() {
-        assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Untar(
-            "/layers/yarn/dist".into(),
-            create_io_error("Disk full"),
-        )));
-    }
-
-    #[test]
-    fn test_yarn_cli_layer_installation_error() {
-        assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Installation(
-            create_io_error("Disk full"),
-        )));
-    }
-
-    #[test]
-    fn test_yarn_cli_layer_permissions_error() {
-        assert_error_snapshot(YarnBuildpackError::CliLayer(CliLayerError::Permissions(
-            create_io_error("Invalid permissions"),
         )));
     }
 
@@ -458,11 +353,6 @@ mod tests {
     #[test]
     fn test_yarn_version_unsupported_error() {
         assert_error_snapshot(YarnBuildpackError::YarnVersionUnsupported(0));
-    }
-
-    #[test]
-    fn test_yarn_default_parse_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnDefaultParse(create_version_error()));
     }
 
     #[test]
@@ -546,21 +436,5 @@ mod tests {
 
     fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
-    }
-
-    fn create_reqwest_error() -> reqwest_middleware::Error {
-        async_runtime().block_on(async {
-            reqwest_middleware::Error::Reqwest(
-                reqwest::get("https://test/error").await.unwrap_err(),
-            )
-        })
-    }
-
-    fn async_runtime() -> tokio::runtime::Runtime {
-        tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(1)
-            .enable_all()
-            .build()
-            .unwrap()
     }
 }

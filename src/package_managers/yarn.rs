@@ -9,6 +9,10 @@ static YARN_BERRY_RANGE: LazyLock<Requirement> = LazyLock::new(|| {
     Requirement::parse(">=2").expect("Yarn berry requirement range should be valid")
 });
 
+pub(crate) static DEFAULT_YARN_REQUIREMENT: LazyLock<Requirement> = LazyLock::new(|| {
+    Requirement::parse("1.22.x").expect("Default Yarn requirement should be valid")
+});
+
 pub(crate) fn resolve_yarn_package_packument(
     context: &BuildpackBuildContext,
     requirement: &Requirement,

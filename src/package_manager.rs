@@ -7,12 +7,14 @@ use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use libcnb::Env;
+use std::path::Path;
 
 // TODO: support `devEngines` field
 pub(crate) enum RequestedPackageManager {
     NpmEngine(Requirement),
     PnpmEngine(Requirement),
     YarnEngine(Requirement),
+    YarnDefault(Requirement),
     PackageManager(PackageManagerField),
 }
 
@@ -41,6 +43,7 @@ impl RequestedPackageManager {
 
     pub(crate) fn is_yarn(&self) -> bool {
         matches!(self, RequestedPackageManager::YarnEngine(_))
+            || matches!(self, RequestedPackageManager::YarnDefault(_))
             || matches!(
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
@@ -52,6 +55,7 @@ impl RequestedPackageManager {
 }
 
 pub(crate) fn determine_package_manager(
+    app_dir: &Path,
     package_json: &PackageJson,
 ) -> Option<RequestedPackageManager> {
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
@@ -68,6 +72,13 @@ pub(crate) fn determine_package_manager(
     }
     if let Some(Ok(requirement)) = package_json.npm_engine() {
         return Some(RequestedPackageManager::NpmEngine(requirement));
+    }
+
+    // fallback to default Yarn if lockfile is detected
+    if let Ok(true) = app_dir.join("yarn.lock").try_exists() {
+        return Some(RequestedPackageManager::YarnDefault(
+            yarn::DEFAULT_YARN_REQUIREMENT.clone(),
+        ));
     }
 
     None
@@ -92,6 +103,10 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
             style::value("engines.yarn"),
             style::value(requirement.to_string()),
             style::value("package.json")
+        )),
+        RequestedPackageManager::YarnDefault(requirement) => print::sub_bullet(format!(
+            "Found Yarn lockfile, defaulting to {}",
+            style::value(requirement.to_string()),
         )),
         RequestedPackageManager::PackageManager(package_manager_field) => {
             print::sub_bullet(format!(
@@ -127,7 +142,8 @@ pub(crate) fn resolve_package_manager(
                 },
             )
         }
-        RequestedPackageManager::YarnEngine(requirement) => {
+        RequestedPackageManager::YarnEngine(requirement)
+        | RequestedPackageManager::YarnDefault(requirement) => {
             yarn::resolve_yarn_package_packument(context, requirement).map(
                 |yarn_package_packument| {
                     ResolvedPackageManager::Yarn(requirement.clone(), yarn_package_packument)

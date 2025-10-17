@@ -1,4 +1,3 @@
-use crate::utils::vrs::Requirement;
 use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
@@ -7,13 +6,7 @@ use thiserror::Error;
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub(crate) struct PackageJson {
-    pub(crate) engines: Option<Engines>,
     pub(crate) scripts: Option<Scripts>,
-}
-
-#[derive(Deserialize, Debug, Default, Clone)]
-pub(crate) struct Engines {
-    pub(crate) yarn: Option<Requirement>,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
@@ -131,7 +124,6 @@ mod tests {
                 heroku_postbuild: Some("echo 'heroku-postbuild'".to_owned()),
                 ..Scripts::default()
             }),
-            ..PackageJson::default()
         };
         let build_scripts = pkg_json.build_scripts();
 
@@ -147,7 +139,6 @@ mod tests {
                 build: Some("echo 'build'".to_owned()),
                 ..Scripts::default()
             }),
-            ..PackageJson::default()
         };
         let build_scripts = pkg_json.build_scripts();
 
