@@ -60,40 +60,28 @@ pub(crate) fn install_yarn(
 }
 
 pub(crate) fn read_yarnrc(app_dir: &Path) -> Option<BuildpackResult<Yarnrc>> {
-    let yarnrc_path = app_dir.join(".yarnrc.yml");
+    let yarnrc_path = app_dir.join(Yarnrc::file_name());
 
     let contents = match std::fs::read_to_string(&yarnrc_path) {
         Ok(contents) => contents,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return None,
         Err(error) => {
-            return Some(Err(create_yarnrc_yml_read_error_message(
-                &yarnrc_path,
-                &error,
-            )
-            .into()));
+            return Some(Err(create_yarnrc_yml_read_error_message(&error).into()));
         }
     };
 
     match yaml_rust2::YamlLoader::load_from_str(&contents) {
-        Ok(docs) if docs.len() == 1 => Some(Ok(Yarnrc(
-            docs.into_iter()
-                .next()
-                .expect("YAML file should have only one document"),
-        ))),
-        Ok(docs) if docs.is_empty() => None,
-        Ok(_) => Some(Err(create_yarnrc_yml_multiple_documents_error_message(
-            &yarnrc_path,
-        )
-        .into())),
-        Err(error) => Some(Err(create_yarnrc_yml_parse_error_message(
-            &yarnrc_path,
-            &error,
-        )
-        .into())),
+        Ok(docs) if docs.len() == 1 => Some(Ok(Yarnrc(docs.into_iter().next()))),
+        Ok(docs) if docs.is_empty() => Some(Ok(Yarnrc(None))),
+        Ok(_) => Some(Err(
+            create_yarnrc_yml_multiple_documents_error_message().into()
+        )),
+        Err(error) => Some(Err(create_yarnrc_yml_parse_error_message(&error).into())),
     }
 }
 
-pub(crate) struct Yarnrc(yaml_rust2::Yaml);
+#[derive(Debug)]
+pub(crate) struct Yarnrc(Option<yaml_rust2::Yaml>);
 
 impl Yarnrc {
     pub(crate) fn file_name() -> PathBuf {
@@ -101,12 +89,15 @@ impl Yarnrc {
     }
 
     pub(crate) fn yarn_path(&self) -> Option<PathBuf> {
-        self.0["yarnPath"].as_str().map(PathBuf::from)
+        self.0
+            .iter()
+            .next()
+            .and_then(|doc| doc["yarnPath"].as_str().map(PathBuf::from))
     }
 }
 
-fn create_yarnrc_yml_read_error_message(path: &Path, error: &std::io::Error) -> ErrorMessage {
-    let yamlrc_yml = file_value(path);
+fn create_yarnrc_yml_read_error_message(error: &std::io::Error) -> ErrorMessage {
+    let yamlrc_yml = file_value(Yarnrc::file_name());
     error_message()
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
@@ -124,11 +115,8 @@ fn create_yarnrc_yml_read_error_message(path: &Path, error: &std::io::Error) -> 
         .create()
 }
 
-fn create_yarnrc_yml_parse_error_message(
-    path: &Path,
-    error: &yaml_rust2::ScanError,
-) -> ErrorMessage {
-    let yamlrc_yml = file_value(path);
+fn create_yarnrc_yml_parse_error_message(error: &yaml_rust2::ScanError) -> ErrorMessage {
+    let yamlrc_yml = file_value(Yarnrc::file_name());
     let yaml_spec_url = style::url("https://yaml.org/spec/1.2.2/");
     error_message()
         .error_type(ErrorType::UserFacing(
@@ -147,8 +135,8 @@ fn create_yarnrc_yml_parse_error_message(
         .create()
 }
 
-fn create_yarnrc_yml_multiple_documents_error_message(path: &Path) -> ErrorMessage {
-    let yamlrc_yml = file_value(path);
+fn create_yarnrc_yml_multiple_documents_error_message() -> ErrorMessage {
+    let yamlrc_yml = file_value(Yarnrc::file_name());
     let hyphens = style::value("---");
     error_message()
         .error_type(ErrorType::UserFacing(
@@ -239,5 +227,108 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
             " })
             .debug_info(e.to_string())
             .create(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+
+    #[test]
+    fn version_parse_error() {
+        assert_error_snapshot(&create_get_yarn_version_command_error(
+            &VersionCommandError::Parse(
+                "not.a.version".into(),
+                Version::parse("not.a.version").unwrap_err(),
+            ),
+        ));
+    }
+
+    #[test]
+    fn version_command_error() {
+        assert_error_snapshot(&create_get_yarn_version_command_error(
+            &VersionCommandError::Command(create_cmd_error("yarn --version")),
+        ));
+    }
+
+    #[test]
+    fn read_yarnrc_success() {
+        let app_dir = tempfile::tempdir().unwrap();
+        let yarnrc_path = app_dir.path().join(".yarnrc.yml");
+
+        // no yarnrc
+        let yarnrc = read_yarnrc(app_dir.path());
+        assert!(yarnrc.is_none());
+
+        // empty yarnrc
+        std::fs::write(&yarnrc_path, "").unwrap();
+        let yarnrc = read_yarnrc(app_dir.path()).unwrap().unwrap();
+        assert_eq!(yarnrc.yarn_path(), None);
+
+        // yarnrc with yarnPath
+        std::fs::write(&yarnrc_path, "yarnPath: /path/to/yarn").unwrap();
+        let yarnrc = read_yarnrc(app_dir.path()).unwrap().unwrap();
+        assert_eq!(yarnrc.yarn_path(), Some("/path/to/yarn".into()));
+    }
+
+    #[test]
+    fn yarnrc_multiple_docs_error() {
+        let app_dir = tempfile::tempdir().unwrap();
+        let yarnrc_path = app_dir.path().join(".yarnrc.yml");
+        std::fs::write(
+            &yarnrc_path,
+            "---\nyarnPath: /path/to/yarn\n---\nyarnPath: /path/to/yarn",
+        )
+        .unwrap();
+        let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
+        match error {
+            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
+                message,
+            )) => {
+                assert_error_snapshot(&message);
+            }
+            _ => panic!("Not the expected error type"),
+        }
+    }
+
+    #[test]
+    fn yarnrc_parse_error() {
+        let app_dir = tempfile::tempdir().unwrap();
+        let yarnrc_path = app_dir.path().join(".yarnrc.yml");
+        std::fs::write(&yarnrc_path, "---\nyarnPath: \"").unwrap();
+        let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
+        match error {
+            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
+                message,
+            )) => {
+                assert_error_snapshot(&message);
+            }
+            _ => panic!("Not the expected error type"),
+        }
+    }
+
+    #[test]
+    fn yarnrc_read_error() {
+        let app_dir = tempfile::tempdir().unwrap();
+        let yarnrc_path = app_dir.path().join(".yarnrc.yml");
+        std::fs::create_dir(yarnrc_path).unwrap();
+        let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
+        match error {
+            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
+                message,
+            )) => {
+                assert_error_snapshot(&message);
+            }
+            _ => panic!("Not the expected error type"),
+        }
+    }
+
+    #[test]
+    fn write_vendored_yarn_link_error() {
+        assert_error_snapshot(&create_write_vendored_yarn_link_error(
+            &PathBuf::from("/path/to/yarn"),
+            &std::io::Error::other("Not found"),
+        ));
     }
 }
