@@ -1,5 +1,4 @@
 use crate::npm_install::main::NpmInstallBuildpackError;
-use crate::package_manager::RequestedPackageManager;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use crate::yarn::main::YarnBuildpackError;
@@ -130,40 +129,32 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             );
         }
 
-        let requested_package_manager =
-            package_manager::determine_package_manager(&context.app_dir, &package_json);
-
-        // reproduces the group order detection logic from
-        // https://github.com/heroku/buildpacks-nodejs/blob/v4.1.4/meta-buildpacks/nodejs/buildpack.toml
-        if pnpm_install::main::detect(&context)?
-            && requested_package_manager
-                .as_ref()
-                .is_some_and(RequestedPackageManager::is_pnpm)
+        // install package manager
+        if let Some(requested_package_manager) =
+            package_manager::determine_package_manager(&context.app_dir, &package_json)
         {
-            print::bullet("Determining pnpm package information");
-            if let Some(requested_package_manager) = requested_package_manager {
-                env = install_package_manager(&context, env, requested_package_manager)?;
-            }
-            // install dependencies
+            Ok(requested_package_manager)
+                .inspect(package_manager::log_requested_package_manager)
+                .and_then(|requested_package_manager| {
+                    package_manager::resolve_package_manager(&context, &requested_package_manager)
+                })
+                .inspect(package_manager::log_resolved_package_manager)
+                .and_then(|resolved_package_manager| {
+                    package_manager::install_package_manager(
+                        &context,
+                        &mut env,
+                        &resolved_package_manager,
+                    )
+                })?;
+        }
+
+        // dependency installation & process registration
+        if pnpm_install::main::detect(&context)? {
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder)?;
-        } else if detect_corepack_yarn_group(&context)? {
-            if let Some(requested_package_manager) = requested_package_manager
-                && requested_package_manager.is_yarn()
-            {
-                print::bullet("Determining Yarn information");
-                env = install_package_manager(&context, env, requested_package_manager)?;
-            }
-            // install dependencies
+        } else if yarn::main::detect(&context)? {
             (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
         } else if npm_install::main::detect(&context)? {
-            if let Some(requested_package_manager) = requested_package_manager
-                && requested_package_manager.is_npm()
-            {
-                print::bullet("Determining npm package information");
-                env = install_package_manager(&context, env, requested_package_manager)?;
-            }
-            // install dependencies
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;
         }
@@ -186,38 +177,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         print::plain(error_message.to_string());
         eprintln!();
     }
-}
-
-fn install_package_manager(
-    context: &BuildpackBuildContext,
-    mut env: Env,
-    requested_package_manager: RequestedPackageManager,
-) -> BuildpackResult<Env> {
-    Ok(requested_package_manager)
-        .inspect(package_manager::log_requested_package_manager)
-        .and_then(|requested_package_manager| {
-            package_manager::resolve_package_manager(context, &requested_package_manager)
-        })
-        .inspect(package_manager::log_resolved_package_manager)
-        .and_then(|resolved_package_manager| {
-            package_manager::install_package_manager(context, &mut env, &resolved_package_manager)
-        })?;
-    Ok(env)
-}
-
-// The `heroku/nodejs-engine` is already detected at the start of this buildpack since it's foundational.
-//
-// [[order.group]]
-// id = "heroku/nodejs-engine"
-//
-// [[order.group]]
-// id = "heroku/nodejs-corepack"
-// optional = true
-//
-// [[order.group]]
-// id = "heroku/nodejs-yarn"
-fn detect_corepack_yarn_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    yarn::main::detect(ctx)
 }
 
 #[derive(Debug)]

@@ -10,6 +10,7 @@ use libcnb::Env;
 use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
+#[derive(Debug, Clone)]
 pub(crate) enum RequestedPackageManager {
     NpmEngine(Requirement),
     PnpmEngine(Requirement),
@@ -97,6 +98,15 @@ pub(crate) fn determine_package_manager(
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
+    // TODO: change this output to something more generic
+    if requested_package_manager.is_yarn() {
+        print::bullet("Determining Yarn information");
+    } else if requested_package_manager.is_pnpm() {
+        print::bullet("Determining pnpm package information");
+    } else if requested_package_manager.is_npm() {
+        print::bullet("Determining npm package information");
+    }
+
     match requested_package_manager {
         RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",

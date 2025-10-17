@@ -104,7 +104,7 @@ fn package_json_parse_error_message(path: &Path, error: &serde_json::Error) -> E
         .create()
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct PackageManagerField {
     pub(crate) name: PackageManagerFieldPackageManager,
     pub(crate) version: Version,
@@ -182,7 +182,7 @@ pub(crate) enum PackageManagerFieldError {
     },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum PackageManagerFieldPackageManager {
     Npm,
     Pnpm,
