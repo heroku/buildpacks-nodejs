@@ -9,11 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for the `engines.pnpm` field in `package.json` to declare pnpm as the package manager.
+- Support for the `engines.pnpm` field in `package.json` to declare pnpm as the package manager. ([#1203](https://github.com/heroku/buildpacks-nodejs/pull/1203))
 
 ### Changed
 
-- The `corepack` tool will no longer be used to install pnpm. Usage of the `packageManager` field in `package.json` to declare pnpm as the package manager is still supported. 
+- The `corepack` tool will no longer be used to install pnpm. Usage of the `packageManager` field in `package.json` to declare pnpm as the package manager is still supported. ([#1203](https://github.com/heroku/buildpacks-nodejs/pull/1203))
+- The `corepack` tool will no longer be used to install Yarn. Usage of the `packageManager` field in `package.json` to declare Yarn as the package manager is still supported. ([#1204](https://github.com/heroku/buildpacks-nodejs/pull/1204))
+- The default version of `yarn@1.22.x` will no longer be installed to bootstrap vendored Yarn installations configured using `yarnPath` in `.yarnrc.yml`. ([#1204](https://github.com/heroku/buildpacks-nodejs/pull/1204))
 
 ## [5.1.3] - 2025-10-09
 
