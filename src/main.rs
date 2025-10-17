@@ -1,4 +1,3 @@
-use crate::corepack::main::CorepackBuildpackError;
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::package_manager::RequestedPackageManager;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
@@ -14,7 +13,6 @@ use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
 
-mod corepack;
 mod npm_install;
 mod package_json;
 mod package_manager;
@@ -149,11 +147,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder)?;
         } else if detect_corepack_yarn_group(&context)? {
-            // corepack is optional for this group
-            if corepack::main::detect(&context)? {
-                (env, build_result_builder) =
-                    corepack::main::build(&context, env, build_result_builder)?;
+            if let Some(requested_package_manager) = requested_package_manager
+                && requested_package_manager.is_yarn()
+            {
+                print::bullet("Determining Yarn information");
+                env = install_package_manager(&context, env, requested_package_manager)?;
             }
+            // install dependencies
             (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
         } else if npm_install::main::detect(&context)? {
             if let Some(requested_package_manager) = requested_package_manager
@@ -175,7 +175,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::Corepack(error) => corepack::main::on_error(error),
                 NodeJsBuildpackError::NpmInstall(error) => npm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
                 NodeJsBuildpackError::Yarn(error) => yarn::main::on_error(error),
@@ -222,7 +221,6 @@ fn detect_corepack_yarn_group(ctx: &BuildpackBuildContext) -> BuildpackResult<bo
 
 #[derive(Debug)]
 enum NodeJsBuildpackError {
-    Corepack(CorepackBuildpackError),
     NpmInstall(NpmInstallBuildpackError),
     PnpmInstall(PnpmInstallBuildpackError),
     Yarn(YarnBuildpackError),

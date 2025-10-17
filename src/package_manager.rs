@@ -1,5 +1,5 @@
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
-use crate::package_managers::{npm, pnpm};
+use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
 use crate::utils::npm_registry::PackagePackument;
 use crate::utils::vrs::Requirement;
@@ -12,6 +12,7 @@ use libcnb::Env;
 pub(crate) enum RequestedPackageManager {
     NpmEngine(Requirement),
     PnpmEngine(Requirement),
+    YarnEngine(Requirement),
     PackageManager(PackageManagerField),
 }
 
@@ -37,13 +38,22 @@ impl RequestedPackageManager {
                 })
             )
     }
+
+    pub(crate) fn is_yarn(&self) -> bool {
+        matches!(self, RequestedPackageManager::YarnEngine(_))
+            || matches!(
+                self,
+                RequestedPackageManager::PackageManager(PackageManagerField {
+                    name: PackageManagerFieldPackageManager::Yarn,
+                    ..
+                })
+            )
+    }
 }
 
 pub(crate) fn determine_package_manager(
     package_json: &PackageJson,
 ) -> Option<RequestedPackageManager> {
-    // TODO: this will eventually need to check for lockfiles to determine the package manager
-    //       but due to how this is currently being called, only npm can be returned
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
         return Some(RequestedPackageManager::PackageManager(
             package_manager_field,
@@ -53,7 +63,9 @@ pub(crate) fn determine_package_manager(
     if let Some(Ok(requirement)) = package_json.pnpm_engine() {
         return Some(RequestedPackageManager::PnpmEngine(requirement));
     }
-
+    if let Some(Ok(requirement)) = package_json.yarn_engine() {
+        return Some(RequestedPackageManager::YarnEngine(requirement));
+    }
     if let Some(Ok(requirement)) = package_json.npm_engine() {
         return Some(RequestedPackageManager::NpmEngine(requirement));
     }
@@ -75,6 +87,12 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
             style::value(requirement.to_string()),
             style::value("package.json")
         )),
+        RequestedPackageManager::YarnEngine(requirement) => print::sub_bullet(format!(
+            "Found {} version {} declared in {}",
+            style::value("engines.yarn"),
+            style::value(requirement.to_string()),
+            style::value("package.json")
+        )),
         RequestedPackageManager::PackageManager(package_manager_field) => {
             print::sub_bullet(format!(
                 "Found {} set to {} in {}",
@@ -89,6 +107,7 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 pub(crate) enum ResolvedPackageManager {
     Npm(Requirement, PackagePackument),
     Pnpm(Requirement, PackagePackument),
+    Yarn(Requirement, PackagePackument),
 }
 
 pub(crate) fn resolve_package_manager(
@@ -105,6 +124,13 @@ pub(crate) fn resolve_package_manager(
             pnpm::resolve_pnpm_package_packument(context, requirement).map(
                 |pnpm_package_packument| {
                     ResolvedPackageManager::Pnpm(requirement.clone(), pnpm_package_packument)
+                },
+            )
+        }
+        RequestedPackageManager::YarnEngine(requirement) => {
+            yarn::resolve_yarn_package_packument(context, requirement).map(
+                |yarn_package_packument| {
+                    ResolvedPackageManager::Yarn(requirement.clone(), yarn_package_packument)
                 },
             )
         }
@@ -126,9 +152,13 @@ pub(crate) fn resolve_package_manager(
                         },
                     )
                 }
-                PackageManagerFieldPackageManager::Yarn => unreachable!(
-                    "This code path will not be reachable until further refactorings are made"
-                ),
+                PackageManagerFieldPackageManager::Yarn => {
+                    yarn::resolve_yarn_package_packument(context, &requirement).map(
+                        |yarn_package_packument| {
+                            ResolvedPackageManager::Yarn(requirement, yarn_package_packument)
+                        },
+                    )
+                }
             }
         }
     }
@@ -148,6 +178,13 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 "Resolved pnpm version {} to {}",
                 style::value(requested_version.to_string()),
                 style::value(pnpm_package_packument.version.to_string())
+            ));
+        }
+        ResolvedPackageManager::Yarn(requested_version, yarn_package_packument) => {
+            print::sub_bullet(format!(
+                "Resolved yarn version {} to {}",
+                style::value(requested_version.to_string()),
+                style::value(yarn_package_packument.version.to_string())
             ));
         }
     }
@@ -183,6 +220,17 @@ pub(crate) fn install_package_manager(
             print::sub_bullet(format!(
                 "Successfully installed {}",
                 style::value(format!("pnpm@{pnpm_version}")),
+            ));
+            Ok(())
+        }
+        ResolvedPackageManager::Yarn(_, yarn_package_packument) => {
+            print::bullet("Installing Yarn");
+            let yarn_version = &yarn_package_packument.version;
+            let node_version = nodejs::get_node_version(env)?;
+            yarn::install_yarn(context, env, yarn_package_packument, &node_version)?;
+            print::sub_bullet(format!(
+                "Successfully installed {}",
+                style::value(format!("yarn@{yarn_version}")),
             ));
             Ok(())
         }

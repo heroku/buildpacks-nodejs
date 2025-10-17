@@ -1,22 +1,14 @@
-use crate::utils::vrs::{Requirement, Version};
-use serde::{Deserialize, Deserializer, de};
-use std::fmt::Display;
+use crate::utils::vrs::Requirement;
+use serde::Deserialize;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
-use std::str::FromStr;
 use thiserror::Error;
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub(crate) struct PackageJson {
     pub(crate) engines: Option<Engines>,
     pub(crate) scripts: Option<Scripts>,
-    #[serde(
-        default,
-        deserialize_with = "deserialize_package_manager",
-        rename = "packageManager"
-    )]
-    pub(crate) package_manager: Option<PackageManager>,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
@@ -34,18 +26,6 @@ pub(crate) struct Scripts {
     pub(crate) heroku_build: Option<String>,
     #[serde(rename = "heroku-postbuild")]
     pub(crate) heroku_postbuild: Option<String>,
-}
-
-#[derive(Debug, Clone)]
-pub(crate) struct PackageManager {
-    pub(crate) name: String,
-    pub(crate) version: Version,
-}
-
-impl Display for PackageManager {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}@{}", self.name, self.version)
-    }
 }
 
 #[derive(Error, Debug)]
@@ -99,38 +79,6 @@ impl PackageJson {
     }
 }
 
-/// Deserializes a `packageManager` field value (like "yarn@1.22.19" into a `Option<PackageManager>`)
-fn deserialize_package_manager<'de, D>(deserializer: D) -> Result<Option<PackageManager>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value: String = Deserialize::deserialize(deserializer)?;
-    if value.is_empty() {
-        return Ok(None);
-    }
-    let mut parts = value.split('@');
-    let err_msg = format!("Couldn't parse `packageManager` value: \"{value}\".");
-    let name = parts
-        .next()
-        .ok_or_else(|| de::Error::custom(&err_msg))?
-        .to_string();
-
-    if name.is_empty() {
-        return Err(de::Error::custom(format!(
-            "{err_msg} Hint: Does the value have a package manager name before the \"@\"?"
-        )));
-    }
-
-    let vrs_str = parts.next().ok_or_else(|| {
-        de::Error::custom(format!(
-            "{err_msg} Hint: Does the value contain an \"@\" followed by a semantic version number?"
-        ))
-    })?;
-
-    let version = Version::from_str(vrs_str).map_err(de::Error::custom)?;
-    Ok(Some(PackageManager { name, version }))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -151,43 +99,6 @@ mod tests {
         write!(f, "{{\"name\": \"foo\",\"version\": \"0.0.0\"}}").unwrap();
         let pkg = PackageJson::read(f.path());
         assert!(pkg.is_ok());
-    }
-
-    #[test]
-    fn read_valid_package_with_package_manager() {
-        let mut f = Builder::new().tempfile().unwrap();
-        write!(
-            f,
-            "{{
-            \"name\": \"foo\",
-            \"packageManager\": \"yarn@3.2.0\"
-            }}"
-        )
-        .unwrap();
-        let pkg = PackageJson::read(f.path()).unwrap();
-        let pkg_mgr = &pkg
-            .package_manager
-            .expect("Expected packageManager to exist");
-        assert_eq!(pkg_mgr.name, "yarn");
-        assert_eq!(pkg_mgr.version.to_string(), "3.2.0");
-    }
-
-    #[test]
-    fn read_invalid_package_package_manager_no_at_version() {
-        let mut f = Builder::new().tempfile().unwrap();
-        write!(
-            f,
-            "{{
-            \"name\": \"foo\",
-            \"packageManager\": \"some-package-manager\"
-            }}"
-        )
-        .unwrap();
-        let err = PackageJson::read(f.path())
-            .expect_err("expected some-package-manager to cause an error")
-            .to_string();
-        println!("{err}");
-        assert!(err.contains("some-package-manager"));
     }
 
     #[test]

@@ -20,18 +20,15 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `18.20.8 (<arch>)`
   - Installing Node.js `18.20.8 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.32.0`
-- Found `packageManager` set to `yarn@4.0.0` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
-- Installing `yarn@4.0.0`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing yarn@4.0.0...
-
-  - Done (<time_elapsed>)
+- Determining Yarn information
+  - Found `packageManager` set to `yarn@4.0.0` in `package.json`
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved yarn version `4.0.0` to `4.0.0`
+- Installing Yarn
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Successfully installed `yarn@4.0.0`
 - Yarn CLI operating in yarn 4.0.0 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
@@ -72,9 +69,8 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
-Adding layer 'heroku/nodejs:shim'
 Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:yarn'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -88,6 +84,6 @@ Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
-Adding cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

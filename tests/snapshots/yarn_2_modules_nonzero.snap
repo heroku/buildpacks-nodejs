@@ -20,16 +20,15 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `22.20.0 (<arch>)`
   - Installing Node.js `22.20.0 (<arch>)` ... (<time_elapsed>)
-- Detecting yarn CLI version to install
-  - Detected yarn engine version range >=2.4.0 <2.5.0-0 in package.json
+- Determining Yarn information
+  - Found `engines.yarn` version `>=2.4.0 <2.5.0-0` declared in `package.json`
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Resolved yarn CLI version: 2.4.2
-- Installing yarn CLI
+  - Resolved yarn version `>=2.4.0 <2.5.0-0` to `2.4.2`
+- Installing Yarn
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-2.4.2.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Extracting yarn 2.4.2
-  - Installing yarn 2.4.2
+  - Successfully installed `yarn@2.4.2`
 - Yarn CLI operating in yarn 2.4.1 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
@@ -73,8 +72,8 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:dist-yarn'
 Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:yarn'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -89,6 +88,6 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:deps'
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:dist-yarn'
+Adding cache layer 'heroku/nodejs:yarn'
 Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'
