@@ -29,7 +29,6 @@ heroku/nodejs <buildpack-version>
   - GET https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Successfully installed `yarn@1.22.22`
-- Yarn CLI operating in yarn 1.22.22 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set cache-folder /layers/heroku_nodejs/deps/cache`
 

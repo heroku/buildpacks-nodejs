@@ -30,7 +30,6 @@ test/skip-build-scripts 0.0.0
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.2.2.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Successfully installed `yarn@4.2.2`
-- Yarn CLI operating in yarn 4.2.2 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 

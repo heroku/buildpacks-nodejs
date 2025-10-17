@@ -47,8 +47,6 @@ pub(crate) fn build(
     let yarn = Yarn::from_major(yarn_version.major())
         .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
-    print::bullet(format!("Yarn CLI operating in yarn {yarn_version} mode."));
-
     print::bullet("Setting up yarn dependency cache");
     cmd::yarn_disable_global_cache(&yarn, &env)
         .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;

@@ -26,7 +26,6 @@ heroku/nodejs <buildpack-version>
 - Configuring vendored Yarn
   - Linking `yarn` to vendored `yarnPath`
   - Successfully configured `yarn@4.0.0`
-- Yarn CLI operating in yarn 4.0.0 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 
