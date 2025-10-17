@@ -7,7 +7,7 @@ use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use libcnb::Env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
 pub(crate) enum RequestedPackageManager {
@@ -15,6 +15,7 @@ pub(crate) enum RequestedPackageManager {
     PnpmEngine(Requirement),
     YarnEngine(Requirement),
     YarnDefault(Requirement),
+    YarnVendored(PathBuf),
     PackageManager(PackageManagerField),
 }
 
@@ -44,6 +45,7 @@ impl RequestedPackageManager {
     pub(crate) fn is_yarn(&self) -> bool {
         matches!(self, RequestedPackageManager::YarnEngine(_))
             || matches!(self, RequestedPackageManager::YarnDefault(_))
+            || matches!(self, RequestedPackageManager::YarnVendored(_))
             || matches!(
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
@@ -58,12 +60,22 @@ pub(crate) fn determine_package_manager(
     app_dir: &Path,
     package_json: &PackageJson,
 ) -> Option<RequestedPackageManager> {
+    // vendored Yarn should take highest priority
+    if let Some(Ok(yarnrc)) = yarn::read_yarnrc(app_dir)
+        && let Some(yarn_path) = yarnrc.yarn_path()
+        && let Ok(true) = yarn_path.try_exists()
+    {
+        return Some(RequestedPackageManager::YarnVendored(yarn_path));
+    }
+
+    // then the package manager field
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
         return Some(RequestedPackageManager::PackageManager(
             package_manager_field,
         ));
     }
 
+    // then the package manager field
     if let Some(Ok(requirement)) = package_json.pnpm_engine() {
         return Some(RequestedPackageManager::PnpmEngine(requirement));
     }
@@ -108,6 +120,12 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
             "Found Yarn lockfile, defaulting to {}",
             style::value(requirement.to_string()),
         )),
+        RequestedPackageManager::YarnVendored(yarn_path) => print::sub_bullet(format!(
+            "Found {} set to {} in {}",
+            style::value("yarnPath"),
+            style::value(yarn_path.to_string_lossy()),
+            style::value(yarn::Yarnrc::file_name().to_string_lossy())
+        )),
         RequestedPackageManager::PackageManager(package_manager_field) => {
             print::sub_bullet(format!(
                 "Found {} set to {} in {}",
@@ -123,6 +141,7 @@ pub(crate) enum ResolvedPackageManager {
     Npm(Requirement, PackagePackument),
     Pnpm(Requirement, PackagePackument),
     Yarn(Requirement, PackagePackument),
+    YarnVendored(PathBuf),
 }
 
 pub(crate) fn resolve_package_manager(
@@ -149,6 +168,9 @@ pub(crate) fn resolve_package_manager(
                     ResolvedPackageManager::Yarn(requirement.clone(), yarn_package_packument)
                 },
             )
+        }
+        RequestedPackageManager::YarnVendored(yarn_path) => {
+            Ok(ResolvedPackageManager::YarnVendored(yarn_path.clone()))
         }
         RequestedPackageManager::PackageManager(package_manager_field) => {
             let requirement = Requirement::parse(&package_manager_field.version.to_string())
@@ -203,6 +225,12 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 style::value(yarn_package_packument.version.to_string())
             ));
         }
+        ResolvedPackageManager::YarnVendored(yarn_path) => {
+            print::sub_bullet(format!(
+                "Using vendored yarn at {}",
+                style::value(yarn_path.to_string_lossy())
+            ));
+        }
     }
 }
 
@@ -246,6 +274,21 @@ pub(crate) fn install_package_manager(
             yarn::install_yarn(context, env, yarn_package_packument, &node_version)?;
             print::sub_bullet(format!(
                 "Successfully installed {}",
+                style::value(format!("yarn@{yarn_version}")),
+            ));
+            Ok(())
+        }
+        ResolvedPackageManager::YarnVendored(yarn_path) => {
+            print::bullet("Configuring vendored Yarn");
+            print::sub_bullet(format!(
+                "Linking {} to vendored {}",
+                style::value("yarn"),
+                style::value("yarnPath")
+            ));
+            yarn::link_vendored_yarn(context, env, yarn_path)?;
+            let yarn_version = yarn::get_version(env)?;
+            print::sub_bullet(format!(
+                "Successfully configured {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
             Ok(())

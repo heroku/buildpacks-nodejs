@@ -29,7 +29,7 @@ heroku/nodejs <buildpack-version>
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-2.4.2.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Successfully installed `yarn@2.4.2`
-- Yarn CLI operating in yarn 2.4.1 mode.
+- Yarn CLI operating in yarn 2.4.2 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 

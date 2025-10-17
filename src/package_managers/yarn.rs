@@ -1,8 +1,19 @@
+use crate::utils::error_handling::ErrorType::Internal;
+use crate::utils::error_handling::{
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+};
 use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
-use crate::utils::vrs::{Requirement, Version};
+use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult, utils};
+use bullet_stream::style;
+use fun_run::CommandWithName;
+use indoc::formatdoc;
 use libcnb::Env;
 use libcnb::data::layer_name;
+use libcnb::layer::UncachedLayerDefinition;
+use libcnb::layer_env::Scope;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use std::sync::LazyLock;
 
 static YARN_BERRY_RANGE: LazyLock<Requirement> = LazyLock::new(|| {
@@ -46,4 +57,187 @@ pub(crate) fn install_yarn(
         node_version,
     )
     .map_err(Into::into)
+}
+
+pub(crate) fn read_yarnrc(app_dir: &Path) -> Option<BuildpackResult<Yarnrc>> {
+    let yarnrc_path = app_dir.join(".yarnrc.yml");
+
+    let contents = match std::fs::read_to_string(&yarnrc_path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(error) => {
+            return Some(Err(create_yarnrc_yml_read_error_message(
+                &yarnrc_path,
+                &error,
+            )
+            .into()));
+        }
+    };
+
+    match yaml_rust2::YamlLoader::load_from_str(&contents) {
+        Ok(docs) if docs.len() == 1 => Some(Ok(Yarnrc(
+            docs.into_iter()
+                .next()
+                .expect("YAML file should have only one document"),
+        ))),
+        Ok(docs) if docs.is_empty() => None,
+        Ok(_) => Some(Err(create_yarnrc_yml_multiple_documents_error_message(
+            &yarnrc_path,
+        )
+        .into())),
+        Err(error) => Some(Err(create_yarnrc_yml_parse_error_message(
+            &yarnrc_path,
+            &error,
+        )
+        .into())),
+    }
+}
+
+pub(crate) struct Yarnrc(yaml_rust2::Yaml);
+
+impl Yarnrc {
+    pub(crate) fn file_name() -> PathBuf {
+        PathBuf::from(".yarnrc.yml")
+    }
+
+    pub(crate) fn yarn_path(&self) -> Option<PathBuf> {
+        self.0["yarnPath"].as_str().map(PathBuf::from)
+    }
+}
+
+fn create_yarnrc_yml_read_error_message(path: &Path, error: &std::io::Error) -> ErrorMessage {
+    let yamlrc_yml = file_value(path);
+    error_message()
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Error reading {yamlrc_yml}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {yamlrc_yml} to determine Yarn configuration but \
+            the file can't be read.
+
+            Suggestions:
+            - Ensure the file has read permissions.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_yarnrc_yml_parse_error_message(
+    path: &Path,
+    error: &yaml_rust2::ScanError,
+) -> ErrorMessage {
+    let yamlrc_yml = file_value(path);
+    let yaml_spec_url = style::url("https://yaml.org/spec/1.2.2/");
+    error_message()
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Error parsing {yamlrc_yml}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {yamlrc_yml} to determine Yarn configuration but \
+            the file isn't valid YAML.
+
+            Suggestions:
+            - Ensure the file follows the YAML format described at {yaml_spec_url}
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_yarnrc_yml_multiple_documents_error_message(path: &Path) -> ErrorMessage {
+    let yamlrc_yml = file_value(path);
+    let hyphens = style::value("---");
+    error_message()
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Multiple YAML documents found in {yamlrc_yml}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {yamlrc_yml} to determine Yarn configuration but \
+            the file contains multiple YAML documents. There must only be a single document in this file.
+
+            YAML documents are separated by a line contain three hyphens ({hyphens}).
+
+            Suggestions:
+            - Ensure the file has only a single document.
+        " })
+        .create()
+}
+
+pub(crate) fn link_vendored_yarn(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
+    yarn_path: &Path,
+) -> BuildpackResult<()> {
+    let bin_layer = context.uncached_layer(
+        layer_name!("yarn_vendored"),
+        UncachedLayerDefinition {
+            build: true,
+            launch: true,
+        },
+    )?;
+
+    let bin_dir = bin_layer.path().join("bin");
+    let yarn = bin_dir.join("yarn");
+    let full_yarn_path = context.app_dir.join(yarn_path);
+
+    std::fs::create_dir_all(&bin_dir)
+        .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
+    std::os::unix::fs::symlink(full_yarn_path, yarn)
+        .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
+
+    let layer_env = &bin_layer.read_env()?;
+
+    env.clone_from(&layer_env.apply(Scope::Build, env));
+
+    Ok(())
+}
+
+fn create_write_vendored_yarn_link_error(yarn_path: &Path, error: &std::io::Error) -> ErrorMessage {
+    let yarn_path = style::value(yarn_path.to_string_lossy());
+    let yarn = style::value("yarn");
+    error_message()
+        .error_type(Internal)
+        .header("Failed to create vendored Yarn link")
+        .body(formatdoc! { "
+            An unexpected error occurred while attempting to create a symbolic link from {yarn_path} to {yarn}.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+pub(crate) fn get_version(env: &Env) -> BuildpackResult<Version> {
+    Command::new("yarn")
+        .envs(env)
+        .arg("--version")
+        .named_output()
+        .try_into()
+        .map_err(|e| create_get_yarn_version_command_error(&e).into())
+}
+
+fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMessage {
+    match error {
+        VersionCommandError::Command(e) => error_message()
+            .error_type(Internal)
+            .header("Failed to determine Yarn version")
+            .body(formatdoc! { "
+                An unexpected error occurred while attempting to determine the current Yarn version \
+                from the system.
+            " })
+            .debug_info(e.to_string())
+            .create(),
+
+        VersionCommandError::Parse(stdout, e) => error_message()
+            .error_type(Internal)
+            .header("Failed to parse Yarn version")
+            .body(formatdoc! { "
+                An unexpected error occurred while parsing Yarn version information from '{stdout}'.
+            " })
+            .debug_info(e.to_string())
+            .create(),
+    }
 }

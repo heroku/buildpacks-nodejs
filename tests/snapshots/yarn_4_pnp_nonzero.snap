@@ -21,14 +21,11 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `22.20.0 (<arch>)`
   - Installing Node.js `22.20.0 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
-  - Found `packageManager` set to `yarn@4.0.0` in `package.json`
-  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
-  - Downloading ... (<time_elapsed>)
-  - Resolved yarn version `4.0.0` to `4.0.0`
-- Installing Yarn
-  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.0.0.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
-  - Successfully installed `yarn@4.0.0`
+  - Found `yarnPath` set to `.yarn/releases/yarn-4.0.0.cjs` in `.yarnrc.yml`
+  - Using vendored yarn at `.yarn/releases/yarn-4.0.0.cjs`
+- Configuring vendored Yarn
+  - Linking `yarn` to vendored `yarnPath`
+  - Successfully configured `yarn@4.0.0`
 - Yarn CLI operating in yarn 4.0.0 mode.
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
@@ -76,7 +73,7 @@ Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:deps'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:web_env'
-Adding layer 'heroku/nodejs:yarn'
+Adding layer 'heroku/nodejs:yarn_vendored'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -91,6 +88,4 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:deps'
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:yarn'
-Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'
