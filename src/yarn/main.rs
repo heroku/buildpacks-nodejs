@@ -23,11 +23,6 @@ use std::str::FromStr;
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
-#[allow(clippy::unnecessary_wraps)]
-pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    Ok(context.app_dir.join("yarn.lock").exists())
-}
-
 #[allow(clippy::too_many_lines)]
 pub(crate) fn build(
     context: &BuildpackBuildContext,
