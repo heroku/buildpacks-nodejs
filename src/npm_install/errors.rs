@@ -1,5 +1,4 @@
 use super::main::NpmInstallBuildpackError;
-use super::npm;
 use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     on_package_json_error,
@@ -11,61 +10,9 @@ use indoc::formatdoc;
 pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
-        NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e),
-        NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e),
-        NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e),
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e),
         NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
     }
-}
-
-fn on_set_cache_dir_error(error: &CmdError) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Failed to set the npm cache directory")
-        .body("An unexpected error occurred while setting the npm cache directory.")
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_npm_version_error(error: npm::VersionError) -> ErrorMessage {
-    match error {
-        npm::VersionError::Command(e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Failed to determine npm version")
-            .body(formatdoc! { "
-                An unexpected error occurred while attempting to determine the current npm version \
-                from the system.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        npm::VersionError::Parse(stdout, e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Failed to parse npm version")
-            .body(formatdoc! { "
-                An unexpected error occurred while parsing npm version information from '{stdout}'.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
-}
-
-fn on_npm_install_error(error: &CmdError) -> ErrorMessage {
-    let npm_install = style::value(error.name());
-    error_message()
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-        .header("Failed to install Node modules")
-        .body(formatdoc! { "
-            The {BUILDPACK_NAME} uses the command {npm_install} to install your Node modules. This command \
-            failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
-
-            Suggestions:
-            - Ensure that this command runs locally without error (exit status = 0).
-            - Check the status of the upstream Node module repository service at https://status.npmjs.org/
-        " })
-        .debug_info(error.to_string())
-        .create()
 }
 
 fn on_build_script_error(error: &CmdError) -> ErrorMessage {
@@ -114,43 +61,11 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
 mod tests {
     use super::*;
     use crate::utils::package_json::PackageJsonError;
-    use crate::utils::vrs::Version;
     use bullet_stream::strip_ansi;
     use fun_run::CommandWithName;
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_npm_install_set_cache_dir_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::NpmSetCacheDir(create_cmd_error(
-            "npm config set cache /some/dir --global",
-        )));
-    }
-
-    #[test]
-    fn test_npm_install_npm_version_command_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::NpmVersion(
-            npm::VersionError::Command(create_cmd_error("npm --version")),
-        ));
-    }
-
-    #[test]
-    fn test_npm_install_npm_version_parse_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::NpmVersion(
-            npm::VersionError::Parse(
-                "not.a.version".into(),
-                Version::parse("not.a.version").unwrap_err(),
-            ),
-        ));
-    }
-
-    #[test]
-    fn test_npm_install_npm_install_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::NpmInstall(create_cmd_error(
-            "npm install",
-        )));
-    }
 
     #[test]
     fn test_npm_install_build_script_error() {

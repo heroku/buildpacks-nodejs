@@ -1,15 +1,15 @@
 ---
-source: buildpacks/nodejs/src/npm_install/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Command failed `npm install`
+  - Command failed `npm ci`
     exit status: 1
     stdout: <empty>
     stderr: <empty>
 
 ! Failed to install Node modules
 !
-! The Heroku Node.js buildpack uses the command `npm install` to install your Node modules. This command failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+! The Heroku Node.js buildpack uses the command `npm ci` to install your Node modules. This command failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
 !
 ! Suggestions:
 ! - Ensure that this command runs locally without error (exit status = 0).

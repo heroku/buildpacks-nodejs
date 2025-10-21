@@ -2,7 +2,7 @@ use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldP
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
 use crate::utils::npm_registry::PackagePackument;
-use crate::utils::vrs::Requirement;
+use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -262,17 +262,17 @@ pub(crate) fn install_package_manager(
     context: &BuildpackBuildContext,
     env: &mut Env,
     resolved_package_manager: &ResolvedPackageManager,
-) -> BuildpackResult<()> {
+) -> BuildpackResult<InstalledPackageManager> {
     match resolved_package_manager {
         ResolvedPackageManager::NpmBundled => {
             // TODO: this needs to be reported but will be addressed later
             // E.g.; print::bullet("Installing npm");
-            //let npm_version = npm::get_version(env)?;
+            let npm_version = npm::get_version(env)?;
             // print::sub_bullet(format!(
             //     "Skipping, bundled {} will be used",
             //     style::value(format!("npm@{npm_version}"))
             // ));
-            Ok(())
+            Ok(InstalledPackageManager::Npm(npm_version))
         }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
             print::bullet("Installing npm");
@@ -288,7 +288,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("npm@{npm_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Npm(npm_version.clone()))
         }
         ResolvedPackageManager::Pnpm(_, pnpm_package_packument) => {
             print::bullet("Installing pnpm");
@@ -299,7 +299,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("pnpm@{pnpm_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Pnpm)
         }
         ResolvedPackageManager::Yarn(_, yarn_package_packument) => {
             print::bullet("Installing Yarn");
@@ -310,7 +310,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Yarn)
         }
         ResolvedPackageManager::YarnVendored(yarn_path) => {
             print::bullet("Configuring vendored Yarn");
@@ -325,7 +325,29 @@ pub(crate) fn install_package_manager(
                 "Successfully configured {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Yarn)
         }
     }
+}
+
+pub(crate) enum InstalledPackageManager {
+    Npm(Version),
+    Pnpm,
+    Yarn,
+}
+
+pub(crate) fn install_dependencies(
+    context: &BuildpackBuildContext,
+    env: &Env,
+    installed_package_manager: &InstalledPackageManager,
+) -> BuildpackResult<()> {
+    match installed_package_manager {
+        InstalledPackageManager::Npm(version) => {
+            npm::install_npm_dependencies(context, env, version)?;
+        }
+        _ => {
+            unreachable!("Only npm code should be calling this function")
+        }
+    }
+    Ok(())
 }

@@ -3,17 +3,15 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use super::configure_npm_cache_directory::configure_npm_cache_directory;
 use super::configure_npm_runtime_env::configure_npm_runtime_env;
 use super::npm;
 use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
-use crate::utils::vrs::Version;
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use fun_run::{CmdError, CommandWithName, NamedOutput};
+use fun_run::CmdError;
 use indoc::indoc;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
@@ -29,11 +27,6 @@ pub(crate) fn build(
     let app_dir = &context.app_dir;
     let package_json = PackageJson::read(app_dir.join("package.json"))
         .map_err(NpmInstallBuildpackError::PackageJson)?;
-
-    print::bullet("Installing node modules");
-    log_npm_version(&env)?;
-    configure_npm_cache_directory(context, &env)?;
-    run_npm_install(&env)?;
 
     print::bullet("Running scripts");
     run_build_scripts(&package_json, buildpack_config, &env)?;
@@ -107,33 +100,6 @@ pub(crate) fn on_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     super::errors::on_npm_install_buildpack_error(error)
 }
 
-fn log_npm_version(env: &Env) -> Result<(), NpmInstallBuildpackError> {
-    npm::Version { env }
-        .into_command()
-        .named_output()
-        .and_then(NamedOutput::nonzero_captured)
-        .map_err(npm::VersionError::Command)
-        .and_then(|output| {
-            let stdout = output.stdout_lossy();
-            stdout
-                .parse::<Version>()
-                .map_err(|e| npm::VersionError::Parse(stdout, e))
-        })
-        .map_err(NpmInstallBuildpackError::NpmVersion)
-        .map(|version| {
-            print::sub_bullet(format!(
-                "Using npm version {}",
-                style::value(version.to_string())
-            ));
-        })
-}
-
-fn run_npm_install(env: &Env) -> Result<(), NpmInstallBuildpackError> {
-    print::sub_stream_cmd(npm::Install { env }.into_command())
-        .map(|_| ())
-        .map_err(NpmInstallBuildpackError::NpmInstall)
-}
-
 fn run_build_scripts(
     package_json: &PackageJson,
     buildpack_config: &BuildpackConfig,
@@ -195,9 +161,6 @@ fn configure_default_processes(
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
     BuildScript(CmdError),
-    NpmInstall(CmdError),
-    NpmSetCacheDir(CmdError),
-    NpmVersion(npm::VersionError),
     PackageJson(PackageJsonError),
     PruneDevDependencies(CmdError),
 }
