@@ -557,8 +557,7 @@ pub(crate) fn prune_dev_dependencies(
     Ok(prune_command)
 }
 
-const YARN_PRUNE_PLUGIN_SOURCE: &str =
-    include_str!("../yarn/@yarnpkg/plugin-prune-dev-dependencies.js");
+const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
 fn install_yarn_prune_plugin() -> Result<PathBuf, ErrorMessage> {
     let temp_dir = tempfile::tempdir()

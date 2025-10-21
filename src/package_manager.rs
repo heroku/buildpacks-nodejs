@@ -535,8 +535,16 @@ pub(crate) fn configure_default_processes(
     installed_package_manager: &InstalledPackageManager,
 ) -> BuildResultBuilder {
     if let Ok(true) = context.app_dir.join("Procfile").try_exists() {
-        print::bullet("Configuring default processes");
-        print::sub_bullet("Skipping default web process (Procfile detected)");
+        match installed_package_manager {
+            InstalledPackageManager::Npm(_) => {
+                print::bullet("Configuring default processes");
+                print::sub_bullet("Skipping default web process (Procfile detected)");
+            }
+            InstalledPackageManager::Yarn(_) => {
+                print::bullet("Skipping default web process (Procfile detected)");
+            }
+            InstalledPackageManager::Pnpm => {}
+        }
         build_result_builder
     } else if package_json.script("start").is_some() {
         match installed_package_manager {
@@ -556,11 +564,22 @@ pub(crate) fn configure_default_processes(
                         .build(),
                 )
             }
-            _ => build_result_builder,
+            InstalledPackageManager::Yarn(_) => build_result_builder.launch(
+                LaunchBuilder::new()
+                    .process(
+                        ProcessBuilder::new(process_type!("web"), ["yarn", "start"])
+                            .default(true)
+                            .build(),
+                    )
+                    .build(),
+            ),
+            InstalledPackageManager::Pnpm => build_result_builder,
         }
     } else {
-        print::bullet("Configuring default processes");
-        print::sub_bullet("Skipping default web process (no start script defined)");
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet("Skipping default web process (no start script defined)");
+        }
         build_result_builder
     }
 }

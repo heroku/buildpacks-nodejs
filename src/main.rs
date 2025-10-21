@@ -1,7 +1,7 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
+use crate::package_manager::InstalledPackageManager;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
-use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
 use indoc::indoc;
 use libcnb::build::BuildResultBuilder;
@@ -21,7 +21,6 @@ mod pnpm_install;
 mod runtime;
 mod runtimes;
 mod utils;
-mod yarn;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
 type BuildpackBuildContext = libcnb::build::BuildContext<NodeJsBuildpack>;
@@ -151,22 +150,10 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         if pnpm_install::main::detect(&context)? {
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder)?;
-        } else if let Ok(true) = &context.app_dir.join("yarn.lock").try_exists() {
-            package_manager::install_dependencies(&context, &env, &installed_package_manager)?;
-            package_manager::run_build_scripts(
-                &env,
-                &installed_package_manager,
-                &package_json,
-                &buildpack_config,
-            )?;
-            package_manager::prune_dev_dependencies(
-                &env,
-                &installed_package_manager,
-                &buildpack_config,
-            )?;
-            (_, build_result_builder) =
-                yarn::main::build(&context, env, build_result_builder, &buildpack_config)?;
-        } else if let Ok(true) = &context.app_dir.join("package-lock.json").try_exists() {
+        } else if ["yarn.lock", "package-lock.json"]
+            .iter()
+            .any(|lockfile| context.app_dir.join(lockfile).exists())
+        {
             package_manager::install_dependencies(&context, &env, &installed_package_manager)?;
             package_manager::run_build_scripts(
                 &env,
@@ -187,13 +174,15 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &installed_package_manager,
             );
 
-            // TODO: this should be done on package manager install but is current here due to how the
-            //       build flow works when the bundled npm version is used
-            utils::runtime_env::register_execd_script(
-                &context,
-                layer_name!("npm_runtime_config"),
-                additional_buildpack_binary_path!("npm_runtime_config"),
-            )?;
+            if matches!(installed_package_manager, InstalledPackageManager::Npm(_)) {
+                // TODO: this should be done on package manager install but is current here due to how the
+                //       build flow works when the bundled npm version is used
+                utils::runtime_env::register_execd_script(
+                    &context,
+                    layer_name!("npm_runtime_config"),
+                    additional_buildpack_binary_path!("npm_runtime_config"),
+                )?;
+            }
 
             if let Some(ConfigValue { source, .. }) = buildpack_config.prune_dev_dependencies {
                 match source {
@@ -222,7 +211,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
-                NodeJsBuildpackError::Yarn(error) => yarn::main::on_error(error),
                 NodeJsBuildpackError::Message(error) => error,
             },
             framework_error => on_framework_error(&framework_error),
@@ -235,7 +223,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 #[derive(Debug)]
 enum NodeJsBuildpackError {
     PnpmInstall(PnpmInstallBuildpackError),
-    Yarn(YarnBuildpackError),
     Message(ErrorMessage),
 }
 
