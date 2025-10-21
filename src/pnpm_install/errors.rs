@@ -1,6 +1,5 @@
 use super::cmd::PnpmVersionError;
 use super::main::PnpmInstallBuildpackError;
-use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
 use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     file_value, on_package_json_error,
@@ -121,53 +120,6 @@ pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) 
                 .create()
         }
 
-        PnpmInstallBuildpackError::NodeBuildScriptsMetadata(error) => {
-            let requires_metadata = style::value("[requires.metadata]");
-            let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-
-            match error {
-                NodeBuildScriptsMetadataError::InvalidEnabledValue(value) => error_message()
-                    .error_type(ErrorType::UserFacing(
-                        SuggestRetryBuild::No,
-                        SuggestSubmitIssue::Yes,
-                    ))
-                    .header("Invalid build plan metadata")
-                    .body(formatdoc! { "
-                        A participating buildpack has set invalid {requires_metadata} for the build plan \
-                        named {buildplan_name}.
-                        
-                        Expected metadata format:
-                        [requires.metadata]
-                        enabled = <bool>
-                        skip_pruning = <bool>
-                        
-                        But configured with:
-                        enabled = {value} <{value_type}>     
-                    ", value_type = value.type_str() })
-                    .create(),
-
-                NodeBuildScriptsMetadataError::InvalidSkipPruningValue(value) => error_message()
-                    .error_type(ErrorType::UserFacing(
-                        SuggestRetryBuild::No,
-                        SuggestSubmitIssue::Yes,
-                    ))
-                    .header("Invalid build plan metadata")
-                    .body(formatdoc! { "
-                        A participating buildpack has set invalid {requires_metadata} for the build plan \
-                        named {buildplan_name}.
-                        
-                        Expected metadata format:
-                        [requires.metadata]
-                        enabled = <bool>
-                        skip_pruning = <bool>
-                        
-                        But configured with:
-                        skip_pruning = {value} <{value_type}>     
-                    ", value_type = value.type_str() })
-                    .create(),
-            }
-        }
-
         PnpmInstallBuildpackError::PruneDevDependencies(error) => error_message()
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
             .header("Failed to prune pnpm dev dependencies")
@@ -203,8 +155,6 @@ pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) 
                         .create(),
                 }
         },
-
-        PnpmInstallBuildpackError::Config(error) => error.into()
     }
 }
 
@@ -219,24 +169,6 @@ mod tests {
     use std::io;
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_pnpm_install_node_build_scripts_metadata_error_for_invalid_enabled_value() {
-        assert_error_snapshot(PnpmInstallBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
-    }
-
-    #[test]
-    fn test_pnpm_install_node_build_scripts_metadata_error_for_invalid_skip_pruning_value() {
-        assert_error_snapshot(PnpmInstallBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
-    }
 
     #[test]
     fn test_pnpm_install_set_store_dir_error() {

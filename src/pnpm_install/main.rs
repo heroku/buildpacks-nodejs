@@ -7,8 +7,7 @@ use super::cmd::PnpmVersionError;
 use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
 use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use super::{cmd, store};
-use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
-use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
+use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::utils::vrs::{Requirement, Version};
@@ -25,19 +24,16 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use toml::Table;
 
+#[allow(clippy::too_many_lines)]
 pub(crate) fn build(
     context: &BuildpackBuildContext,
     env: Env,
     mut build_result_builder: BuildResultBuilder,
+    buildpack_config: &BuildpackConfig,
 ) -> BuildpackResult<(Env, BuildResultBuilder)> {
     let pkg_json_file = context.app_dir.join("package.json");
     let pkg_json =
         PackageJson::read(&pkg_json_file).map_err(PnpmInstallBuildpackError::PackageJson)?;
-    let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
-        .map_err(PnpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
-    let prune_dev_dependencies =
-        read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
-            .map_err(PnpmInstallBuildpackError::Config)?;
     let has_pnpm_workspace_file = has_pnpm_workspace_file(context);
 
     print::bullet("Setting up pnpm dependency store");
@@ -67,7 +63,13 @@ pub(crate) fn build(
         print::sub_bullet("No build scripts found");
     } else {
         for script in scripts {
-            if let Some(false) = node_build_scripts_metadata.enabled {
+            if matches!(
+                buildpack_config.build_scripts_enabled,
+                Some(ConfigValue {
+                    value: false,
+                    source: ConfigValueSource::Buildplan(_)
+                })
+            ) {
                 print::sub_bullet(format!(
                     "! Not running {script} as it was disabled by a participating buildpack",
                     script = style::value(&script)
@@ -79,9 +81,21 @@ pub(crate) fn build(
     }
 
     print::bullet("Pruning dev dependencies");
-    if prune_dev_dependencies == Some(false) {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::ProjectToml
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled in project.toml");
-    } else if node_build_scripts_metadata.skip_pruning == Some(true) {
+    } else if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::Buildplan(_)
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
     } else {
         pnpm_prune_dev_dependencies(
@@ -112,14 +126,26 @@ pub(crate) fn build(
         );
     }
 
-    if prune_dev_dependencies.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::ProjectToml,
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
             found in `project.toml`. This feature may change unexpectedly in the future.
         " });
     }
 
-    if node_build_scripts_metadata.skip_pruning.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::Buildplan(_),
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
             to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
@@ -147,10 +173,8 @@ pub(crate) enum PnpmInstallBuildpackError {
         to: PathBuf,
         source: std::io::Error,
     },
-    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneDevDependencies(fun_run::CmdError),
     PnpmVersion(PnpmVersionError),
-    Config(ConfigError),
 }
 
 impl From<PnpmInstallBuildpackError> for BuildpackError {

@@ -149,7 +149,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         // dependency installation & process registration
         if context.app_dir.join("pnpm-lock.yaml").exists() {
             (_, build_result_builder) =
-                pnpm_install::main::build(&context, env, build_result_builder)?;
+                pnpm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
         } else if ["yarn.lock", "package-lock.json"]
             .iter()
             .any(|lockfile| context.app_dir.join(lockfile).exists())
