@@ -36,9 +36,9 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/yarn_cache`
 
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/yarn_cache'
 
   - Done (<time_elapsed>)
 - Installing dependencies
@@ -64,10 +64,10 @@ heroku/nodejs <buildpack-version>
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
-Adding layer 'heroku/nodejs:deps'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:yarn'
+Adding layer 'heroku/nodejs:yarn_cache'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -79,8 +79,8 @@ no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs:deps'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarn_cache'
 Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

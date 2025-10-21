@@ -1,12 +1,8 @@
-use super::main::{NodeLinker, UnknownNodeLinker, Yarn};
 use crate::utils::vrs::{Version, VersionError};
 use bullet_stream::global::print;
 use fun_run::{CmdError, CommandWithName};
 use libcnb::Env;
-use std::{
-    path::{Path, PathBuf},
-    process::Command,
-};
+use std::{path::Path, process::Command};
 
 #[derive(Debug)]
 pub(crate) enum YarnVersionError {
@@ -28,60 +24,6 @@ pub(crate) fn yarn_version(env: &Env) -> Result<Version, YarnVersionError> {
                 .parse::<Version>()
                 .map_err(|e| YarnVersionError::Parse(stdout, e))
         })
-}
-
-/// Execute `yarn config get` to determine where the yarn cache is.
-pub(crate) fn yarn_get_cache(yarn_line: &Yarn, env: &Env) -> Result<PathBuf, CmdError> {
-    let mut cmd = Command::new("yarn");
-    cmd.envs(env);
-
-    cmd.arg("config");
-    cmd.arg("get");
-    if yarn_line == &Yarn::Yarn1 {
-        cmd.arg("cache-folder");
-    } else {
-        cmd.arg("cacheFolder");
-    }
-
-    cmd.named_output()
-        .map(|output| PathBuf::from(output.stdout_lossy().trim()))
-}
-
-/// Execute `yarn config set` to set the yarn cache to a specfic location.
-pub(crate) fn yarn_set_cache(
-    yarn_line: &Yarn,
-    cache_path: &Path,
-    env: &Env,
-) -> Result<(), CmdError> {
-    let cache_path_string = cache_path.to_string_lossy();
-    let mut args = vec!["config", "set"];
-    if yarn_line == &Yarn::Yarn1 {
-        args.append(&mut vec!["cache-folder", &cache_path_string]);
-    } else {
-        args.append(&mut vec!["cacheFolder", &cache_path_string]);
-    }
-    print::sub_stream_cmd(Command::new("yarn").args(args).envs(env)).map(|_| ())
-}
-
-/// Execute `yarn install` to install dependencies for a yarn project.
-pub(crate) fn yarn_install(
-    yarn_line: &Yarn,
-    zero_install: bool,
-    yarn_env: &Env,
-) -> Result<(), CmdError> {
-    let mut args = vec!["install"];
-    if yarn_line == &Yarn::Yarn1 {
-        args.push("--production=false");
-        args.push("--frozen-lockfile");
-    } else {
-        args.push("--immutable");
-        args.push("--inline-builds");
-        if zero_install {
-            args.push("--immutable-cache");
-        }
-    }
-
-    print::sub_stream_cmd(Command::new("yarn").args(args).envs(yarn_env)).map(|_| ())
 }
 
 /// Execute `yarn run` commands like `build`.
@@ -113,32 +55,4 @@ pub(crate) fn yarn_prune_with_plugin(env: &Env, plugin_path: &Path) -> Result<()
             .args(["heroku", "prune"]),
     )
     .map(|_| ())
-}
-
-pub(crate) fn yarn_config_get_node_linker(
-    env: &Env,
-    yarn: &Yarn,
-) -> Result<Option<NodeLinker>, GetNodeLinkerError> {
-    match yarn {
-        Yarn::Yarn1 => Ok(None),
-        Yarn::Yarn2 | Yarn::Yarn3 | Yarn::Yarn4 => {
-            let output = Command::new("yarn")
-                .envs(env)
-                .args(["config", "get", "nodeLinker"])
-                .named_output()
-                .map_err(GetNodeLinkerError::Command)?;
-            let node_linker = output
-                .stdout_lossy()
-                .trim()
-                .parse()
-                .map_err(GetNodeLinkerError::Parse)?;
-            Ok(Some(node_linker))
-        }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) enum GetNodeLinkerError {
-    Parse(UnknownNodeLinker),
-    Command(CmdError),
 }

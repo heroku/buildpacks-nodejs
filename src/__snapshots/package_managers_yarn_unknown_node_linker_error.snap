@@ -1,11 +1,11 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 ! Failed to parse Yarn's nodeLinker configuration
 !
 ! An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
 ! Expected - 'pnp', 'node-modules', or 'pnpm'
-! Actual   - 'test-linker'
+! Actual   - 'unknown'
 !
 ! Suggestions:
 ! - Run `yarn config get nodeLinker` locally to check your 'nodeLinker' configuration.

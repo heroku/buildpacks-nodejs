@@ -3,9 +3,8 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use super::cmd::{GetNodeLinkerError, YarnVersionError};
-use super::configure_yarn_cache::{DepsLayerError, configure_yarn_cache};
-use super::{cfg, cmd};
+use super::cmd;
+use super::cmd::YarnVersionError;
 use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
@@ -18,7 +17,6 @@ use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
 
@@ -36,20 +34,6 @@ pub(crate) fn build(
 
     let yarn = Yarn::from_major(yarn_version.major())
         .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
-
-    let zero_install = cfg::cache_populated(
-        &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
-    );
-    if zero_install {
-        print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
-    } else {
-        let yarn_node_linker = cmd::yarn_config_get_node_linker(&env, &yarn)
-            .map_err(YarnBuildpackError::YarnGetNodeLinker)?;
-        configure_yarn_cache(context, &yarn, yarn_node_linker.as_ref(), &env)?;
-    }
-
-    print::bullet("Installing dependencies");
-    cmd::yarn_install(&yarn, zero_install, &env).map_err(YarnBuildpackError::YarnInstall)?;
 
     print::bullet("Running scripts");
     let scripts = pkg_json.build_scripts();
@@ -145,14 +129,10 @@ pub(crate) fn on_error(error: YarnBuildpackError) -> ErrorMessage {
 #[derive(Debug)]
 pub(crate) enum YarnBuildpackError {
     BuildScript(fun_run::CmdError),
-    DepsLayer(DepsLayerError),
     PackageJson(PackageJsonError),
-    YarnCacheGet(fun_run::CmdError),
-    YarnInstall(fun_run::CmdError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),
     PruneYarnDevDependencies(fun_run::CmdError),
-    YarnGetNodeLinker(GetNodeLinkerError),
     InstallPrunePluginError(std::io::Error),
 }
 
@@ -199,26 +179,3 @@ impl Yarn {
         }
     }
 }
-
-#[derive(Debug)]
-pub(crate) enum NodeLinker {
-    Pnp,
-    Pnpm,
-    NodeModules,
-}
-
-impl FromStr for NodeLinker {
-    type Err = UnknownNodeLinker;
-
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value {
-            "pnp" => Ok(NodeLinker::Pnp),
-            "node-modules" => Ok(NodeLinker::NodeModules),
-            "pnpm" => Ok(NodeLinker::Pnpm),
-            _ => Err(UnknownNodeLinker(value.to_string())),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub(crate) struct UnknownNodeLinker(pub(crate) String);

@@ -1,4 +1,3 @@
-use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -11,10 +10,15 @@ use fun_run::CommandWithName;
 use indoc::formatdoc;
 use libcnb::Env;
 use libcnb::data::layer_name;
-use libcnb::layer::UncachedLayerDefinition;
+use libcnb::layer::{
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
+    UncachedLayerDefinition,
+};
 use libcnb::layer_env::Scope;
+use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::str::FromStr;
 use std::sync::LazyLock;
 
 static YARN_BERRY_RANGE: LazyLock<Requirement> = LazyLock::new(|| {
@@ -190,7 +194,7 @@ fn create_write_vendored_yarn_link_error(yarn_path: &Path, error: &std::io::Erro
     let yarn_path = style::value(yarn_path.to_string_lossy());
     let yarn = style::value("yarn");
     error_message()
-        .error_type(Internal)
+        .error_type(ErrorType::Internal)
         .header("Failed to create vendored Yarn link")
         .body(formatdoc! { "
             An unexpected error occurred while attempting to create a symbolic link from {yarn_path} to {yarn}.
@@ -211,7 +215,7 @@ pub(crate) fn get_version(env: &Env) -> BuildpackResult<Version> {
 fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMessage {
     match error {
         VersionCommandError::Command(e) => error_message()
-            .error_type(Internal)
+            .error_type(ErrorType::Internal)
             .header("Failed to determine Yarn version")
             .body(formatdoc! { "
                 An unexpected error occurred while attempting to determine the current Yarn version \
@@ -221,7 +225,7 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
             .create(),
 
         VersionCommandError::Parse(stdout, e) => error_message()
-            .error_type(Internal)
+            .error_type(ErrorType::Internal)
             .header("Failed to parse Yarn version")
             .body(formatdoc! { "
                 An unexpected error occurred while parsing Yarn version information from '{stdout}'.
@@ -232,12 +236,43 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
 }
 
 pub(crate) fn install_dependencies(
-    _context: &BuildpackBuildContext,
+    context: &BuildpackBuildContext,
     env: &Env,
     version: &Version,
 ) -> BuildpackResult<()> {
     print::bullet("Setting up yarn dependency cache");
+    ensure_global_cache_is_disabled(env, version)?;
 
+    let yarn_cache = get_cache_folder_config(env, version)?;
+    let zero_install_mode = is_yarn_zero_install_mode(&yarn_cache);
+    if zero_install_mode {
+        print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+    } else {
+        let node_linker = get_node_linker_config(env, version)?;
+        let cache_dir = create_cache_directory(context, version, node_linker.as_ref())?;
+        set_cache_folder_config(env, version, &cache_dir)?;
+    }
+
+    print::bullet("Installing dependencies");
+    let mut yarn_install_command = Command::new("yarn");
+    yarn_install_command.envs(env);
+    yarn_install_command.arg("install");
+    if version.major() == 1 {
+        yarn_install_command.args(["--production=false", "--frozen-lockfile"]);
+    } else {
+        yarn_install_command.args(["--immutable", "--inline-builds"]);
+        if zero_install_mode {
+            yarn_install_command.arg("--immutable-cache");
+        }
+    }
+
+    print::sub_stream_cmd(yarn_install_command)
+        .map_err(|e| create_yarn_install_command_error(&e))?;
+
+    Ok(())
+}
+
+fn ensure_global_cache_is_disabled(env: &Env, version: &Version) -> Result<(), ErrorMessage> {
     // Execute `yarn config set enableGlobalCache false`. This setting is
     // only available on yarn >= 2. If set to `true`, the `cacheFolder` setting
     // will be ignored, and cached dependencies will be stored in the global
@@ -250,21 +285,243 @@ pub(crate) fn install_dependencies(
                 .args(["config", "set", "enableGlobalCache", "false"])
                 .envs(env),
         )
-        .map_err(|e| create_yarn_disable_global_cache_error(&e))?;
+        .map_err(|e| create_ensure_global_cache_is_disabled_error(&e))?;
     }
-
-    // TODO: implement yarn install
-
     Ok(())
 }
 
-fn create_yarn_disable_global_cache_error(error: &fun_run::CmdError) -> ErrorMessage {
+fn create_ensure_global_cache_is_disabled_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
         .error_type(ErrorType::Internal)
         .header("Failed to disable Yarn global cache")
         .body(formatdoc! {"
             The Heroku Node.js buildpack was unable to disable the Yarn global cache.
         "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn get_cache_folder_config(env: &Env, version: &Version) -> Result<PathBuf, ErrorMessage> {
+    Command::new("yarn")
+        .envs(env)
+        .arg("config")
+        .arg("get")
+        .arg(match version.major() {
+            1 => "cache-folder",
+            _ => "cacheFolder",
+        })
+        .named_output()
+        .map(|output| PathBuf::from(output.stdout_lossy().trim()))
+        .map_err(|e| create_get_cache_folder_config_error(&e))
+}
+
+fn create_get_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to read configured Yarn cache directory")
+        .body(formatdoc! {"
+            The Heroku Node.js buildpack was unable to read the configuration for the Yarn cache directory.
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn set_cache_folder_config(
+    env: &Env,
+    version: &Version,
+    cache_dir: &Path,
+) -> Result<(), ErrorMessage> {
+    print::sub_stream_cmd(
+        Command::new("yarn")
+            .envs(env)
+            .arg("config")
+            .arg("set")
+            .arg(match version.major() {
+                1 => "cache-folder",
+                _ => "cacheFolder",
+            })
+            .arg(cache_dir.to_string_lossy().to_string()),
+    )
+    .map(|_| ())
+    .map_err(|e| create_set_cache_folder_config_error(&e))
+}
+
+fn create_set_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to configure Yarn cache directory")
+        .body(formatdoc! {"
+            An unexpected error occurred while configuring the Yarn cache directory.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+// A yarn cache is populated if it exists and has non-hidden files, indicating a zero-install mode
+// should be employed.
+fn is_yarn_zero_install_mode(yarn_cache: &Path) -> bool {
+    yarn_cache
+        .read_dir()
+        .map(|mut contents| {
+            contents.any(|entry| {
+                entry
+                    .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
+                    .unwrap_or(false)
+            })
+        })
+        .unwrap_or(false)
+}
+
+fn get_node_linker_config(
+    env: &Env,
+    version: &Version,
+) -> Result<Option<NodeLinker>, ErrorMessage> {
+    if version.major() == 1 {
+        Ok(None)
+    } else {
+        let output = Command::new("yarn")
+            .envs(env)
+            .args(["config", "get", "nodeLinker"])
+            .named_output()
+            .map_err(|e| create_get_node_linker_config_error(&e))?;
+        let node_linker = output.stdout_lossy().trim().parse()?;
+        Ok(Some(node_linker))
+    }
+}
+
+fn create_get_node_linker_config_error(error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+        .header("Failed to read Yarn's nodeLinker configuration")
+        .body(formatdoc! { "
+            An unexpected value was encountered when trying to read Yarn's nodeLinker configuration. This \
+            configuration is read using the command {read_cmd}.
+
+            Suggestions:
+            - Ensure the above command runs locally.
+        ", read_cmd = style::command(error.name()) })
+        .debug_info(error.to_string())
+        .create()
+}
+
+#[derive(Debug)]
+pub(crate) enum NodeLinker {
+    Pnp,
+    Pnpm,
+    NodeModules,
+}
+
+impl FromStr for NodeLinker {
+    type Err = ErrorMessage;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value {
+            "pnp" => Ok(NodeLinker::Pnp),
+            "node-modules" => Ok(NodeLinker::NodeModules),
+            "pnpm" => Ok(NodeLinker::Pnpm),
+            _ => Err(create_unknown_node_linker_error(value)),
+        }
+    }
+}
+
+fn create_unknown_node_linker_error(value: &str) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
+        .header("Failed to parse Yarn's nodeLinker configuration")
+        .body(formatdoc! { "
+                An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
+                Expected - 'pnp', 'node-modules', or 'pnpm'
+                Actual   - '{value}'
+
+                Suggestions:
+                - Run {check_cmd} locally to check your 'nodeLinker' configuration.
+                - Set an explicit 'nodeLinker' configuration in {yarnrc_yml} ({install_modes_url})
+            ",
+            check_cmd = style::command("yarn config get nodeLinker"),
+            yarnrc_yml = style::value(".yarnrc.yml"),
+            install_modes_url = style::url("https://yarnpkg.com/features/linkers")
+        })
+        .create()
+}
+
+fn create_cache_directory(
+    context: &BuildpackBuildContext,
+    version: &Version,
+    node_linker: Option<&NodeLinker>,
+) -> BuildpackResult<PathBuf> {
+    let new_metadata = YarnCacheDirectoryLayerMetadata {
+        layer_version: YARN_CACHE_DIRECTORY_LAYER_VERSION.to_string(),
+        cache_usage_count: 0.0,
+        yarn_major_version: version.major().to_string(),
+    };
+
+    let yarn_cache_layer = context.cached_layer(
+        layer_name!("yarn_cache"),
+        CachedLayerDefinition {
+            build: true,
+            // In Plug'n'Play mode, Yarn resolves packages directly from the cache so it must be present at launch
+            launch: matches!(node_linker, Some(NodeLinker::Pnp)),
+            invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
+            restored_layer_action: &|old_metadata: &YarnCacheDirectoryLayerMetadata, _| {
+                let is_reusable = old_metadata.yarn_major_version
+                    == new_metadata.yarn_major_version
+                    && old_metadata.layer_version == new_metadata.layer_version
+                    && old_metadata.cache_usage_count < YARN_CACHE_DIRECTORY_MAX_CACHE_USAGE_COUNT;
+                if is_reusable {
+                    RestoredLayerAction::KeepLayer
+                } else {
+                    RestoredLayerAction::DeleteLayer
+                }
+            },
+        },
+    )?;
+
+    match yarn_cache_layer.state {
+        LayerState::Restored { .. } => {
+            print::sub_bullet("Restoring yarn dependency cache");
+        }
+        LayerState::Empty { cause } => {
+            if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
+                print::sub_bullet("Clearing yarn dependency cache");
+            }
+            yarn_cache_layer.write_metadata(YarnCacheDirectoryLayerMetadata {
+                cache_usage_count: new_metadata.cache_usage_count + 1.0,
+                ..new_metadata
+            })?;
+        }
+    }
+
+    Ok(yarn_cache_layer.path())
+}
+
+const YARN_CACHE_DIRECTORY_MAX_CACHE_USAGE_COUNT: f32 = 150.0;
+const YARN_CACHE_DIRECTORY_LAYER_VERSION: &str = "1";
+
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
+#[serde(deny_unknown_fields)]
+struct YarnCacheDirectoryLayerMetadata {
+    // Usings float here due to [an issue with lifecycle's handling of integers](https://github.com/buildpacks/lifecycle/issues/884)
+    cache_usage_count: f32,
+    yarn_major_version: String,
+    layer_version: String,
+}
+
+fn create_yarn_install_command_error(error: &fun_run::CmdError) -> ErrorMessage {
+    let yarn_install = style::value(error.name());
+    error_message()
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::Yes,
+        ))
+        .header("Failed to install Node modules")
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack uses the command {yarn_install} to install your Node modules. This command \
+            failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+            - Check the status of the upstream Node module repository service at https://status.npmjs.org/
+        " })
         .debug_info(error.to_string())
         .create()
 }
@@ -372,9 +629,62 @@ mod tests {
     }
 
     #[test]
-    fn yarn_disable_global_cache_error() {
-        assert_error_snapshot(&create_yarn_disable_global_cache_error(&create_cmd_error(
-            "yarn config set enableGlobalCache false",
+    fn ensure_global_cache_is_disabled_error() {
+        assert_error_snapshot(&create_ensure_global_cache_is_disabled_error(
+            &create_cmd_error("yarn config set enableGlobalCache false"),
+        ));
+    }
+
+    #[test]
+    fn get_cache_folder_config_error() {
+        assert_error_snapshot(&create_get_cache_folder_config_error(&create_cmd_error(
+            "yarn config get cacheFolder",
         )));
+    }
+
+    #[test]
+    fn set_cache_folder_config_error() {
+        assert_error_snapshot(&create_set_cache_folder_config_error(&create_cmd_error(
+            "yarn config set cacheFolder /path/to/cache",
+        )));
+    }
+
+    #[test]
+    fn get_node_linker_config_error() {
+        assert_error_snapshot(&create_get_node_linker_config_error(&create_cmd_error(
+            "yarn config get nodeLinker",
+        )));
+    }
+
+    #[test]
+    fn unknown_node_linker_error() {
+        assert_error_snapshot(&create_unknown_node_linker_error("unknown"));
+    }
+
+    #[test]
+    fn yarn_install_command_error() {
+        assert_error_snapshot(&create_yarn_install_command_error(&create_cmd_error(
+            "yarn install",
+        )));
+    }
+
+    #[test]
+    fn test_is_zero_install_mode_when_cache_is_populated() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("./tests/fixtures/yarn-3-modules-zero/.yarn/cache");
+        assert!(
+            is_yarn_zero_install_mode(&path),
+            "Expected zero-install app to have a populated cache"
+        );
+    }
+
+    #[test]
+    fn test_is_zero_install_mode_when_cache_is_unpopulated() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("./tests/fixtures/yarn-4-pnp-nonzero/.yarn/cache");
+        assert!(
+            !is_yarn_zero_install_mode(&path),
+            "Expected non-zero-install app to have an unpopulated cache"
+        );
     }
 }

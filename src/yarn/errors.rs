@@ -1,10 +1,9 @@
-use super::cmd::{GetNodeLinkerError, YarnVersionError};
-use super::configure_yarn_cache::DepsLayerError;
+use super::cmd::YarnVersionError;
 use super::main::YarnBuildpackError;
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
-    file_value, on_package_json_error,
+    on_package_json_error,
 };
 use bullet_stream::style;
 use fun_run::CmdError;
@@ -13,16 +12,12 @@ use indoc::formatdoc;
 pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
     match error {
         YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
-        YarnBuildpackError::DepsLayer(e) => on_deps_layer_error(&e),
         YarnBuildpackError::PackageJson(e) => on_package_json_error(e),
-        YarnBuildpackError::YarnCacheGet(e) => on_yarn_cache_get_error(&e),
-        YarnBuildpackError::YarnInstall(e) => on_yarn_install_error(&e),
         YarnBuildpackError::YarnVersionDetect(e) => on_yarn_version_detect_error(&e),
         YarnBuildpackError::YarnVersionUnsupported(version) => {
             on_yarn_version_unsupported_error(version)
         }
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
-        YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
     }
 }
@@ -49,60 +44,6 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
             Suggestions:
             - Ensure that this command runs locally without error.
         "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_deps_layer_error(error: &DepsLayerError) -> ErrorMessage {
-    match error {
-        DepsLayerError::CreateCacheDir(path, e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Failed to create Yarn cache directory")
-            .body(formatdoc! {"
-                An unexpected I/O error occurred while creating the cache directory at {path} that will be \
-                used by the Yarn package manager.
-            ", path = file_value(path) })
-            .debug_info(e.to_string())
-            .create(),
-
-        DepsLayerError::YarnCacheSet(e) => error_message()
-            .error_type(ErrorType::Internal)
-            .header("Failed to configure Yarn cache directory")
-            .body(formatdoc! {"
-                An unexpected error occurred while configuring the Yarn cache directory.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
-}
-
-fn on_yarn_cache_get_error(error: &CmdError) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Failed to read configured Yarn cache directory")
-        .body(formatdoc! {"
-            The {BUILDPACK_NAME} was unable to read the configuration for the Yarn cache directory.
-        "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_yarn_install_error(error: &CmdError) -> ErrorMessage {
-    let yarn_install = style::value(error.name());
-    error_message()
-        .error_type(ErrorType::UserFacing(
-            SuggestRetryBuild::Yes,
-            SuggestSubmitIssue::Yes,
-        ))
-        .header("Failed to install Node modules")
-        .body(formatdoc! { "
-            The {BUILDPACK_NAME} uses the command {yarn_install} to install your Node modules. This command \
-            failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
-
-            Suggestions:
-            - Ensure that this command runs locally without error (exit status = 0).
-            - Check the status of the upstream Node module repository service at https://status.npmjs.org/
-        " })
         .debug_info(error.to_string())
         .create()
 }
@@ -162,41 +103,6 @@ fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
         .create()
 }
 
-fn on_get_node_linker_error(error: &GetNodeLinkerError) -> ErrorMessage {
-    match error {
-        GetNodeLinkerError::Parse(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-            .header("Failed to parse Yarn's nodeLinker configuration")
-            .body(formatdoc! { "
-                An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
-                Expected - 'pnp', 'node-modules', or 'pnpm'
-                Actual   - '{value}'
-
-                Suggestions:
-                - Run {check_cmd} locally to check your 'nodeLinker' configuration.
-                - Set an explicit 'nodeLinker' configuration in {yarnrc_yml} ({install_modes_url})
-                ",
-                value = e.0,
-                check_cmd = style::command("yarn config get nodeLinker"),
-                yarnrc_yml = style::value(".yarnrc.yml"),
-                install_modes_url = style::url("https://yarnpkg.com/features/linkers")
-            })
-            .create(),
-
-        GetNodeLinkerError::Command(e) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
-            .header("Failed to read Yarn's nodeLinker configuration")
-            .body(formatdoc! { "
-                An unexpected value was encountered when trying to read Yarn's nodeLinker configuration. This \
-                configuration is read using the command {read_cmd}.
-
-                Suggestions:
-                - Ensure the above command runs locally.
-            ", read_cmd = style::command(e.name()) })
-            .debug_info(e.to_string()).create()
-    }
-}
-
 fn on_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
     error_message()
         .error_type(ErrorType::Internal)
@@ -214,7 +120,6 @@ mod tests {
     use super::*;
     use crate::utils::package_json::PackageJsonError;
     use crate::utils::vrs::{Version, VersionError};
-    use crate::yarn::main::UnknownNodeLinker;
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, CommandWithName};
     use insta::{assert_snapshot, with_settings};
@@ -225,23 +130,6 @@ mod tests {
     fn test_yarn_build_script_error() {
         assert_error_snapshot(YarnBuildpackError::BuildScript(create_cmd_error(
             "yarn run build",
-        )));
-    }
-
-    #[test]
-    fn test_yarn_deps_layer_create_cache_dir_error() {
-        assert_error_snapshot(YarnBuildpackError::DepsLayer(
-            DepsLayerError::CreateCacheDir(
-                "/layers/yarn/deps/cache".into(),
-                create_io_error("Disk full"),
-            ),
-        ));
-    }
-
-    #[test]
-    fn test_yarn_deps_layer_yarn_cache_set_error() {
-        assert_error_snapshot(YarnBuildpackError::DepsLayer(DepsLayerError::YarnCacheSet(
-            create_cmd_error("yarn config set cache-dir /some/dir"),
         )));
     }
 
@@ -257,20 +145,6 @@ mod tests {
         assert_error_snapshot(YarnBuildpackError::PackageJson(
             PackageJsonError::ParseError(create_json_error()),
         ));
-    }
-
-    #[test]
-    fn test_yarn_cache_get_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnCacheGet(create_cmd_error(
-            "yarn config get cache-dir",
-        )));
-    }
-
-    #[test]
-    fn test_yarn_install_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnInstall(create_cmd_error(
-            "yarn install",
-        )));
     }
 
     #[test]
@@ -296,20 +170,6 @@ mod tests {
     fn test_yarn_prune_dev_dependencies_error() {
         assert_error_snapshot(YarnBuildpackError::PruneYarnDevDependencies(
             create_cmd_error("yarn heroku prune"),
-        ));
-    }
-
-    #[test]
-    fn test_yarn_get_node_linker_parse_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnGetNodeLinker(
-            GetNodeLinkerError::Parse(UnknownNodeLinker("test-linker".to_string())),
-        ));
-    }
-
-    #[test]
-    fn test_yarn_get_node_linker_command_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnGetNodeLinker(
-            GetNodeLinkerError::Command(create_cmd_error("yarn config get nodeLinker")),
         ));
     }
 
