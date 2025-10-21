@@ -11,8 +11,85 @@ use std::path::Path;
 use test_support::{
     add_build_script, add_package_json_dependency, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    update_json_file,
+    set_node_engine, set_npm_engine, set_package_manager, update_json_file,
 };
+
+#[test]
+#[ignore = "integration test"]
+fn npm_engine_install() {
+    nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        // verify that the `npm_engine` layer comes before the `dist` layer in the PATH
+        assert_contains!(
+            ctx.run_shell_command("env").stdout,
+            "PATH=/layers/heroku_nodejs/npm_engine/bin:/layers/heroku_nodejs/dist/bin"
+        );
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn npm_package_manager_install() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_package_manager(&app_dir, "npm@10.2.0");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            let output = ctx.run_shell_command("npm --version");
+            assert_contains!(output.stdout, "10.2.0");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_npm_engine_caching() {
+    nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_npm_version_change_invalidates_npm_engine_cache() {
+    nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+
+        let mut config = ctx.config.clone();
+        config.app_dir_preprocessor(|app_dir| {
+            set_npm_engine(&app_dir, "9.6.5");
+        });
+
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_node_version_change_invalidates_npm_engine_cache() {
+    nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+
+        let mut config = ctx.config.clone();
+        config.app_dir_preprocessor(|app_dir| {
+            set_node_engine(&app_dir, "16.20.1");
+        });
+
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
+    });
+}
 
 #[test]
 #[ignore = "integration test"]
