@@ -37,10 +37,6 @@ pub(crate) fn build(
     let yarn = Yarn::from_major(yarn_version.major())
         .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
 
-    print::bullet("Setting up yarn dependency cache");
-    cmd::yarn_disable_global_cache(&yarn, &env)
-        .map_err(YarnBuildpackError::YarnDisableGlobalCache)?;
-
     let zero_install = cfg::cache_populated(
         &cmd::yarn_get_cache(&yarn, &env).map_err(YarnBuildpackError::YarnCacheGet)?,
     );
@@ -152,7 +148,6 @@ pub(crate) enum YarnBuildpackError {
     DepsLayer(DepsLayerError),
     PackageJson(PackageJsonError),
     YarnCacheGet(fun_run::CmdError),
-    YarnDisableGlobalCache(fun_run::CmdError),
     YarnInstall(fun_run::CmdError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),

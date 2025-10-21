@@ -318,7 +318,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
-            Ok(InstalledPackageManager::Yarn)
+            Ok(InstalledPackageManager::Yarn(yarn_version.clone()))
         }
         ResolvedPackageManager::YarnVendored(yarn_path) => {
             print::bullet("Configuring vendored Yarn");
@@ -333,7 +333,7 @@ pub(crate) fn install_package_manager(
                 "Successfully configured {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
-            Ok(InstalledPackageManager::Yarn)
+            Ok(InstalledPackageManager::Yarn(yarn_version.clone()))
         }
     }
 }
@@ -341,7 +341,7 @@ pub(crate) fn install_package_manager(
 pub(crate) enum InstalledPackageManager {
     Npm(Version),
     Pnpm,
-    Yarn,
+    Yarn(Version),
 }
 
 pub(crate) fn install_dependencies(
@@ -353,8 +353,11 @@ pub(crate) fn install_dependencies(
         InstalledPackageManager::Npm(version) => {
             npm::install_npm_dependencies(context, env, version)?;
         }
-        _ => {
-            unreachable!("Only npm code should be calling this function")
+        InstalledPackageManager::Yarn(version) => {
+            yarn::install_dependencies(context, env, version)?;
+        }
+        InstalledPackageManager::Pnpm => {
+            unreachable!("Only npm and yarn code should be calling this function")
         }
     }
     Ok(())

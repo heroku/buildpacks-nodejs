@@ -16,7 +16,6 @@ pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::DepsLayer(e) => on_deps_layer_error(&e),
         YarnBuildpackError::PackageJson(e) => on_package_json_error(e),
         YarnBuildpackError::YarnCacheGet(e) => on_yarn_cache_get_error(&e),
-        YarnBuildpackError::YarnDisableGlobalCache(e) => on_yarn_disable_global_cache_error(&e),
         YarnBuildpackError::YarnInstall(e) => on_yarn_install_error(&e),
         YarnBuildpackError::YarnVersionDetect(e) => on_yarn_version_detect_error(&e),
         YarnBuildpackError::YarnVersionUnsupported(version) => {
@@ -83,17 +82,6 @@ fn on_yarn_cache_get_error(error: &CmdError) -> ErrorMessage {
         .header("Failed to read configured Yarn cache directory")
         .body(formatdoc! {"
             The {BUILDPACK_NAME} was unable to read the configuration for the Yarn cache directory.
-        "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_yarn_disable_global_cache_error(error: &CmdError) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Failed to disable Yarn global cache")
-        .body(formatdoc! {"
-            The {BUILDPACK_NAME} was unable to disable the Yarn global cache.
         "})
         .debug_info(error.to_string())
         .create()
@@ -276,13 +264,6 @@ mod tests {
         assert_error_snapshot(YarnBuildpackError::YarnCacheGet(create_cmd_error(
             "yarn config get cache-dir",
         )));
-    }
-
-    #[test]
-    fn test_yarn_disable_global_cache_error() {
-        assert_error_snapshot(YarnBuildpackError::YarnDisableGlobalCache(
-            create_cmd_error("yarn config set enableGlobalCache false"),
-        ));
     }
 
     #[test]

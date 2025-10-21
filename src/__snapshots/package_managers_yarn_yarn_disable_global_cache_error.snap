@@ -1,5 +1,6 @@
 ---
-source: buildpacks/nodejs/src/yarn/errors.rs
+source: src/utils/error_handling.rs
+assertion_line: 207
 ---
 - Debug Info:
   - Command failed `yarn config set enableGlobalCache false`

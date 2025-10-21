@@ -5,6 +5,7 @@ use crate::utils::error_handling::{
 use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
 use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult, utils};
+use bullet_stream::global::print;
 use bullet_stream::style;
 use fun_run::CommandWithName;
 use indoc::formatdoc;
@@ -230,6 +231,44 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
     }
 }
 
+pub(crate) fn install_dependencies(
+    _context: &BuildpackBuildContext,
+    env: &Env,
+    version: &Version,
+) -> BuildpackResult<()> {
+    print::bullet("Setting up yarn dependency cache");
+
+    // Execute `yarn config set enableGlobalCache false`. This setting is
+    // only available on yarn >= 2. If set to `true`, the `cacheFolder` setting
+    // will be ignored, and cached dependencies will be stored in the global
+    // Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
+    // persisted into the build cache or the final image. Yarn 2.x and 3.x have
+    // a default value to `false`. Yarn 4.x has a default value of `true`.
+    if version.major() >= 2 {
+        print::sub_stream_cmd(
+            Command::new("yarn")
+                .args(["config", "set", "enableGlobalCache", "false"])
+                .envs(env),
+        )
+        .map_err(|e| create_yarn_disable_global_cache_error(&e))?;
+    }
+
+    // TODO: implement yarn install
+
+    Ok(())
+}
+
+fn create_yarn_disable_global_cache_error(error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to disable Yarn global cache")
+        .body(formatdoc! {"
+            The Heroku Node.js buildpack was unable to disable the Yarn global cache.
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -330,5 +369,12 @@ mod tests {
             &PathBuf::from("/path/to/yarn"),
             &std::io::Error::other("Not found"),
         ));
+    }
+
+    #[test]
+    fn yarn_disable_global_cache_error() {
+        assert_error_snapshot(&create_yarn_disable_global_cache_error(&create_cmd_error(
+            "yarn config set enableGlobalCache false",
+        )));
     }
 }

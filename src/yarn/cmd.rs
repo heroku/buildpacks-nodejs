@@ -63,24 +63,6 @@ pub(crate) fn yarn_set_cache(
     print::sub_stream_cmd(Command::new("yarn").args(args).envs(env)).map(|_| ())
 }
 
-/// Execute `yarn config set enableGlobalCache false`. This setting is
-/// only available on yarn >= 2. If set to `true`, the `cacheFolder` setting
-/// will be ignored, and cached dependencies will be stored in the global
-/// Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
-/// persisted into the build cache or the final image. Yarn 2.x and 3.x have
-/// a default value to `false`. Yarn 4.x has a default value of `true`.
-pub(crate) fn yarn_disable_global_cache(yarn_line: &Yarn, env: &Env) -> Result<(), CmdError> {
-    if yarn_line == &Yarn::Yarn1 {
-        return Ok(());
-    }
-    print::sub_stream_cmd(
-        Command::new("yarn")
-            .args(["config", "set", "enableGlobalCache", "false"])
-            .envs(env),
-    )
-    .map(|_| ())
-}
-
 /// Execute `yarn install` to install dependencies for a yarn project.
 pub(crate) fn yarn_install(
     yarn_line: &Yarn,
