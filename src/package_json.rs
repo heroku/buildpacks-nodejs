@@ -51,6 +51,14 @@ impl PackageJson {
             .and_then(|val| val.as_str())
             .map(PackageManagerField::from_str)
     }
+
+    pub(crate) fn script(&self, name: impl AsRef<str>) -> Option<(String, String)> {
+        self.0
+            .get("scripts")
+            .and_then(|scripts| scripts.get(name.as_ref()))
+            .and_then(|val| val.as_str())
+            .map(|script| (name.as_ref().to_owned(), script.to_owned()))
+    }
 }
 
 impl TryFrom<PathBuf> for PackageJson {

@@ -28,9 +28,6 @@ pub(crate) fn build(
     let package_json = PackageJson::read(app_dir.join("package.json"))
         .map_err(NpmInstallBuildpackError::PackageJson)?;
 
-    print::bullet("Running scripts");
-    run_build_scripts(&package_json, buildpack_config, &env)?;
-
     // NOTE:
     // Up until now, we haven't been pruning dev dependencies from the final runtime image. This
     // causes unnecessary bloat to image sizes so we're going to start pruning these dependencies
@@ -100,36 +97,6 @@ pub(crate) fn on_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     super::errors::on_npm_install_buildpack_error(error)
 }
 
-fn run_build_scripts(
-    package_json: &PackageJson,
-    buildpack_config: &BuildpackConfig,
-    env: &Env,
-) -> Result<(), NpmInstallBuildpackError> {
-    let build_scripts = package_json.build_scripts();
-    if build_scripts.is_empty() {
-        print::sub_bullet("No build scripts found");
-    } else {
-        for script in build_scripts {
-            if matches!(
-                buildpack_config.build_scripts_enabled,
-                Some(ConfigValue {
-                    value: false,
-                    source: ConfigValueSource::Buildplan(_)
-                })
-            ) {
-                print::sub_bullet(format!(
-                    "Not running {} as it was disabled by a participating buildpack",
-                    style::value(script)
-                ));
-            } else {
-                print::sub_stream_cmd(npm::RunScript { env, script }.into_command())
-                    .map_err(NpmInstallBuildpackError::BuildScript)?;
-            }
-        }
-    }
-    Ok(())
-}
-
 fn configure_default_processes(
     context: &BuildpackBuildContext,
     build_result_builder: BuildResultBuilder,
@@ -160,7 +127,6 @@ fn configure_default_processes(
 
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
-    BuildScript(CmdError),
     PackageJson(PackageJsonError),
     PruneDevDependencies(CmdError),
 }

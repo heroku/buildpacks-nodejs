@@ -1,11 +1,16 @@
+use crate::buildpack_config::{BuildpackConfig, ConfigValue};
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
+use crate::utils::error_handling::{
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
+};
 use crate::utils::npm_registry::PackagePackument;
 use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use indoc::formatdoc;
 use libcnb::Env;
 use std::path::{Path, PathBuf};
 
@@ -350,4 +355,121 @@ pub(crate) fn install_dependencies(
         }
     }
     Ok(())
+}
+
+pub(crate) fn run_build_scripts(
+    env: &Env,
+    package_manager: &InstalledPackageManager,
+    package_json: &PackageJson,
+    buildpack_config: &BuildpackConfig,
+) -> BuildpackResult<()> {
+    print::bullet("Running scripts");
+    let build_scripts_enabled = !matches!(
+        &buildpack_config.build_scripts_enabled,
+        Some(ConfigValue { value: false, .. })
+    );
+
+    if [
+        "heroku-prebuild",
+        "heroku-build",
+        "build",
+        "heroku-postbuild",
+    ]
+    .iter()
+    .all(|s| package_json.script(s).is_none())
+    {
+        print::sub_bullet("No build scripts found");
+        return Ok(());
+    }
+
+    if let Some((prebuild, _)) = package_json.script("heroku-prebuild") {
+        if build_scripts_enabled {
+            print::sub_stream_cmd(match package_manager {
+                InstalledPackageManager::Npm(_) => npm::run_script(&prebuild, env),
+                _ => unreachable!("Only npm code should be calling this function"),
+            })
+            .map_err(|e| create_run_script_error_message(&prebuild, &e))?;
+        } else {
+            print::sub_bullet(format!(
+                "Not running {} as it was disabled by a participating buildpack",
+                style::value("heroku-prebuild")
+            ));
+        }
+    }
+
+    if let Some((build, _)) = match package_json.script("heroku-build") {
+        Some((build, script)) => Some((build, script)),
+        None => package_json.script("build"),
+    } {
+        if build_scripts_enabled {
+            print::sub_stream_cmd(match package_manager {
+                InstalledPackageManager::Npm(_) => npm::run_script(&build, env),
+                _ => unreachable!("Only npm code should be calling this function"),
+            })
+            .map_err(|e| create_run_script_error_message(&build, &e))?;
+        } else {
+            print::sub_bullet(format!(
+                "Not running {} as it was disabled by a participating buildpack",
+                style::value(build)
+            ));
+        }
+    }
+
+    if let Some((postbuild, _)) = package_json.script("heroku-postbuild") {
+        if build_scripts_enabled {
+            print::sub_stream_cmd(match package_manager {
+                InstalledPackageManager::Npm(_) => npm::run_script(&postbuild, env),
+                _ => unreachable!("Only npm code should be calling this function"),
+            })
+            .map_err(|e| create_run_script_error_message(&postbuild, &e))?;
+        } else {
+            print::sub_bullet(format!(
+                "Not running {} as it was disabled by a participating buildpack",
+                style::value("heroku-postbuild")
+            ));
+        }
+    }
+
+    Ok(())
+}
+
+fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> ErrorMessage {
+    let script = style::value(script);
+    let script_command = style::command(error.name());
+    let package_json = style::value("package.json");
+    let heroku_prebuild = style::value("heroku-prebuild");
+    let heroku_build = style::value("heroku-build");
+    let build = style::value("build");
+    let heroku_postbuild = style::value("heroku-postbuild");
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+        .header(format!("Failed to execute build script - {script}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack allows customization of the build process by executing the following scripts \
+            if they are defined in {package_json}:
+            - {heroku_prebuild}
+            - {heroku_build} or {build}
+            - {heroku_postbuild}
+
+            An unexpected error occurred while executing {script_command}. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+
+    #[test]
+    fn run_script_error_message() {
+        assert_error_snapshot(&create_run_script_error_message(
+            "build",
+            &create_cmd_error("<package_manager> run build"),
+        ));
+    }
 }

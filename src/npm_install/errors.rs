@@ -9,36 +9,9 @@ use indoc::formatdoc;
 
 pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
-        NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e),
         NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
     }
-}
-
-fn on_build_script_error(error: &CmdError) -> ErrorMessage {
-    let build_script = style::value(error.name());
-    let package_json = style::value("package.json");
-    let heroku_prebuild = style::value("heroku-prebuild");
-    let heroku_build = style::value("heroku-build");
-    let build = style::value("build");
-    let heroku_postbuild = style::value("heroku-postbuild");
-    error_message()
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-        .header("Failed to execute build script")
-        .body(formatdoc! { "
-            The {BUILDPACK_NAME} allows customization of the build process by executing the following scripts \
-            if they are defined in {package_json}:
-            - {heroku_prebuild} 
-            - {heroku_build} or {build} 
-            - {heroku_postbuild}
-
-            An unexpected error occurred while executing {build_script}. See the log output above for more information.
-
-            Suggestions:
-            - Ensure that this command runs locally without error.
-        "})
-        .debug_info(error.to_string())
-        .create()
 }
 
 fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
@@ -66,13 +39,6 @@ mod tests {
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_npm_install_build_script_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::BuildScript(create_cmd_error(
-            "npm run build",
-        )));
-    }
 
     #[test]
     fn test_npm_install_package_json_access_error() {
