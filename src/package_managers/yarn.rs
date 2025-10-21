@@ -526,6 +526,13 @@ fn create_yarn_install_command_error(error: &fun_run::CmdError) -> ErrorMessage 
         .create()
 }
 
+pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
+    let mut command = Command::new("yarn");
+    command.args(["run", name.as_ref()]);
+    command.envs(env);
+    command
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

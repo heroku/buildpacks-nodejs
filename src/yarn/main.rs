@@ -10,7 +10,6 @@ use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
-use bullet_stream::style;
 use indoc::indoc;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
@@ -34,29 +33,6 @@ pub(crate) fn build(
 
     let yarn = Yarn::from_major(yarn_version.major())
         .ok_or_else(|| YarnBuildpackError::YarnVersionUnsupported(yarn_version.major()))?;
-
-    print::bullet("Running scripts");
-    let scripts = pkg_json.build_scripts();
-    if scripts.is_empty() {
-        print::sub_bullet("No build scripts found");
-    } else {
-        for script in scripts {
-            if matches!(
-                buildpack_config.build_scripts_enabled,
-                Some(ConfigValue {
-                    value: false,
-                    source: ConfigValueSource::Buildplan(_)
-                })
-            ) {
-                print::sub_bullet(format!(
-                    "! Not running {script} as it was disabled by a participating buildpack",
-                    script = style::value(script)
-                ));
-            } else {
-                cmd::yarn_run(&env, &script).map_err(YarnBuildpackError::BuildScript)?;
-            }
-        }
-    }
 
     print::bullet("Pruning dev dependencies");
     if matches!(
@@ -128,7 +104,6 @@ pub(crate) fn on_error(error: YarnBuildpackError) -> ErrorMessage {
 
 #[derive(Debug)]
 pub(crate) enum YarnBuildpackError {
-    BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),

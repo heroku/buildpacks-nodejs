@@ -11,7 +11,6 @@ use indoc::formatdoc;
 
 pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
     match error {
-        YarnBuildpackError::BuildScript(e) => on_build_script_error(&e),
         YarnBuildpackError::PackageJson(e) => on_package_json_error(e),
         YarnBuildpackError::YarnVersionDetect(e) => on_yarn_version_detect_error(&e),
         YarnBuildpackError::YarnVersionUnsupported(version) => {
@@ -20,32 +19,6 @@ pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
     }
-}
-
-fn on_build_script_error(error: &CmdError) -> ErrorMessage {
-    let build_script = style::value(error.name());
-    let package_json = style::value("package.json");
-    let heroku_prebuild = style::value("heroku-prebuild");
-    let heroku_build = style::value("heroku-build");
-    let build = style::value("build");
-    let heroku_postbuild = style::value("heroku-postbuild");
-    error_message()
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-        .header("Failed to execute build script")
-        .body(formatdoc! { "
-            The {BUILDPACK_NAME} allows customization of the build process by executing the following scripts \
-            if they are defined in {package_json}:
-            - {heroku_prebuild} 
-            - {heroku_build} or {build} 
-            - {heroku_postbuild}
-
-            An unexpected error occurred while executing {build_script}. See the log output above for more information.
-
-            Suggestions:
-            - Ensure that this command runs locally without error.
-        "})
-        .debug_info(error.to_string())
-        .create()
 }
 
 fn on_yarn_version_detect_error(error: &YarnVersionError) -> ErrorMessage {
@@ -125,13 +98,6 @@ mod tests {
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_yarn_build_script_error() {
-        assert_error_snapshot(YarnBuildpackError::BuildScript(create_cmd_error(
-            "yarn run build",
-        )));
-    }
 
     #[test]
     fn test_yarn_package_json_access_error() {

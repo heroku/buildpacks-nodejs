@@ -392,7 +392,10 @@ pub(crate) fn run_build_scripts(
         if build_scripts_enabled {
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&prebuild, env),
-                _ => unreachable!("Only npm code should be calling this function"),
+                InstalledPackageManager::Yarn(_) => yarn::run_script(&prebuild, env),
+                InstalledPackageManager::Pnpm => {
+                    unreachable!("Only npm and yarn code should be calling this function")
+                }
             })
             .map_err(|e| create_run_script_error_message(&prebuild, &e))?;
         } else {
@@ -410,7 +413,10 @@ pub(crate) fn run_build_scripts(
         if build_scripts_enabled {
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&build, env),
-                _ => unreachable!("Only npm code should be calling this function"),
+                InstalledPackageManager::Yarn(_) => yarn::run_script(&build, env),
+                InstalledPackageManager::Pnpm => {
+                    unreachable!("Only npm and yarn code should be calling this function")
+                }
             })
             .map_err(|e| create_run_script_error_message(&build, &e))?;
         } else {
@@ -425,7 +431,10 @@ pub(crate) fn run_build_scripts(
         if build_scripts_enabled {
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&postbuild, env),
-                _ => unreachable!("Only npm code should be calling this function"),
+                InstalledPackageManager::Yarn(_) => yarn::run_script(&postbuild, env),
+                InstalledPackageManager::Pnpm => {
+                    unreachable!("Only npm and yarn code should be calling this function")
+                }
             })
             .map_err(|e| create_run_script_error_message(&postbuild, &e))?;
         } else {

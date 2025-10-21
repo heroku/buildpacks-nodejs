@@ -26,11 +26,6 @@ pub(crate) fn yarn_version(env: &Env) -> Result<Version, YarnVersionError> {
         })
 }
 
-/// Execute `yarn run` commands like `build`.
-pub(crate) fn yarn_run(yarn_env: &Env, script: &str) -> Result<(), CmdError> {
-    print::sub_stream_cmd(Command::new("yarn").arg("run").arg(script).envs(yarn_env)).map(|_| ())
-}
-
 pub(crate) fn yarn_prune(env: &Env) -> Result<(), CmdError> {
     print::sub_stream_cmd(
         Command::new("yarn")
