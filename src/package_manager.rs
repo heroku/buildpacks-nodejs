@@ -12,6 +12,9 @@ use bullet_stream::global::print;
 use bullet_stream::style;
 use indoc::formatdoc;
 use libcnb::Env;
+use libcnb::build::BuildResultBuilder;
+use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::process_type;
 use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
@@ -506,6 +509,43 @@ fn create_prune_dev_dependencies_error_message(error: &fun_run::CmdError) -> Err
         " })
         .debug_info(error.to_string())
         .create()
+}
+
+pub(crate) fn configure_default_processes(
+    context: &BuildpackBuildContext,
+    build_result_builder: BuildResultBuilder,
+    package_json: &PackageJson,
+    installed_package_manager: &InstalledPackageManager,
+) -> BuildResultBuilder {
+    if let Ok(true) = context.app_dir.join("Procfile").try_exists() {
+        print::bullet("Configuring default processes");
+        print::sub_bullet("Skipping default web process (Procfile detected)");
+        build_result_builder
+    } else if package_json.script("start").is_some() {
+        match installed_package_manager {
+            InstalledPackageManager::Npm(_) => {
+                print::bullet("Configuring default processes");
+                print::sub_bullet(format!(
+                    "Adding default web process for {}",
+                    style::value("npm start")
+                ));
+                build_result_builder.launch(
+                    LaunchBuilder::new()
+                        .process(
+                            ProcessBuilder::new(process_type!("web"), ["npm", "start"])
+                                .default(true)
+                                .build(),
+                        )
+                        .build(),
+                )
+            }
+            _ => build_result_builder,
+        }
+    } else {
+        print::bullet("Configuring default processes");
+        print::sub_bullet("Skipping default web process (no start script defined)");
+        build_result_builder
+    }
 }
 
 #[cfg(test)]

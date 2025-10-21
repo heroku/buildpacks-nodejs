@@ -1,5 +1,4 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
-use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use crate::yarn::main::YarnBuildpackError;
@@ -15,7 +14,6 @@ use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 use libcnb_test as _;
 
 mod buildpack_config;
-mod npm_install;
 mod package_json;
 mod package_manager;
 mod package_managers;
@@ -168,6 +166,14 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &installed_package_manager,
                 &buildpack_config,
             )?;
+
+            build_result_builder = package_manager::configure_default_processes(
+                &context,
+                build_result_builder,
+                &package_json,
+                &installed_package_manager,
+            );
+
             // TODO: this should be done on package manager install but is current here due to how the
             //       build flow works when the bundled npm version is used
             utils::runtime_env::register_execd_script(
@@ -175,8 +181,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 layer_name!("npm_runtime_config"),
                 additional_buildpack_binary_path!("npm_runtime_config"),
             )?;
-            (_, build_result_builder) =
-                npm_install::main::build(&context, env, build_result_builder)?;
+
             if let Some(ConfigValue { source, .. }) = buildpack_config.prune_dev_dependencies {
                 match source {
                     ConfigValueSource::Buildplan(_) => {
@@ -203,7 +208,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::NpmInstall(error) => npm_install::main::on_error(error),
                 NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
                 NodeJsBuildpackError::Yarn(error) => yarn::main::on_error(error),
                 NodeJsBuildpackError::Message(error) => error,
@@ -217,7 +221,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
 #[derive(Debug)]
 enum NodeJsBuildpackError {
-    NpmInstall(NpmInstallBuildpackError),
     PnpmInstall(PnpmInstallBuildpackError),
     Yarn(YarnBuildpackError),
     Message(ErrorMessage),
