@@ -85,12 +85,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
 
         print::bullet("Checking Node.js version");
-        let resolved_runtime = Ok(runtime::determine_runtime(&package_json))
+        Ok(runtime::determine_runtime(&package_json))
             .inspect(runtime::log_requested_runtime)
             .and_then(runtime::resolve_runtime)
-            .inspect(runtime::log_resolved_runtime)?;
-
-        runtime::install_runtime(&context, &mut env, resolved_runtime)?;
+            .inspect(runtime::log_resolved_runtime)
+            .and_then(|resolved_runtime| {
+                runtime::install_runtime(&context, &mut env, resolved_runtime)
+            })?;
 
         // TODO: this code could be moved to the start of the build execution but will remain here until the package managers are cleaned up
         utils::runtime_env::register_execd_script(
