@@ -19,15 +19,6 @@ use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use std::io;
-
-pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    context
-        .app_dir
-        .join("package-lock.json")
-        .try_exists()
-        .map_err(|e| NpmInstallBuildpackError::Detect(e).into())
-}
 
 pub(crate) fn build(
     context: &BuildpackBuildContext,
@@ -204,7 +195,6 @@ fn configure_default_processes(
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
     BuildScript(CmdError),
-    Detect(io::Error),
     NpmInstall(CmdError),
     NpmSetCacheDir(CmdError),
     NpmVersion(npm::VersionError),

@@ -7,12 +7,10 @@ use crate::utils::error_handling::{
 use bullet_stream::style;
 use fun_run::CmdError;
 use indoc::formatdoc;
-use std::io;
 
 pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
-        NpmInstallBuildpackError::Detect(e) => on_detect_error(&e),
         NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e),
         NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e),
         NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e),
@@ -91,18 +89,6 @@ fn on_build_script_error(error: &CmdError) -> ErrorMessage {
 
             Suggestions:
             - Ensure that this command runs locally without error.
-        "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn on_detect_error(error: &io::Error) -> ErrorMessage {
-    error_message()
-        .error_type(ErrorType::Internal)
-        .header("Unable to complete buildpack detection")
-        .body(formatdoc! { "
-            An unexpected error occurred while determining if the {BUILDPACK_NAME} should be \
-            run for this application. See the log output above for more information.
         "})
         .debug_info(error.to_string())
         .create()
@@ -188,13 +174,6 @@ mod tests {
     }
 
     #[test]
-    fn test_npm_install_detect_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::Detect(create_io_error(
-            "test I/O error blah",
-        )));
-    }
-
-    #[test]
     fn test_npm_install_prune_dev_dependencies_error() {
         assert_error_snapshot(NpmInstallBuildpackError::PruneDevDependencies(
             create_cmd_error("npm prune --production"),
@@ -219,8 +198,8 @@ mod tests {
         });
     }
 
-    fn create_io_error(text: &str) -> io::Error {
-        io::Error::other(text)
+    fn create_io_error(text: &str) -> std::io::Error {
+        std::io::Error::other(text)
     }
 
     fn create_json_error() -> serde_json::error::Error {
