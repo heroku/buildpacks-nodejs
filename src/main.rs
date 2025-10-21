@@ -159,6 +159,11 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &package_json,
                 &buildpack_config,
             )?;
+            package_manager::prune_dev_dependencies(
+                &env,
+                &installed_package_manager,
+                &buildpack_config,
+            )?;
             (_, build_result_builder) =
                 yarn::main::build(&context, env, build_result_builder, &buildpack_config)?;
         } else if let Ok(true) = &context.app_dir.join("package-lock.json").try_exists() {

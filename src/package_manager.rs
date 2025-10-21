@@ -500,7 +500,12 @@ pub(crate) fn prune_dev_dependencies(
 
     print::sub_stream_cmd(match package_manager {
         InstalledPackageManager::Npm(_) => npm::prune_dev_dependencies(env),
-        _ => unreachable!("Only npm code should be calling this function"),
+        InstalledPackageManager::Yarn(yarn_version) => {
+            yarn::prune_dev_dependencies(env, yarn_version)?
+        }
+        InstalledPackageManager::Pnpm => {
+            unreachable!("Only npm and Yarn code should be calling this function")
+        }
     })
     .map_err(|e| create_prune_dev_dependencies_error_message(&e))?;
 

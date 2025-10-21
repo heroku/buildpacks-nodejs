@@ -533,6 +533,57 @@ pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
     command
 }
 
+pub(crate) fn prune_dev_dependencies(
+    env: &Env,
+    version: &Version,
+) -> Result<Command, ErrorMessage> {
+    let mut prune_command = Command::new("yarn");
+    prune_command.envs(env);
+    if version.major() == 1 {
+        prune_command.args([
+            "install",
+            "--production",
+            "--frozen-lockfile",
+            "--ignore-engines",
+            "--ignore-scripts",
+            "--prefer-offline",
+        ])
+    } else {
+        let yarn_prune_plugin = install_yarn_prune_plugin()?;
+        prune_command
+            .env("YARN_PLUGINS", yarn_prune_plugin)
+            .args(["heroku", "prune"])
+    };
+    Ok(prune_command)
+}
+
+const YARN_PRUNE_PLUGIN_SOURCE: &str =
+    include_str!("../yarn/@yarnpkg/plugin-prune-dev-dependencies.js");
+
+fn install_yarn_prune_plugin() -> Result<PathBuf, ErrorMessage> {
+    let temp_dir = tempfile::tempdir()
+        .map(tempfile::TempDir::keep)
+        .map_err(|e| create_yarn_install_prune_plugin_error(&e))?;
+
+    let plugin_source = temp_dir.join("plugin-prune-dev-dependencies.js");
+    std::fs::write(&plugin_source, YARN_PRUNE_PLUGIN_SOURCE)
+        .map_err(|e| create_yarn_install_prune_plugin_error(&e))?;
+
+    Ok(plugin_source)
+}
+
+fn create_yarn_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to install Yarn plugin for pruning")
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack uses a custom plugin for Yarn to handle pruning \
+            of dev dependencies. An unexpected error was encountered while trying to install it.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -693,5 +744,12 @@ mod tests {
             !is_yarn_zero_install_mode(&path),
             "Expected non-zero-install app to have an unpopulated cache"
         );
+    }
+
+    #[test]
+    fn yarn_install_prune_plugin_error() {
+        assert_error_snapshot(&create_yarn_install_prune_plugin_error(
+            &std::io::Error::other("Out of disk space"),
+        ));
     }
 }
