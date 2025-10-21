@@ -12,6 +12,7 @@ use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
 
+mod buildpack_config;
 mod npm_install;
 mod package_json;
 mod package_manager;
@@ -77,6 +78,8 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
+
+        let buildpack_config = buildpack_config::BuildpackConfig::try_from(&context)?;
 
         let package_json =
             package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
@@ -156,7 +159,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             (_, build_result_builder) = yarn::main::build(&context, env, build_result_builder)?;
         } else if npm_install::main::detect(&context)? {
             (_, build_result_builder) =
-                npm_install::main::build(&context, env, build_result_builder)?;
+                npm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
         }
 
         print::all_done(&Some(buildpack_start));

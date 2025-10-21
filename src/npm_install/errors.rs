@@ -1,6 +1,5 @@
 use super::main::NpmInstallBuildpackError;
 use super::npm;
-use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
 use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
     on_package_json_error,
@@ -14,62 +13,11 @@ pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) ->
     match error {
         NpmInstallBuildpackError::BuildScript(e) => on_build_script_error(&e),
         NpmInstallBuildpackError::Detect(e) => on_detect_error(&e),
-        NpmInstallBuildpackError::NodeBuildScriptsMetadata(e) => {
-            on_node_build_scripts_metadata_error(e)
-        }
         NpmInstallBuildpackError::NpmInstall(e) => on_npm_install_error(&e),
         NpmInstallBuildpackError::NpmSetCacheDir(e) => on_set_cache_dir_error(&e),
         NpmInstallBuildpackError::NpmVersion(e) => on_npm_version_error(e),
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e),
         NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
-        NpmInstallBuildpackError::Config(e) => e.into(),
-    }
-}
-
-fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) -> ErrorMessage {
-    let requires_metadata = style::value("[requires.metadata]");
-    let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-
-    match error {
-        NodeBuildScriptsMetadataError::InvalidEnabledValue(value) => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::No,
-                SuggestSubmitIssue::Yes,
-            ))
-            .header("Invalid build plan metadata")
-            .body(formatdoc! { "
-                A participating buildpack has set invalid {requires_metadata} for the build plan \
-                named {buildplan_name}.
-                
-                Expected metadata format:
-                [requires.metadata]
-                enabled = <bool>
-                skip_pruning = <bool>
-                
-                But configured with:
-                enabled = {value} <{value_type}>     
-            ", value_type = value.type_str() })
-            .create(),
-
-        NodeBuildScriptsMetadataError::InvalidSkipPruningValue(value) => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::No,
-                SuggestSubmitIssue::Yes,
-            ))
-            .header("Invalid build plan metadata")
-            .body(formatdoc! { "
-                A participating buildpack has set invalid {requires_metadata} for the build plan \
-                named {buildplan_name}.
-                
-                Expected metadata format:
-                [requires.metadata]
-                enabled = <bool>
-                skip_pruning = <bool>
-                
-                But configured with:
-                skip_pruning = {value} <{value_type}>     
-            ", value_type = value.type_str() })
-            .create(),
     }
 }
 
@@ -186,24 +134,6 @@ mod tests {
     use insta::{assert_snapshot, with_settings};
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_npm_install_node_build_scripts_metadata_error_for_invalid_enabled_value() {
-        assert_error_snapshot(NpmInstallBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
-    }
-
-    #[test]
-    fn test_npm_install_node_build_scripts_metadata_error_for_invalid_skip_pruning_value() {
-        assert_error_snapshot(NpmInstallBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
-    }
 
     #[test]
     fn test_npm_install_set_cache_dir_error() {

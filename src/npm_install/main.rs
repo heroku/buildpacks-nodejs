@@ -6,10 +6,7 @@
 use super::configure_npm_cache_directory::configure_npm_cache_directory;
 use super::configure_npm_runtime_env::configure_npm_runtime_env;
 use super::npm;
-use crate::utils::buildplan::{
-    NodeBuildScriptsMetadata, NodeBuildScriptsMetadataError, read_node_build_scripts_metadata,
-};
-use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
+use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::utils::vrs::Version;
@@ -36,15 +33,11 @@ pub(crate) fn build(
     context: &BuildpackBuildContext,
     env: Env,
     build_result_builder: BuildResultBuilder,
+    buildpack_config: &BuildpackConfig,
 ) -> BuildpackResult<(Env, BuildResultBuilder)> {
     let app_dir = &context.app_dir;
     let package_json = PackageJson::read(app_dir.join("package.json"))
         .map_err(NpmInstallBuildpackError::PackageJson)?;
-    let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
-        .map_err(NpmInstallBuildpackError::NodeBuildScriptsMetadata)?;
-    let prune_dev_dependencies =
-        read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
-            .map_err(NpmInstallBuildpackError::Config)?;
 
     print::bullet("Installing node modules");
     log_npm_version(&env)?;
@@ -52,7 +45,7 @@ pub(crate) fn build(
     run_npm_install(&env)?;
 
     print::bullet("Running scripts");
-    run_build_scripts(&package_json, &node_build_scripts_metadata, &env)?;
+    run_build_scripts(&package_json, buildpack_config, &env)?;
 
     // NOTE:
     // Up until now, we haven't been pruning dev dependencies from the final runtime image. This
@@ -63,9 +56,21 @@ pub(crate) fn build(
     // configuration mechanism is going to be changed in the near-future but, for now, we'll
     // also attach the pruning opt-out configuration to it.
     print::bullet("Pruning dev dependencies");
-    if prune_dev_dependencies == Some(false) {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::ProjectToml
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled in project.toml");
-    } else if let Some(true) = node_build_scripts_metadata.skip_pruning {
+    } else if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::Buildplan(_)
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
     } else {
         print::sub_stream_cmd(npm::Prune { env: &env }.into_command())
@@ -78,14 +83,26 @@ pub(crate) fn build(
 
     configure_npm_runtime_env(context)?;
 
-    if prune_dev_dependencies.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::ProjectToml,
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
             found in `project.toml`. This feature may change unexpectedly in the future.
         " });
     }
 
-    if node_build_scripts_metadata.skip_pruning.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::Buildplan(_),
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
             to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
@@ -128,7 +145,7 @@ fn run_npm_install(env: &Env) -> Result<(), NpmInstallBuildpackError> {
 
 fn run_build_scripts(
     package_json: &PackageJson,
-    node_build_scripts_metadata: &NodeBuildScriptsMetadata,
+    buildpack_config: &BuildpackConfig,
     env: &Env,
 ) -> Result<(), NpmInstallBuildpackError> {
     let build_scripts = package_json.build_scripts();
@@ -136,7 +153,13 @@ fn run_build_scripts(
         print::sub_bullet("No build scripts found");
     } else {
         for script in build_scripts {
-            if let Some(false) = node_build_scripts_metadata.enabled {
+            if matches!(
+                buildpack_config.build_scripts_enabled,
+                Some(ConfigValue {
+                    value: false,
+                    source: ConfigValueSource::Buildplan(_)
+                })
+            ) {
                 print::sub_bullet(format!(
                     "Not running {} as it was disabled by a participating buildpack",
                     style::value(script)
@@ -186,9 +209,7 @@ pub(crate) enum NpmInstallBuildpackError {
     NpmSetCacheDir(CmdError),
     NpmVersion(npm::VersionError),
     PackageJson(PackageJsonError),
-    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneDevDependencies(CmdError),
-    Config(ConfigError),
 }
 
 impl From<NpmInstallBuildpackError> for BuildpackError {
