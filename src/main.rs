@@ -133,23 +133,18 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         }
 
         // install package manager
-        if let Some(requested_package_manager) =
-            package_manager::determine_package_manager(&context.app_dir, &package_json)
-        {
-            Ok(requested_package_manager)
-                .inspect(package_manager::log_requested_package_manager)
-                .and_then(|requested_package_manager| {
-                    package_manager::resolve_package_manager(&context, &requested_package_manager)
-                })
-                .inspect(package_manager::log_resolved_package_manager)
-                .and_then(|resolved_package_manager| {
-                    package_manager::install_package_manager(
-                        &context,
-                        &mut env,
-                        &resolved_package_manager,
-                    )
-                })?;
-        }
+        Ok(package_manager::determine_package_manager(
+            &context.app_dir,
+            &package_json,
+        ))
+        .inspect(package_manager::log_requested_package_manager)
+        .and_then(|requested_package_manager| {
+            package_manager::resolve_package_manager(&context, &requested_package_manager)
+        })
+        .inspect(package_manager::log_resolved_package_manager)
+        .and_then(|resolved_package_manager| {
+            package_manager::install_package_manager(&context, &mut env, &resolved_package_manager)
+        })?;
 
         // dependency installation & process registration
         if pnpm_install::main::detect(&context)? {

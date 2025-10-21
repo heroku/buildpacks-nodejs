@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 // TODO: support `devEngines` field
 #[derive(Debug, Clone)]
 pub(crate) enum RequestedPackageManager {
+    BundledNpm,
     NpmEngine(Requirement),
     PnpmEngine(Requirement),
     YarnEngine(Requirement),
@@ -23,6 +24,7 @@ pub(crate) enum RequestedPackageManager {
 impl RequestedPackageManager {
     pub(crate) fn is_npm(&self) -> bool {
         matches!(self, RequestedPackageManager::NpmEngine(_))
+            || matches!(self, RequestedPackageManager::BundledNpm)
             || matches!(
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
@@ -60,41 +62,38 @@ impl RequestedPackageManager {
 pub(crate) fn determine_package_manager(
     app_dir: &Path,
     package_json: &PackageJson,
-) -> Option<RequestedPackageManager> {
+) -> RequestedPackageManager {
     // vendored Yarn should take highest priority
     if let Some(Ok(yarnrc)) = yarn::read_yarnrc(app_dir)
         && let Some(yarn_path) = yarnrc.yarn_path()
         && let Ok(true) = yarn_path.try_exists()
     {
-        return Some(RequestedPackageManager::YarnVendored(yarn_path));
+        return RequestedPackageManager::YarnVendored(yarn_path);
     }
 
     // then the package manager field
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
-        return Some(RequestedPackageManager::PackageManager(
-            package_manager_field,
-        ));
+        return RequestedPackageManager::PackageManager(package_manager_field);
     }
 
     // then the package manager field
     if let Some(Ok(requirement)) = package_json.pnpm_engine() {
-        return Some(RequestedPackageManager::PnpmEngine(requirement));
+        return RequestedPackageManager::PnpmEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.yarn_engine() {
-        return Some(RequestedPackageManager::YarnEngine(requirement));
+        return RequestedPackageManager::YarnEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.npm_engine() {
-        return Some(RequestedPackageManager::NpmEngine(requirement));
+        return RequestedPackageManager::NpmEngine(requirement);
     }
 
     // fallback to default Yarn if lockfile is detected
     if let Ok(true) = app_dir.join("yarn.lock").try_exists() {
-        return Some(RequestedPackageManager::YarnDefault(
-            yarn::DEFAULT_YARN_REQUIREMENT.clone(),
-        ));
+        return RequestedPackageManager::YarnDefault(yarn::DEFAULT_YARN_REQUIREMENT.clone());
     }
 
-    None
+    // default to bundled npm if nothing is requested
+    RequestedPackageManager::BundledNpm
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
@@ -103,11 +102,20 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
         print::bullet("Determining Yarn information");
     } else if requested_package_manager.is_pnpm() {
         print::bullet("Determining pnpm package information");
-    } else if requested_package_manager.is_npm() {
+    } else if requested_package_manager.is_npm()
+        && !matches!(
+            requested_package_manager,
+            RequestedPackageManager::BundledNpm
+        )
+    {
         print::bullet("Determining npm package information");
     }
 
     match requested_package_manager {
+        RequestedPackageManager::BundledNpm => {
+            // TODO: this should be reported but will be addressed later
+            // E.g.; print::sub_bullet("No npm version requested")
+        }
         RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",
             style::value("engines.npm"),
@@ -149,6 +157,7 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 
 pub(crate) enum ResolvedPackageManager {
     Npm(Requirement, PackagePackument),
+    NpmBundled,
     Pnpm(Requirement, PackagePackument),
     Yarn(Requirement, PackagePackument),
     YarnVendored(PathBuf),
@@ -159,6 +168,7 @@ pub(crate) fn resolve_package_manager(
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
+        RequestedPackageManager::BundledNpm => Ok(ResolvedPackageManager::NpmBundled),
         RequestedPackageManager::NpmEngine(requirement) => {
             npm::resolve_npm_package_packument(context, requirement).map(|npm_package_packument| {
                 ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
@@ -214,6 +224,10 @@ pub(crate) fn resolve_package_manager(
 
 pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPackageManager) {
     match resolved_package_manager {
+        ResolvedPackageManager::NpmBundled => {
+            // TODO: this should be reported but will be addressed later
+            // E.g.; print::sub_bullet("Using bundled npm");
+        }
         ResolvedPackageManager::Npm(requested_version, npm_package_packument) => {
             print::sub_bullet(format!(
                 "Resolved npm version {} to {}",
@@ -250,6 +264,16 @@ pub(crate) fn install_package_manager(
     resolved_package_manager: &ResolvedPackageManager,
 ) -> BuildpackResult<()> {
     match resolved_package_manager {
+        ResolvedPackageManager::NpmBundled => {
+            // TODO: this needs to be reported but will be addressed later
+            // E.g.; print::bullet("Installing npm");
+            //let npm_version = npm::get_version(env)?;
+            // print::sub_bullet(format!(
+            //     "Skipping, bundled {} will be used",
+            //     style::value(format!("npm@{npm_version}"))
+            // ));
+            Ok(())
+        }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
             print::bullet("Installing npm");
             let npm_version = &npm_package_packument.version;
