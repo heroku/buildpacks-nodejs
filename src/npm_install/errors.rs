@@ -1,33 +1,10 @@
 use super::main::NpmInstallBuildpackError;
-use crate::utils::error_handling::{
-    BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
-    on_package_json_error,
-};
-use bullet_stream::style;
-use fun_run::CmdError;
-use indoc::formatdoc;
+use crate::utils::error_handling::{ErrorMessage, on_package_json_error};
 
 pub(crate) fn on_npm_install_buildpack_error(error: NpmInstallBuildpackError) -> ErrorMessage {
     match error {
         NpmInstallBuildpackError::PackageJson(e) => on_package_json_error(e),
-        NpmInstallBuildpackError::PruneDevDependencies(e) => on_prune_dev_dependencies_error(&e),
     }
-}
-
-fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
-    let npm_prune = style::value(error.name());
-    error_message()
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-        .header("Failed to prune npm dev dependencies")
-        .body(formatdoc! { "
-            The {BUILDPACK_NAME} uses the command {npm_prune} to remove your dev dependencies from the production environment. This command \
-            failed and the buildpack cannot continue. See the log output above for more information.
-
-            Suggestions:
-            - Ensure that this command runs locally without error (exit status = 0).
-        " })
-        .debug_info(error.to_string())
-        .create()
 }
 
 #[cfg(test)]
@@ -35,9 +12,7 @@ mod tests {
     use super::*;
     use crate::utils::package_json::PackageJsonError;
     use bullet_stream::strip_ansi;
-    use fun_run::CommandWithName;
     use insta::{assert_snapshot, with_settings};
-    use std::process::Command;
     use test_support::test_name;
 
     #[test]
@@ -51,13 +26,6 @@ mod tests {
     fn test_npm_install_package_json_parse_error() {
         assert_error_snapshot(NpmInstallBuildpackError::PackageJson(
             PackageJsonError::ParseError(create_json_error()),
-        ));
-    }
-
-    #[test]
-    fn test_npm_install_prune_dev_dependencies_error() {
-        assert_error_snapshot(NpmInstallBuildpackError::PruneDevDependencies(
-            create_cmd_error("npm prune --production"),
         ));
     }
 
@@ -85,12 +53,5 @@ mod tests {
 
     fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
-    }
-
-    fn create_cmd_error(command: impl Into<String>) -> CmdError {
-        Command::new("false")
-            .named(command.into())
-            .named_output()
-            .unwrap_err()
     }
 }

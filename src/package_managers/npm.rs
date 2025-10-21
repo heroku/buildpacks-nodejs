@@ -187,6 +187,13 @@ pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
     command
 }
 
+pub(crate) fn prune_dev_dependencies(env: &Env) -> Command {
+    let mut cmd = Command::new("npm");
+    cmd.arg("prune");
+    cmd.envs(env);
+    cmd
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

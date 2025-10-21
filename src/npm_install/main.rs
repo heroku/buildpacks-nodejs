@@ -4,15 +4,11 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use super::configure_npm_runtime_env::configure_npm_runtime_env;
-use super::npm;
-use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
-use fun_run::CmdError;
-use indoc::indoc;
 use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -22,73 +18,16 @@ pub(crate) fn build(
     context: &BuildpackBuildContext,
     env: Env,
     build_result_builder: BuildResultBuilder,
-    buildpack_config: &BuildpackConfig,
 ) -> BuildpackResult<(Env, BuildResultBuilder)> {
     let app_dir = &context.app_dir;
     let package_json = PackageJson::read(app_dir.join("package.json"))
         .map_err(NpmInstallBuildpackError::PackageJson)?;
-
-    // NOTE:
-    // Up until now, we haven't been pruning dev dependencies from the final runtime image. This
-    // causes unnecessary bloat to image sizes so we're going to start pruning these dependencies
-    // as the default behavior. Unfortunately, the front-end buildpacks rely on dev dependencies
-    // being available for execution at release phase time. The front-end buildpacks also rely on
-    // setting `node_build_scripts` requires metadata to configure some opt-out features. This buildpack
-    // configuration mechanism is going to be changed in the near-future but, for now, we'll
-    // also attach the pruning opt-out configuration to it.
-    print::bullet("Pruning dev dependencies");
-    if matches!(
-        buildpack_config.prune_dev_dependencies,
-        Some(ConfigValue {
-            value: false,
-            source: ConfigValueSource::ProjectToml
-        })
-    ) {
-        print::sub_bullet("Skipping as pruning was disabled in project.toml");
-    } else if matches!(
-        buildpack_config.prune_dev_dependencies,
-        Some(ConfigValue {
-            value: false,
-            source: ConfigValueSource::Buildplan(_)
-        })
-    ) {
-        print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
-    } else {
-        print::sub_stream_cmd(npm::Prune { env: &env }.into_command())
-            .map_err(NpmInstallBuildpackError::PruneDevDependencies)?;
-    }
 
     print::bullet("Configuring default processes");
     let build_result_builder =
         configure_default_processes(context, build_result_builder, &package_json);
 
     configure_npm_runtime_env(context)?;
-
-    if matches!(
-        buildpack_config.prune_dev_dependencies,
-        Some(ConfigValue {
-            source: ConfigValueSource::ProjectToml,
-            ..
-        })
-    ) {
-        print::warning(indoc! { "
-            Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
-            found in `project.toml`. This feature may change unexpectedly in the future.
-        " });
-    }
-
-    if matches!(
-        buildpack_config.prune_dev_dependencies,
-        Some(ConfigValue {
-            source: ConfigValueSource::Buildplan(_),
-            ..
-        })
-    ) {
-        print::warning(indoc! { "
-            Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
-            to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
-        " });
-    }
 
     Ok((env, build_result_builder))
 }
@@ -128,7 +67,6 @@ fn configure_default_processes(
 #[derive(Debug)]
 pub(crate) enum NpmInstallBuildpackError {
     PackageJson(PackageJsonError),
-    PruneDevDependencies(CmdError),
 }
 
 impl From<NpmInstallBuildpackError> for BuildpackError {

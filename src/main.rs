@@ -1,8 +1,10 @@
+use crate::buildpack_config::{ConfigValue, ConfigValueSource};
 use crate::npm_install::main::NpmInstallBuildpackError;
 use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use crate::yarn::main::YarnBuildpackError;
 use bullet_stream::global::print;
+use indoc::indoc;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
@@ -161,8 +163,29 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &package_json,
                 &buildpack_config,
             )?;
+            package_manager::prune_dev_dependencies(
+                &env,
+                &installed_package_manager,
+                &buildpack_config,
+            )?;
             (_, build_result_builder) =
-                npm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
+                npm_install::main::build(&context, env, build_result_builder)?;
+            if let Some(ConfigValue { source, .. }) = buildpack_config.prune_dev_dependencies {
+                match source {
+                    ConfigValueSource::Buildplan(_) => {
+                        print::warning(indoc! { "
+                            Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
+                            to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
+                        " });
+                    }
+                    ConfigValueSource::ProjectToml => {
+                        print::warning(indoc! { "
+                            Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
+                            found in `project.toml`. This feature may change unexpectedly in the future.
+                        " });
+                    }
+                }
+            }
         }
 
         print::all_done(&Some(buildpack_start));

@@ -1,4 +1,4 @@
-use crate::buildpack_config::{BuildpackConfig, ConfigValue};
+use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
@@ -460,6 +460,54 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
         .create()
 }
 
+pub(crate) fn prune_dev_dependencies(
+    env: &Env,
+    package_manager: &InstalledPackageManager,
+    buildpack_config: &BuildpackConfig,
+) -> BuildpackResult<()> {
+    print::bullet("Pruning dev dependencies");
+    if let Some(ConfigValue {
+        value: false,
+        source,
+    }) = &buildpack_config.prune_dev_dependencies
+    {
+        // TODO: revisit this output as it could be simplified.
+        match source {
+            ConfigValueSource::Buildplan(_) => {
+                print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
+            }
+            ConfigValueSource::ProjectToml => {
+                print::sub_bullet("Skipping as pruning was disabled in project.toml");
+            }
+        }
+        return Ok(());
+    }
+
+    print::sub_stream_cmd(match package_manager {
+        InstalledPackageManager::Npm(_) => npm::prune_dev_dependencies(env),
+        _ => unreachable!("Only npm code should be calling this function"),
+    })
+    .map_err(|e| create_prune_dev_dependencies_error_message(&e))?;
+
+    Ok(())
+}
+
+fn create_prune_dev_dependencies_error_message(error: &fun_run::CmdError) -> ErrorMessage {
+    let prune_command = style::value(error.name());
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header("Failed to prune dev dependencies")
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack uses the command {prune_command} to remove your dev dependencies from the production \
+            environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -470,6 +518,13 @@ mod tests {
         assert_error_snapshot(&create_run_script_error_message(
             "build",
             &create_cmd_error("<package_manager> run build"),
+        ));
+    }
+
+    #[test]
+    fn prune_dev_dependencies_error_message() {
+        assert_error_snapshot(&create_prune_dev_dependencies_error_message(
+            &create_cmd_error("<package_manager> prune"),
         ));
     }
 }
