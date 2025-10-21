@@ -25,11 +25,6 @@ use serde_json::Value;
 use std::path::{Path, PathBuf};
 use toml::Table;
 
-#[allow(clippy::unnecessary_wraps)]
-pub(crate) fn detect(context: &BuildpackBuildContext) -> BuildpackResult<bool> {
-    Ok(context.app_dir.join("pnpm-lock.yaml").exists())
-}
-
 pub(crate) fn build(
     context: &BuildpackBuildContext,
     env: Env,
