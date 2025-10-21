@@ -168,6 +168,13 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &installed_package_manager,
                 &buildpack_config,
             )?;
+            // TODO: this should be done on package manager install but is current here due to how the
+            //       build flow works when the bundled npm version is used
+            utils::runtime_env::register_execd_script(
+                &context,
+                layer_name!("npm_runtime_config"),
+                additional_buildpack_binary_path!("npm_runtime_config"),
+            )?;
             (_, build_result_builder) =
                 npm_install::main::build(&context, env, build_result_builder)?;
             if let Some(ConfigValue { source, .. }) = buildpack_config.prune_dev_dependencies {

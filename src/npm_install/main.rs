@@ -3,7 +3,6 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
-use super::configure_npm_runtime_env::configure_npm_runtime_env;
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
@@ -26,8 +25,6 @@ pub(crate) fn build(
     print::bullet("Configuring default processes");
     let build_result_builder =
         configure_default_processes(context, build_result_builder, &package_json);
-
-    configure_npm_runtime_env(context)?;
 
     Ok((env, build_result_builder))
 }
