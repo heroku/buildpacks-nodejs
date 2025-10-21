@@ -6,8 +6,7 @@
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::{DepsLayerError, configure_yarn_cache};
 use super::{cfg, cmd};
-use crate::utils::buildplan::{NodeBuildScriptsMetadataError, read_node_build_scripts_metadata};
-use crate::utils::config::{ConfigError, read_prune_dev_dependencies_from_project_toml};
+use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
 use crate::{BuildpackBuildContext, BuildpackError, BuildpackResult, NodeJsBuildpackError};
@@ -28,14 +27,10 @@ pub(crate) fn build(
     context: &BuildpackBuildContext,
     env: Env,
     mut build_result_builder: BuildResultBuilder,
+    buildpack_config: &BuildpackConfig,
 ) -> BuildpackResult<(Env, BuildResultBuilder)> {
     let pkg_json = PackageJson::read(context.app_dir.join("package.json"))
         .map_err(YarnBuildpackError::PackageJson)?;
-    let node_build_scripts_metadata = read_node_build_scripts_metadata(&context.buildpack_plan)
-        .map_err(YarnBuildpackError::NodeBuildScriptsMetadata)?;
-    let prune_dev_dependencies =
-        read_prune_dev_dependencies_from_project_toml(&context.app_dir.join("project.toml"))
-            .map_err(YarnBuildpackError::Config)?;
 
     let yarn_version = cmd::yarn_version(&env).map_err(YarnBuildpackError::YarnVersionDetect)?;
 
@@ -66,7 +61,13 @@ pub(crate) fn build(
         print::sub_bullet("No build scripts found");
     } else {
         for script in scripts {
-            if let Some(false) = node_build_scripts_metadata.enabled {
+            if matches!(
+                buildpack_config.build_scripts_enabled,
+                Some(ConfigValue {
+                    value: false,
+                    source: ConfigValueSource::Buildplan(_)
+                })
+            ) {
                 print::sub_bullet(format!(
                     "! Not running {script} as it was disabled by a participating buildpack",
                     script = style::value(script)
@@ -78,9 +79,21 @@ pub(crate) fn build(
     }
 
     print::bullet("Pruning dev dependencies");
-    if prune_dev_dependencies == Some(false) {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::ProjectToml
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled in project.toml");
-    } else if node_build_scripts_metadata.skip_pruning == Some(true) {
+    } else if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            value: false,
+            source: ConfigValueSource::Buildplan(_)
+        })
+    ) {
         print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
     } else {
         yarn_prune_dev_dependencies(&env, &yarn)?;
@@ -100,14 +113,26 @@ pub(crate) fn build(
         );
     }
 
-    if prune_dev_dependencies.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::ProjectToml,
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` \
             found in `project.toml`. This feature may change unexpectedly in the future.
         " });
     }
 
-    if node_build_scripts_metadata.skip_pruning.is_some() {
+    if matches!(
+        buildpack_config.prune_dev_dependencies,
+        Some(ConfigValue {
+            source: ConfigValueSource::Buildplan(_),
+            ..
+        })
+    ) {
         print::warning(indoc! { "
             Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added \
             to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
@@ -131,11 +156,9 @@ pub(crate) enum YarnBuildpackError {
     YarnInstall(fun_run::CmdError),
     YarnVersionDetect(YarnVersionError),
     YarnVersionUnsupported(u64),
-    NodeBuildScriptsMetadata(NodeBuildScriptsMetadataError),
     PruneYarnDevDependencies(fun_run::CmdError),
     YarnGetNodeLinker(GetNodeLinkerError),
     InstallPrunePluginError(std::io::Error),
-    Config(ConfigError),
 }
 
 impl From<YarnBuildpackError> for BuildpackError {

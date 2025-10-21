@@ -1,7 +1,6 @@
 use super::cmd::{GetNodeLinkerError, YarnVersionError};
 use super::configure_yarn_cache::DepsLayerError;
 use super::main::YarnBuildpackError;
-use crate::utils::buildplan::{NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME, NodeBuildScriptsMetadataError};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     BUILDPACK_NAME, ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -23,11 +22,9 @@ pub(crate) fn on_yarn_error(error: YarnBuildpackError) -> ErrorMessage {
         YarnBuildpackError::YarnVersionUnsupported(version) => {
             on_yarn_version_unsupported_error(version)
         }
-        YarnBuildpackError::NodeBuildScriptsMetadata(e) => on_node_build_scripts_metadata_error(e),
         YarnBuildpackError::PruneYarnDevDependencies(e) => on_prune_dev_dependencies_error(&e),
         YarnBuildpackError::YarnGetNodeLinker(e) => on_get_node_linker_error(&e),
         YarnBuildpackError::InstallPrunePluginError(e) => on_install_prune_plugin_error(&e),
-        YarnBuildpackError::Config(e) => e.into(),
     }
 }
 
@@ -159,47 +156,6 @@ fn on_yarn_version_unsupported_error(version: u64) -> ErrorMessage {
             - Update your package.json to specify a supported Yarn version.
         "})
         .create()
-}
-
-fn on_node_build_scripts_metadata_error(error: NodeBuildScriptsMetadataError) -> ErrorMessage {
-    let requires_metadata = style::value("[requires.metadata]");
-    let buildplan_name = style::value(NODE_BUILD_SCRIPTS_BUILD_PLAN_NAME);
-
-    match error {
-        NodeBuildScriptsMetadataError::InvalidEnabledValue(value) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-            .header("Invalid build plan metadata")
-            .body(formatdoc! { "
-                A participating buildpack has set invalid {requires_metadata} for the build plan \
-                named {buildplan_name}.
-                
-                Expected metadata format:
-                [requires.metadata]
-                enabled = <bool>
-                skip_pruning = <bool>
-                
-                But configured with:
-                enabled = {value} <{value_type}>     
-            ", value_type = value.type_str() })
-            .create(),
-
-        NodeBuildScriptsMetadataError::InvalidSkipPruningValue(value) => error_message()
-            .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
-            .header("Invalid build plan metadata")
-            .body(formatdoc! { "
-                A participating buildpack has set invalid {requires_metadata} for the build plan \
-                named {buildplan_name}.
-                
-                Expected metadata format:
-                [requires.metadata]
-                enabled = <bool>
-                skip_pruning = <bool>
-                
-                But configured with:
-                skip_pruning = {value} <{value_type}>     
-            ", value_type = value.type_str() })
-            .create(),
-    }
 }
 
 fn on_prune_dev_dependencies_error(error: &CmdError) -> ErrorMessage {
@@ -353,24 +309,6 @@ mod tests {
     #[test]
     fn test_yarn_version_unsupported_error() {
         assert_error_snapshot(YarnBuildpackError::YarnVersionUnsupported(0));
-    }
-
-    #[test]
-    fn test_yarn_node_build_scripts_metadata_error_for_invalid_enabled_value() {
-        assert_error_snapshot(YarnBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidEnabledValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
-    }
-
-    #[test]
-    fn test_yarn_node_build_scripts_metadata_error_for_invalid_skip_pruning_value() {
-        assert_error_snapshot(YarnBuildpackError::NodeBuildScriptsMetadata(
-            NodeBuildScriptsMetadataError::InvalidSkipPruningValue(toml::value::Value::String(
-                "test".to_string(),
-            )),
-        ));
     }
 
     #[test]
