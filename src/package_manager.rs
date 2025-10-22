@@ -390,62 +390,34 @@ pub(crate) fn run_build_scripts(
         return Ok(());
     }
 
-    if let Some((prebuild, _)) = package_json.script("heroku-prebuild") {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&prebuild, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&prebuild, env),
-                InstalledPackageManager::Pnpm(_) => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&prebuild, &e))?;
+    let run_script = |script: Option<(String, String)>| {
+        if let Some((script_name, _)) = script {
+            if build_scripts_enabled {
+                print::sub_stream_cmd(match package_manager {
+                    InstalledPackageManager::Npm(_) => npm::run_script(&script_name, env),
+                    InstalledPackageManager::Yarn(_) => yarn::run_script(&script_name, env),
+                    InstalledPackageManager::Pnpm(_) => pnpm::run_script(&script_name, env),
+                })
+                .map(|_| ())
+                .map_err(|e| create_run_script_error_message(&script_name, &e))
+            } else {
+                print::sub_bullet(format!(
+                    "Not running {} as it was disabled by a participating buildpack",
+                    style::value(script_name)
+                ));
+                Ok(())
+            }
         } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value("heroku-prebuild")
-            ));
+            Ok(())
         }
-    }
+    };
 
-    if let Some((build, _)) = match package_json.script("heroku-build") {
+    run_script(package_json.script("heroku-prebuild"))?;
+    run_script(match package_json.script("heroku-build") {
         Some((build, script)) => Some((build, script)),
         None => package_json.script("build"),
-    } {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&build, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&build, env),
-                InstalledPackageManager::Pnpm(_) => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&build, &e))?;
-        } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value(build)
-            ));
-        }
-    }
-
-    if let Some((postbuild, _)) = package_json.script("heroku-postbuild") {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&postbuild, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&postbuild, env),
-                InstalledPackageManager::Pnpm(_) => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&postbuild, &e))?;
-        } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value("heroku-postbuild")
-            ));
-        }
-    }
+    })?;
+    run_script(package_json.script("heroku-postbuild"))?;
 
     Ok(())
 }

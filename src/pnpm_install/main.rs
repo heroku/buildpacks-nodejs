@@ -34,29 +34,6 @@ pub(crate) fn build(
 
     let pnpm_version = cmd::pnpm_version(&env)?;
 
-    print::bullet("Running scripts");
-    let scripts = pkg_json.build_scripts();
-    if scripts.is_empty() {
-        print::sub_bullet("No build scripts found");
-    } else {
-        for script in scripts {
-            if matches!(
-                buildpack_config.build_scripts_enabled,
-                Some(ConfigValue {
-                    value: false,
-                    source: ConfigValueSource::Buildplan(_)
-                })
-            ) {
-                print::sub_bullet(format!(
-                    "! Not running {script} as it was disabled by a participating buildpack",
-                    script = style::value(&script)
-                ));
-            } else {
-                cmd::pnpm_run(&env, &script).map_err(PnpmInstallBuildpackError::BuildScript)?;
-            }
-        }
-    }
-
     print::bullet("Pruning dev dependencies");
     if matches!(
         buildpack_config.prune_dev_dependencies,
@@ -136,7 +113,6 @@ pub(crate) fn on_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
 
 #[derive(Debug)]
 pub(crate) enum PnpmInstallBuildpackError {
-    BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
     PruneDevDependencies(fun_run::CmdError),
     PnpmVersion(PnpmVersionError),

@@ -162,6 +162,12 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &mut store,
                 &installed_package_manager,
             )?;
+            package_manager::run_build_scripts(
+                &env,
+                &installed_package_manager,
+                &package_json,
+                &buildpack_config,
+            )?;
 
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;

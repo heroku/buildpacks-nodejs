@@ -6,11 +6,6 @@ use fun_run::{CmdError, CommandWithName};
 use libcnb::Env;
 use std::process::Command;
 
-/// Execute `pnpm run` commands like `build`.
-pub(crate) fn pnpm_run(pnpm_env: &Env, script: &str) -> Result<(), CmdError> {
-    print::sub_stream_cmd(Command::new("pnpm").arg("run").arg(script).envs(pnpm_env)).map(|_| ())
-}
-
 pub(crate) fn pnpm_prune_dev_dependencies(
     env: &Env,
     extra_args: Vec<&str>,

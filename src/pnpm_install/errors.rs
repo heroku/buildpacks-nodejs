@@ -10,32 +10,6 @@ use indoc::formatdoc;
 #[allow(clippy::too_many_lines)]
 pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
     match error {
-        PnpmInstallBuildpackError::BuildScript(e) => {
-            let build_script = style::value(e.name());
-            let package_json = style::value("package.json");
-            let heroku_prebuild = style::value("heroku-prebuild");
-            let heroku_build = style::value("heroku-build");
-            let build = style::value("build");
-            let heroku_postbuild = style::value("heroku-postbuild");
-            error_message()
-                .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
-                .header("Failed to execute build script")
-                .body(formatdoc! { "
-                    The {BUILDPACK_NAME} allows customization of the build process by executing the following scripts \
-                    if they are defined in {package_json}:
-                    - {heroku_prebuild} 
-                    - {heroku_build} or {build} 
-                    - {heroku_postbuild}
-        
-                    An unexpected error occurred while executing {build_script}. See the log output above for more information.
-        
-                    Suggestions:
-                    - Ensure that this command runs locally without error.
-                "})
-                .debug_info(e.to_string())
-                .create()
-        }
-
         PnpmInstallBuildpackError::PackageJson(e) => {
             on_package_json_error(e)
         }
@@ -89,13 +63,6 @@ mod tests {
     use std::io;
     use std::process::Command;
     use test_support::test_name;
-
-    #[test]
-    fn test_pnpm_install_build_script_error() {
-        assert_error_snapshot(PnpmInstallBuildpackError::BuildScript(create_cmd_error(
-            "pnpm run build",
-        )));
-    }
 
     #[test]
     fn test_pnpm_install_package_json_access_error() {
