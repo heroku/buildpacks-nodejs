@@ -19,6 +19,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::LazyLock;
 
 pub(crate) fn resolve_pnpm_package_packument(
     context: &BuildpackBuildContext,
@@ -301,6 +302,69 @@ pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
     command.envs(env);
     command
 }
+
+pub(crate) fn prune_dev_dependencies(
+    context: &BuildpackBuildContext,
+    env: &Env,
+    version: &Version,
+    on_prune_command_error: impl FnOnce(&fun_run::CmdError) -> ErrorMessage,
+) -> Result<(), ErrorMessage> {
+    let has_workspace_file = ["pnpm-workspace.yaml", "pnpm-workspace.yml"]
+        .iter()
+        .any(|file| context.app_dir.join(file).exists());
+
+    if has_workspace_file {
+        print::sub_bullet(format!(
+            "Skipping because pruning is not supported for pnpm workspaces ({})",
+            style::url("https://pnpm.io/cli/prune")
+        ));
+        return Ok(());
+    }
+
+    let mut cmd = Command::new("pnpm");
+    cmd.envs(env);
+    cmd.args(["prune", "--prod"]);
+
+    if PRUNE_DEV_DEPENDENCIES_MIN_VERSION.satisfies(version) {
+        cmd.arg("--ignore-scripts");
+        return print::sub_stream_cmd(cmd)
+            .map(|_| ())
+            .map_err(|e| on_prune_command_error(&e));
+    }
+
+    let package_json =
+        crate::package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
+
+    if ["pnpm:devPreinstall", "preinstall", "postinstall", "prepare"]
+        .iter()
+        .any(|script| package_json.script(script).is_some())
+    {
+        print::warning(formatdoc! { "
+            Pruning skipped due to presence of lifecycle scripts
+
+            The version of pnpm used ({version}) will execute the following lifecycle scripts \
+            declared in package.json during pruning which can cause build failures:
+            - pnpm:devPreinstall
+            - preinstall
+            - install
+            - postinstall
+            - prepare
+
+            Since pruning can't be done safely for your build, it will be skipped. To fix this you \
+            must upgrade your version of pnpm to 8.15.6 or higher.
+        "});
+        return Ok(());
+    }
+
+    print::sub_stream_cmd(cmd)
+        .map(|_| ())
+        .map_err(|e| on_prune_command_error(&e))
+}
+
+static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<Requirement> = LazyLock::new(|| {
+    Requirement::parse(">8.15.6")
+        .expect("Prune dev dependencies min version requirement should be valid")
+});
 
 #[cfg(test)]
 mod tests {

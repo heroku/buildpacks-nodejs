@@ -168,6 +168,12 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &package_json,
                 &buildpack_config,
             )?;
+            package_manager::prune_dev_dependencies(
+                &context,
+                &env,
+                &installed_package_manager,
+                &buildpack_config,
+            )?;
 
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
@@ -188,6 +194,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &buildpack_config,
             )?;
             package_manager::prune_dev_dependencies(
+                &context,
                 &env,
                 &installed_package_manager,
                 &buildpack_config,

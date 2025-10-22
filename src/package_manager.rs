@@ -450,6 +450,7 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
 }
 
 pub(crate) fn prune_dev_dependencies(
+    context: &BuildpackBuildContext,
     env: &Env,
     package_manager: &InstalledPackageManager,
     buildpack_config: &BuildpackConfig,
@@ -472,16 +473,22 @@ pub(crate) fn prune_dev_dependencies(
         return Ok(());
     }
 
-    print::sub_stream_cmd(match package_manager {
-        InstalledPackageManager::Npm(_) => npm::prune_dev_dependencies(env),
-        InstalledPackageManager::Yarn(yarn_version) => {
-            yarn::prune_dev_dependencies(env, yarn_version)?
+    match package_manager {
+        InstalledPackageManager::Npm(_) => {
+            npm::prune_dev_dependencies(env, create_prune_dev_dependencies_error_message)
         }
-        InstalledPackageManager::Pnpm(_) => {
-            unreachable!("Only npm and Yarn code should be calling this function")
-        }
-    })
-    .map_err(|e| create_prune_dev_dependencies_error_message(&e))?;
+        InstalledPackageManager::Yarn(yarn_version) => yarn::prune_dev_dependencies(
+            env,
+            yarn_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+        InstalledPackageManager::Pnpm(pnpm_version) => pnpm::prune_dev_dependencies(
+            context,
+            env,
+            pnpm_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+    }?;
 
     Ok(())
 }
