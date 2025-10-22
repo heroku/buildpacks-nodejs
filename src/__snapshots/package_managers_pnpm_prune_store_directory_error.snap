@@ -1,8 +1,8 @@
 ---
-source: buildpacks/nodejs/src/pnpm_install/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Command failed `pnpm prune`
+  - Command failed `pnpm store prune`
     exit status: 1
     stdout: <empty>
     stderr: <empty>

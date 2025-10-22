@@ -11,12 +11,6 @@ pub(crate) fn pnpm_run(pnpm_env: &Env, script: &str) -> Result<(), CmdError> {
     print::sub_stream_cmd(Command::new("pnpm").arg("run").arg(script).envs(pnpm_env)).map(|_| ())
 }
 
-/// Execute `pnpm store prune` to remove unused dependencies from the
-/// content-addressable store.
-pub(crate) fn pnpm_store_prune(pnpm_env: &Env) -> Result<(), CmdError> {
-    print::sub_stream_cmd(Command::new("pnpm").args(["store", "prune"]).envs(pnpm_env)).map(|_| ())
-}
-
 pub(crate) fn pnpm_prune_dev_dependencies(
     env: &Env,
     extra_args: Vec<&str>,

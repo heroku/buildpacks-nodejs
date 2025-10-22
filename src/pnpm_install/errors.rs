@@ -40,19 +40,6 @@ pub(crate) fn on_pnpm_install_buildpack_error(error: PnpmInstallBuildpackError) 
             on_package_json_error(e)
         }
 
-        PnpmInstallBuildpackError::PnpmStorePrune(e) => {
-            error_message()
-                .error_type(ErrorType::Internal)
-                .header("Failed to prune packages from the store directory")
-                .body(formatdoc! { "
-                    The {BUILDPACK_NAME} periodically cleans up the store directory to remove \
-                    packages that are no longer in use from the cache. An unexpected error occurred \
-                    during this operation.
-                " })
-                .debug_info(e.to_string())
-                .create()
-        }
-
         PnpmInstallBuildpackError::PruneDevDependencies(error) => error_message()
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
             .header("Failed to prune pnpm dev dependencies")
@@ -122,13 +109,6 @@ mod tests {
         assert_error_snapshot(PnpmInstallBuildpackError::PackageJson(
             PackageJsonError::ParseError(create_json_error()),
         ));
-    }
-
-    #[test]
-    fn test_pnpm_install_pnpm_store_prune_error() {
-        assert_error_snapshot(PnpmInstallBuildpackError::PnpmStorePrune(create_cmd_error(
-            "pnpm prune",
-        )));
     }
 
     #[test]

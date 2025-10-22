@@ -10,6 +10,7 @@ use fun_run::CommandWithName;
 use indoc::formatdoc;
 use libcnb::Env;
 use libcnb::data::layer_name;
+use libcnb::data::store::Store;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
     UncachedLayerDefinition,
@@ -49,6 +50,7 @@ pub(crate) fn install_pnpm(
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
     env: &Env,
+    store: &mut Store,
     version: &Version,
 ) -> BuildpackResult<()> {
     print::bullet("Setting up pnpm dependency store");
@@ -66,6 +68,8 @@ pub(crate) fn install_dependencies(
             .envs(env),
     )
     .map_err(|e| create_pnpm_install_command_error(&e))?;
+
+    maybe_prune_store_directory(env, store)?;
 
     Ok(())
 }
@@ -254,6 +258,43 @@ fn create_pnpm_install_command_error(error: &fun_run::CmdError) -> ErrorMessage 
         .create()
 }
 
+fn maybe_prune_store_directory(env: &Env, store: &mut Store) -> BuildpackResult<()> {
+    let cache_use_count_key = "cache_use_count";
+    let cache_prune_interval = 40;
+
+    #[allow(clippy::cast_possible_truncation)]
+    let cache_use_count = store.metadata.get(cache_use_count_key).map_or(0, |v| {
+        v.as_float().map_or(cache_prune_interval, |f| f as i64)
+    });
+
+    if cache_use_count.rem_euclid(cache_prune_interval) == 0 {
+        print::bullet("Pruning unused dependencies from pnpm content-addressable store");
+        print::sub_stream_cmd(Command::new("pnpm").args(["store", "prune"]).envs(env))
+            .map_err(|e| create_prune_store_directory_error(&e))?;
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    store.metadata.insert(
+        cache_use_count_key.into(),
+        toml::Value::from((cache_use_count + 1) as f64),
+    );
+
+    Ok(())
+}
+
+fn create_prune_store_directory_error(error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .error_type(ErrorType::Internal)
+        .header("Failed to prune packages from the store directory")
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack periodically cleans up the store directory to remove \
+            packages that are no longer in use from the cache. An unexpected error occurred \
+            during this operation.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -285,6 +326,13 @@ mod tests {
     fn node_modules_symlink_error() {
         assert_error_snapshot(&create_node_modules_symlink_error(&std::io::Error::other(
             "Target directory does not exist",
+        )));
+    }
+
+    #[test]
+    fn prune_store_directory_error() {
+        assert_error_snapshot(&create_prune_store_directory_error(&create_cmd_error(
+            "pnpm store prune",
         )));
     }
 }

@@ -3,8 +3,8 @@
 // to be able selectively opt out of coverage for functions/lines/modules.
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
+use super::cmd;
 use super::cmd::PnpmVersionError;
-use super::{cmd, store};
 use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
 use crate::utils::package_json::{PackageJson, PackageJsonError};
@@ -17,10 +17,8 @@ use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
-use libcnb::data::store::Store;
 use serde_json::Value;
 use std::path::Path;
-use toml::Table;
 
 #[allow(clippy::too_many_lines)]
 pub(crate) fn build(
@@ -35,18 +33,6 @@ pub(crate) fn build(
     let has_pnpm_workspace_file = has_pnpm_workspace_file(context);
 
     let pnpm_version = cmd::pnpm_version(&env)?;
-
-    let mut metadata = if let Some(store) = &context.store {
-        store.metadata.clone()
-    } else {
-        Table::new()
-    };
-    let cache_use_count = store::read_cache_use_count(&metadata);
-    if store::should_prune_cache(cache_use_count) {
-        print::bullet("Pruning unused dependencies from pnpm content-addressable store");
-        cmd::pnpm_store_prune(&env).map_err(PnpmInstallBuildpackError::PnpmStorePrune)?;
-    }
-    store::set_cache_use_count(&mut metadata, cache_use_count + 1);
 
     print::bullet("Running scripts");
     let scripts = pkg_json.build_scripts();
@@ -101,8 +87,6 @@ pub(crate) fn build(
         )?;
     }
 
-    build_result_builder = build_result_builder.store(Store { metadata });
-
     if context.app_dir.join("Procfile").exists() {
         print::bullet("Skipping default web process (Procfile detected)");
     } else if pkg_json.has_start_script() {
@@ -154,7 +138,6 @@ pub(crate) fn on_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
 pub(crate) enum PnpmInstallBuildpackError {
     BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
-    PnpmStorePrune(fun_run::CmdError),
     PruneDevDependencies(fun_run::CmdError),
     PnpmVersion(PnpmVersionError),
 }

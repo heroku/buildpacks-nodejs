@@ -7,11 +7,13 @@ use indoc::indoc;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::store::Store;
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::DetectResultBuilder;
 use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
+use toml::Table;
 
 mod buildpack_config;
 mod package_json;
@@ -75,6 +77,12 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 .expect("The buildpack should have a name"),
         );
 
+        let mut store = Store {
+            metadata: match context.store.as_ref() {
+                Some(store) => store.metadata.clone(),
+                None => Table::new(),
+            },
+        };
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
 
@@ -148,14 +156,25 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         // dependency installation & process registration
         if context.app_dir.join("pnpm-lock.yaml").exists() {
-            package_manager::install_dependencies(&context, &env, &installed_package_manager)?;
+            package_manager::install_dependencies(
+                &context,
+                &env,
+                &mut store,
+                &installed_package_manager,
+            )?;
+
             (_, build_result_builder) =
                 pnpm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
         } else if ["yarn.lock", "package-lock.json"]
             .iter()
             .any(|lockfile| context.app_dir.join(lockfile).exists())
         {
-            package_manager::install_dependencies(&context, &env, &installed_package_manager)?;
+            package_manager::install_dependencies(
+                &context,
+                &env,
+                &mut store,
+                &installed_package_manager,
+            )?;
             package_manager::run_build_scripts(
                 &env,
                 &installed_package_manager,
@@ -205,7 +224,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         print::all_done(&Some(buildpack_start));
 
-        build_result_builder.build()
+        build_result_builder.store(store).build()
     }
 
     fn on_error(&self, error: BuildpackError) {

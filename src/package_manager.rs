@@ -15,6 +15,7 @@ use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
+use libcnb::data::store::Store;
 use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
@@ -347,6 +348,7 @@ pub(crate) enum InstalledPackageManager {
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
     env: &Env,
+    store: &mut Store,
     installed_package_manager: &InstalledPackageManager,
 ) -> BuildpackResult<()> {
     match installed_package_manager {
@@ -357,7 +359,7 @@ pub(crate) fn install_dependencies(
             yarn::install_dependencies(context, env, version)?;
         }
         InstalledPackageManager::Pnpm(version) => {
-            pnpm::install_dependencies(context, env, version)?;
+            pnpm::install_dependencies(context, env, store, version)?;
         }
     }
     Ok(())
