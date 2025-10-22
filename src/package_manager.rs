@@ -307,7 +307,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("pnpm@{pnpm_version}")),
             ));
-            Ok(InstalledPackageManager::Pnpm)
+            Ok(InstalledPackageManager::Pnpm(pnpm_version.clone()))
         }
         ResolvedPackageManager::Yarn(_, yarn_package_packument) => {
             print::bullet("Installing Yarn");
@@ -340,7 +340,7 @@ pub(crate) fn install_package_manager(
 
 pub(crate) enum InstalledPackageManager {
     Npm(Version),
-    Pnpm,
+    Pnpm(Version),
     Yarn(Version),
 }
 
@@ -356,8 +356,8 @@ pub(crate) fn install_dependencies(
         InstalledPackageManager::Yarn(version) => {
             yarn::install_dependencies(context, env, version)?;
         }
-        InstalledPackageManager::Pnpm => {
-            unreachable!("Only npm and yarn code should be calling this function")
+        InstalledPackageManager::Pnpm(version) => {
+            pnpm::install_dependencies(context, env, version)?;
         }
     }
     Ok(())
@@ -393,7 +393,7 @@ pub(crate) fn run_build_scripts(
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&prebuild, env),
                 InstalledPackageManager::Yarn(_) => yarn::run_script(&prebuild, env),
-                InstalledPackageManager::Pnpm => {
+                InstalledPackageManager::Pnpm(_) => {
                     unreachable!("Only npm and yarn code should be calling this function")
                 }
             })
@@ -414,7 +414,7 @@ pub(crate) fn run_build_scripts(
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&build, env),
                 InstalledPackageManager::Yarn(_) => yarn::run_script(&build, env),
-                InstalledPackageManager::Pnpm => {
+                InstalledPackageManager::Pnpm(_) => {
                     unreachable!("Only npm and yarn code should be calling this function")
                 }
             })
@@ -432,7 +432,7 @@ pub(crate) fn run_build_scripts(
             print::sub_stream_cmd(match package_manager {
                 InstalledPackageManager::Npm(_) => npm::run_script(&postbuild, env),
                 InstalledPackageManager::Yarn(_) => yarn::run_script(&postbuild, env),
-                InstalledPackageManager::Pnpm => {
+                InstalledPackageManager::Pnpm(_) => {
                     unreachable!("Only npm and yarn code should be calling this function")
                 }
             })
@@ -503,7 +503,7 @@ pub(crate) fn prune_dev_dependencies(
         InstalledPackageManager::Yarn(yarn_version) => {
             yarn::prune_dev_dependencies(env, yarn_version)?
         }
-        InstalledPackageManager::Pnpm => {
+        InstalledPackageManager::Pnpm(_) => {
             unreachable!("Only npm and Yarn code should be calling this function")
         }
     })
@@ -543,7 +543,7 @@ pub(crate) fn configure_default_processes(
             InstalledPackageManager::Yarn(_) => {
                 print::bullet("Skipping default web process (Procfile detected)");
             }
-            InstalledPackageManager::Pnpm => {}
+            InstalledPackageManager::Pnpm(_) => {}
         }
         build_result_builder
     } else if package_json.script("start").is_some() {
@@ -573,7 +573,7 @@ pub(crate) fn configure_default_processes(
                     )
                     .build(),
             ),
-            InstalledPackageManager::Pnpm => build_result_builder,
+            InstalledPackageManager::Pnpm(_) => build_result_builder,
         }
     } else {
         if let InstalledPackageManager::Npm(_) = installed_package_manager {

@@ -4,8 +4,6 @@
 #![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 use super::cmd::PnpmVersionError;
-use super::configure_pnpm_store_directory::configure_pnpm_store_directory;
-use super::configure_pnpm_virtual_store_directory::configure_pnpm_virtual_store_directory;
 use super::{cmd, store};
 use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::utils::error_handling::ErrorMessage;
@@ -21,7 +19,7 @@ use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::data::store::Store;
 use serde_json::Value;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use toml::Table;
 
 #[allow(clippy::too_many_lines)]
@@ -35,13 +33,6 @@ pub(crate) fn build(
     let pkg_json =
         PackageJson::read(&pkg_json_file).map_err(PnpmInstallBuildpackError::PackageJson)?;
     let has_pnpm_workspace_file = has_pnpm_workspace_file(context);
-
-    print::bullet("Setting up pnpm dependency store");
-    configure_pnpm_store_directory(context, &env)?;
-    configure_pnpm_virtual_store_directory(context, &env)?;
-
-    print::bullet("Installing dependencies");
-    cmd::pnpm_install(&env).map_err(PnpmInstallBuildpackError::PnpmInstall)?;
 
     let pnpm_version = cmd::pnpm_version(&env)?;
 
@@ -163,16 +154,7 @@ pub(crate) fn on_error(error: PnpmInstallBuildpackError) -> ErrorMessage {
 pub(crate) enum PnpmInstallBuildpackError {
     BuildScript(fun_run::CmdError),
     PackageJson(PackageJsonError),
-    PnpmSetStoreDir(fun_run::CmdError),
-    PnpmSetVirtualStoreDir(fun_run::CmdError),
-    PnpmInstall(fun_run::CmdError),
     PnpmStorePrune(fun_run::CmdError),
-    CreateDirectory(PathBuf, std::io::Error),
-    CreateSymlink {
-        from: PathBuf,
-        to: PathBuf,
-        source: std::io::Error,
-    },
     PruneDevDependencies(fun_run::CmdError),
     PnpmVersion(PnpmVersionError),
 }
