@@ -639,9 +639,7 @@ mod tests {
         .unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),
@@ -655,9 +653,7 @@ mod tests {
         std::fs::write(&yarnrc_path, "---\nyarnPath: \"").unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),
@@ -671,9 +667,7 @@ mod tests {
         std::fs::create_dir(yarnrc_path).unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),

@@ -24,7 +24,7 @@ mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
 type BuildpackBuildContext = libcnb::build::BuildContext<NodeJsBuildpack>;
-type BuildpackError = libcnb::Error<NodeJsBuildpackError>;
+type BuildpackError = libcnb::Error<ErrorMessage>;
 type BuildpackResult<T> = Result<T, BuildpackError>;
 
 buildpack_main!(NodeJsBuildpack);
@@ -34,12 +34,12 @@ struct NodeJsBuildpack;
 impl libcnb::Buildpack for NodeJsBuildpack {
     type Platform = libcnb::generic::GenericPlatform;
     type Metadata = libcnb::generic::GenericMetadata;
-    type Error = NodeJsBuildpackError;
+    type Error = ErrorMessage;
 
     fn detect(
         &self,
         context: BuildpackDetectContext,
-    ) -> libcnb::Result<libcnb::detect::DetectResult, NodeJsBuildpackError> {
+    ) -> libcnb::Result<libcnb::detect::DetectResult, ErrorMessage> {
         let buildpack_id = context.buildpack_descriptor.buildpack.id.to_string();
 
         // provide heroku/nodejs for other buildpacks to use
@@ -65,7 +65,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn build(
         &self,
         context: BuildpackBuildContext,
-    ) -> libcnb::Result<libcnb::build::BuildResult, NodeJsBuildpackError> {
+    ) -> libcnb::Result<libcnb::build::BuildResult, ErrorMessage> {
         let buildpack_start = print::buildpack(
             context
                 .buildpack_descriptor
@@ -218,23 +218,10 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
-            libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::Message(error) => error,
-            },
+            libcnb::Error::BuildpackError(error_message) => error_message,
             framework_error => on_framework_error(&framework_error),
         };
         print::plain(error_message.to_string());
         eprintln!();
-    }
-}
-
-#[derive(Debug)]
-enum NodeJsBuildpackError {
-    Message(ErrorMessage),
-}
-
-impl From<NodeJsBuildpackError> for BuildpackError {
-    fn from(value: NodeJsBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
     }
 }

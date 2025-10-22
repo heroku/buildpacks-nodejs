@@ -5,7 +5,7 @@ use crate::utils::error_handling::{
 };
 use crate::utils::http::{ResponseExt, get};
 use crate::utils::vrs::{Requirement, Version};
-use crate::{BuildpackBuildContext, BuildpackError, NodeJsBuildpackError, utils};
+use crate::{BuildpackBuildContext, BuildpackError, utils};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use http::{HeaderMap, HeaderValue, StatusCode};
@@ -378,7 +378,7 @@ pub(crate) fn install_package_layer(
 
 pub(crate) enum InstallPackageLayerError {
     Download(Box<PackagePackument>, DownloaderError),
-    Layer(Box<libcnb::Error<NodeJsBuildpackError>>),
+    Layer(Box<libcnb::Error<ErrorMessage>>),
     MissingBins(Box<PackagePackument>),
     WriteBin(Box<PackagePackument>, std::io::Error),
 }

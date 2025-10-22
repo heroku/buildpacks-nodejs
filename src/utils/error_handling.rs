@@ -1,4 +1,4 @@
-use crate::{BuildpackError, NodeJsBuildpackError};
+use crate::BuildpackError;
 use bullet_stream::{Print, style};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
@@ -114,7 +114,7 @@ impl Display for ErrorMessage {
 
 impl From<ErrorMessage> for BuildpackError {
     fn from(value: ErrorMessage) -> Self {
-        libcnb::Error::BuildpackError(NodeJsBuildpackError::Message(value))
+        libcnb::Error::BuildpackError(value)
     }
 }
 
