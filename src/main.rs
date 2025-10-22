@@ -1,6 +1,5 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
 use crate::package_manager::InstalledPackageManager;
-use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use bullet_stream::global::print;
 use indoc::indoc;
@@ -19,7 +18,6 @@ mod buildpack_config;
 mod package_json;
 mod package_manager;
 mod package_managers;
-mod pnpm_install;
 mod runtime;
 mod runtimes;
 mod utils;
@@ -155,29 +153,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         })?;
 
         // dependency installation & process registration
-        if context.app_dir.join("pnpm-lock.yaml").exists() {
-            package_manager::install_dependencies(
-                &context,
-                &env,
-                &mut store,
-                &installed_package_manager,
-            )?;
-            package_manager::run_build_scripts(
-                &env,
-                &installed_package_manager,
-                &package_json,
-                &buildpack_config,
-            )?;
-            package_manager::prune_dev_dependencies(
-                &context,
-                &env,
-                &installed_package_manager,
-                &buildpack_config,
-            )?;
-
-            (_, build_result_builder) =
-                pnpm_install::main::build(&context, env, build_result_builder, &buildpack_config)?;
-        } else if ["yarn.lock", "package-lock.json"]
+        if ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]
             .iter()
             .any(|lockfile| context.app_dir.join(lockfile).exists())
         {
@@ -243,7 +219,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
             libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
                 NodeJsBuildpackError::Message(error) => error,
             },
             framework_error => on_framework_error(&framework_error),
@@ -255,7 +230,6 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
 #[derive(Debug)]
 enum NodeJsBuildpackError {
-    PnpmInstall(PnpmInstallBuildpackError),
     Message(ErrorMessage),
 }
 
