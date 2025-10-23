@@ -182,7 +182,7 @@ Reusing layer 'heroku/nodejs:mgr'
 Reusing layer 'heroku/nodejs:shim'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Reused 1/1 app layer(s)
+Added 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'

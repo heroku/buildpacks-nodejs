@@ -124,7 +124,7 @@ Adding layer 'heroku/nodejs:dist'
 Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Reused 1/1 app layer(s)
+Added 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
