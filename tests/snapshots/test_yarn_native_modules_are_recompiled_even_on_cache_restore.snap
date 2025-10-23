@@ -13,13 +13,13 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.20.0`
+  - Resolved Node.js version: `22.21.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.20.0/node-v22.20.0-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v22.21.0/node-v22.21.0-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.20.0 (<arch>)`
-  - Installing Node.js `22.20.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.21.0 (<arch>)`
+  - Installing Node.js `22.21.0 (<arch>)` ... (<time_elapsed>)
 - Using Corepack version `0.34.0`
 - Found `packageManager` set to `yarn@4.2.2` in `package.json`
 - Enabling Corepack
@@ -114,9 +114,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `22.x`
-  - Resolved Node.js version: `22.20.0`
+  - Resolved Node.js version: `22.21.0`
 - Installing Node.js distribution
-  - Reusing Node.js 22.20.0 (<arch>)
+  - Reusing Node.js 22.21.0 (<arch>)
 - Using Corepack version `0.34.0`
 - Found `packageManager` set to `yarn@4.2.2` in `package.json`
 - Enabling Corepack
@@ -182,7 +182,7 @@ Reusing layer 'heroku/nodejs:mgr'
 Reusing layer 'heroku/nodejs:shim'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Added 1/1 app layer(s)
+Reused 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
