@@ -94,6 +94,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493 # v4.3.0
 
+      # The dpkg man-db trigger is excessively slow on GHA runners, see e.g.:
+      # https://github.com/actions/runner-images/issues/10977
+      # https://github.com/actions/runner/issues/4030
+      # We disable it here so it does not fire at the end of the following apt-get install
+      - name: Disable man-db auto-update
+        run: sudo rm -f /var/lib/man-db/auto-update
+
       - name: Install musl-tools
         run: sudo apt-get install musl-tools -y --no-install-recommends
 
