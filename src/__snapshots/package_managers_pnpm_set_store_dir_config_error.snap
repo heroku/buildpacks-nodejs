@@ -1,8 +1,8 @@
 ---
-source: buildpacks/nodejs-pnpm-install/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Command failed `pnpm config set store-dir /some/dir --global`
+  - Command failed `pnpm config set store-dir /some/dir`
     exit status: 1
     stdout: <empty>
     stderr: <empty>

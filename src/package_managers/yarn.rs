@@ -536,7 +536,8 @@ pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
 pub(crate) fn prune_dev_dependencies(
     env: &Env,
     version: &Version,
-) -> Result<Command, ErrorMessage> {
+    on_prune_command_error: impl FnOnce(&fun_run::CmdError) -> ErrorMessage,
+) -> Result<(), ErrorMessage> {
     let mut prune_command = Command::new("yarn");
     prune_command.envs(env);
     if version.major() == 1 {
@@ -554,7 +555,9 @@ pub(crate) fn prune_dev_dependencies(
             .env("YARN_PLUGINS", yarn_prune_plugin)
             .args(["heroku", "prune"])
     };
-    Ok(prune_command)
+    print::sub_stream_cmd(prune_command)
+        .map(|_| ())
+        .map_err(|e| on_prune_command_error(&e))
 }
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
@@ -636,9 +639,7 @@ mod tests {
         .unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),
@@ -652,9 +653,7 @@ mod tests {
         std::fs::write(&yarnrc_path, "---\nyarnPath: \"").unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),
@@ -668,9 +667,7 @@ mod tests {
         std::fs::create_dir(yarnrc_path).unwrap();
         let error = read_yarnrc(app_dir.path()).unwrap().unwrap_err();
         match error {
-            crate::BuildpackError::BuildpackError(crate::NodeJsBuildpackError::Message(
-                message,
-            )) => {
+            crate::BuildpackError::BuildpackError(message) => {
                 assert_error_snapshot(&message);
             }
             _ => panic!("Not the expected error type"),

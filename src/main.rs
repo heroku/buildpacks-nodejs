@@ -1,30 +1,30 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
 use crate::package_manager::InstalledPackageManager;
-use crate::pnpm_install::main::PnpmInstallBuildpackError;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use bullet_stream::global::print;
 use indoc::indoc;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::build_plan::BuildPlanBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::store::Store;
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::DetectResultBuilder;
 use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
+use toml::Table;
 
 mod buildpack_config;
 mod package_json;
 mod package_manager;
 mod package_managers;
-mod pnpm_install;
 mod runtime;
 mod runtimes;
 mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
 type BuildpackBuildContext = libcnb::build::BuildContext<NodeJsBuildpack>;
-type BuildpackError = libcnb::Error<NodeJsBuildpackError>;
+type BuildpackError = libcnb::Error<ErrorMessage>;
 type BuildpackResult<T> = Result<T, BuildpackError>;
 
 buildpack_main!(NodeJsBuildpack);
@@ -34,12 +34,12 @@ struct NodeJsBuildpack;
 impl libcnb::Buildpack for NodeJsBuildpack {
     type Platform = libcnb::generic::GenericPlatform;
     type Metadata = libcnb::generic::GenericMetadata;
-    type Error = NodeJsBuildpackError;
+    type Error = ErrorMessage;
 
     fn detect(
         &self,
         context: BuildpackDetectContext,
-    ) -> libcnb::Result<libcnb::detect::DetectResult, NodeJsBuildpackError> {
+    ) -> libcnb::Result<libcnb::detect::DetectResult, ErrorMessage> {
         let buildpack_id = context.buildpack_descriptor.buildpack.id.to_string();
 
         // provide heroku/nodejs for other buildpacks to use
@@ -65,7 +65,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     fn build(
         &self,
         context: BuildpackBuildContext,
-    ) -> libcnb::Result<libcnb::build::BuildResult, NodeJsBuildpackError> {
+    ) -> libcnb::Result<libcnb::build::BuildResult, ErrorMessage> {
         let buildpack_start = print::buildpack(
             context
                 .buildpack_descriptor
@@ -75,6 +75,12 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 .expect("The buildpack should have a name"),
         );
 
+        let mut store = Store {
+            metadata: match context.store.as_ref() {
+                Some(store) => store.metadata.clone(),
+                None => Table::new(),
+            },
+        };
         let mut build_result_builder = BuildResultBuilder::new();
         let mut env = Env::from_current();
 
@@ -147,14 +153,16 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         })?;
 
         // dependency installation & process registration
-        if pnpm_install::main::detect(&context)? {
-            (_, build_result_builder) =
-                pnpm_install::main::build(&context, env, build_result_builder)?;
-        } else if ["yarn.lock", "package-lock.json"]
+        if ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]
             .iter()
             .any(|lockfile| context.app_dir.join(lockfile).exists())
         {
-            package_manager::install_dependencies(&context, &env, &installed_package_manager)?;
+            package_manager::install_dependencies(
+                &context,
+                &env,
+                &mut store,
+                &installed_package_manager,
+            )?;
             package_manager::run_build_scripts(
                 &env,
                 &installed_package_manager,
@@ -162,6 +170,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &buildpack_config,
             )?;
             package_manager::prune_dev_dependencies(
+                &context,
                 &env,
                 &installed_package_manager,
                 &buildpack_config,
@@ -204,30 +213,15 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         print::all_done(&Some(buildpack_start));
 
-        build_result_builder.build()
+        build_result_builder.store(store).build()
     }
 
     fn on_error(&self, error: BuildpackError) {
         let error_message = match error {
-            libcnb::Error::BuildpackError(buildpack_error) => match buildpack_error {
-                NodeJsBuildpackError::PnpmInstall(error) => pnpm_install::main::on_error(error),
-                NodeJsBuildpackError::Message(error) => error,
-            },
+            libcnb::Error::BuildpackError(error_message) => error_message,
             framework_error => on_framework_error(&framework_error),
         };
         print::plain(error_message.to_string());
         eprintln!();
-    }
-}
-
-#[derive(Debug)]
-enum NodeJsBuildpackError {
-    PnpmInstall(PnpmInstallBuildpackError),
-    Message(ErrorMessage),
-}
-
-impl From<NodeJsBuildpackError> for BuildpackError {
-    fn from(value: NodeJsBuildpackError) -> Self {
-        libcnb::Error::BuildpackError(value)
     }
 }

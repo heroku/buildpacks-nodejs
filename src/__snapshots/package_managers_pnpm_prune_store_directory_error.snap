@@ -1,12 +1,15 @@
 ---
-source: buildpacks/nodejs-pnpm-install/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Insufficient permissions
+  - Command failed `pnpm store prune`
+    exit status: 1
+    stdout: <empty>
+    stderr: <empty>
 
-! Failed to create directory
+! Failed to prune packages from the store directory
 !
-! An unexpected I/O error occurred while creating the directory at `/layers/pnpm_install/dir`.
+! The Heroku Node.js buildpack periodically cleans up the store directory to remove packages that are no longer in use from the cache. An unexpected error occurred during this operation.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues

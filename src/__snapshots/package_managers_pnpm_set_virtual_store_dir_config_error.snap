@@ -1,15 +1,15 @@
 ---
-source: buildpacks/nodejs-pnpm-install/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Command failed `pnpm --version`
+  - Command failed `pnpm config set virtual-store-dir /some/dir`
     exit status: 1
     stdout: <empty>
     stderr: <empty>
 
-! Failed to determine pnpm version
+! Failed to configure pnpm virtual store dir
 !
-! An unexpected error occurred while attempting to determine the current pnpm version from the system.
+! An unexpected error occurred while configuring the store directory for pnpm. This is the directory where pnpm links all installed packages from the store.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues

@@ -15,6 +15,7 @@ use libcnb::Env;
 use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
+use libcnb::data::store::Store;
 use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
@@ -307,7 +308,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("pnpm@{pnpm_version}")),
             ));
-            Ok(InstalledPackageManager::Pnpm)
+            Ok(InstalledPackageManager::Pnpm(pnpm_version.clone()))
         }
         ResolvedPackageManager::Yarn(_, yarn_package_packument) => {
             print::bullet("Installing Yarn");
@@ -340,13 +341,14 @@ pub(crate) fn install_package_manager(
 
 pub(crate) enum InstalledPackageManager {
     Npm(Version),
-    Pnpm,
+    Pnpm(Version),
     Yarn(Version),
 }
 
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
     env: &Env,
+    store: &mut Store,
     installed_package_manager: &InstalledPackageManager,
 ) -> BuildpackResult<()> {
     match installed_package_manager {
@@ -356,8 +358,8 @@ pub(crate) fn install_dependencies(
         InstalledPackageManager::Yarn(version) => {
             yarn::install_dependencies(context, env, version)?;
         }
-        InstalledPackageManager::Pnpm => {
-            unreachable!("Only npm and yarn code should be calling this function")
+        InstalledPackageManager::Pnpm(version) => {
+            pnpm::install_dependencies(context, env, store, version)?;
         }
     }
     Ok(())
@@ -388,62 +390,34 @@ pub(crate) fn run_build_scripts(
         return Ok(());
     }
 
-    if let Some((prebuild, _)) = package_json.script("heroku-prebuild") {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&prebuild, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&prebuild, env),
-                InstalledPackageManager::Pnpm => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&prebuild, &e))?;
+    let run_script = |script: Option<(String, String)>| {
+        if let Some((script_name, _)) = script {
+            if build_scripts_enabled {
+                print::sub_stream_cmd(match package_manager {
+                    InstalledPackageManager::Npm(_) => npm::run_script(&script_name, env),
+                    InstalledPackageManager::Yarn(_) => yarn::run_script(&script_name, env),
+                    InstalledPackageManager::Pnpm(_) => pnpm::run_script(&script_name, env),
+                })
+                .map(|_| ())
+                .map_err(|e| create_run_script_error_message(&script_name, &e))
+            } else {
+                print::sub_bullet(format!(
+                    "Not running {} as it was disabled by a participating buildpack",
+                    style::value(script_name)
+                ));
+                Ok(())
+            }
         } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value("heroku-prebuild")
-            ));
+            Ok(())
         }
-    }
+    };
 
-    if let Some((build, _)) = match package_json.script("heroku-build") {
+    run_script(package_json.script("heroku-prebuild"))?;
+    run_script(match package_json.script("heroku-build") {
         Some((build, script)) => Some((build, script)),
         None => package_json.script("build"),
-    } {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&build, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&build, env),
-                InstalledPackageManager::Pnpm => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&build, &e))?;
-        } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value(build)
-            ));
-        }
-    }
-
-    if let Some((postbuild, _)) = package_json.script("heroku-postbuild") {
-        if build_scripts_enabled {
-            print::sub_stream_cmd(match package_manager {
-                InstalledPackageManager::Npm(_) => npm::run_script(&postbuild, env),
-                InstalledPackageManager::Yarn(_) => yarn::run_script(&postbuild, env),
-                InstalledPackageManager::Pnpm => {
-                    unreachable!("Only npm and yarn code should be calling this function")
-                }
-            })
-            .map_err(|e| create_run_script_error_message(&postbuild, &e))?;
-        } else {
-            print::sub_bullet(format!(
-                "Not running {} as it was disabled by a participating buildpack",
-                style::value("heroku-postbuild")
-            ));
-        }
-    }
+    })?;
+    run_script(package_json.script("heroku-postbuild"))?;
 
     Ok(())
 }
@@ -476,6 +450,7 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
 }
 
 pub(crate) fn prune_dev_dependencies(
+    context: &BuildpackBuildContext,
     env: &Env,
     package_manager: &InstalledPackageManager,
     buildpack_config: &BuildpackConfig,
@@ -498,16 +473,22 @@ pub(crate) fn prune_dev_dependencies(
         return Ok(());
     }
 
-    print::sub_stream_cmd(match package_manager {
-        InstalledPackageManager::Npm(_) => npm::prune_dev_dependencies(env),
-        InstalledPackageManager::Yarn(yarn_version) => {
-            yarn::prune_dev_dependencies(env, yarn_version)?
+    match package_manager {
+        InstalledPackageManager::Npm(_) => {
+            npm::prune_dev_dependencies(env, create_prune_dev_dependencies_error_message)
         }
-        InstalledPackageManager::Pnpm => {
-            unreachable!("Only npm and Yarn code should be calling this function")
-        }
-    })
-    .map_err(|e| create_prune_dev_dependencies_error_message(&e))?;
+        InstalledPackageManager::Yarn(yarn_version) => yarn::prune_dev_dependencies(
+            env,
+            yarn_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+        InstalledPackageManager::Pnpm(pnpm_version) => pnpm::prune_dev_dependencies(
+            context,
+            env,
+            pnpm_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+    }?;
 
     Ok(())
 }
@@ -535,46 +516,40 @@ pub(crate) fn configure_default_processes(
     installed_package_manager: &InstalledPackageManager,
 ) -> BuildResultBuilder {
     if let Ok(true) = context.app_dir.join("Procfile").try_exists() {
-        match installed_package_manager {
-            InstalledPackageManager::Npm(_) => {
-                print::bullet("Configuring default processes");
-                print::sub_bullet("Skipping default web process (Procfile detected)");
-            }
-            InstalledPackageManager::Yarn(_) => {
-                print::bullet("Skipping default web process (Procfile detected)");
-            }
-            InstalledPackageManager::Pnpm => {}
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet("Skipping default web process (Procfile detected)");
+        } else {
+            print::bullet("Skipping default web process (Procfile detected)");
         }
         build_result_builder
     } else if package_json.script("start").is_some() {
-        match installed_package_manager {
-            InstalledPackageManager::Npm(_) => {
-                print::bullet("Configuring default processes");
-                print::sub_bullet(format!(
-                    "Adding default web process for {}",
-                    style::value("npm start")
-                ));
-                build_result_builder.launch(
-                    LaunchBuilder::new()
-                        .process(
-                            ProcessBuilder::new(process_type!("web"), ["npm", "start"])
-                                .default(true)
-                                .build(),
-                        )
-                        .build(),
-                )
-            }
-            InstalledPackageManager::Yarn(_) => build_result_builder.launch(
-                LaunchBuilder::new()
-                    .process(
-                        ProcessBuilder::new(process_type!("web"), ["yarn", "start"])
-                            .default(true)
-                            .build(),
-                    )
-                    .build(),
-            ),
-            InstalledPackageManager::Pnpm => build_result_builder,
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet(format!(
+                "Adding default web process for {}",
+                style::value("npm start")
+            ));
         }
+        build_result_builder.launch(
+            LaunchBuilder::new()
+                .process(
+                    ProcessBuilder::new(
+                        process_type!("web"),
+                        [
+                            match installed_package_manager {
+                                InstalledPackageManager::Npm(_) => "npm",
+                                InstalledPackageManager::Yarn(_) => "yarn",
+                                InstalledPackageManager::Pnpm(_) => "pnpm",
+                            },
+                            "start",
+                        ],
+                    )
+                    .default(true)
+                    .build(),
+                )
+                .build(),
+        )
     } else {
         if let InstalledPackageManager::Npm(_) = installed_package_manager {
             print::bullet("Configuring default processes");
