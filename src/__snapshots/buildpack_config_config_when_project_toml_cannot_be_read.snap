@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Is a directory (os error 21)
+
+! Error reading `project.toml`
+!
+! The Heroku Node.js buildpack reads from `project.toml` to read configuration data but the file can't be read.
+!
+! Suggestions:
+! - Ensure the file has read permissions.
+!
+! Use the debug information above to troubleshoot and retry your build.

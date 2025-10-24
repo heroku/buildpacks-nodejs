@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - test I/O error
+
+! Failed to copy Node.js distribution contents
+!
+! An unexpected I/O error occurred while writing the contents of the Node.js distribution from https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz to the installation directory at `/layers/heroku_nodejs/nodejs`.
+!
+! Use the debug information above to troubleshoot and retry your build.
+!
+! If the issue persists and you think you found a bug in the buildpack, reproduce the issue locally with a minimal example. Open an issue in the buildpack's GitHub repository and include the details here:
+! https://github.com/heroku/buildpacks-nodejs/issues

@@ -1,8 +1,0 @@
-{
-  "name": "corepack-template",
-  "version": "1.0.0",
-  "packageManager": "VALUE WILL BE SET IN TEST",
-  "dependencies": {
-    "debug": "^4.3.4"
-  }
-}

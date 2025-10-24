@@ -20,18 +20,15 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `22.21.0 (<arch>)`
   - Installing Node.js `22.21.0 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.34.0`
-- Found `packageManager` set to `pnpm@8.4.0` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin pnpm`
-- Installing `pnpm@8.4.0`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing pnpm@8.4.0...
-
-  - Done (<time_elapsed>)
+- Determining pnpm package information
+  - Found `packageManager` set to `pnpm@8.4.0` in `package.json`
+  - GET https://registry.npmjs.org/pnpm ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Resolved pnpm version `8.4.0` to `8.4.0`
+- Installing pnpm
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-8.4.0.tgz ... (OK)
+  - Downloading ... (<time_elapsed>)
+  - Successfully installed `pnpm@8.4.0`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
@@ -74,8 +71,7 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
-Adding layer 'heroku/nodejs:shim'
+Adding layer 'heroku/nodejs:pnpm'
 Adding layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
@@ -92,6 +88,6 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:addressable'
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
-Adding cache layer 'heroku/nodejs:shim'
+Adding cache layer 'heroku/nodejs:pnpm'
+Adding cache layer 'heroku/nodejs:pnpm_packument'
 Successfully built image '<image-name>'

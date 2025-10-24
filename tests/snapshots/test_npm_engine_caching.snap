@@ -28,8 +28,6 @@ heroku/nodejs <buildpack-version>
 - Installing npm
   - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Removing npm bundled with Node.js
-  - Installing requested npm
   - Successfully installed `npm@9.6.6`
 - Installing node modules
   - Using npm version `9.6.6`
@@ -114,7 +112,7 @@ heroku/nodejs <buildpack-version>
   - Using cached packument for npm
   - Resolved npm version `9.6.6` to `9.6.6`
 - Installing npm
-  - Requested npm version is already installed
+  - Using cached version of npm
   - Successfully installed `npm@9.6.6`
 - Installing node modules
   - Using npm version `9.6.6`
@@ -157,6 +155,7 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:npm_engine'
 Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
@@ -173,6 +172,8 @@ Saving <image-name>...
 Reusing cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:npm_cache'
+Reusing cache layer 'heroku/nodejs:npm_engine'
+Adding cache layer 'heroku/nodejs:npm_engine'
 Reusing cache layer 'heroku/nodejs:npm_packument'
 Adding cache layer 'heroku/nodejs:npm_packument'
 Successfully built image '<image-name>'
