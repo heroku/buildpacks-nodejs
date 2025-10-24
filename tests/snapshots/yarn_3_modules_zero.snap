@@ -20,19 +20,12 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `18.20.8 (<arch>)`
   - Installing Node.js `18.20.8 (<arch>)` ... (<time_elapsed>)
-- Using Corepack version `0.32.0`
-- Found `packageManager` set to `yarn@3.2.4` in `package.json`
-- Enabling Corepack
-  - Creating Corepack shims
-  - Executing `corepack enable --install-directory /layers/heroku_nodejs/shim/bin yarn`
-- Installing `yarn@3.2.4`
-  - Creating Corepack package manager
-  - Running `corepack prepare`
-
-      Preparing yarn@3.2.4...
-
-  - Done (<time_elapsed>)
-- Yarn CLI operating in yarn 3.2.4 mode.
+- Determining Yarn information
+  - Found `yarnPath` set to `.yarn/releases/yarn-3.2.4.cjs` in `.yarnrc.yml`
+  - Using vendored yarn at `.yarn/releases/yarn-3.2.4.cjs`
+- Configuring vendored Yarn
+  - Linking `yarn` to vendored `yarnPath`
+  - Successfully configured `yarn@3.2.4`
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 
@@ -71,9 +64,8 @@ heroku/nodejs <buildpack-version>
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:mgr'
-Adding layer 'heroku/nodejs:shim'
 Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:yarn_vendored'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -87,6 +79,4 @@ Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:mgr'
-Adding cache layer 'heroku/nodejs:shim'
 Successfully built image '<image-name>'

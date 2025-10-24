@@ -1,9 +1,0 @@
----
-source: buildpacks/nodejs-corepack/src/errors.rs
----
-! Invalid Corepack packageManager
-!
-! There was an error reading the `packageManager` field from `package.json`. 
-!
-! Suggestions:
-! - Ensure the field value matches Corepack usage format (https://github.com/nodejs/corepack?tab=readme-ov-file#when-authoring-packages)
