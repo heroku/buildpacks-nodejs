@@ -1,0 +1,13 @@
+---
+source: src/utils/error_handling.rs
+---
+! Multiple YAML documents found in `.yarnrc.yml`
+!
+! The Heroku Node.js buildpack reads from `.yarnrc.yml` to determine Yarn configuration but the file contains multiple YAML documents. There must only be a single document in this file.
+!
+! YAML documents are separated by a line contain three hyphens (`---`).
+!
+! Suggestions:
+! - Ensure the file has only a single document.
+!
+! Use the debug information above to troubleshoot and retry your build.

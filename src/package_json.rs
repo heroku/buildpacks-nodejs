@@ -32,6 +32,13 @@ impl PackageJson {
             .map(Requirement::parse)
     }
 
+    pub(crate) fn yarn_engine(&self) -> Option<Result<Requirement, VersionError>> {
+        self.engines()
+            .and_then(|val| val.get("yarn"))
+            .and_then(|val| val.as_str())
+            .map(Requirement::parse)
+    }
+
     fn engines(&self) -> Option<&serde_json::Value> {
         self.0.get("engines")
     }
@@ -43,6 +50,14 @@ impl PackageJson {
             .get("packageManager")
             .and_then(|val| val.as_str())
             .map(PackageManagerField::from_str)
+    }
+
+    pub(crate) fn script(&self, name: impl AsRef<str>) -> Option<(String, String)> {
+        self.0
+            .get("scripts")
+            .and_then(|scripts| scripts.get(name.as_ref()))
+            .and_then(|val| val.as_str())
+            .map(|script| (name.as_ref().to_owned(), script.to_owned()))
     }
 }
 
@@ -97,7 +112,7 @@ fn package_json_parse_error_message(path: &Path, error: &serde_json::Error) -> E
         .create()
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct PackageManagerField {
     pub(crate) name: PackageManagerFieldPackageManager,
     pub(crate) version: Version,
@@ -175,7 +190,7 @@ pub(crate) enum PackageManagerFieldError {
     },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum PackageManagerFieldPackageManager {
     Npm,
     Pnpm,
