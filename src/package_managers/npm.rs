@@ -187,11 +187,16 @@ pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
     command
 }
 
-pub(crate) fn prune_dev_dependencies(env: &Env) -> Command {
+pub(crate) fn prune_dev_dependencies(
+    env: &Env,
+    on_prune_command_error: impl FnOnce(&fun_run::CmdError) -> ErrorMessage,
+) -> Result<(), ErrorMessage> {
     let mut cmd = Command::new("npm");
     cmd.arg("prune");
     cmd.envs(env);
-    cmd
+    print::sub_stream_cmd(cmd)
+        .map(|_| ())
+        .map_err(|e| on_prune_command_error(&e))
 }
 
 #[cfg(test)]

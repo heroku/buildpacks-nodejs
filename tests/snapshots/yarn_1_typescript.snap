@@ -30,10 +30,10 @@ heroku/nodejs <buildpack-version>
   - Downloading ... (<time_elapsed>)
   - Successfully installed `yarn@1.22.22`
 - Setting up yarn dependency cache
-  - Running `yarn config set cache-folder /layers/heroku_nodejs/deps/cache`
+  - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`
 
       yarn config v1.22.22
-      success Set "cache-folder" to "/layers/heroku_nodejs/deps/cache".
+      success Set "cache-folder" to "/layers/heroku_nodejs/yarn_cache".
       Done in <time_elapsed>.
 
   - Done (<time_elapsed>)
@@ -86,8 +86,8 @@ Setting default process type 'web'
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs:deps'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarn_cache'
 Adding cache layer 'heroku/nodejs:yarn_packument'
 Successfully built image '<image-name>'

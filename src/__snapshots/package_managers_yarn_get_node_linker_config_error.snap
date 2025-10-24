@@ -1,5 +1,5 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
   - Command failed `yarn config get nodeLinker`

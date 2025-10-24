@@ -114,6 +114,7 @@ fn test_yarn_skip_build_scripts_from_buildplan() {
                             name = "heroku/nodejs"
                             [requires.metadata]
                             enabled = false
+                            skip_pruning = true
                         EOF
                     "# })
                     .call(),

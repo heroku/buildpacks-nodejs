@@ -1,12 +1,12 @@
 ---
-source: buildpacks/nodejs-yarn/src/errors.rs
+source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Failed to parse version.
+  - Insufficient permissions
 
-! Failed to parse npm version
+! Failed to create directory
 !
-! An unexpected error occurred while parsing Yarn version information from 'not.a.version'.
+! An unexpected I/O error occurred while creating the directory at `/layers/some/dir`.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues
