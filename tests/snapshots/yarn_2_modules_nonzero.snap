@@ -35,9 +35,9 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs/deps/cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/yarn_cache`
 
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/deps/cache'
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/yarn_cache'
 
   - Done (<time_elapsed>)
 - Installing dependencies
@@ -85,8 +85,8 @@ Setting default process type 'web'
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
-Adding cache layer 'heroku/nodejs:deps'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarn_cache'
 Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

@@ -1,17 +1,27 @@
+use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
+use crate::utils::error_handling::{
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
+};
 use crate::utils::npm_registry::PackagePackument;
-use crate::utils::vrs::Requirement;
+use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use indoc::formatdoc;
 use libcnb::Env;
+use libcnb::build::BuildResultBuilder;
+use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
+use libcnb::data::process_type;
+use libcnb::data::store::Store;
 use std::path::{Path, PathBuf};
 
 // TODO: support `devEngines` field
 #[derive(Debug, Clone)]
 pub(crate) enum RequestedPackageManager {
+    BundledNpm,
     NpmEngine(Requirement),
     PnpmEngine(Requirement),
     YarnEngine(Requirement),
@@ -23,6 +33,7 @@ pub(crate) enum RequestedPackageManager {
 impl RequestedPackageManager {
     pub(crate) fn is_npm(&self) -> bool {
         matches!(self, RequestedPackageManager::NpmEngine(_))
+            || matches!(self, RequestedPackageManager::BundledNpm)
             || matches!(
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
@@ -60,41 +71,38 @@ impl RequestedPackageManager {
 pub(crate) fn determine_package_manager(
     app_dir: &Path,
     package_json: &PackageJson,
-) -> Option<RequestedPackageManager> {
+) -> RequestedPackageManager {
     // vendored Yarn should take highest priority
     if let Some(Ok(yarnrc)) = yarn::read_yarnrc(app_dir)
         && let Some(yarn_path) = yarnrc.yarn_path()
         && let Ok(true) = yarn_path.try_exists()
     {
-        return Some(RequestedPackageManager::YarnVendored(yarn_path));
+        return RequestedPackageManager::YarnVendored(yarn_path);
     }
 
     // then the package manager field
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
-        return Some(RequestedPackageManager::PackageManager(
-            package_manager_field,
-        ));
+        return RequestedPackageManager::PackageManager(package_manager_field);
     }
 
     // then the package manager field
     if let Some(Ok(requirement)) = package_json.pnpm_engine() {
-        return Some(RequestedPackageManager::PnpmEngine(requirement));
+        return RequestedPackageManager::PnpmEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.yarn_engine() {
-        return Some(RequestedPackageManager::YarnEngine(requirement));
+        return RequestedPackageManager::YarnEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.npm_engine() {
-        return Some(RequestedPackageManager::NpmEngine(requirement));
+        return RequestedPackageManager::NpmEngine(requirement);
     }
 
     // fallback to default Yarn if lockfile is detected
     if let Ok(true) = app_dir.join("yarn.lock").try_exists() {
-        return Some(RequestedPackageManager::YarnDefault(
-            yarn::DEFAULT_YARN_REQUIREMENT.clone(),
-        ));
+        return RequestedPackageManager::YarnDefault(yarn::DEFAULT_YARN_REQUIREMENT.clone());
     }
 
-    None
+    // default to bundled npm if nothing is requested
+    RequestedPackageManager::BundledNpm
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
@@ -103,11 +111,20 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
         print::bullet("Determining Yarn information");
     } else if requested_package_manager.is_pnpm() {
         print::bullet("Determining pnpm package information");
-    } else if requested_package_manager.is_npm() {
+    } else if requested_package_manager.is_npm()
+        && !matches!(
+            requested_package_manager,
+            RequestedPackageManager::BundledNpm
+        )
+    {
         print::bullet("Determining npm package information");
     }
 
     match requested_package_manager {
+        RequestedPackageManager::BundledNpm => {
+            // TODO: this should be reported but will be addressed later
+            // E.g.; print::sub_bullet("No npm version requested")
+        }
         RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",
             style::value("engines.npm"),
@@ -149,6 +166,7 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 
 pub(crate) enum ResolvedPackageManager {
     Npm(Requirement, PackagePackument),
+    NpmBundled,
     Pnpm(Requirement, PackagePackument),
     Yarn(Requirement, PackagePackument),
     YarnVendored(PathBuf),
@@ -159,6 +177,7 @@ pub(crate) fn resolve_package_manager(
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
+        RequestedPackageManager::BundledNpm => Ok(ResolvedPackageManager::NpmBundled),
         RequestedPackageManager::NpmEngine(requirement) => {
             npm::resolve_npm_package_packument(context, requirement).map(|npm_package_packument| {
                 ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
@@ -214,6 +233,10 @@ pub(crate) fn resolve_package_manager(
 
 pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPackageManager) {
     match resolved_package_manager {
+        ResolvedPackageManager::NpmBundled => {
+            // TODO: this should be reported but will be addressed later
+            // E.g.; print::sub_bullet("Using bundled npm");
+        }
         ResolvedPackageManager::Npm(requested_version, npm_package_packument) => {
             print::sub_bullet(format!(
                 "Resolved npm version {} to {}",
@@ -248,8 +271,18 @@ pub(crate) fn install_package_manager(
     context: &BuildpackBuildContext,
     env: &mut Env,
     resolved_package_manager: &ResolvedPackageManager,
-) -> BuildpackResult<()> {
+) -> BuildpackResult<InstalledPackageManager> {
     match resolved_package_manager {
+        ResolvedPackageManager::NpmBundled => {
+            // TODO: this needs to be reported but will be addressed later
+            // E.g.; print::bullet("Installing npm");
+            let npm_version = npm::get_version(env)?;
+            // print::sub_bullet(format!(
+            //     "Skipping, bundled {} will be used",
+            //     style::value(format!("npm@{npm_version}"))
+            // ));
+            Ok(InstalledPackageManager::Npm(npm_version))
+        }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
             print::bullet("Installing npm");
             let npm_version = &npm_package_packument.version;
@@ -264,7 +297,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("npm@{npm_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Npm(npm_version.clone()))
         }
         ResolvedPackageManager::Pnpm(_, pnpm_package_packument) => {
             print::bullet("Installing pnpm");
@@ -275,7 +308,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("pnpm@{pnpm_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Pnpm(pnpm_version.clone()))
         }
         ResolvedPackageManager::Yarn(_, yarn_package_packument) => {
             print::bullet("Installing Yarn");
@@ -286,7 +319,7 @@ pub(crate) fn install_package_manager(
                 "Successfully installed {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
-            Ok(())
+            Ok(InstalledPackageManager::Yarn(yarn_version.clone()))
         }
         ResolvedPackageManager::YarnVendored(yarn_path) => {
             print::bullet("Configuring vendored Yarn");
@@ -301,7 +334,248 @@ pub(crate) fn install_package_manager(
                 "Successfully configured {}",
                 style::value(format!("yarn@{yarn_version}")),
             ));
+            Ok(InstalledPackageManager::Yarn(yarn_version.clone()))
+        }
+    }
+}
+
+pub(crate) enum InstalledPackageManager {
+    Npm(Version),
+    Pnpm(Version),
+    Yarn(Version),
+}
+
+pub(crate) fn install_dependencies(
+    context: &BuildpackBuildContext,
+    env: &Env,
+    store: &mut Store,
+    installed_package_manager: &InstalledPackageManager,
+) -> BuildpackResult<()> {
+    match installed_package_manager {
+        InstalledPackageManager::Npm(version) => {
+            npm::install_npm_dependencies(context, env, version)?;
+        }
+        InstalledPackageManager::Yarn(version) => {
+            yarn::install_dependencies(context, env, version)?;
+        }
+        InstalledPackageManager::Pnpm(version) => {
+            pnpm::install_dependencies(context, env, store, version)?;
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn run_build_scripts(
+    env: &Env,
+    package_manager: &InstalledPackageManager,
+    package_json: &PackageJson,
+    buildpack_config: &BuildpackConfig,
+) -> BuildpackResult<()> {
+    print::bullet("Running scripts");
+    let build_scripts_enabled = !matches!(
+        &buildpack_config.build_scripts_enabled,
+        Some(ConfigValue { value: false, .. })
+    );
+
+    if [
+        "heroku-prebuild",
+        "heroku-build",
+        "build",
+        "heroku-postbuild",
+    ]
+    .iter()
+    .all(|s| package_json.script(s).is_none())
+    {
+        print::sub_bullet("No build scripts found");
+        return Ok(());
+    }
+
+    let run_script = |script: Option<(String, String)>| {
+        if let Some((script_name, _)) = script {
+            if build_scripts_enabled {
+                print::sub_stream_cmd(match package_manager {
+                    InstalledPackageManager::Npm(_) => npm::run_script(&script_name, env),
+                    InstalledPackageManager::Yarn(_) => yarn::run_script(&script_name, env),
+                    InstalledPackageManager::Pnpm(_) => pnpm::run_script(&script_name, env),
+                })
+                .map(|_| ())
+                .map_err(|e| create_run_script_error_message(&script_name, &e))
+            } else {
+                print::sub_bullet(format!(
+                    "Not running {} as it was disabled by a participating buildpack",
+                    style::value(script_name)
+                ));
+                Ok(())
+            }
+        } else {
             Ok(())
         }
+    };
+
+    run_script(package_json.script("heroku-prebuild"))?;
+    run_script(match package_json.script("heroku-build") {
+        Some((build, script)) => Some((build, script)),
+        None => package_json.script("build"),
+    })?;
+    run_script(package_json.script("heroku-postbuild"))?;
+
+    Ok(())
+}
+
+fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> ErrorMessage {
+    let script = style::value(script);
+    let script_command = style::command(error.name());
+    let package_json = style::value("package.json");
+    let heroku_prebuild = style::value("heroku-prebuild");
+    let heroku_build = style::value("heroku-build");
+    let build = style::value("build");
+    let heroku_postbuild = style::value("heroku-postbuild");
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
+        .header(format!("Failed to execute build script - {script}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack allows customization of the build process by executing the following scripts \
+            if they are defined in {package_json}:
+            - {heroku_prebuild}
+            - {heroku_build} or {build}
+            - {heroku_postbuild}
+
+            An unexpected error occurred while executing {script_command}. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+pub(crate) fn prune_dev_dependencies(
+    context: &BuildpackBuildContext,
+    env: &Env,
+    package_manager: &InstalledPackageManager,
+    buildpack_config: &BuildpackConfig,
+) -> BuildpackResult<()> {
+    print::bullet("Pruning dev dependencies");
+    if let Some(ConfigValue {
+        value: false,
+        source,
+    }) = &buildpack_config.prune_dev_dependencies
+    {
+        // TODO: revisit this output as it could be simplified.
+        match source {
+            ConfigValueSource::Buildplan(_) => {
+                print::sub_bullet("Skipping as pruning was disabled by a participating buildpack");
+            }
+            ConfigValueSource::ProjectToml => {
+                print::sub_bullet("Skipping as pruning was disabled in project.toml");
+            }
+        }
+        return Ok(());
+    }
+
+    match package_manager {
+        InstalledPackageManager::Npm(_) => {
+            npm::prune_dev_dependencies(env, create_prune_dev_dependencies_error_message)
+        }
+        InstalledPackageManager::Yarn(yarn_version) => yarn::prune_dev_dependencies(
+            env,
+            yarn_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+        InstalledPackageManager::Pnpm(pnpm_version) => pnpm::prune_dev_dependencies(
+            context,
+            env,
+            pnpm_version,
+            create_prune_dev_dependencies_error_message,
+        ),
+    }?;
+
+    Ok(())
+}
+
+fn create_prune_dev_dependencies_error_message(error: &fun_run::CmdError) -> ErrorMessage {
+    let prune_command = style::value(error.name());
+    error_message()
+        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header("Failed to prune dev dependencies")
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack uses the command {prune_command} to remove your dev dependencies from the production \
+            environment. This command failed and the buildpack cannot continue. See the log output above for more information.
+
+            Suggestions:
+            - Ensure that this command runs locally without error (exit status = 0).
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+pub(crate) fn configure_default_processes(
+    context: &BuildpackBuildContext,
+    build_result_builder: BuildResultBuilder,
+    package_json: &PackageJson,
+    installed_package_manager: &InstalledPackageManager,
+) -> BuildResultBuilder {
+    if let Ok(true) = context.app_dir.join("Procfile").try_exists() {
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet("Skipping default web process (Procfile detected)");
+        } else {
+            print::bullet("Skipping default web process (Procfile detected)");
+        }
+        build_result_builder
+    } else if package_json.script("start").is_some() {
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet(format!(
+                "Adding default web process for {}",
+                style::value("npm start")
+            ));
+        }
+        build_result_builder.launch(
+            LaunchBuilder::new()
+                .process(
+                    ProcessBuilder::new(
+                        process_type!("web"),
+                        [
+                            match installed_package_manager {
+                                InstalledPackageManager::Npm(_) => "npm",
+                                InstalledPackageManager::Yarn(_) => "yarn",
+                                InstalledPackageManager::Pnpm(_) => "pnpm",
+                            },
+                            "start",
+                        ],
+                    )
+                    .default(true)
+                    .build(),
+                )
+                .build(),
+        )
+    } else {
+        if let InstalledPackageManager::Npm(_) = installed_package_manager {
+            print::bullet("Configuring default processes");
+            print::sub_bullet("Skipping default web process (no start script defined)");
+        }
+        build_result_builder
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+
+    #[test]
+    fn run_script_error_message() {
+        assert_error_snapshot(&create_run_script_error_message(
+            "build",
+            &create_cmd_error("<package_manager> run build"),
+        ));
+    }
+
+    #[test]
+    fn prune_dev_dependencies_error_message() {
+        assert_error_snapshot(&create_prune_dev_dependencies_error_message(
+            &create_cmd_error("<package_manager> prune"),
+        ));
     }
 }
