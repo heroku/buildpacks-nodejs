@@ -132,11 +132,20 @@ pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContex
 }
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {
-    start_container(ctx, |_container, socket_addr| {
-        let mut response = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+    start_container(ctx, |container, socket_addr| {
+        let mut response = match retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
             ureq::get(&format!("http://{socket_addr}/")).call()
-        })
-        .unwrap();
+        }) {
+            Ok(response) => response,
+            Err(e) => {
+                let logs = container.logs_now();
+                let stdout = logs.stdout;
+                let stderr = logs.stderr;
+                panic!(
+                    "Failed to get response: {e}\n\nContainer STDOUT:\n{stdout}\n\nContainer STDERR:\n{stderr}"
+                );
+            }
+        };
         let response_body = response.body_mut().read_to_string().unwrap();
         assert_contains!(response_body, expected_response_body);
     });
@@ -174,6 +183,34 @@ pub fn set_node_engine(app_dir: &Path, version_range: &str) {
             .unwrap()
             .insert(
                 "node".to_string(),
+                serde_json::Value::String(version_range.to_string()),
+            );
+    });
+}
+
+pub fn set_pnpm_engine(app_dir: &Path, version_range: &str) {
+    update_package_json(app_dir, |package_json| {
+        package_json
+            .entry("engines")
+            .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+            .as_object_mut()
+            .unwrap()
+            .insert(
+                "pnpm".to_string(),
+                serde_json::Value::String(version_range.to_string()),
+            );
+    });
+}
+
+pub fn set_npm_engine(app_dir: &Path, version_range: &str) {
+    update_package_json(app_dir, |package_json| {
+        package_json
+            .entry("engines")
+            .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+            .as_object_mut()
+            .unwrap()
+            .insert(
+                "npm".to_string(),
                 serde_json::Value::String(version_range.to_string()),
             );
     });

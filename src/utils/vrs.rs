@@ -1,9 +1,10 @@
+use fun_run::NamedOutput;
 use libherokubuildpack::inventory::version::VersionRequirement;
 use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt, str::FromStr};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct VersionError(String);
 impl Error for VersionError {}
 impl fmt::Display for VersionError {
@@ -55,6 +56,26 @@ impl fmt::Display for Version {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }
+}
+
+impl TryFrom<Result<NamedOutput, fun_run::CmdError>> for Version {
+    type Error = VersionCommandError;
+
+    fn try_from(val: Result<NamedOutput, fun_run::CmdError>) -> Result<Self, Self::Error> {
+        val.map_err(VersionCommandError::Command)
+            .and_then(|output| {
+                let stdout = output.stdout_lossy();
+                stdout
+                    .parse::<Version>()
+                    .map_err(|e| VersionCommandError::Parse(stdout, e))
+            })
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum VersionCommandError {
+    Command(fun_run::CmdError),
+    Parse(String, VersionError),
 }
 
 #[derive(Deserialize, Debug, Clone)]

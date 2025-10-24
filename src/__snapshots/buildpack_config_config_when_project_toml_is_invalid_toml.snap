@@ -1,0 +1,18 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - TOML parse error at line 1, column 9
+      |
+    1 | [invalid toml
+      |         ^
+    unclosed table, expected `]`
+
+! Error parsing `project.toml`
+!
+! The Heroku Node.js buildpack reads from `project.toml` to read configuration but the file isn't valid TOML.
+!
+! Suggestions:
+! - Ensure the file follows the TOML format described at https://toml.io/en/v1.0.0
+!
+! Use the debug information above to troubleshoot and retry your build.

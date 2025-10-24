@@ -1,17 +1,17 @@
+use crate::package_json::PackageJson;
 use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::vrs::Requirement;
-use crate::{BuildpackBuildContext, BuildpackResult, package_json, runtimes};
+use crate::{BuildpackBuildContext, BuildpackResult, runtimes};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use std::env::consts;
-use std::path::Path;
 use std::sync::LazyLock;
 
 static OS: LazyLock<Os> = LazyLock::new(|| consts::OS.parse::<Os>().expect("OS should be valid"));
@@ -24,13 +24,11 @@ pub(crate) enum RequestedRuntime {
     NodeJsDefault,
 }
 
-pub(crate) fn determine_runtime(app_dir: &Path) -> BuildpackResult<RequestedRuntime> {
-    let package_json = package_json::PackageJson::try_from(app_dir.join("package.json"))?;
-    let requested_node_version = match package_json.node_engine() {
+pub(crate) fn determine_runtime(package_json: &PackageJson) -> RequestedRuntime {
+    match package_json.node_engine() {
         Some(Ok(version)) => RequestedRuntime::NodeJsEngine(version),
         _ => RequestedRuntime::NodeJsDefault,
-    };
-    Ok(requested_node_version)
+    }
 }
 
 pub(crate) fn log_requested_runtime(requested_runtime: &RequestedRuntime) {

@@ -1,0 +1,15 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Request to `https://registry.npmjs.org/test/-/test-1.0.0.tgz` failed
+    Error: error sending request for url (https://test/error)
+
+! Failed to download `test`
+!
+! An unexpected error occurred while downloading the `test` package. This error can occur due to an unstable network connection or an issue with the npm registry.
+!
+! Suggestions:
+! - Check the npm status page for any ongoing incidents (https://status.npmjs.org/)
+!
+! Use the debug information above to troubleshoot and retry your build.

@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - while scanning a quoted scalar, found unexpected end of stream at byte 14 line 2 column 11
+
+! Error parsing `.yarnrc.yml`
+!
+! The Heroku Node.js buildpack reads from `.yarnrc.yml` to determine Yarn configuration but the file isn't valid YAML.
+!
+! Suggestions:
+! - Ensure the file follows the YAML format described at https://yaml.org/spec/1.2.2/
+!
+! Use the debug information above to troubleshoot and retry your build.

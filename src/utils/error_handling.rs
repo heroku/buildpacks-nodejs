@@ -1,5 +1,4 @@
-use crate::utils::package_json::PackageJsonError;
-use crate::{BuildpackError, NodeJsBuildpackError};
+use crate::BuildpackError;
 use bullet_stream::{Print, style};
 use indoc::formatdoc;
 use std::fmt::{Display, Formatter};
@@ -29,45 +28,6 @@ where
         "})
         .debug_info(error.to_string())
         .create()
-}
-
-#[must_use]
-pub(crate) fn on_package_json_error(error: PackageJsonError) -> ErrorMessage {
-    let package_json = file_value("./package.json");
-    let json_spec_url = style::url("https://www.json.org/");
-    match error {
-        PackageJsonError::AccessError(e) => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::Yes,
-                SuggestSubmitIssue::No,
-            ))
-            .header(format!("Error reading {package_json}"))
-            .body(formatdoc! { "
-                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
-                the file can't be read.
-
-                Suggestions:
-                - Ensure the file has read permissions.
-            " })
-            .debug_info(e.to_string())
-            .create(),
-
-        PackageJsonError::ParseError(e) => error_message()
-            .error_type(ErrorType::UserFacing(
-                SuggestRetryBuild::Yes,
-                SuggestSubmitIssue::No,
-            ))
-            .header(format!("Error parsing {package_json}"))
-            .body(formatdoc! { "
-                The {BUILDPACK_NAME} reads from {package_json} to complete the build but \
-                the file isn't valid JSON.
-
-                Suggestions:
-                - Ensure the file follows the JSON format described at {json_spec_url}
-            " })
-            .debug_info(e.to_string())
-            .create(),
-    }
 }
 
 #[bon::builder(finish_fn = create, on(String, into), state_mod(vis = "pub"))]
@@ -154,7 +114,7 @@ impl Display for ErrorMessage {
 
 impl From<ErrorMessage> for BuildpackError {
     fn from(value: ErrorMessage) -> Self {
-        libcnb::Error::BuildpackError(NodeJsBuildpackError::Message(value))
+        libcnb::Error::BuildpackError(value)
     }
 }
 
@@ -181,8 +141,10 @@ pub(crate) enum SuggestSubmitIssue {
 pub(crate) mod test_util {
     use crate::utils::error_handling::ErrorMessage;
     use bullet_stream::strip_ansi;
+    use fun_run::{CmdError, CommandWithName};
     use insta::{assert_snapshot, with_settings};
     use std::path::PathBuf;
+    use std::process::Command;
     use test_support::test_name;
 
     pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
@@ -216,5 +178,12 @@ pub(crate) mod test_util {
 
     pub(crate) fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
+    }
+
+    pub(crate) fn create_cmd_error(command: impl Into<String>) -> CmdError {
+        Command::new("false")
+            .named(command.into())
+            .named_output()
+            .unwrap_err()
     }
 }
