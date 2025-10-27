@@ -56,10 +56,61 @@ For example, to select the latest release of Node.js version 22, modify your `pa
 }
 ```
 
-This field supports the same semantic versioning syntax as `package.json`.
+> [!NOTE]
+> This field supports the same semantic versioning syntax as `package.json`. 
+> E.g.; `^1.0`, `~1.0`, `1.x`, etc. See https://semver.npmjs.com/ for more examples.
 
-If no Node.js version is specified, the latest LTS version will be used.
-We highly suggest specifying a version to prevent surprise changes.
+> [!NOTE]
+> If no Node.js version is specified, the latest LTS version will be used. We highly suggest specifying 
+> a version to prevent surprise changes.
+
+### Package Manager Version
+
+To select a package manager version, specify it via:
+
+- `engines.yarn`, `engines.npm`, `engines.pnpm`
+
+    For example, to select npm, modify your `package.json` like this:
+
+    ```
+    {
+      "engines": {
+        "npm": "11.x"
+      }
+    }
+    ```
+
+  > The version declared in the `engine` fields supports the same semantic versioning syntax as `package.json`. 
+  > E.g.; `^1.0`, `~1.0`, `1.x`, etc. See https://semver.npmjs.com/ for more examples.
+
+- `packageManager` in `package.json`
+
+  For example, to select pnpm, modify your `package.json` like this:
+
+    ```
+    {
+      "engines": {
+        "packageManager": "pnpm@10.19.0"
+      }
+    }
+    ```
+
+  > The version declared in the `packageManager` field must be an exact version for compatibility with 
+  > local use of [Corepack](https://github.com/nodejs/corepack) tooling.
+
+> [!NOTE]
+> If no package manager is specified, the npm version bundled with Node.js will be used. We highly suggest specifying
+> a package manager and version to prevent surprise changes.
+
+### Build Script Hooks
+
+The following scripts from `package.json` will be executed by the configured package manager in the order listed:
+
+- `heroku-prebuild`
+- `heroku-build` or `build` (if both are present, only `heroku-build` will execute)
+- `heroku-postbuild`
+ 
+If any of the above scripts are not defined in `package.json` they will be skipped.
 
 ## Contributing
 
