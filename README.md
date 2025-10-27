@@ -80,7 +80,6 @@ To select a package manager version, specify it via:
     }
     ```
 
-  > [!NOTE]
   > The version declared in the `engine` fields supports the same semantic versioning syntax as `package.json`. 
   > E.g.; `^1.0`, `~1.0`, `1.x`, etc. See https://semver.npmjs.com/ for more examples.
 
@@ -96,7 +95,6 @@ To select a package manager version, specify it via:
     }
     ```
 
-  > [!NOTE]
   > The version declared in the `packageManager` field must be an exact version for compatibility with 
   > local use of [Corepack](https://github.com/nodejs/corepack) tooling.
 
