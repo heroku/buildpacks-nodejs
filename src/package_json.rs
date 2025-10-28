@@ -1,3 +1,4 @@
+use crate::o11y::*;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -7,6 +8,7 @@ use indoc::formatdoc;
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use tracing::instrument;
 
 pub(crate) struct PackageJson(serde_json::Value);
 
@@ -64,9 +66,11 @@ impl PackageJson {
 impl TryFrom<PathBuf> for PackageJson {
     type Error = ErrorMessage;
 
+    #[instrument(name = "package.json", skip_all)]
     fn try_from(value: PathBuf) -> Result<Self, Self::Error> {
         let contents = std::fs::read_to_string(&value)
             .map_err(|e| package_json_read_error_message(&value, &e))?;
+        tracing::info!({ PACKAGE_JSON_CONTENTS } = contents);
         let json = serde_json::from_str::<serde_json::Value>(&contents)
             .map_err(|e| package_json_parse_error_message(&value, &e))?;
         Ok(Self(json))
