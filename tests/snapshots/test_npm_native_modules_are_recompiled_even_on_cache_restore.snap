@@ -98,6 +98,7 @@ heroku/nodejs <buildpack-version>
       > node-gyp rebuild || node suppress-error.js
 
       <NODE-GYP BUILD OUTPUT> 
+      make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
