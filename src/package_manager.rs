@@ -1,4 +1,5 @@
 use crate::buildpack_config::{BuildpackConfig, ConfigValue, ConfigValueSource};
+use crate::o11y::*;
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
@@ -17,6 +18,7 @@ use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::data::store::Store;
 use std::path::{Path, PathBuf};
+use tracing::instrument;
 
 // TODO: support `devEngines` field
 #[derive(Debug, Clone)]
@@ -68,6 +70,7 @@ impl RequestedPackageManager {
     }
 }
 
+#[instrument(skip_all)]
 pub(crate) fn determine_package_manager(
     app_dir: &Path,
     package_json: &PackageJson,
@@ -77,31 +80,66 @@ pub(crate) fn determine_package_manager(
         && let Some(yarn_path) = yarnrc.yarn_path()
         && let Ok(true) = yarn_path.try_exists()
     {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "vendored yarnPath",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "yarn",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = yarn_path.to_string_lossy().to_string(),
+        });
         return RequestedPackageManager::YarnVendored(yarn_path);
     }
 
     // then the package manager field
     if let Some(Ok(package_manager_field)) = package_json.package_manager() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "packageManager field",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = package_manager_field.name.to_string(),
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = package_manager_field.version.to_string(),
+        });
         return RequestedPackageManager::PackageManager(package_manager_field);
     }
 
-    // then the package manager field
+    // then the engine fields
     if let Some(Ok(requirement)) = package_json.pnpm_engine() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "engine field",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "pnpm",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = requirement.to_string(),
+        });
         return RequestedPackageManager::PnpmEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.yarn_engine() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "engine field",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "yarn",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = requirement.to_string(),
+        });
         return RequestedPackageManager::YarnEngine(requirement);
     }
     if let Some(Ok(requirement)) = package_json.npm_engine() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "engine field",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "npm",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = requirement.to_string(),
+        });
         return RequestedPackageManager::NpmEngine(requirement);
     }
 
     // fallback to default Yarn if lockfile is detected
     if let Ok(true) = app_dir.join("yarn.lock").try_exists() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "yarn.lock",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "yarn",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = "default",
+        });
         return RequestedPackageManager::YarnDefault(yarn::DEFAULT_YARN_REQUIREMENT.clone());
     }
 
     // default to bundled npm if nothing is requested
+    tracing::info!({
+        { PACKAGE_MANAGER_REQUESTED_SOURCE } = "bundled npm",
+        { PACKAGE_MANAGER_REQUESTED_NAME } = "npm",
+        { PACKAGE_MANAGER_REQUESTED_VERSION } = "default",
+    });
     RequestedPackageManager::BundledNpm
 }
 
@@ -172,20 +210,36 @@ pub(crate) enum ResolvedPackageManager {
     YarnVendored(PathBuf),
 }
 
+#[instrument(skip_all)]
 pub(crate) fn resolve_package_manager(
     context: &BuildpackBuildContext,
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
-        RequestedPackageManager::BundledNpm => Ok(ResolvedPackageManager::NpmBundled),
+        RequestedPackageManager::BundledNpm => {
+            tracing::info!({ { PACKAGE_MANAGER_NAME } = "npm", "package_manager" });
+            Ok(ResolvedPackageManager::NpmBundled)
+        }
         RequestedPackageManager::NpmEngine(requirement) => {
             npm::resolve_npm_package_packument(context, requirement).map(|npm_package_packument| {
+                tracing::info!({
+                    { PACKAGE_MANAGER_NAME } = "npm",
+                    { PACKAGE_MANAGER_VERSION } = npm_package_packument.version.to_string(),
+                    { PACKAGE_MANAGER_VERSION_MAJOR } = npm_package_packument.version.major(),
+                    "package_manager"
+                });
                 ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
             })
         }
         RequestedPackageManager::PnpmEngine(requirement) => {
             pnpm::resolve_pnpm_package_packument(context, requirement).map(
                 |pnpm_package_packument| {
+                    tracing::info!({
+                        { PACKAGE_MANAGER_NAME } = "pnpm",
+                        { PACKAGE_MANAGER_VERSION } = pnpm_package_packument.version.to_string(),
+                        { PACKAGE_MANAGER_VERSION_MAJOR } = pnpm_package_packument.version.major(),
+                        "package_manager"
+                    });
                     ResolvedPackageManager::Pnpm(requirement.clone(), pnpm_package_packument)
                 },
             )
@@ -194,38 +248,63 @@ pub(crate) fn resolve_package_manager(
         | RequestedPackageManager::YarnDefault(requirement) => {
             yarn::resolve_yarn_package_packument(context, requirement).map(
                 |yarn_package_packument| {
+                    tracing::info!({
+                        { PACKAGE_MANAGER_NAME } = "yarn",
+                        { PACKAGE_MANAGER_VERSION } = yarn_package_packument.version.to_string(),
+                        { PACKAGE_MANAGER_VERSION_MAJOR } = yarn_package_packument.version.major(),
+                        "package_manager"
+                    });
                     ResolvedPackageManager::Yarn(requirement.clone(), yarn_package_packument)
                 },
             )
         }
         RequestedPackageManager::YarnVendored(yarn_path) => {
+            tracing::info!({ { PACKAGE_MANAGER_NAME } = "yarn", "package_manager" });
             Ok(ResolvedPackageManager::YarnVendored(yarn_path.clone()))
         }
         RequestedPackageManager::PackageManager(package_manager_field) => {
             let requirement = Requirement::parse(&package_manager_field.version.to_string())
                 .expect("Exact version string should be a valid requirement range");
             match package_manager_field.name {
-                PackageManagerFieldPackageManager::Npm => {
-                    npm::resolve_npm_package_packument(context, &requirement).map(
-                        |npm_package_packument| {
-                            ResolvedPackageManager::Npm(requirement, npm_package_packument)
-                        },
-                    )
-                }
-                PackageManagerFieldPackageManager::Pnpm => {
-                    pnpm::resolve_pnpm_package_packument(context, &requirement).map(
-                        |pnpm_package_packument| {
-                            ResolvedPackageManager::Pnpm(requirement, pnpm_package_packument)
-                        },
-                    )
-                }
-                PackageManagerFieldPackageManager::Yarn => {
-                    yarn::resolve_yarn_package_packument(context, &requirement).map(
-                        |yarn_package_packument| {
-                            ResolvedPackageManager::Yarn(requirement, yarn_package_packument)
-                        },
-                    )
-                }
+                PackageManagerFieldPackageManager::Npm => npm::resolve_npm_package_packument(
+                    context,
+                    &requirement,
+                )
+                .map(|npm_package_packument| {
+                    tracing::info!({
+                        { PACKAGE_MANAGER_NAME } = "npm",
+                        { PACKAGE_MANAGER_VERSION } = npm_package_packument.version.to_string(),
+                        { PACKAGE_MANAGER_VERSION_MAJOR } = npm_package_packument.version.major(),
+                        "package_manager"
+                    });
+                    ResolvedPackageManager::Npm(requirement, npm_package_packument)
+                }),
+                PackageManagerFieldPackageManager::Pnpm => pnpm::resolve_pnpm_package_packument(
+                    context,
+                    &requirement,
+                )
+                .map(|pnpm_package_packument| {
+                    tracing::info!({
+                        { PACKAGE_MANAGER_NAME } = "pnpm",
+                        { PACKAGE_MANAGER_VERSION } = pnpm_package_packument.version.to_string(),
+                        { PACKAGE_MANAGER_VERSION_MAJOR } = pnpm_package_packument.version.major(),
+                        "package_manager"
+                    });
+                    ResolvedPackageManager::Pnpm(requirement, pnpm_package_packument)
+                }),
+                PackageManagerFieldPackageManager::Yarn => yarn::resolve_yarn_package_packument(
+                    context,
+                    &requirement,
+                )
+                .map(|yarn_package_packument| {
+                    tracing::info!({
+                        { PACKAGE_MANAGER_NAME } = "yarn",
+                        { PACKAGE_MANAGER_VERSION } = yarn_package_packument.version.to_string(),
+                        { PACKAGE_MANAGER_VERSION_MAJOR } = yarn_package_packument.version.major(),
+                        "package_manager"
+                    });
+                    ResolvedPackageManager::Yarn(requirement, yarn_package_packument)
+                }),
             }
         }
     }
@@ -267,6 +346,7 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
     }
 }
 
+#[instrument(skip_all)]
 pub(crate) fn install_package_manager(
     context: &BuildpackBuildContext,
     env: &mut Env,
@@ -277,6 +357,11 @@ pub(crate) fn install_package_manager(
             // TODO: this needs to be reported but will be addressed later
             // E.g.; print::bullet("Installing npm");
             let npm_version = npm::get_version(env)?;
+            tracing::info!({
+                { PACKAGE_MANAGER_VERSION } = npm_version.to_string(),
+                { PACKAGE_MANAGER_VERSION_MAJOR } = npm_version.major(),
+                "package_manager"
+            });
             // print::sub_bullet(format!(
             //     "Skipping, bundled {} will be used",
             //     style::value(format!("npm@{npm_version}"))
@@ -330,6 +415,11 @@ pub(crate) fn install_package_manager(
             ));
             yarn::link_vendored_yarn(context, env, yarn_path)?;
             let yarn_version = yarn::get_version(env)?;
+            tracing::info!({
+                { PACKAGE_MANAGER_VERSION } = yarn_version.to_string(),
+                { PACKAGE_MANAGER_VERSION_MAJOR } = yarn_version.major(),
+                "package_manager"
+            });
             print::sub_bullet(format!(
                 "Successfully configured {}",
                 style::value(format!("yarn@{yarn_version}")),
@@ -345,6 +435,7 @@ pub(crate) enum InstalledPackageManager {
     Yarn(Version),
 }
 
+#[instrument(skip_all)]
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
     env: &Env,
@@ -365,6 +456,7 @@ pub(crate) fn install_dependencies(
     Ok(())
 }
 
+#[instrument(skip_all)]
 pub(crate) fn run_build_scripts(
     env: &Env,
     package_manager: &InstalledPackageManager,
@@ -391,8 +483,20 @@ pub(crate) fn run_build_scripts(
     }
 
     let run_script = |script: Option<(String, String)>| {
-        if let Some((script_name, _)) = script {
+        if let Some((script_name, value)) = script {
             if build_scripts_enabled {
+                match script_name.as_str() {
+                    "heroku-prebuild" => {
+                        tracing::info!({ BUILD_SCRIPTS_PREBUILD } = value, "build_scripts");
+                    }
+                    "heroku-build" | "build" => {
+                        tracing::info!({ BUILD_SCRIPTS_BUILD } = value, "build_scripts");
+                    }
+                    "heroku-postbuild" => {
+                        tracing::info!({ BUILD_SCRIPTS_POSTBUILD } = value, "build_scripts");
+                    }
+                    _ => {}
+                }
                 print::sub_stream_cmd(match package_manager {
                     InstalledPackageManager::Npm(_) => npm::run_script(&script_name, env),
                     InstalledPackageManager::Yarn(_) => yarn::run_script(&script_name, env),
@@ -449,6 +553,7 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
         .create()
 }
 
+#[instrument(skip_all)]
 pub(crate) fn prune_dev_dependencies(
     context: &BuildpackBuildContext,
     env: &Env,
@@ -509,6 +614,7 @@ fn create_prune_dev_dependencies_error_message(error: &fun_run::CmdError) -> Err
         .create()
 }
 
+#[instrument(skip_all)]
 pub(crate) fn configure_default_processes(
     context: &BuildpackBuildContext,
     build_result_builder: BuildResultBuilder,

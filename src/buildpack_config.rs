@@ -1,4 +1,5 @@
 use crate::BuildpackBuildContext;
+use crate::o11y::*;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
@@ -11,6 +12,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use toml::Table;
 use toml_edit::{DocumentMut, TableLike};
+use tracing::instrument;
 
 pub(crate) const NAMESPACED_CONFIG: &str = "com.heroku.buildpacks.nodejs";
 
@@ -94,11 +96,30 @@ impl BuildpackConfig {
 impl TryFrom<&BuildpackBuildContext> for BuildpackConfig {
     type Error = ErrorMessage;
 
+    #[instrument(name = "buildpack_config", skip_all)]
     fn try_from(value: &BuildpackBuildContext) -> Result<Self, Self::Error> {
         let buildpack_id = &value.buildpack_descriptor.buildpack.id;
         let buildpack_plan = &value.buildpack_plan;
         let project_toml = &value.app_dir.join("project.toml");
-        BuildpackConfig::try_from((buildpack_id, buildpack_plan, project_toml))
+        let buildpack_config =
+            BuildpackConfig::try_from((buildpack_id, buildpack_plan, project_toml));
+        if let Ok(buildpack_config) = &buildpack_config {
+            if let Some(ConfigValue { value, source }) = &buildpack_config.prune_dev_dependencies {
+                tracing::info!(
+                    { CONFIG_PRUNE_DEV_DEPENDENCIES_SOURCE } = source.to_string(),
+                    { CONFIG_PRUNE_DEV_DEPENDENCIES_VALUE } = value,
+                    "buildpack_config"
+                );
+            }
+            if let Some(ConfigValue { value, source }) = &buildpack_config.build_scripts_enabled {
+                tracing::info!(
+                    { CONFIG_BUILD_SCRIPT_ENABLED_SOURCE } = source.to_string(),
+                    { CONFIG_BUILD_SCRIPT_ENABLED_VALUE } = value,
+                    "buildpack_config"
+                );
+            }
+        }
+        buildpack_config
     }
 }
 
@@ -196,6 +217,7 @@ impl TryFrom<(&ConfigValueSource, &Table)> for BuildpackConfig {
 impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
     type Error = ErrorMessage;
 
+    #[instrument(name = "buildpack_config_source", skip_all)]
     fn try_from(value: (&ConfigValueSource, &dyn TableLike)) -> Result<Self, Self::Error> {
         let (source, table) = value;
         let build_scripts_enabled =
@@ -206,6 +228,13 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
                     value,
                     source: source.clone(),
                 });
+        if let Some(build_scripts_enabled) = &build_scripts_enabled {
+            tracing::info!(
+                { CONFIG_BUILD_SCRIPT_ENABLED_SOURCE } = source.to_string(),
+                { CONFIG_BUILD_SCRIPT_ENABLED_VALUE } = build_scripts_enabled.value,
+                "buildpack_config"
+            );
+        }
         // TODO: these config sources should be aligned
         let prune_dev_dependencies = match source {
             ConfigValueSource::Buildplan(_) => table
@@ -225,6 +254,13 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
                     source: source.clone(),
                 }),
         };
+        if let Some(prune_dev_dependencies) = &prune_dev_dependencies {
+            tracing::info!(
+                { CONFIG_PRUNE_DEV_DEPENDENCIES_SOURCE } = source.to_string(),
+                { CONFIG_PRUNE_DEV_DEPENDENCIES_VALUE } = prune_dev_dependencies.value,
+                "buildpack_config"
+            );
+        }
         Ok(BuildpackConfig {
             build_scripts_enabled,
             prune_dev_dependencies,

@@ -1,3 +1,4 @@
+use crate::o11y::*;
 use crate::package_json::PackageJson;
 use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
 use crate::utils::error_handling::ErrorType::UserFacing;
@@ -13,6 +14,7 @@ use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use std::env::consts;
 use std::sync::LazyLock;
+use tracing::instrument;
 
 static OS: LazyLock<Os> = LazyLock::new(|| consts::OS.parse::<Os>().expect("OS should be valid"));
 
@@ -24,10 +26,22 @@ pub(crate) enum RequestedRuntime {
     NodeJsDefault,
 }
 
+#[instrument(skip_all)]
 pub(crate) fn determine_runtime(package_json: &PackageJson) -> RequestedRuntime {
-    match package_json.node_engine() {
-        Some(Ok(version)) => RequestedRuntime::NodeJsEngine(version),
-        _ => RequestedRuntime::NodeJsDefault,
+    if let Some(Ok(version)) = package_json.node_engine() {
+        tracing::info!(
+            { RUNTIME_REQUESTED_NAME } = "nodejs",
+            { RUNTIME_REQUESTED_VERSION } = version.to_string(),
+            "runtime"
+        );
+        RequestedRuntime::NodeJsEngine(version)
+    } else {
+        tracing::info!(
+            { RUNTIME_REQUESTED_NAME } = "nodejs",
+            { RUNTIME_REQUESTED_VERSION } = "default",
+            "runtime"
+        );
+        RequestedRuntime::NodeJsDefault
     }
 }
 
@@ -52,6 +66,7 @@ pub(crate) enum ResolvedRuntime {
     Nodejs(NodejsArtifact),
 }
 
+#[instrument(skip_all)]
 pub(crate) fn resolve_runtime(
     requested_runtime: RequestedRuntime,
 ) -> BuildpackResult<ResolvedRuntime> {
@@ -67,6 +82,13 @@ fn resolve_nodejs_runtime(requirement: &Requirement) -> BuildpackResult<Resolved
     let artifact = NODEJS_INVENTORY
         .resolve(*OS, *ARCH, requirement)
         .ok_or(create_unknown_nodejs_version_error(requirement))?;
+    tracing::info!(
+        { RUNTIME_NAME } = "nodejs",
+        { RUNTIME_VERSION } = artifact.version.to_string(),
+        { RUNTIME_VERSION_MAJOR } = artifact.version.major(),
+        { RUNTIME_URL } = artifact.url,
+        "runtime"
+    );
     Ok(ResolvedRuntime::Nodejs(artifact.clone()))
 }
 
@@ -100,6 +122,7 @@ fn create_unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessag
         .create()
 }
 
+#[instrument(skip_all)]
 pub(crate) fn install_runtime(
     context: &BuildpackBuildContext,
     env: &mut Env,
