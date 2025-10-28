@@ -1,4 +1,5 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
+use crate::o11y::*;
 use crate::package_manager::InstalledPackageManager;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
 use bullet_stream::global::print;
@@ -15,6 +16,7 @@ use libcnb_test as _;
 use toml::Table;
 
 mod buildpack_config;
+mod o11y;
 mod package_json;
 mod package_manager;
 mod package_managers;
@@ -44,6 +46,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
 
         // provide heroku/nodejs for other buildpacks to use
         let mut buildplan_builder = BuildPlanBuilder::new().provides(&buildpack_id);
+        tracing::info!({ DETECT_PROVIDES_NODEJS } = true, "buildplan");
 
         // If there are common node artifacts, this buildpack should both
         // provide and require heroku/nodejs so that it may be used as
@@ -54,6 +57,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             .any(|path| path.exists())
         {
             buildplan_builder = buildplan_builder.requires(&buildpack_id);
+            tracing::info!({ DETECT_REQUIRES_NODEJS } = true, "buildplan");
         }
 
         DetectResultBuilder::pass()

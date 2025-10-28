@@ -6,6 +6,7 @@ use reqwest::{IntoUrl, Request, Response};
 use reqwest_middleware::{ClientBuilder, Middleware, Next};
 use reqwest_retry::RetryTransientMiddleware;
 use reqwest_retry::policies::ExponentialBackoff;
+use reqwest_tracing::{SpanBackendWithUrl, TracingMiddleware};
 use std::io;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicU32;
@@ -46,6 +47,7 @@ where
         ExponentialBackoff::builder().build_with_max_retries(max_retries),
     ))
     .with(RetryLoggingMiddleware::new(max_retries))
+    .with(TracingMiddleware::<SpanBackendWithUrl>::new())
     .build();
 
     let mut request_builder = client.get(url.clone());
