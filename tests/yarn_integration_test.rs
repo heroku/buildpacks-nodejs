@@ -4,6 +4,7 @@
 use indoc::indoc;
 use libcnb::data::buildpack_id;
 use libcnb_test::BuildpackReference;
+use std::os::unix::fs::PermissionsExt;
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
@@ -66,10 +67,25 @@ fn yarn_4_pnp_nonzero() {
 #[test]
 #[ignore = "integration test"]
 fn yarn_4_modules_zero() {
-    nodejs_integration_test("./fixtures/yarn-4-modules-zero", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
-        assert_web_response(&ctx, "yarn-4-modules-zero");
-    });
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-4-modules-zero",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                let vendored_yarn = app_dir.join(".yarn/releases/yarn-4.0.0.cjs");
+                // Remove executable permissions to test that the buildpack sets them
+                let metadata = std::fs::metadata(&vendored_yarn).unwrap();
+                let mut permissions = metadata.permissions();
+                // Clear user, group, and other executable bits
+                let mode = permissions.mode() & !0o111;
+                permissions.set_mode(mode);
+                std::fs::set_permissions(&vendored_yarn, permissions).unwrap();
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-4-modules-zero");
+        },
+    );
 }
 
 #[test]
