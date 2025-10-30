@@ -180,7 +180,7 @@ pub(crate) fn link_vendored_yarn(
 
     std::fs::create_dir_all(&bin_dir)
         .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
-    std::os::unix::fs::symlink(full_yarn_path, yarn)
+    utils::fs::symlink_executable(full_yarn_path, yarn)
         .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
 
     let layer_env = &bin_layer.read_env()?;

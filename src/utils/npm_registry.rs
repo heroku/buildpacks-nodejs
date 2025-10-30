@@ -356,7 +356,7 @@ pub(crate) fn install_package_layer(
                         e,
                     )),
                 }?;
-                std::os::unix::fs::symlink(script_path, bin_path).map_err(|e| {
+                utils::fs::symlink_executable(script_path, bin_path).map_err(|e| {
                     InstallPackageLayerError::WriteBin(Box::new(package_packument.clone()), e)
                 })?;
             }

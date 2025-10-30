@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Ensure linked binaries are executable. ([#1219](https://github.com/heroku/buildpacks-nodejs/pull/1219))
+
 ## [5.2.1] - 2025-10-30
 
 ### Added
