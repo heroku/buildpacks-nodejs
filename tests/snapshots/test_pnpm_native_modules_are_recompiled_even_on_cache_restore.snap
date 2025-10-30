@@ -150,7 +150,7 @@ heroku/nodejs <buildpack-version>
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-Adding layer 'heroku/nodejs:virtual'
+Reusing layer 'heroku/nodejs:virtual'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
