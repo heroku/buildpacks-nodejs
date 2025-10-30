@@ -9,9 +9,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tokio::fs::File as AsyncFile;
-use tokio::io::{AsyncWriteExt, BufReader as AsyncBufReader, copy as async_copy};
-use tokio_util::compat::FuturesAsyncReadCompatExt;
-use tokio_util::io::InspectReader;
+use tokio::io::{AsyncWriteExt, BufReader as AsyncBufReader, copy as async_copy, sink};
+use tokio_util::io::{InspectReader, StreamReader};
 
 pub(crate) fn download_sync<'a, T>(downloader: T) -> Result<(), DownloaderError>
 where
@@ -51,13 +50,7 @@ where
         let mut inspectable_reader = AsyncBufReader::new(
             // the inspect reader lets us pipe this decompressed output to both the output file and the hash digest
             InspectReader::new(
-                // and we need to convert the http stream into an async reader
-                FuturesAsyncReadCompatExt::compat(
-                    response
-                        .bytes_stream()
-                        .map_err(io::Error::other)
-                        .into_async_read(),
-                ),
+                StreamReader::new(response.bytes_stream().map_err(io::Error::other)),
                 |bytes| {
                     if let Some(hasher) = &mut hasher {
                         hasher.update(bytes);
@@ -90,6 +83,9 @@ where
 
                     // Skip if we don't have enough components after stripping
                     if path_components.len() <= options.strip_components {
+                        async_copy(&mut entry, &mut sink())
+                            .await
+                            .map_err(create_write_error)?;
                         continue;
                     }
 
@@ -100,6 +96,9 @@ where
                             std::path::Component::ParentDir | std::path::Component::RootDir
                         )
                     }) {
+                        async_copy(&mut entry, &mut sink())
+                            .await
+                            .map_err(create_write_error)?;
                         continue;
                     }
 
@@ -111,12 +110,18 @@ where
 
                     // Skip empty paths
                     if stripped_path.components().count() == 0 {
+                        async_copy(&mut entry, &mut sink())
+                            .await
+                            .map_err(create_write_error)?;
                         continue;
                     }
 
                     // Skip excluded paths
                     let exclude = &options.exclude;
                     if exclude(&stripped_path) {
+                        async_copy(&mut entry, &mut sink())
+                            .await
+                            .map_err(create_write_error)?;
                         continue;
                     }
 
