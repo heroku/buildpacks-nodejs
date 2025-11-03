@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use a custom executable wrapper for vendored `yarn` script. ([#1224](https://github.com/heroku/buildpacks-nodejs/pull/1224))
+
 ## [5.2.2] - 2025-10-30
 
 ### Changed
