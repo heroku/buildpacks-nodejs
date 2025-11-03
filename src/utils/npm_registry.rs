@@ -293,7 +293,7 @@ pub(crate) fn install_package_layer(
 
     let new_metadata = InstallPackageLayerMetadata {
         node_version: node_version.to_string(),
-        package_name: package_name.to_string(),
+        package_name: package_name.clone(),
         package_version: package_version.to_string(),
         layer_version: INSTALL_PACKAGE_LAYER_VERSION.to_string(),
         arch: context.target.arch.clone(),
@@ -334,7 +334,7 @@ pub(crate) fn install_package_layer(
             }
 
             download_sync(PackageDownloader {
-                url: package_packument.dist.tarball.to_string(),
+                url: package_packument.dist.tarball.clone(),
                 destination: install_package_layer.path(),
             })
             .map_err(|e| {
