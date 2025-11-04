@@ -185,8 +185,8 @@ pub(crate) fn link_vendored_yarn(
                 &yarn,
                 formatdoc! { "
                     #!/usr/bin/env node
-                    require('{}');
-                ", vendored_yarn.to_string_lossy() },
+                    require({});
+                ", serde_json::json!(vendored_yarn) },
             )
         })
         .and_then(|()| std::fs::metadata(&yarn))
