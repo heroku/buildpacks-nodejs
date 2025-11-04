@@ -16,6 +16,7 @@ use libcnb::layer::{
 };
 use libcnb::layer_env::Scope;
 use serde::{Deserialize, Serialize};
+use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
@@ -164,7 +165,7 @@ fn create_yarnrc_yml_multiple_documents_error_message() -> ErrorMessage {
 pub(crate) fn link_vendored_yarn(
     context: &BuildpackBuildContext,
     env: &mut Env,
-    yarn_path: &Path,
+    vendored_yarn: &Path,
 ) -> BuildpackResult<()> {
     let bin_layer = context.uncached_layer(
         layer_name!("yarn_vendored"),
@@ -176,12 +177,25 @@ pub(crate) fn link_vendored_yarn(
 
     let bin_dir = bin_layer.path().join("bin");
     let yarn = bin_dir.join("yarn");
-    let full_yarn_path = context.app_dir.join(yarn_path);
+    let vendored_yarn = context.app_dir.join(vendored_yarn);
 
     std::fs::create_dir_all(&bin_dir)
-        .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
-    utils::fs::symlink_executable(full_yarn_path, yarn)
-        .map_err(|e| create_write_vendored_yarn_link_error(yarn_path, &e))?;
+        .and_then(|()| {
+            std::fs::write(
+                &yarn,
+                formatdoc! { "
+                    #!/usr/bin/env node
+                    require({});
+                ", serde_json::json!(vendored_yarn) },
+            )
+        })
+        .and_then(|()| std::fs::metadata(&yarn))
+        .and_then(|metadata| {
+            let mut permissions = metadata.permissions();
+            permissions.set_mode(0o755);
+            std::fs::set_permissions(&yarn, permissions)
+        })
+        .map_err(|e| create_write_vendored_yarn_executable_error(&vendored_yarn, &e))?;
 
     let layer_env = &bin_layer.read_env()?;
 
@@ -190,14 +204,17 @@ pub(crate) fn link_vendored_yarn(
     Ok(())
 }
 
-fn create_write_vendored_yarn_link_error(yarn_path: &Path, error: &std::io::Error) -> ErrorMessage {
-    let yarn_path = style::value(yarn_path.to_string_lossy());
+fn create_write_vendored_yarn_executable_error(
+    vendored_yarn_path: &Path,
+    error: &std::io::Error,
+) -> ErrorMessage {
+    let vendored_yarn_path = style::value(vendored_yarn_path.to_string_lossy());
     let yarn = style::value("yarn");
     error_message()
         .error_type(ErrorType::Internal)
-        .header("Failed to create vendored Yarn link")
+        .header("Failed to create vendored Yarn executable")
         .body(formatdoc! { "
-            An unexpected error occurred while attempting to create a symbolic link from {yarn_path} to {yarn}.
+            An unexpected error occurred while attempting to create a {yarn} executable for {vendored_yarn_path}.
         " })
         .debug_info(error.to_string())
         .create()
@@ -675,8 +692,8 @@ mod tests {
     }
 
     #[test]
-    fn write_vendored_yarn_link_error() {
-        assert_error_snapshot(&create_write_vendored_yarn_link_error(
+    fn write_vendored_yarn_executable_error() {
+        assert_error_snapshot(&create_write_vendored_yarn_executable_error(
             &PathBuf::from("/path/to/yarn"),
             &std::io::Error::other("Not found"),
         ));

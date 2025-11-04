@@ -1,12 +1,13 @@
 ---
 source: src/utils/error_handling.rs
+assertion_line: 167
 ---
 - Debug Info:
   - Not found
 
-! Failed to create vendored Yarn link
+! Failed to create vendored Yarn executable
 !
-! An unexpected error occurred while attempting to create a symbolic link from `/path/to/yarn` to `yarn`.
+! An unexpected error occurred while attempting to create a `yarn` executable for `/path/to/yarn`.
 !
 ! The causes for this error are unknown. We do not have suggestions for diagnosis or a workaround at this time. You can help our understanding by sharing your buildpack log and a description of the issue at:
 ! https://github.com/heroku/buildpacks-nodejs/issues
