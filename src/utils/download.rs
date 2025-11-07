@@ -11,6 +11,7 @@ use std::time::Duration;
 use tokio::fs::File as AsyncFile;
 use tokio::io::{AsyncWriteExt, BufReader as AsyncBufReader, copy as async_copy, sink};
 use tokio_util::io::{InspectReader, StreamReader};
+use tracing::instrument;
 
 pub(crate) fn download_sync<'a, T>(downloader: T) -> Result<(), DownloaderError>
 where
@@ -20,6 +21,7 @@ where
 }
 
 #[allow(clippy::too_many_lines)]
+#[instrument(skip_all)]
 pub(crate) async fn download<'a, T>(downloader: T) -> Result<(), DownloaderError>
 where
     T: Downloader<'a>,

@@ -97,45 +97,47 @@ pub(crate) fn packument_layer(
         }
     }
 
-    let packument_response = get(format!("{NPMJS_ORG_HOST}/{package_name}"))
-        .headers(headers)
-        .call_sync()
-        .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
-
-    let packument_file = packument_layer.path().join(packument_filename);
-
-    // only update the metadata if we have a 200 response
-    if packument_response.status() == StatusCode::OK {
-        let etag = packument_response
-            .headers()
-            .get("ETag")
-            .and_then(|value| value.to_str().map(ToString::to_string).ok());
-
-        let last_modified = packument_response
-            .headers()
-            .get("Last-Modified")
-            .and_then(|value| value.to_str().map(ToString::to_string).ok());
-
-        packument_response
-            .download_to_file_sync(&packument_file)
+    tracing::info_span!("fetch_packument").in_scope(|| {
+        let packument_response = get(format!("{NPMJS_ORG_HOST}/{package_name}"))
+            .headers(headers)
+            .call_sync()
             .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
 
-        packument_layer
-            .write_metadata(PackumentMetadata {
-                etag,
-                last_modified,
-            })
-            .map_err(|e| PackumentLayerError::Layer(Box::new(e)))?;
-    } else if packument_response.status() == StatusCode::NOT_MODIFIED {
-        print::sub_bullet(format!("Using cached packument for {package_name}"));
-    } else {
-        Err(PackumentLayerError::UnexpectedResponse(
-            package_name.to_string(),
-            packument_response.status(),
-        ))?;
-    }
+        let packument_file = packument_layer.path().join(packument_filename);
 
-    parse_packument(&packument_file)
+        // only update the metadata if we have a 200 response
+        if packument_response.status() == StatusCode::OK {
+            let etag = packument_response
+                .headers()
+                .get("ETag")
+                .and_then(|value| value.to_str().map(ToString::to_string).ok());
+
+            let last_modified = packument_response
+                .headers()
+                .get("Last-Modified")
+                .and_then(|value| value.to_str().map(ToString::to_string).ok());
+
+            packument_response
+                .download_to_file_sync(&packument_file)
+                .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
+
+            packument_layer
+                .write_metadata(PackumentMetadata {
+                    etag,
+                    last_modified,
+                })
+                .map_err(|e| PackumentLayerError::Layer(Box::new(e)))?;
+        } else if packument_response.status() == StatusCode::NOT_MODIFIED {
+            print::sub_bullet(format!("Using cached packument for {package_name}"));
+        } else {
+            Err(PackumentLayerError::UnexpectedResponse(
+                package_name.to_string(),
+                packument_response.status(),
+            ))?;
+        }
+
+        parse_packument(&packument_file)
+    })
 }
 
 #[derive(Debug)]

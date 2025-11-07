@@ -1,3 +1,4 @@
+use crate::o11y::*;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -21,6 +22,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use std::sync::LazyLock;
+use tracing::instrument;
 
 static YARN_BERRY_RANGE: LazyLock<Requirement> = LazyLock::new(|| {
     Requirement::parse(">=2").expect("Yarn berry requirement range should be valid")
@@ -65,6 +67,7 @@ pub(crate) fn install_yarn(
     .map_err(Into::into)
 }
 
+#[instrument(skip_all)]
 pub(crate) fn read_yarnrc(app_dir: &Path) -> Option<BuildpackResult<Yarnrc>> {
     let yarnrc_path = app_dir.join(Yarnrc::file_name());
 
@@ -75,6 +78,7 @@ pub(crate) fn read_yarnrc(app_dir: &Path) -> Option<BuildpackResult<Yarnrc>> {
             return Some(Err(create_yarnrc_yml_read_error_message(&error).into()));
         }
     };
+    tracing::info!({ YARNRC_CONTENTS } = contents, ".yarnrc.yml");
 
     match yaml_rust2::YamlLoader::load_from_str(&contents) {
         Ok(docs) if docs.len() == 1 => Some(Ok(Yarnrc(docs.into_iter().next()))),
