@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added 
 
 - Capture dependency information from `package.json`. ([#1228](https://github.com/heroku/buildpacks-nodejs/pull/1228))
+- Error `id` for diagnostics. ([#1230](https://github.com/heroku/buildpacks-nodejs/pull/1230))
  
 ### Changed
 
