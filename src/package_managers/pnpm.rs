@@ -143,6 +143,7 @@ fn set_store_dir_config(
 
 fn create_set_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/pnpm/set_store_dir_config")
         .error_type(ErrorType::Internal)
         .header("Failed to configure pnpm store dir")
         .body(formatdoc! { "
@@ -187,6 +188,7 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
 fn create_virtual_store_error(path: &Path, error: &std::io::Error) -> ErrorMessage {
     let path = file_value(path);
     error_message()
+        .id("package_manager/pnpm/create_virtual_store_directory")
         .error_type(ErrorType::Internal)
         .header("Failed to create directory")
         .body(formatdoc! { "
@@ -198,6 +200,7 @@ fn create_virtual_store_error(path: &Path, error: &std::io::Error) -> ErrorMessa
 
 fn create_node_modules_symlink_error(error: &std::io::Error) -> ErrorMessage {
     error_message()
+        .id("package_manager/pnpm/create_node_modules_symlink")
         .error_type(ErrorType::Internal)
         .header("Failed to create pnpm symlink")
         .body(formatdoc! { "
@@ -231,6 +234,7 @@ fn set_virtual_store_dir_config(
 
 fn create_set_virtual_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/pnpm/set_virtual_store_dir_config")
         .error_type(ErrorType::Internal)
         .header("Failed to configure pnpm virtual store dir")
         .body(formatdoc! { "
@@ -244,6 +248,7 @@ fn create_set_virtual_store_dir_config_error(error: &fun_run::CmdError) -> Error
 fn create_pnpm_install_command_error(error: &fun_run::CmdError) -> ErrorMessage {
     let pnpm_install = style::value(error.name());
     error_message()
+        .id("package_manager/pnpm/install")
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to install Node modules")
         .body(formatdoc! { "
@@ -285,6 +290,7 @@ fn maybe_prune_store_directory(env: &Env, store: &mut Store) -> BuildpackResult<
 
 fn create_prune_store_directory_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/pnpm/prune_store_directory")
         .error_type(ErrorType::Internal)
         .header("Failed to prune packages from the store directory")
         .body(formatdoc! { "

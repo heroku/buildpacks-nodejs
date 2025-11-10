@@ -109,6 +109,7 @@ impl Yarnrc {
 fn create_yarnrc_yml_read_error_message(error: &std::io::Error) -> ErrorMessage {
     let yamlrc_yml = file_value(Yarnrc::file_name());
     error_message()
+        .id("package_manager/yarn/read_yarnrc_yml")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,
@@ -129,6 +130,7 @@ fn create_yarnrc_yml_parse_error_message(error: &yaml_rust2::ScanError) -> Error
     let yamlrc_yml = file_value(Yarnrc::file_name());
     let yaml_spec_url = style::url("https://yaml.org/spec/1.2.2/");
     error_message()
+        .id("package_manager/yarn/parse_yarnrc_yml")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,
@@ -149,6 +151,7 @@ fn create_yarnrc_yml_multiple_documents_error_message() -> ErrorMessage {
     let yamlrc_yml = file_value(Yarnrc::file_name());
     let hyphens = style::value("---");
     error_message()
+        .id("package_manager/yarn/multiple_documents_in_yarnrc_yml")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,
@@ -215,6 +218,7 @@ fn create_write_vendored_yarn_executable_error(
     let vendored_yarn_path = style::value(vendored_yarn_path.to_string_lossy());
     let yarn = style::value("yarn");
     error_message()
+        .id("package_manager/yarn/write_vendored_yarn_executable")
         .error_type(ErrorType::Internal)
         .header("Failed to create vendored Yarn executable")
         .body(formatdoc! { "
@@ -236,6 +240,7 @@ pub(crate) fn get_version(env: &Env) -> BuildpackResult<Version> {
 fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMessage {
     match error {
         VersionCommandError::Command(e) => error_message()
+            .id("package_manager/yarn/get_version")
             .error_type(ErrorType::Internal)
             .header("Failed to determine Yarn version")
             .body(formatdoc! { "
@@ -246,6 +251,7 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
             .create(),
 
         VersionCommandError::Parse(stdout, e) => error_message()
+            .id("package_manager/yarn/parse_version")
             .error_type(ErrorType::Internal)
             .header("Failed to parse Yarn version")
             .body(formatdoc! { "
@@ -313,6 +319,7 @@ fn ensure_global_cache_is_disabled(env: &Env, version: &Version) -> Result<(), E
 
 fn create_ensure_global_cache_is_disabled_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/ensure_global_cache_is_disabled")
         .error_type(ErrorType::Internal)
         .header("Failed to disable Yarn global cache")
         .body(formatdoc! {"
@@ -338,6 +345,7 @@ fn get_cache_folder_config(env: &Env, version: &Version) -> Result<PathBuf, Erro
 
 fn create_get_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/get_cache_folder_config")
         .error_type(ErrorType::Internal)
         .header("Failed to read configured Yarn cache directory")
         .body(formatdoc! {"
@@ -369,6 +377,7 @@ fn set_cache_folder_config(
 
 fn create_set_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/set_cache_folder_config")
         .error_type(ErrorType::Internal)
         .header("Failed to configure Yarn cache directory")
         .body(formatdoc! {"
@@ -412,6 +421,7 @@ fn get_node_linker_config(
 
 fn create_get_node_linker_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/get_node_linker_config")
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
         .header("Failed to read Yarn's nodeLinker configuration")
         .body(formatdoc! { "
@@ -447,6 +457,7 @@ impl FromStr for NodeLinker {
 
 fn create_unknown_node_linker_error(value: &str) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/unknown_node_linker")
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
         .header("Failed to parse Yarn's nodeLinker configuration")
         .body(formatdoc! { "
@@ -530,6 +541,7 @@ struct YarnCacheDirectoryLayerMetadata {
 fn create_yarn_install_command_error(error: &fun_run::CmdError) -> ErrorMessage {
     let yarn_install = style::value(error.name());
     error_message()
+        .id("package_manager/yarn/install")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::Yes,
@@ -597,6 +609,7 @@ fn install_yarn_prune_plugin() -> Result<PathBuf, ErrorMessage> {
 
 fn create_yarn_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessage {
     error_message()
+        .id("package_manager/yarn/install_prune_plugin")
         .error_type(ErrorType::Internal)
         .header("Failed to install Yarn plugin for pruning")
         .body(formatdoc! { "

@@ -109,6 +109,7 @@ fn create_unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessag
         style::url("https://github.com/heroku/buildpacks-nodejs/blob/inventory/nodejs.toml");
     let version = style::value(requirement.to_string());
     error_message()
+        .id("runtime/unknown_nodejs_version")
         .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
         .header(format!("Unknown Node.js version: {version}"))
         .body(formatdoc! {"

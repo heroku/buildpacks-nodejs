@@ -91,6 +91,7 @@ impl TryFrom<PathBuf> for PackageJson {
 fn package_json_read_error_message(path: &Path, error: &std::io::Error) -> ErrorMessage {
     let package_json = file_value(path);
     error_message()
+        .id("package_json/read")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,
@@ -111,6 +112,7 @@ fn package_json_parse_error_message(path: &Path, error: &serde_json::Error) -> E
     let package_json = file_value(path);
     let json_spec_url = style::url("https://www.json.org/");
     error_message()
+        .id("package_json/parse")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,

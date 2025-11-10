@@ -14,6 +14,7 @@ where
 {
     let issues_url = style::url(ISSUES_URL);
     error_message()
+        .id("framework_error")
         .error_type(ErrorType::Framework)
         .header(format!("{BUILDPACK_NAME} internal error"))
         .body(formatdoc! {"
@@ -33,6 +34,7 @@ where
 #[bon::builder(finish_fn = create, on(String, into), state_mod(vis = "pub"))]
 #[allow(clippy::needless_pass_by_value)]
 pub(crate) fn error_message(
+    id: String,
     header: String,
     body: String,
     error_type: ErrorType,
@@ -85,6 +87,7 @@ pub(crate) fn error_message(
     ErrorMessage {
         debug_info,
         message,
+        id,
     }
 }
 
@@ -96,6 +99,7 @@ pub(crate) fn file_value(value: impl AsRef<Path>) -> String {
 pub(crate) struct ErrorMessage {
     debug_info: Option<String>,
     message: String,
+    pub(crate) id: String,
 }
 
 impl Display for ErrorMessage {

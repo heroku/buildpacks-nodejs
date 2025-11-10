@@ -139,6 +139,7 @@ fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
             let nodejs_status_url = style::url("https://status.nodejs.org/");
             let url = style::url(url);
             error_message()
+                .id("runtime/nodejs/download/request")
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
                 .header("Failed to download Node.js distribution")
                 .body(formatdoc! {"
@@ -163,6 +164,7 @@ fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
             let expected = style::value(&expected_checksum);
             let actual = style::value(&actual_checksum);
             error_message()
+                .id("runtime/nodejs/download/checksum")
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
                 .header("Node.js distribution checksum verification failed")
                 .body(formatdoc! {"
@@ -184,6 +186,7 @@ fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
             let dst_path = file_value(destination);
             let url = style::url(url);
             error_message()
+                .id("runtime/nodejs/download/write")
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
                 .header("Failed to copy Node.js distribution contents")
                 .body(formatdoc! {"
@@ -226,6 +229,7 @@ pub(crate) fn get_node_version(env: &Env) -> BuildpackResult<Version> {
 fn create_get_node_version_command_error(error: &VersionCommandError) -> ErrorMessage {
     match error {
         VersionCommandError::Command(e) => error_message()
+            .id("runtime/nodejs/get_version")
             .error_type(Internal)
             .header("Failed to determine Node.js version")
             .body(formatdoc! { "
@@ -236,6 +240,7 @@ fn create_get_node_version_command_error(error: &VersionCommandError) -> ErrorMe
             .create(),
 
         VersionCommandError::Parse(stdout, e) => error_message()
+            .id("runtime/nodejs/parse_version")
             .error_type(Internal)
             .header("Failed to parse Node.js version")
             .body(formatdoc! { "
