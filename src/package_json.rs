@@ -73,6 +73,17 @@ impl TryFrom<PathBuf> for PackageJson {
         tracing::info!({ PACKAGE_JSON_CONTENTS } = contents);
         let json = serde_json::from_str::<serde_json::Value>(&contents)
             .map_err(|e| package_json_parse_error_message(&value, &e))?;
+        for dependency_type in ["dependencies", "devDependencies", "peerDependencies"] {
+            if let Some(deps) = json.get(dependency_type).and_then(|v| v.as_object()) {
+                for (name, version) in deps {
+                    tracing::info!(
+                        { DEPENDENCIES_REQUESTED_PACKAGE_NAME } = name,
+                        { DEPENDENCIES_REQUESTED_PACKAGE_VERSION } = version.to_string(),
+                        { DEPENDENCIES_REQUESTED_DEPENDENCY_SOURCE_FIELD } = dependency_type
+                    );
+                }
+            }
+        }
         Ok(Self(json))
     }
 }

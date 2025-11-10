@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added 
+
+- Capture dependency information from `package.json`. ([#1228](https://github.com/heroku/buildpacks-nodejs/pull/1228))
+
 ## [5.2.4] - 2025-11-07
 
 ### Added
