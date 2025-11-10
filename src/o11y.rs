@@ -57,3 +57,14 @@ pub(crate) const BUILD_SCRIPTS_PREBUILD: &str = formatcp!("{BUILD_SCRIPTS}.prebu
 pub(crate) const BUILD_SCRIPTS_BUILD: &str = formatcp!("{BUILD_SCRIPTS}.build");
 
 pub(crate) const BUILD_SCRIPTS_POSTBUILD: &str = formatcp!("{BUILD_SCRIPTS}.postbuild");
+
+const DEPENDENCIES: &str = formatcp!("{NAMESPACE}.dependencies");
+
+pub(crate) const DEPENDENCIES_REQUESTED_PACKAGE_NAME: &str =
+    formatcp!("{DEPENDENCIES}.requested_package_name");
+
+pub(crate) const DEPENDENCIES_REQUESTED_PACKAGE_VERSION: &str =
+    formatcp!("{DEPENDENCIES}.requested_package_version");
+
+pub(crate) const DEPENDENCIES_REQUESTED_DEPENDENCY_SOURCE_FIELD: &str =
+    formatcp!("{DEPENDENCIES}.requested_dependency_source_field");
