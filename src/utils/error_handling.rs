@@ -85,9 +85,9 @@ pub(crate) fn error_message(
     let message = message_parts.join("\n\n");
 
     ErrorMessage {
-        id,
         debug_info,
         message,
+        id,
     }
 }
 
