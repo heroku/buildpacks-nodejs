@@ -80,7 +80,10 @@ pub(crate) enum VersionCommandError {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
-pub(crate) struct Requirement(Range);
+pub(crate) struct Requirement {
+    range: Range,
+    original: String,
+}
 
 impl VersionRequirement<Version> for Requirement {
     fn satisfies(&self, version: &Version) -> bool {
@@ -102,28 +105,37 @@ impl Requirement {
     pub(crate) fn parse(requirement: &str) -> Result<Self, VersionError> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
-            return Ok(Requirement(Range::any()));
+            return Ok(Requirement {
+                range: Range::any(),
+                original: requirement.to_string(),
+            });
         }
         if trimmed.starts_with("~=") {
             let version = trimmed.replacen('=', "", 1);
             if let Ok(range) = Range::parse(version) {
-                return Ok(Requirement(range));
+                return Ok(Requirement {
+                    range,
+                    original: requirement.to_string(),
+                });
             }
         }
         match Range::parse(trimmed) {
-            Ok(range) => Ok(Requirement(range)),
+            Ok(range) => Ok(Requirement {
+                range,
+                original: requirement.to_string(),
+            }),
             Err(error) => Err(VersionError(format!("{error}"))),
         }
     }
 
     #[must_use]
     pub(crate) fn satisfies(&self, ver: &Version) -> bool {
-        self.0.satisfies(&ver.0)
+        self.range.satisfies(&ver.0)
     }
 
     #[must_use]
     pub(crate) fn allows_any(&self, other: &Requirement) -> bool {
-        self.0.allows_any(&other.0)
+        self.range.allows_any(&other.range)
     }
 }
 
@@ -136,7 +148,7 @@ impl TryFrom<String> for Requirement {
 
 impl fmt::Display for Requirement {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
+        write!(f, "{}", self.original)
     }
 }
 
@@ -150,7 +162,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("*", format!("{reqs}"));
+            assert_eq!("*", format!("{}", reqs.range));
         }
     }
 
@@ -160,7 +172,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("14.0.0", format!("{reqs}"));
+            assert_eq!("14.0.0", format!("{}", reqs.range));
         }
     }
 
@@ -170,7 +182,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("14.0.0", format!("{reqs}"));
+            assert_eq!("14.0.0", format!("{}", reqs.range));
         }
     }
 
@@ -180,7 +192,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=12.0.0", format!("{reqs}"));
+            assert_eq!(">=12.0.0", format!("{}", reqs.range));
         }
     }
 
@@ -192,7 +204,7 @@ mod tests {
         if let Ok(reqs) = result {
             assert_eq!(
                 ">=12.0.0 <13.0.0-0||>=13.0.0 <14.0.0-0||>=14.0.0 <15.0.0-0",
-                format!("{reqs}")
+                format!("{}", reqs.range)
             );
         }
     }
@@ -203,7 +215,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.0 <14.5.0-0", format!("{reqs}"));
+            assert_eq!(">=14.4.0 <14.5.0-0", format!("{}", reqs.range));
         }
     }
 
@@ -213,7 +225,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=14.4.3 <14.5.0-0", format!("{reqs}"));
+            assert_eq!(">=14.4.3 <14.5.0-0", format!("{}", reqs.range));
         }
     }
 
@@ -223,7 +235,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">15.5.0", format!("{reqs}"));
+            assert_eq!(">15.5.0", format!("{}", reqs.range));
         }
     }
 
@@ -233,7 +245,7 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!(">=10.0.0", format!("{reqs}"));
+            assert_eq!(">=10.0.0", format!("{}", reqs.range));
         }
     }
 
@@ -243,15 +255,13 @@ mod tests {
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
-            assert_eq!("10.22.0", format!("{reqs}"));
+            assert_eq!("10.22.0", format!("{}", reqs.range));
         }
     }
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
         let result = Requirement::parse("12.%");
-        println!("{result:?}");
-
         assert!(result.is_err());
     }
 }
