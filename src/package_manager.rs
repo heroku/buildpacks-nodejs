@@ -535,6 +535,7 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
     let build = style::value("build");
     let heroku_postbuild = style::value("heroku-postbuild");
     error_message()
+        .id(format!("package_manager/run_script/{script}"))
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
         .header(format!("Failed to execute build script - {script}"))
         .body(formatdoc! { "
@@ -601,6 +602,7 @@ pub(crate) fn prune_dev_dependencies(
 fn create_prune_dev_dependencies_error_message(error: &fun_run::CmdError) -> ErrorMessage {
     let prune_command = style::value(error.name());
     error_message()
+        .id("package_manager/prune_dev_dependencies")
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to prune dev dependencies")
         .body(formatdoc! { "

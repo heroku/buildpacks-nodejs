@@ -272,6 +272,7 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
 fn create_read_project_toml_error_message(error: &std::io::Error) -> ErrorMessage {
     let project_toml = style::value("project.toml");
     error_message()
+        .id("config/project_toml/read")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,
@@ -292,6 +293,7 @@ fn create_parse_project_toml_error_message(error: &toml_edit::TomlError) -> Erro
     let project_toml = style::value("project.toml");
     let toml_spec_url = style::url("https://toml.io/en/v1.0.0");
     error_message()
+        .id("config/project_toml/parse")
         .error_type(ErrorType::UserFacing(
             SuggestRetryBuild::Yes,
             SuggestSubmitIssue::No,

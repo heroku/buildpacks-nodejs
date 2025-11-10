@@ -159,10 +159,12 @@ impl From<PackumentLayerError> for BuildpackError {
                 create_packument_layer_unexpected_response_error(&package_name, status_code).into()
             }
             PackumentLayerError::ReadPackument(package_name, error) => {
-                create_packument_layer_internal_error(&package_name, &error.to_string()).into()
+                create_packument_layer_internal_error(&package_name, &error.to_string(), "read")
+                    .into()
             }
             PackumentLayerError::ParsePackument(package_name, error) => {
-                create_packument_layer_internal_error(&package_name, &error.to_string()).into()
+                create_packument_layer_internal_error(&package_name, &error.to_string(), "parse")
+                    .into()
             }
             PackumentLayerError::Layer(error) => *error,
         }
@@ -173,9 +175,11 @@ fn create_packument_layer_fetch_packument_error(
     package_name: &str,
     error: &utils::http::Error,
 ) -> ErrorMessage {
+    let id = format!("npm_registry/{package_name}/packument/fetch");
     let package_name = style::value(package_name);
     let npm_status_url = style::url(NPM_STATUS_URL);
     error_message()
+        .id(id)
         .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header(format!("Failed to load available {package_name} versions"))
         .body(formatdoc! { "
@@ -199,16 +203,23 @@ fn create_packument_layer_unexpected_response_error(
     create_packument_layer_internal_error(
         package_name,
         &formatdoc! { "
-        An unexpected response status was received while loading the available {package_name} versions. The
-        status code returned was {status_code} but a {ok} or {not_modified} status code was expected.
-    " },
+            An unexpected response status was received while loading the available {package_name} versions. The
+            status code returned was {status_code} but a {ok} or {not_modified} status code was expected.
+        " },
+        "unexpected_response",
     )
 }
 
-fn create_packument_layer_internal_error(package_name: &str, debug_info: &str) -> ErrorMessage {
+fn create_packument_layer_internal_error(
+    package_name: &str,
+    debug_info: &str,
+    error_kind: &str,
+) -> ErrorMessage {
+    let id = format!("npm_registry/{package_name}/packument/{error_kind}");
     let package_name = style::value(package_name);
     let npm_status_url = style::url(NPM_STATUS_URL);
     error_message()
+        .id(id)
         .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
         .header(format!("Failed to load available {package_name} versions"))
         .body(formatdoc! { "
@@ -271,6 +282,7 @@ fn create_resolve_package_packument_error(
     let npm_show_command = style::value(npm_show_command);
 
     error_message()
+        .id(format!("npm_registry/{}/packument/resolve", &packument.name))
         .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
         .header(format!("Error resolving requested {package_name} version {requested_version}"))
         .body(formatdoc! { "
@@ -411,6 +423,7 @@ fn create_install_package_download_error(
         DownloaderError::Request { source, .. } => {
             let package_name = style::value(&package_packument.name);
             error_message()
+                .id(format!("npm_registry/{}/download/request", &package_packument.name))
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
                 .header(format!("Failed to download {package_name}"))
                 .body(formatdoc! {"
@@ -436,6 +449,7 @@ fn create_install_package_download_error(
             let package_name = style::value(&package_packument.name);
             let destination = file_value(destination);
             error_message()
+                .id(format!("npm_registry/{}/download/write", &package_packument.name))
                 .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
                 .header(format!("Failed to extract {package_name} package file"))
                 .body(formatdoc! {"
@@ -453,6 +467,10 @@ fn create_install_package_write_error(
 ) -> ErrorMessage {
     let package_name = style::value(&package_packument.name);
     error_message()
+        .id(format!(
+            "npm_registry/{}/install/write",
+            &package_packument.name
+        ))
         .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes))
         .header(format!(
             "Failed to install the downloaded {package_name} package binaries"
@@ -468,6 +486,7 @@ fn create_install_package_write_error(
 fn create_install_package_missing_bins_error(package_packument: &PackagePackument) -> ErrorMessage {
     let package_name = style::value(&package_packument.name);
     error_message()
+        .id(format!("npm_registry/{}/install/missing_bins", &package_packument.name))
         .error_type(UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::Yes))
         .header(format!(
             "Failed to determine the downloaded {package_name} package binaries"

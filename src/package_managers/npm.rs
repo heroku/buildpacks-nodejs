@@ -41,6 +41,7 @@ pub(crate) fn get_version(env: &Env) -> BuildpackResult<Version> {
 fn create_get_npm_version_command_error(error: &VersionCommandError) -> ErrorMessage {
     match error {
         VersionCommandError::Command(e) => error_message()
+            .id("package_manager/npm/get_version")
             .error_type(Internal)
             .header("Failed to determine npm version")
             .body(formatdoc! { "
@@ -51,6 +52,7 @@ fn create_get_npm_version_command_error(error: &VersionCommandError) -> ErrorMes
             .create(),
 
         VersionCommandError::Parse(stdout, e) => error_message()
+            .id("package_manager/npm/parse_version")
             .error_type(Internal)
             .header("Failed to parse npm version")
             .body(formatdoc! { "
@@ -148,6 +150,7 @@ fn create_cache_directory(context: &BuildpackBuildContext) -> BuildpackResult<Pa
 
 fn create_set_npm_cache_directory_command_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
+        .id("package_manager/npm/set_cache_directory")
         .error_type(Internal)
         .header("Failed to set the npm cache directory")
         .body("An unexpected error occurred while setting the npm cache directory.")
@@ -158,6 +161,7 @@ fn create_set_npm_cache_directory_command_error(error: &fun_run::CmdError) -> Er
 fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
     let npm_install = style::value(error.name());
     error_message()
+        .id("package_manager/npm/install")
         .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
         .header("Failed to install Node modules")
         .body(formatdoc! { "

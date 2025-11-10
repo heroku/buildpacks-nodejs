@@ -225,6 +225,11 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             libcnb::Error::BuildpackError(error_message) => error_message,
             framework_error => on_framework_error(&framework_error),
         };
+        tracing::error!(
+            { ERROR_ID } = error_message.id,
+            { ERROR_MESSAGE } = error_message.to_string(),
+            "error"
+        );
         print::plain(error_message.to_string());
         eprintln!();
     }
