@@ -21,10 +21,10 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `22.21.1 (<arch>)`
   - Installing Node.js `22.21.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
-  - Found `engines.yarn` version `>=2.4.0 <2.5.0-0` declared in `package.json`
+  - Found `engines.yarn` version `2.4.x` declared in `package.json`
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Resolved yarn version `>=2.4.0 <2.5.0-0` to `2.4.2`
+  - Resolved yarn version `2.4.x` to `2.4.2`
 - Installing Yarn
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-2.4.2.tgz ... (OK)
   - Downloading ... (<time_elapsed>)

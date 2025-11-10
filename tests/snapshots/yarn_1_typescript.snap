@@ -12,7 +12,7 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `>=16.0.0 <17.0.0-0`
+  - Detected Node.js version range: `^16.0`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
@@ -21,10 +21,10 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `16.20.2 (<arch>)`
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
-  - Found Yarn lockfile, defaulting to `>=1.22.0 <1.23.0-0`
+  - Found Yarn lockfile, defaulting to `1.22.x`
   - GET https://registry.npmjs.org/yarn ... (OK)
   - Downloading ... (<time_elapsed>)
-  - Resolved yarn version `>=1.22.0 <1.23.0-0` to `1.22.22`
+  - Resolved yarn version `1.22.x` to `1.22.22`
 - Installing Yarn
   - GET https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz ... (OK)
   - Downloading ... (<time_elapsed>)

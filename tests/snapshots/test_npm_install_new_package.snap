@@ -12,7 +12,7 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
+  - Detected Node.js version range: `^22.0`
   - Resolved Node.js version: `22.21.1`
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v22.21.1/node-v22.21.1-<arch>.tar.gz ... (OK)
@@ -78,7 +78,7 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `>=22.0.0 <23.0.0-0`
+  - Detected Node.js version range: `^22.0`
   - Resolved Node.js version: `22.21.1`
 - Installing Node.js distribution
   - Reusing Node.js 22.21.1 (<arch>)
