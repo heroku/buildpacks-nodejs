@@ -2023,9 +2023,9 @@ checksum = "6a82ae493e598baaea5209805c49bbf2ea7de956d50d7da0da1164f9c6d28543"
 
 [[package]]
 name = "libcnb"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "777888ec928e337245533d96d957af1238f8f7aede71f7b371f9a549886cc623"
+checksum = "df3aafc3130960511da3ff79cd363eea09c2473d05d7edc6120cebeb920c4b3f"
 dependencies = [
  "libcnb-common",
  "libcnb-data",
@@ -2044,9 +2044,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-common"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61d0cee3625345c8002850adec2f340d7efd3a8fe3b3f5906b1a0ce56450ad86"
+checksum = "dc87f4bc36bb1b1c288675164a431029af30e1aaf7377c8e6254517a921fa60c"
 dependencies = [
  "serde",
  "thiserror 2.0.17",
@@ -2055,9 +2055,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-data"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f85677e76548458513b73fc5c741937a70cd55a026a05dbefbd5c44c76d03359"
+checksum = "9586f2f9194d48fae1cbe5c615484f3621ed454a760e4f3f7f71cce992ba3825"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -2069,9 +2069,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-package"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cefd53be45e21807ce2dca62a18fdfce6a50360ef0e3ef43ab9126c86aa7ecf3"
+checksum = "529d326aab6b3dd58b0449e6534e3b7dd12ec4aeb0cdaaa34763350d4a245470"
 dependencies = [
  "cargo_metadata",
  "ignore",
@@ -2086,9 +2086,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-proc-macros"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcd38ee73654e86cff3623170c9d23a0f8ed6e54286e487712710344abbe1269"
+checksum = "b842199b2972328aefd33eb2c8516e7c6886425009544d1781e6b49059200ea3"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -2098,9 +2098,9 @@ dependencies = [
 
 [[package]]
 name = "libcnb-test"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9677e39a7b46c904a57fe3dd83f1d7cc69402ea1d462a363f60eda36dd63a2e2"
+checksum = "8a06c9ff41d3d7a1e9c0275caa20e2837ca4c85e1093acc4afa90cdc441d66bd"
 dependencies = [
  "fastrand",
  "fs_extra",
@@ -2114,9 +2114,9 @@ dependencies = [
 
 [[package]]
 name = "libherokubuildpack"
-version = "0.30.1"
+version = "0.30.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39f8fc1310cf5c86c392f2ffc94e0b253b0281f64cba9e55d189cba46c873d0d"
+checksum = "3b2140276b715b1f3da7a3026ffab2b9ad691fef9f97426580ee00998fbe6197"
 dependencies = [
  "flate2",
  "hex",
@@ -2955,9 +2955,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.41"
+version = "1.0.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce25767e7b499d1b604768e7cde645d14cc8584231ea6b295e9c9eb22c02e1d1"
+checksum = "a338cc41d27e6cc6dce6cefc13a0729dfbb81c262b1f519331575dd80ef3067f"
 dependencies = [
  "proc-macro2",
 ]
@@ -3768,9 +3768,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.108"
+version = "2.0.110"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da58917d35242480a05c2897064da0a80589a2a0476c9a3f2fdc83b53502e917"
+checksum = "a99801b5bd34ede4cf3fc688c5919368fea4e4814a4664359503e6015b280aea"
 dependencies = [
  "proc-macro2",
  "quote",

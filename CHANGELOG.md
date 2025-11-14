@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated `libcnb` dependencies to `0.30.2` to pull in instrumentation improvements. ([#1234](https://github.com/heroku/buildpacks-nodejs/pull/1234))
+
 ## [5.2.6] - 2025-11-13
 
 ### Added
