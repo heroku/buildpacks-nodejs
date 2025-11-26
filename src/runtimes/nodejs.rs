@@ -34,7 +34,7 @@ pub(crate) static NODEJS_INVENTORY: LazyLock<NodejsInventory> = LazyLock::new(||
 //       doesn't (yet), so this wrapper type will have to do for now.
 pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<DefaultNodeRequirement> =
     LazyLock::new(|| {
-        let current_lts = "22.x";
+        let current_lts = "24.x";
         DefaultNodeRequirement {
             value: current_lts.to_string(),
             requirement: Requirement::parse(current_lts)
