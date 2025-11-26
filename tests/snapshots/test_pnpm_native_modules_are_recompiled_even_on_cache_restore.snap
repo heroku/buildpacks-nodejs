@@ -13,13 +13,13 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.19.5`
+  - Resolved Node.js version: `20.19.6`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.19.5/node-v20.19.5-<arch>.tar.gz ... (OK)
+  - GET https://nodejs.org/download/release/v20.19.6/node-v20.19.6-<arch>.tar.gz ... (OK)
   - Downloading ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.19.5 (<arch>)`
-  - Installing Node.js `20.19.5 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.19.6 (<arch>)`
+  - Installing Node.js `20.19.6 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
   - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (OK)
@@ -104,9 +104,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.19.5`
+  - Resolved Node.js version: `20.19.6`
 - Installing Node.js distribution
-  - Reusing Node.js 20.19.5 (<arch>)
+  - Reusing Node.js 20.19.6 (<arch>)
 - Determining pnpm package information
   - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (Not Modified)
