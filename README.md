@@ -120,7 +120,7 @@ would like to help.
 [ci-badge]: https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml/badge.svg
 [ci-url]: https://github.com/heroku/buildpacks-nodejs/actions/workflows/ci.yml
 [cnb]: https://buildpacks.io
-[cnb-banner]: https://cloud.githubusercontent.com/assets/51578/13712672/efdf2a40-e792-11e5-82ef-492478cbc0dc.png
+[cnb-banner]: https://raw.githubusercontent.com/heroku/buildpacks/refs/heads/main/assets/images/buildpack-banner-node-js.png
 [classic-buildpack]: https://github.com/heroku/heroku-buildpack-nodejs
 [heroku-buildpacks]: https://github.com/heroku/buildpacks
 [pack-install]: https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/
