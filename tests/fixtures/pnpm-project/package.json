@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "dependencies": {
     "debug": "^4.3.4"
+  },
+  "engines": {
+    "node": "22.x"
   }
 }

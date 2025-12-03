@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated default Node.js version to `24.x`. ([#1240](https://github.com/heroku/buildpacks-nodejs/pull/1240))
+
 ## [5.2.9] - 2025-11-26
 
 ### Added

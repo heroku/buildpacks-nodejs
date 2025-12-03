@@ -13,7 +13,7 @@ test/skip-build-scripts 0.0.0
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Node.js version not specified, using `22.x`
+  - Detected Node.js version range: `22.x`
   - Resolved Node.js version: `22.21.1`
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v22.21.1/node-v22.21.1-<arch>.tar.gz ... (OK)
