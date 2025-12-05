@@ -1,9 +1,9 @@
-use crate::utils::download::{
-    ChecksumValidator, Downloader, DownloaderError, Extractor, GzipOptions, download_sync,
-};
 use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+};
+use crate::utils::http::{
+    ChecksumValidator, DownloadError, DownloadTask, Extractor, GzipOptions, download,
 };
 use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult};
@@ -21,7 +21,6 @@ use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::inventory::artifact::Artifact;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
-use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::LazyLock;
 
@@ -87,10 +86,17 @@ pub(crate) fn install(
             print::sub_bullet(format!("Reusing Node.js {version_tag}"));
         }
         LayerState::Empty { .. } => {
-            download_sync(NodejsArtifactDownloader {
-                source: distribution_artifact,
-                destination: distribution_layer.path(),
-            })
+            download(
+                &DownloadTask::builder(&distribution_artifact.url, distribution_layer.path())
+                    .checksum_validator(ChecksumValidator::Sha256(
+                        &distribution_artifact.checksum.value,
+                    ))
+                    .extractor(Extractor::Gzip(GzipOptions {
+                        strip_components: 1,
+                        ..GzipOptions::default()
+                    }))
+                    .build(),
+            )
             .map_err(create_downloader_error)?;
             // TODO: this output is meant to match the existing test fixtures but it should be
             //       changed to just output "Installed Node.js version: {}" in the future.
@@ -107,35 +113,9 @@ pub(crate) fn install(
     Ok(())
 }
 
-struct NodejsArtifactDownloader<'a> {
-    source: &'a NodejsArtifact,
-    destination: PathBuf,
-}
-
-impl<'a> Downloader<'a> for NodejsArtifactDownloader<'a> {
-    fn source_url(&self) -> &str {
-        &self.source.url
-    }
-
-    fn destination(&self) -> &Path {
-        &self.destination
-    }
-
-    fn checksum_validator(&self) -> Option<ChecksumValidator<'a>> {
-        Some(ChecksumValidator::Sha256(&self.source.checksum.value))
-    }
-
-    fn extractor(&self) -> Option<Extractor> {
-        Some(Extractor::Gzip(GzipOptions {
-            strip_components: 1,
-            ..GzipOptions::default()
-        }))
-    }
-}
-
-fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
+fn create_downloader_error(error: DownloadError) -> ErrorMessage {
     match error {
-        DownloaderError::Request { url, source } => {
+        DownloadError::Download { url, source } => {
             let nodejs_status_url = style::url("https://status.nodejs.org/");
             let url = style::url(url);
             error_message()
@@ -155,7 +135,7 @@ fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
                 .create()
         }
 
-        DownloaderError::ChecksumMismatch {
+        DownloadError::ChecksumMismatch {
             url,
             expected_checksum,
             actual_checksum,
@@ -178,7 +158,7 @@ fn create_downloader_error(error: DownloaderError) -> ErrorMessage {
                 .create()
         }
 
-        DownloaderError::Write {
+        DownloadError::Write {
             url,
             destination,
             source,
@@ -254,10 +234,10 @@ fn create_get_node_version_command_error(error: &VersionCommandError) -> ErrorMe
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils;
     use crate::utils::error_handling::test_util::{
         assert_error_snapshot, create_cmd_error, create_reqwest_error,
     };
+    use crate::utils::http::GetError;
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
         checksum::Checksum,
@@ -317,15 +297,15 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
     #[test]
     fn download_request_error() {
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
-        assert_error_snapshot(&create_downloader_error(DownloaderError::Request {
+        assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
-            source: utils::http::Error::Request(url.to_string(), create_reqwest_error()),
+            source: GetError::Request(create_reqwest_error()),
         }));
     }
 
     #[test]
     fn download_write_error() {
-        assert_error_snapshot(&create_downloader_error(DownloaderError::Write {
+        assert_error_snapshot(&create_downloader_error(DownloadError::Write {
             url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
                 .into(),
             destination: "/layers/heroku_nodejs/nodejs".into(),
@@ -335,14 +315,12 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
 
     #[test]
     fn download_checksum_error() {
-        assert_error_snapshot(&create_downloader_error(
-            DownloaderError::ChecksumMismatch {
-                url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
-                    .into(),
-                actual_checksum: "e62ff0123a74adfc6903d59a449cbdb0".into(),
-                expected_checksum: "d41d8cd98f00b204e9800998ecf8427e".into(),
-            },
-        ));
+        assert_error_snapshot(&create_downloader_error(DownloadError::ChecksumMismatch {
+            url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                .into(),
+            actual_checksum: "e62ff0123a74adfc6903d59a449cbdb0".into(),
+            expected_checksum: "d41d8cd98f00b204e9800998ecf8427e".into(),
+        }));
     }
 
     #[test]

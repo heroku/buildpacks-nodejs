@@ -1,356 +1,884 @@
-use crate::utils::async_runtime::ASYNC_RUNTIME;
-use bullet_stream::style;
-use futures::stream::TryStreamExt;
-use http::{Extensions, HeaderMap};
-use reqwest::{IntoUrl, Request, Response};
-use reqwest_middleware::{ClientBuilder, Middleware, Next};
-use reqwest_retry::RetryTransientMiddleware;
-use reqwest_retry::policies::ExponentialBackoff;
-use reqwest_tracing::{SpanBackendWithUrl, TracingMiddleware};
+use bullet_stream::global::print;
+use bullet_stream::{GlobalTimer, style};
+use flate2::read::MultiGzDecoder;
+use http::{HeaderMap, StatusCode};
+use reqwest::blocking::Response;
+use retry::delay::Fixed;
+use retry::{OperationResult, retry_with_index};
+use sha2::{Digest, Sha256};
+use std::fmt;
+use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::AtomicU32;
-use std::sync::atomic::Ordering::SeqCst;
 use std::time::Duration;
-use tokio_util::io::StreamReader;
+use tempfile::NamedTempFile;
+use tracing::instrument;
 
 pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
-pub(crate) const DEFAULT_READ_TIMEOUT: Duration = Duration::from_secs(10);
+pub(crate) const DEFAULT_MAX_RETRIES: usize = 5;
 
-pub(crate) const DEFAULT_RETRIES: u32 = 5;
+pub(crate) const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(500); // half a second
 
-#[bon::builder]
-pub(crate) async fn get<U>(
-    #[builder(start_fn)] //
-    url: U,
-    headers: Option<HeaderMap>,
-    #[builder(default = DEFAULT_CONNECT_TIMEOUT)] //
-    connect_timeout: Duration,
-    #[builder(default = DEFAULT_READ_TIMEOUT)] //
-    read_timeout: Duration,
-    #[builder(default = DEFAULT_RETRIES)] //
-    max_retries: u32,
-) -> Result<Response, Error>
-where
-    U: IntoUrl + std::fmt::Display + Clone,
-{
-    let client = ClientBuilder::new(
-        reqwest::ClientBuilder::new()
-            .use_rustls_tls()
-            .connect_timeout(connect_timeout)
-            .read_timeout(read_timeout)
-            .build()
-            .expect("Should be able to construct the HTTP client"),
-    )
-    .with(RetryTransientMiddleware::new_with_policy(
-        ExponentialBackoff::builder().build_with_max_retries(max_retries),
-    ))
-    .with(RetryLoggingMiddleware::new(max_retries))
-    .with(TracingMiddleware::<SpanBackendWithUrl>::new())
-    .build();
+pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
+    let client = reqwest::blocking::ClientBuilder::new()
+        .connect_timeout(request.connect_timeout)
+        .use_rustls_tls()
+        .build()
+        .expect("Should be able to create the HTTP client");
 
-    let mut request_builder = client.get(url.clone());
+    let retry_strategy = Fixed::from(request.retry_delay).take(request.max_retries);
 
-    if let Some(headers) = headers {
-        request_builder = request_builder.headers(headers);
-    }
+    retry_with_index(retry_strategy, |index| {
+        let attempt = index - 1;
 
-    request_builder
-        .send()
-        .await
-        .and_then(|res| {
-            res.error_for_status()
-                .map_err(reqwest_middleware::Error::Reqwest)
-        })
-        .map_err(|e| Error::Request(url.to_string(), e))
-}
-
-/// Extend the [`bon::builder`] for [`get`]
-impl<U, State> GetBuilder<U, State>
-where
-    U: IntoUrl + std::fmt::Display + Clone,
-    State: get_builder::State,
-{
-    pub(crate) fn call_sync(self) -> Result<Response, Error>
-    where
-        State: get_builder::IsComplete,
-    {
-        ASYNC_RUNTIME.block_on(async { self.call().await })
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-pub(crate) enum Error {
-    #[error("Request to `{0}` failed\nError: {1}")]
-    Request(String, reqwest_middleware::Error),
-    #[error("Could not open file at `{0}` for download of `{1}`\nError: {2}")]
-    OpenFile(PathBuf, String, io::Error),
-    #[error("Could not write to file at `{0}` for download of `{1}`\nError: {2}")]
-    WriteFile(PathBuf, String, io::Error),
-}
-
-pub(crate) trait ResponseExt {
-    #[allow(async_fn_in_trait)]
-    async fn download_to_file(self, download_to: impl AsRef<Path>) -> Result<(), Error>;
-    fn download_to_file_sync(self, download_to: impl AsRef<Path>) -> Result<(), Error>;
-}
-
-impl ResponseExt for Response {
-    async fn download_to_file(self, download_to: impl AsRef<Path>) -> Result<(), Error> {
-        let url = &self.url().clone();
-        let to_file = download_to.as_ref();
-
-        let timer = bullet_stream::global::print::sub_start_timer("Downloading");
-
-        let mut reader = StreamReader::new(self.bytes_stream().map_err(io::Error::other));
-
-        let mut writer = tokio::fs::File::options()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(to_file)
-            .await
-            .map_err(|e| Error::OpenFile(to_file.to_path_buf(), url.to_string(), e))?;
-
-        tokio::io::copy(&mut reader, &mut writer)
-            .await
-            .map_err(|e| Error::WriteFile(to_file.to_path_buf(), url.to_string(), e))?;
-
-        timer.done();
-
-        Ok(())
-    }
-
-    fn download_to_file_sync(self, download_to: impl AsRef<Path>) -> Result<(), Error> {
-        ASYNC_RUNTIME.block_on(async { self.download_to_file(download_to).await })
-    }
-}
-
-struct RetryLoggingMiddleware {
-    count: AtomicU32,
-    max_retries: u32,
-}
-
-impl RetryLoggingMiddleware {
-    fn new(max_retries: u32) -> Self {
-        Self {
-            count: AtomicU32::new(0),
-            max_retries,
-        }
-    }
-}
-
-#[async_trait::async_trait]
-impl Middleware for RetryLoggingMiddleware {
-    async fn handle(
-        &self,
-        req: Request,
-        extensions: &mut Extensions,
-        next: Next<'_>,
-    ) -> reqwest_middleware::Result<Response> {
-        // increment and acquire the previous value
-        let previous_value = self.count.fetch_add(1, SeqCst);
-        let message = if previous_value == 0 {
-            format!("{} {}", req.method(), style::url(req.url()))
-        } else {
-            format!("Retry attempt {previous_value} of {}", self.max_retries)
+        // fail early if the temporary download file can't be created
+        let mut response_file = match tempfile::NamedTempFile::new() {
+            Ok(named_temp_file) => named_temp_file,
+            Err(e) => return OperationResult::Err(GetError::Write(e)),
         };
-        let timer = bullet_stream::global::print::sub_start_timer(message);
-        let response = next.run(req, extensions).await;
-        match &response {
-            Ok(response) => {
-                if let Some(reason) = response.status().canonical_reason() {
-                    timer.cancel(reason);
+
+        let timer = print::sub_start_timer(if attempt == 0 {
+            format!("GET {}", style::url(&request.url))
+        } else {
+            format!("Retry attempt {attempt} of {}", request.max_retries)
+        });
+
+        // helper function to provide a short reason to the timer before returning the error
+        let report_error = |timer: GlobalTimer, error: GetError| {
+            timer.cancel(error.cancellation_reason());
+            if error.retry() {
+                OperationResult::Retry(error)
+            } else {
+                OperationResult::Err(error)
+            }
+        };
+
+        let mut response = match client
+            .get(&request.url)
+            .headers(request.headers.clone())
+            .send()
+            .and_then(Response::error_for_status)
+        {
+            Ok(response) => response,
+            Err(e) => {
+                return report_error(timer, GetError::Request(e));
+            }
+        };
+
+        if let Err(e) = io::copy(&mut response, response_file.as_file_mut()) {
+            return report_error(timer, GetError::Write(e));
+        }
+
+        if response.status().is_success() {
+            timer.done();
+        } else if let Some(reason) = response.status().canonical_reason() {
+            timer.cancel(reason);
+        } else {
+            timer.cancel(response.status().as_str());
+        }
+
+        OperationResult::Ok(GetResponse {
+            response,
+            response_file,
+        })
+    })
+    .map_err(|operation| operation.error)
+}
+
+#[derive(Debug)]
+pub(crate) enum GetError {
+    Request(reqwest::Error),
+    Write(io::Error),
+}
+
+impl GetError {
+    fn cancellation_reason(&self) -> String {
+        match self {
+            GetError::Request(error) => {
+                if error.is_connect() {
+                    "connection refused".into()
+                } else if error.is_timeout() {
+                    "timed out".into()
+                } else if error.is_builder() {
+                    "invalid request".into()
+                } else if let Some(status_code) = error.status() {
+                    status_code
+                        .canonical_reason()
+                        .map(ToString::to_string)
+                        .unwrap_or(format!("status: {status_code}"))
                 } else {
-                    timer.cancel(format!("Status {}", response.status().as_str()));
+                    error.to_string()
                 }
             }
+            GetError::Write(_) => "write response error".into(),
+        }
+    }
+
+    fn retry(&self) -> bool {
+        match self {
+            GetError::Request(error) => !error.is_builder(),
+            GetError::Write(_) => true,
+        }
+    }
+}
+
+impl fmt::Display for GetError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GetError::Request(e) => write!(f, "{e}"),
+            GetError::Write(e) => write!(f, "{e}"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, bon::Builder)]
+pub(crate) struct GetRequest {
+    #[builder(start_fn, into)]
+    url: String,
+    #[builder(default = HeaderMap::default())]
+    headers: HeaderMap,
+    #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
+    connect_timeout: Duration,
+    #[builder(default = DEFAULT_MAX_RETRIES)]
+    max_retries: usize,
+    #[builder(default = DEFAULT_RETRY_DELAY)]
+    retry_delay: Duration,
+}
+
+pub(crate) struct GetResponse {
+    response: Response,
+    response_file: NamedTempFile,
+}
+
+impl GetResponse {
+    pub(crate) fn status(&self) -> StatusCode {
+        self.response.status()
+    }
+
+    pub(crate) fn headers(&self) -> &HeaderMap {
+        self.response.headers()
+    }
+
+    pub(crate) fn body_as_file(&self) -> io::Result<std::fs::File> {
+        self.response_file.reopen()
+    }
+}
+
+#[instrument(skip_all)]
+pub(crate) fn download(download_task: &DownloadTask) -> Result<(), DownloadError> {
+    let response = get(&GetRequest::builder(&download_task.source_url)
+        .connect_timeout(download_task.connect_timeout)
+        .retry_delay(download_task.retry_delay)
+        .max_retries(download_task.max_retries)
+        .build())
+    .map_err(|source| DownloadError::Download {
+        url: download_task.source_url.clone(),
+        source,
+    })?;
+
+    if let Some(ChecksumValidator::Sha256(checksum)) = &download_task.checksum_validator {
+        let timer = print::sub_start_timer("Validating");
+        match validate_sha256_checksum(&response, checksum, download_task) {
+            Ok(()) => timer.done(),
             Err(e) => {
-                let reason = if e.is_connect() {
-                    "connection refused".into()
-                } else if e.is_timeout() {
-                    "timed out".into()
-                } else {
-                    e.to_string()
-                };
-                timer.cancel(reason);
+                timer.cancel("error");
+                return Err(e);
             }
         }
-        response
     }
+
+    match &download_task.extractor {
+        Some(Extractor::Gzip(gzip_options)) => {
+            let timer = print::sub_start_timer("Extracting");
+            match gzip_extract_to_destination(
+                &response,
+                &download_task.destination,
+                gzip_options,
+                download_task,
+            ) {
+                Ok(()) => timer.done(),
+                Err(e) => {
+                    timer.cancel("error");
+                    return Err(e);
+                }
+            }
+        }
+        None => {
+            let timer = print::sub_start_timer("Saving");
+            match save_to_destination(&response, &download_task.destination, download_task) {
+                Ok(()) => timer.done(),
+                Err(e) => {
+                    timer.cancel("error");
+                    return Err(e);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn validate_sha256_checksum(
+    response: &GetResponse,
+    checksum: &[u8],
+    download_task: &DownloadTask,
+) -> Result<(), DownloadError> {
+    let mut response_body = response
+        .body_as_file()
+        .map_err(|e| create_write_error(download_task, e))?;
+    let mut hasher = Sha256::new();
+    io::copy(&mut response_body, &mut hasher).map_err(|e| create_write_error(download_task, e))?;
+    let digest = hasher.finalize();
+    if checksum == digest.to_vec() {
+        Ok(())
+    } else {
+        Err(DownloadError::ChecksumMismatch {
+            url: download_task.source_url.clone(),
+            expected_checksum: hex::encode(checksum),
+            actual_checksum: format!("{digest:x}"),
+        })
+    }
+}
+
+fn save_to_destination(
+    response: &GetResponse,
+    destination: &Path,
+    download_task: &DownloadTask,
+) -> Result<(), DownloadError> {
+    let mut response_body = response
+        .body_as_file()
+        .map_err(|e| create_write_error(download_task, e))?;
+    let mut destination_file =
+        File::create(destination).map_err(|e| create_write_error(download_task, e))?;
+    std::io::copy(&mut response_body, &mut destination_file)
+        .map_err(|e| create_write_error(download_task, e))?;
+    Ok(())
+}
+
+fn gzip_extract_to_destination(
+    response: &GetResponse,
+    destination_dir: &Path,
+    gzip_options: &GzipOptions,
+    download_task: &DownloadTask,
+) -> Result<(), DownloadError> {
+    let gzip_file = response
+        .body_as_file()
+        .map_err(|e| create_write_error(download_task, e))?;
+
+    let mut archive = tar::Archive::new(MultiGzDecoder::new(gzip_file));
+
+    let entries = archive
+        .entries()
+        .map_err(|e| create_write_error(download_task, e))?;
+
+    for entry in entries {
+        let mut entry = entry.map_err(|e| create_write_error(download_task, e))?;
+        let path = entry
+            .path()
+            .map_err(|e| create_write_error(download_task, e))?;
+
+        // Get the path components
+        let path_components: Vec<_> = path.components().collect();
+
+        // Skip if we don't have enough components after stripping
+        if path_components.len() <= gzip_options.strip_components {
+            continue;
+        }
+
+        // Skip if the path contains '..' or is absolute
+        if path_components.iter().any(|c| {
+            matches!(
+                c,
+                std::path::Component::ParentDir | std::path::Component::RootDir
+            )
+        }) {
+            continue;
+        }
+
+        // Build the stripped path
+        let stripped_path: PathBuf = path_components
+            .into_iter()
+            .skip(gzip_options.strip_components)
+            .collect();
+
+        // Skip empty paths
+        if stripped_path.components().count() == 0 {
+            continue;
+        }
+
+        // Skip excluded paths
+        let exclude = &gzip_options.exclude;
+        if exclude(&stripped_path) {
+            continue;
+        }
+
+        let entry_type = entry.header().entry_type();
+        let dest_path = destination_dir.join(&stripped_path);
+
+        // Create parent directories for regular files and symlinks
+        if (entry_type.is_file() || entry_type.is_symlink() || entry_type.is_hard_link())
+            && let Some(parent) = dest_path.parent()
+        {
+            std::fs::create_dir_all(parent).map_err(|e| create_write_error(download_task, e))?;
+        }
+
+        entry
+            .unpack(dest_path)
+            .map_err(|e| create_write_error(download_task, e))?;
+    }
+
+    Ok(())
+}
+
+fn create_write_error(download_task: &DownloadTask, source: io::Error) -> DownloadError {
+    DownloadError::Write {
+        url: download_task.source_url.clone(),
+        destination: download_task.destination.clone(),
+        source,
+    }
+}
+
+#[derive(Debug, bon::Builder)]
+pub(crate) struct DownloadTask<'a> {
+    #[builder(start_fn, into)]
+    source_url: String,
+    #[builder(start_fn, into)]
+    destination: PathBuf,
+    checksum_validator: Option<ChecksumValidator<'a>>,
+    extractor: Option<Extractor>,
+    #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
+    connect_timeout: Duration,
+    #[builder(default = DEFAULT_MAX_RETRIES)]
+    max_retries: usize,
+    #[builder(default = DEFAULT_RETRY_DELAY)]
+    retry_delay: Duration,
+}
+
+#[derive(Debug)]
+pub(crate) enum Extractor {
+    Gzip(GzipOptions),
+}
+
+pub(crate) struct GzipOptions {
+    pub(crate) strip_components: usize,
+    pub(crate) exclude: Box<dyn Fn(&Path) -> bool>,
+}
+
+impl core::fmt::Debug for GzipOptions {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GzipOptions")
+            .field("strip_components", &self.strip_components)
+            .field("exclude", &"<closure>")
+            .finish()
+    }
+}
+
+impl Default for GzipOptions {
+    fn default() -> Self {
+        Self {
+            strip_components: 0,
+            exclude: Box::new(|_| false),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) enum ChecksumValidator<'a> {
+    Sha256(&'a [u8]),
+}
+
+#[derive(Debug)]
+pub(crate) enum DownloadError {
+    Download {
+        url: String,
+        source: GetError,
+    },
+    ChecksumMismatch {
+        url: String,
+        expected_checksum: String,
+        actual_checksum: String,
+    },
+    Write {
+        url: String,
+        destination: PathBuf,
+        source: io::Error,
+    },
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
     use bullet_stream::{global, strip_ansi};
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
     use indoc::indoc;
     use regex::Regex;
-    use reqwest::StatusCode;
-    use std::future::Future;
-    use std::ops::{Div, Mul};
-    use std::{env, fs, net};
-    use tempfile::NamedTempFile;
+    use std::io::Write;
+    use std::{env, fs};
     use wiremock::matchers::{method, path};
-    use wiremock::{Mock, MockServer, Respond, ResponseTemplate};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
-    fn test_download_success_no_retry() {
-        let mock_download = ASYNC_RUNTIME.block_on(
-            setup_mock_download()
-                .respond_with_success_after_n_requests(1)
-                .call(),
-        );
-
-        let dst = NamedTempFile::new().unwrap();
-
+    fn test_download_will_not_retry_with_invalid_request() {
+        let dst = tempfile::NamedTempFile::new().unwrap();
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            get(mock_download.url())
-                .call_sync()
-                .unwrap()
-                .download_to_file_sync(dst.path())
-                .unwrap();
+            match download(&DownloadTask::builder("htp://bad.url", dst.path()).build()).unwrap_err()
+            {
+                DownloadError::Download { .. } => {}
+                e => panic!("Not the expected error: {e:?}"),
+            }
         });
-
-        assert_download_contents(&dst);
         assert_log_contains_matches(
             &log,
-            &[
-                request_success_matcher(mock_download.url()),
-                download_file_matcher(),
-            ],
+            &[request_failed_matcher("htp://bad.url", "invalid request")],
         );
+    }
+
+    #[test]
+    fn test_download_success() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(200).set_body_string("test"))
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(&DownloadTask::builder(server.uri(), dst.path()).build()).unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[request_success_matcher(server.uri()), saving_matcher()],
+        );
+        assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
     }
 
     #[test]
     fn test_download_success_after_retry() {
-        let mock_download = ASYNC_RUNTIME.block_on(
-            setup_mock_download()
-                .respond_with_success_after_n_requests(2)
-                .call(),
-        );
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
 
-        let dst = NamedTempFile::new().unwrap();
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(500))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(200).set_body_string("test"))
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
 
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            get(mock_download.url())
-                .max_retries(2)
-                .call_sync()
-                .unwrap()
-                .download_to_file_sync(dst.path())
-                .unwrap();
+            download(&DownloadTask::builder(server.uri(), dst.path()).build()).unwrap();
         });
 
-        assert_download_contents(&dst);
         assert_log_contains_matches(
             &log,
             &[
-                request_failed_matcher(mock_download.url(), "Internal Server Error"),
-                retry_attempt_success_matcher(1, 2),
-                download_file_matcher(),
+                request_failed_matcher(server.uri(), "Internal Server Error"),
+                retry_attempt_success_matcher(1, DEFAULT_MAX_RETRIES),
+                saving_matcher(),
             ],
         );
+        assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
     }
 
     #[test]
     fn test_download_failed_after_retry() {
-        let mock_download = ASYNC_RUNTIME.block_on(
-            setup_mock_download()
-                .respond_with_success_after_n_requests(4)
-                // because we'll only ever get to 3 (first request + 2 retries)
-                .expected_responses(3)
-                .call(),
-        );
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
 
-        let dst = NamedTempFile::new().unwrap();
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(500))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
 
-        let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            get(mock_download.url())
-                .max_retries(2)
-                .call_sync()
-                .unwrap_err();
-        });
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(400))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
 
-        assert_no_download_contents(&dst);
-        assert_log_contains_matches(
-            &log,
-            &[
-                request_failed_matcher(mock_download.url(), "Internal Server Error"),
-                retry_attempt_failed_matcher(1, 2, "Internal Server Error"),
-                retry_attempt_failed_matcher(2, 2, "Internal Server Error"),
-            ],
-        );
-    }
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(404))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
 
-    #[test]
-    fn test_download_retry_connect_timeout() {
-        // let respond_with_success_after_n_requests = 1;
-        let connect_delay = Duration::from_secs(1);
-        let connect_timeout = connect_delay.div(2);
-        let read_timeout = connect_delay.mul(2);
+                server
+            });
 
-        // Borrowed this url from the reqwest test for connect timeouts
-        let download_url = "http://192.0.2.1:81/slow";
-
-        let dst = NamedTempFile::new().unwrap();
+        let dst = tempfile::NamedTempFile::new().unwrap();
 
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            get(download_url)
-                .max_retries(2)
-                .connect_timeout(connect_timeout)
-                .read_timeout(read_timeout)
-                .call_sync()
-                .unwrap_err();
-        });
-
-        assert_no_download_contents(&dst);
-        assert_log_contains_matches(
-            &log,
-            &[
-                request_failed_matcher(download_url, "connection refused"),
-                retry_attempt_failed_matcher(1, 2, "connection refused"),
-                retry_attempt_failed_matcher(2, 2, "connection refused"),
-            ],
-        );
-    }
-
-    #[test]
-    fn test_download_retry_response_timeout() {
-        let read_timeout = Duration::from_millis(100);
-
-        let server = test_server(move |_req| {
-            async {
-                // delay returning the response
-                tokio::time::sleep(Duration::from_millis(300)).await;
-                http::Response::default()
+            match download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .max_retries(2)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { .. } => {}
+                e => panic!("Not the expected error: {e:?}"),
             }
         });
 
-        let dst = NamedTempFile::new().unwrap();
-
-        let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            get(server.uri())
-                .max_retries(2)
-                .read_timeout(read_timeout)
-                .call_sync()
-                .unwrap_err();
-        });
-
-        assert_no_download_contents(&dst);
-
         assert_log_contains_matches(
             &log,
             &[
-                request_failed_matcher(server.uri(), "timed out"),
-                retry_attempt_failed_matcher(1, 2, "timed out"),
-                retry_attempt_failed_matcher(2, 2, "timed out"),
+                request_failed_matcher(server.uri(), "Internal Server Error"),
+                retry_attempt_failed_matcher(1, 2, "Bad Request"),
+                retry_attempt_failed_matcher(2, 2, "Not Found"),
             ],
         );
     }
 
     #[test]
-    fn test_self_signed_cert() {
+    fn test_download_will_not_retry_after_checksum_mismatch() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(200).set_body_string("test"))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let mut sha256 = Sha256::new();
+        sha256.update(b"checksum-mismatch");
+        let digest = sha256.finalize().to_vec();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .checksum_validator(ChecksumValidator::Sha256(&digest))
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::ChecksumMismatch { .. } => {}
+                e => panic!("Not the expected error: {e:?}"),
+            }
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_success_matcher(server.uri()),
+                validating_failed_matcher(),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_download_success_with_checksum_validation() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(200).set_body_string("test"))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let mut sha256 = Sha256::new();
+        sha256.update(b"test");
+        let digest = sha256.finalize().to_vec();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .checksum_validator(ChecksumValidator::Sha256(&digest))
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_success_matcher(server.uri()),
+                validating_matcher(),
+                saving_matcher(),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_download_will_not_retry_on_file_write_error() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(200).set_body_string("test"))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::tempdir().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(&DownloadTask::builder(server.uri(), dst.path()).build()).unwrap_err() {
+                DownloadError::Write { .. } => {}
+                e => panic!("Not the expected error {e:?}"),
+            }
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_success_matcher(server.uri()),
+                saving_failed_matcher(),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_download_success_with_tar_gz_extraction_strip_and_filter() {
+        let tarball = create_archive([
+            ("parent/child-a/name.txt", "child-a"),
+            ("parent/child-a/grandchild-a/name.txt", "grandchild-a"),
+            ("parent/child-b/name.txt", "child-b"),
+            ("parent/child-b/grandchild-b/name.txt", "grandchild-b"),
+        ]);
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .set_body_raw(fs::read(tarball).unwrap(), "application/gzip"),
+                    )
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::tempdir().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .extractor(Extractor::Gzip(GzipOptions {
+                        strip_components: 1,
+                        exclude: Box::new(|path| {
+                            path.components().any(|c| c.as_os_str() == "child-b")
+                        }),
+                    }))
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[request_success_matcher(server.uri()), extracting_matcher()],
+        );
+        assert!(dst.path().join("child-a").is_dir());
+        assert!(dst.path().join("child-a/grandchild-a").is_dir());
+        assert!(!dst.path().join("child-b").exists());
+        assert!(!dst.path().join("child-b/name.txt").exists());
+        assert!(!dst.path().join("child-b/grandchild-b").exists());
+        assert!(!dst.path().join("child-b/grandchild-b/name.txt").exists());
+        assert_eq!(
+            fs::read_to_string(dst.path().join("child-a/name.txt")).unwrap(),
+            "child-a"
+        );
+        assert_eq!(
+            fs::read_to_string(dst.path().join("child-a/grandchild-a/name.txt")).unwrap(),
+            "grandchild-a"
+        );
+    }
+
+    #[test]
+    fn test_download_will_not_retry_with_tar_gz_extraction_error() {
+        let tarball = create_archive([("parent/child-a/name.txt", "child-a")]);
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .set_body_raw(fs::read(tarball).unwrap(), "application/gzip"),
+                    )
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .extractor(Extractor::Gzip(GzipOptions::default()))
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Write { .. } => {}
+                e => panic!("Not the expected error {e:?}"),
+            }
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_success_matcher(server.uri()),
+                extracting_failed_matcher(),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_download_success_with_tar_gz_extraction() {
+        let tarball = create_archive([
+            ("parent/child-a/name.txt", "child-a"),
+            ("parent/child-a/grandchild-a/name.txt", "grandchild-a"),
+            ("parent/child-b/name.txt", "child-b"),
+            ("parent/child-b/grandchild-b/name.txt", "grandchild-b"),
+        ]);
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .set_body_raw(fs::read(tarball).unwrap(), "application/gzip"),
+                    )
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::tempdir().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .extractor(Extractor::Gzip(GzipOptions::default()))
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[request_success_matcher(server.uri()), extracting_matcher()],
+        );
+        assert!(dst.path().join("parent").is_dir());
+        assert!(dst.path().join("parent/child-a").is_dir());
+        assert!(dst.path().join("parent/child-a/grandchild-a").is_dir());
+        assert!(dst.path().join("parent/child-b").is_dir());
+        assert!(dst.path().join("parent/child-b/grandchild-b").is_dir());
+        assert_eq!(
+            fs::read_to_string(dst.path().join("parent/child-a/name.txt")).unwrap(),
+            "child-a"
+        );
+        assert_eq!(
+            fs::read_to_string(dst.path().join("parent/child-a/grandchild-a/name.txt")).unwrap(),
+            "grandchild-a"
+        );
+        assert_eq!(
+            fs::read_to_string(dst.path().join("parent/child-b/name.txt")).unwrap(),
+            "child-b"
+        );
+        assert_eq!(
+            fs::read_to_string(dst.path().join("parent/child-b/grandchild-b/name.txt")).unwrap(),
+            "grandchild-b"
+        );
+    }
+
+    #[test]
+    fn test_client_allows_self_signed_cert() {
         // this is technically not thread-safe but should be okay for now
         // since this is the only test that sets this env var
         #[allow(unsafe_code)]
@@ -360,10 +888,10 @@ mod test {
 
         global::with_locked_writer(Vec::<u8>::new(), || {
             assert!(
-                get("https://self-signed.badssl.com")
+                get(&GetRequest::builder("https://self-signed.badssl.com")
                     .max_retries(0)
-                    .call_sync()
-                    .is_err()
+                    .build())
+                .is_err()
             );
         });
 
@@ -408,10 +936,10 @@ mod test {
 
         global::with_locked_writer(Vec::<u8>::new(), || {
             assert!(
-                get("https://self-signed.badssl.com")
+                get(&GetRequest::builder("https://self-signed.badssl.com")
                     .max_retries(0)
-                    .call_sync()
-                    .is_ok()
+                    .build())
+                .is_ok()
             );
         });
 
@@ -419,72 +947,6 @@ mod test {
         unsafe {
             env::remove_var("SSL_CERT_FILE");
         };
-    }
-
-    #[bon::builder]
-    async fn setup_mock_download(
-        respond_with_success_after_n_requests: u32,
-        expected_responses: Option<u32>,
-    ) -> MockDownload {
-        let server = MockServer::start().await;
-        let expected_responses =
-            expected_responses.unwrap_or(respond_with_success_after_n_requests);
-        Mock::given(method("GET"))
-            .and(path("/"))
-            .respond_with(RetryResponder::new(respond_with_success_after_n_requests))
-            .expect(u64::from(expected_responses))
-            .mount(&server)
-            .await;
-        MockDownload { server }
-    }
-
-    struct MockDownload {
-        server: MockServer,
-    }
-
-    impl MockDownload {
-        pub(crate) fn url(&self) -> String {
-            format!("{}/", self.server.uri())
-        }
-    }
-
-    struct RetryResponder {
-        requests_attempted: AtomicU32,
-        respond_with_success_after_n_requests: u32,
-    }
-
-    impl RetryResponder {
-        fn new(respond_with_success_after_n_requests: u32) -> Self {
-            Self {
-                requests_attempted: AtomicU32::new(0),
-                respond_with_success_after_n_requests,
-            }
-        }
-    }
-
-    impl Respond for RetryResponder {
-        fn respond(&self, _request: &wiremock::Request) -> ResponseTemplate {
-            let requests_attempted = self.requests_attempted.fetch_add(1, SeqCst) + 1;
-
-            if requests_attempted >= self.respond_with_success_after_n_requests {
-                ResponseTemplate::new(StatusCode::OK).set_body_string(TEST_REQUEST_CONTENTS)
-            } else {
-                ResponseTemplate::new(StatusCode::INTERNAL_SERVER_ERROR)
-            }
-        }
-    }
-
-    const TEST_REQUEST_CONTENTS: &str = "test request";
-
-    fn assert_download_contents(download_file: &NamedTempFile) {
-        assert_eq!(
-            fs::read_to_string(download_file.path()).unwrap(),
-            TEST_REQUEST_CONTENTS
-        );
-    }
-
-    fn assert_no_download_contents(download_file: &NamedTempFile) {
-        assert_eq!(download_file.as_file().metadata().unwrap().len(), 0);
     }
 
     fn assert_log_contains_matches(log: &[u8], matchers: &[Regex]) {
@@ -507,23 +969,24 @@ mod test {
     }
 
     const PROGRESS_DOTS: &str = r"\.+";
-    const TIMER: &str = r"\(< \d+\.\d+s\)";
+
+    const TIMER: &str = r"\(<?\s?\d+\.\d+s\)";
 
     fn request_success_matcher(url: impl AsRef<str>) -> Regex {
         let url = url.as_ref().replace('.', r"\.");
-        Regex::new(&format!(r"- GET {url} {PROGRESS_DOTS} \(OK\)")).unwrap()
+        Regex::new(&format!(r"- GET {url}\/? {PROGRESS_DOTS} {TIMER}")).unwrap()
+    }
+
+    fn retry_attempt_success_matcher(attempt: u32, max_retries: usize) -> Regex {
+        Regex::new(&format!(
+            r"- Retry attempt {attempt} of {max_retries} {PROGRESS_DOTS} {TIMER}"
+        ))
+        .unwrap()
     }
 
     fn request_failed_matcher(url: impl AsRef<str>, reason: &str) -> Regex {
         let url = url.as_ref().replace('.', r"\.");
-        Regex::new(&format!(r"- GET {url} {PROGRESS_DOTS} \({reason}\)")).unwrap()
-    }
-
-    fn retry_attempt_success_matcher(attempt: u32, max_retries: u32) -> Regex {
-        Regex::new(&format!(
-            r"- Retry attempt {attempt} of {max_retries} {PROGRESS_DOTS} \(OK\)"
-        ))
-        .unwrap()
+        Regex::new(&format!(r"- GET {url}\/? {PROGRESS_DOTS} \({reason}\)")).unwrap()
     }
 
     fn retry_attempt_failed_matcher(attempt: u32, max_retries: u32, reason: &str) -> Regex {
@@ -533,99 +996,51 @@ mod test {
         .unwrap()
     }
 
-    fn download_file_matcher() -> Regex {
-        Regex::new(&format!(r"- Downloading {PROGRESS_DOTS} {TIMER}")).unwrap()
+    fn validating_matcher() -> Regex {
+        Regex::new(&format!(r"- Validating {PROGRESS_DOTS} {TIMER}")).unwrap()
     }
 
-    struct TestServer {
-        addr: net::SocketAddr,
-        panic_rx: std::sync::mpsc::Receiver<()>,
-        shutdown_tx: Option<tokio::sync::oneshot::Sender<()>>,
+    fn validating_failed_matcher() -> Regex {
+        Regex::new(&format!(r"- Validating {PROGRESS_DOTS} \(error\)")).unwrap()
     }
 
-    impl TestServer {
-        fn uri(&self) -> String {
-            format!("http://{}/", self.addr)
+    fn saving_matcher() -> Regex {
+        Regex::new(&format!(r"- Saving {PROGRESS_DOTS} {TIMER}")).unwrap()
+    }
+
+    fn saving_failed_matcher() -> Regex {
+        Regex::new(&format!(r"- Saving {PROGRESS_DOTS} \(error\)")).unwrap()
+    }
+
+    fn extracting_matcher() -> Regex {
+        Regex::new(&format!(r"- Extracting {PROGRESS_DOTS} {TIMER}")).unwrap()
+    }
+
+    fn extracting_failed_matcher() -> Regex {
+        Regex::new(&format!(r"- Extracting {PROGRESS_DOTS} \(error\)")).unwrap()
+    }
+
+    fn create_archive<'a>(
+        files: impl IntoIterator<Item = (impl Into<PathBuf>, &'a str)>,
+    ) -> PathBuf {
+        let archive_folder = tempfile::tempdir().unwrap();
+        for (path, contents) in files {
+            let path = path.into();
+            assert!(!path.is_absolute(), "Only relative paths allowed");
+            let archive_path = archive_folder.path().join(path);
+            fs::create_dir_all(archive_path.parent().unwrap()).unwrap();
+            fs::write(archive_path, contents).unwrap();
         }
-    }
 
-    impl Drop for TestServer {
-        fn drop(&mut self) {
-            if let Some(tx) = self.shutdown_tx.take() {
-                let _ = tx.send(());
-            }
+        let (archive_file, archive_path) = tempfile::NamedTempFile::new().unwrap().keep().unwrap();
+        let mut tarball = tar::Builder::new(GzEncoder::new(archive_file, Compression::default()));
+        tarball.append_dir_all("", archive_folder.path()).unwrap();
+        // for whatever reason, `tar.finish()` was producing an invalid gzip file, but using `tar.into_inner()`
+        // to get the underlying gzip encoder and flushing+finishing that writer works
+        let mut gzip = tarball.into_inner().unwrap();
+        gzip.flush().unwrap();
+        gzip.finish().unwrap();
 
-            if !::std::thread::panicking() {
-                self.panic_rx
-                    .recv_timeout(Duration::from_secs(3))
-                    .expect("test server should not panic");
-            }
-        }
-    }
-
-    // matches reqwest test server to help simulate read response timeouts
-    fn test_server<F, Fut>(func: F) -> TestServer
-    where
-        F: Fn(http::Request<hyper::body::Incoming>) -> Fut + Clone + Send + 'static,
-        Fut: Future<Output = http::Response<reqwest::Body>> + Send + 'static,
-    {
-        let test_name = std::thread::current()
-            .name()
-            .unwrap_or("<unknown>")
-            .to_string();
-        std::thread::spawn(move || {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .expect("new rt");
-            let listener = rt.block_on(async move {
-                tokio::net::TcpListener::bind(&std::net::SocketAddr::from(([127, 0, 0, 1], 0)))
-                    .await
-                    .unwrap()
-            });
-            let addr = listener.local_addr().unwrap();
-
-            let (shutdown_tx, mut shutdown_rx) = tokio::sync::oneshot::channel();
-            let (panic_tx, panic_rx) = std::sync::mpsc::channel();
-            let tname = format!("test({test_name})-support-server");
-            std::thread::Builder::new()
-                .name(tname)
-                .spawn(move || {
-                    rt.block_on(async move {
-                        let builder =
-                            hyper_util::server::conn::auto::Builder::new(hyper_util::rt::TokioExecutor::new());
-
-                        loop {
-                            tokio::select! {
-                            _ = &mut shutdown_rx => {
-                                break;
-                            }
-                            accepted = listener.accept() => {
-                                let (io, _) = accepted.expect("accepted");
-                                let func = func.clone();
-                                let svc = hyper::service::service_fn(move |req| {
-                                    let fut = func(req);
-                                    async move { Ok::<_, std::convert::Infallible>(fut.await) }
-                                });
-                                let builder = builder.clone();
-                                tokio::spawn(async move {
-                                    let _ = builder.serve_connection_with_upgrades(hyper_util::rt::TokioIo::new(io), svc).await;
-                                });
-                            }
-                        }
-                        }
-                        let _ = panic_tx.send(());
-                    });
-                })
-                .expect("thread spawn");
-
-            TestServer {
-                addr,
-                panic_rx,
-                shutdown_tx: Some(shutdown_tx),
-            }
-        })
-            .join()
-            .unwrap()
+        archive_path
     }
 }

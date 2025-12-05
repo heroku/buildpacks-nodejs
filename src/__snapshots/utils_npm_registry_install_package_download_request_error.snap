@@ -2,8 +2,7 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Request to `https://registry.npmjs.org/test/-/test-1.0.0.tgz` failed
-    Error: error sending request for url (https://test/error)
+  - error sending request for url (https://test/error)
 
 ! Failed to download `test`
 !

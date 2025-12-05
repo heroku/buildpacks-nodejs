@@ -172,12 +172,8 @@ pub(crate) mod test_util {
         });
     }
 
-    pub(crate) fn create_reqwest_error() -> reqwest_middleware::Error {
-        tokio::runtime::Runtime::new().unwrap().block_on(async {
-            reqwest_middleware::Error::Reqwest(
-                reqwest::get("https://test/error").await.unwrap_err(),
-            )
-        })
+    pub(crate) fn create_reqwest_error() -> reqwest::Error {
+        reqwest::blocking::get("https://test/error").unwrap_err()
     }
 
     pub(crate) fn create_json_error() -> serde_json::error::Error {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Improved download stability by switching from parallel to sequential actions for request, checksum validation, and extraction. ([#1249](https://github.com/heroku/buildpacks-nodejs/pull/1249))
+
 ## [5.3.0] - 2025-12-03
 
 ### Changed
