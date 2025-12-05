@@ -15,19 +15,19 @@ heroku/nodejs <buildpack-version>
   - Detected Node.js version range: `^20.0`
   - Resolved Node.js version: `20.19.6`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.19.6/node-v20.19.6-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v20.19.6/node-v20.19.6-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `20.19.6 (<arch>)`
   - Installing Node.js `20.19.6 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
   - Found `packageManager` set to `pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b` in `package.json`
-  - GET https://registry.npmjs.org/pnpm ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/pnpm ... (<time_elapsed>)
   - Resolved pnpm version `9.1.1` to `9.1.1`
 - Installing pnpm
-  - GET https://registry.npmjs.org/pnpm/-/pnpm-9.1.1.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-9.1.1.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Successfully installed `pnpm@9.1.1`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store

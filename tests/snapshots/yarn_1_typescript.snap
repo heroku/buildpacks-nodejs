@@ -15,19 +15,19 @@ heroku/nodejs <buildpack-version>
   - Detected Node.js version range: `^16.0`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found Yarn lockfile, defaulting to `1.22.x`
-  - GET https://registry.npmjs.org/yarn ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/yarn ... (<time_elapsed>)
   - Resolved yarn version `1.22.x` to `1.22.22`
 - Installing Yarn
-  - GET https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/yarn/-/yarn-1.22.22.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Successfully installed `yarn@1.22.22`
 - Setting up yarn dependency cache
   - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`

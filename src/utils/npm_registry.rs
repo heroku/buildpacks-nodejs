@@ -1,11 +1,12 @@
-use crate::utils::download::{Downloader, DownloaderError, Extractor, GzipOptions, download_sync};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
-use crate::utils::http::{ResponseExt, get};
+use crate::utils::http::{
+    DownloadError, DownloadTask, Extractor, GetError, GetRequest, GzipOptions, download, get,
+};
 use crate::utils::vrs::{Requirement, Version};
-use crate::{BuildpackBuildContext, BuildpackError, utils};
+use crate::{BuildpackBuildContext, BuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use http::{HeaderMap, HeaderValue, StatusCode};
@@ -18,8 +19,9 @@ use libcnb::layer::{
 use libcnb::layer_env::Scope;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::fs::File;
+use std::path::Path;
+use std::{fs, io};
 
 const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
 
@@ -98,10 +100,12 @@ pub(crate) fn packument_layer(
     }
 
     tracing::info_span!("fetch_packument").in_scope(|| {
-        let packument_response = get(format!("{NPMJS_ORG_HOST}/{package_name}"))
-            .headers(headers)
-            .call_sync()
-            .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
+        let packument_response = get(&GetRequest::builder(format!(
+            "{NPMJS_ORG_HOST}/{package_name}"
+        ))
+        .headers(headers)
+        .build())
+        .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
 
         let packument_file = packument_layer.path().join(packument_filename);
 
@@ -117,9 +121,13 @@ pub(crate) fn packument_layer(
                 .get("Last-Modified")
                 .and_then(|value| value.to_str().map(ToString::to_string).ok());
 
-            packument_response
-                .download_to_file_sync(&packument_file)
-                .map_err(|e| PackumentLayerError::FetchPackument(package_name.to_string(), e))?;
+            let mut response_body = packument_response
+                .body_as_file()
+                .map_err(|e| PackumentLayerError::WritePackument(package_name.to_string(), e))?;
+
+            File::create(&packument_file)
+                .and_then(|mut packument_file| io::copy(&mut response_body, &mut packument_file))
+                .map_err(|e| PackumentLayerError::WritePackument(package_name.to_string(), e))?;
 
             packument_layer
                 .write_metadata(PackumentMetadata {
@@ -142,9 +150,10 @@ pub(crate) fn packument_layer(
 
 #[derive(Debug)]
 pub(crate) enum PackumentLayerError {
-    FetchPackument(String, utils::http::Error),
+    FetchPackument(String, GetError),
+    WritePackument(String, io::Error),
     UnexpectedResponse(String, StatusCode),
-    ReadPackument(String, std::io::Error),
+    ReadPackument(String, io::Error),
     ParsePackument(String, serde_json::Error),
     Layer(Box<BuildpackError>),
 }
@@ -154,6 +163,9 @@ impl From<PackumentLayerError> for BuildpackError {
         match value {
             PackumentLayerError::FetchPackument(package_name, e) => {
                 create_packument_layer_fetch_packument_error(&package_name, &e).into()
+            }
+            PackumentLayerError::WritePackument(package_name, e) => {
+                create_packument_layer_write_packument_error(&package_name, &e).into()
             }
             PackumentLayerError::UnexpectedResponse(package_name, status_code) => {
                 create_packument_layer_unexpected_response_error(&package_name, status_code).into()
@@ -173,7 +185,7 @@ impl From<PackumentLayerError> for BuildpackError {
 
 fn create_packument_layer_fetch_packument_error(
     package_name: &str,
-    error: &utils::http::Error,
+    error: &GetError,
 ) -> ErrorMessage {
     let id = format!("npm_registry/{package_name}/packument/fetch");
     let package_name = style::value(package_name);
@@ -185,6 +197,28 @@ fn create_packument_layer_fetch_packument_error(
         .body(formatdoc! { "
             An unexpected error occurred while loading the available {package_name} versions. This error can \
             occur due to an unstable network connection or an issue with the npm registry.
+
+            Suggestions:
+            - Check the npm status page for any ongoing incidents ({npm_status_url})
+        "})
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_packument_layer_write_packument_error(
+    package_name: &str,
+    error: &io::Error,
+) -> ErrorMessage {
+    let id = format!("npm_registry/{package_name}/packument/write");
+    let package_name = style::value(package_name);
+    let npm_status_url = style::url(NPM_STATUS_URL);
+    error_message()
+        .id(id)
+        .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+        .header(format!("Failed to load available {package_name} versions"))
+        .body(formatdoc! { "
+            An unexpected error occurred while loading the available {package_name} versions from the npm registry.
+            See the debug info above for more details.
 
             Suggestions:
             - Check the npm status page for any ongoing incidents ({npm_status_url})
@@ -347,10 +381,22 @@ pub(crate) fn install_package_layer(
                 ));
             }
 
-            download_sync(PackageDownloader {
-                url: package_packument.dist.tarball.clone(),
-                destination: install_package_layer.path(),
-            })
+            download(
+                &DownloadTask::builder(
+                    &package_packument.dist.tarball,
+                    install_package_layer.path(),
+                )
+                .extractor(Extractor::Gzip(GzipOptions {
+                    strip_components: 1,
+                    exclude: Box::new(|path| {
+                        path.components()
+                            .take(1)
+                            .next()
+                            .is_some_and(|c| c.as_os_str() == "docs" || c.as_os_str() == "man")
+                    }),
+                }))
+                .build(),
+            )
             .map_err(|e| {
                 InstallPackageLayerError::Download(Box::new(package_packument.clone()), e)
             })?;
@@ -391,7 +437,7 @@ pub(crate) fn install_package_layer(
 }
 
 pub(crate) enum InstallPackageLayerError {
-    Download(Box<PackagePackument>, DownloaderError),
+    Download(Box<PackagePackument>, DownloadError),
     Layer(Box<libcnb::Error<ErrorMessage>>),
     MissingBins(Box<PackagePackument>),
     WriteBin(Box<PackagePackument>, std::io::Error),
@@ -416,11 +462,11 @@ impl From<InstallPackageLayerError> for BuildpackError {
 
 fn create_install_package_download_error(
     package_packument: &PackagePackument,
-    error: &DownloaderError,
+    error: &DownloadError,
 ) -> ErrorMessage {
     let npm_status_url = style::url(NPM_STATUS_URL);
     match error {
-        DownloaderError::Request { source, .. } => {
+        DownloadError::Download { source, .. } => {
             let package_name = style::value(&package_packument.name);
             error_message()
                 .id(format!("npm_registry/{}/download/request", &package_packument.name))
@@ -437,11 +483,11 @@ fn create_install_package_download_error(
                 .create()
         }
 
-        DownloaderError::ChecksumMismatch { .. } => {
+        DownloadError::ChecksumMismatch { .. } => {
             unreachable!("The package installation layer does not perform checksums currently")
         }
 
-        DownloaderError::Write {
+        DownloadError::Write {
             destination,
             source,
             ..
@@ -496,34 +542,6 @@ fn create_install_package_missing_bins_error(package_packument: &PackagePackumen
             unexpected and may indicate a bug in the buildpack.
         " })
         .create()
-}
-
-struct PackageDownloader {
-    url: String,
-    destination: PathBuf,
-}
-
-impl Downloader<'_> for PackageDownloader {
-    fn source_url(&self) -> &str {
-        &self.url
-    }
-
-    fn destination(&self) -> &Path {
-        &self.destination
-    }
-
-    fn extractor(&self) -> Option<Extractor> {
-        Some(Extractor::Gzip(GzipOptions {
-            strip_components: 1,
-            exclude: Box::new(|path| {
-                path.components().take(1).next().is_some_and(|c| {
-                    // test
-                    c.as_os_str() == "docs" || c.as_os_str() == "man"
-                })
-            }),
-            ..GzipOptions::default()
-        }))
-    }
 }
 
 fn install_layer_changed_metadata_fields(
@@ -636,12 +654,9 @@ os = "linux"
         let package_packument = package_packument("test").build();
         assert_error_snapshot(&create_install_package_download_error(
             &package_packument,
-            &DownloaderError::Request {
+            &DownloadError::Download {
                 url: package_packument.dist.tarball.clone(),
-                source: crate::utils::http::Error::Request(
-                    package_packument.dist.tarball.clone(),
-                    create_reqwest_error(),
-                ),
+                source: GetError::Request(create_reqwest_error()),
             },
         ));
     }
@@ -651,9 +666,9 @@ os = "linux"
         let package_packument = package_packument("test").build();
         assert_error_snapshot(&create_install_package_download_error(
             &package_packument,
-            &DownloaderError::Write {
+            &DownloadError::Write {
                 url: package_packument.dist.tarball.clone(),
-                source: std::io::Error::other("Out of disk space"),
+                source: io::Error::other("Out of disk space"),
                 destination: format!("/layers/nodejs/{}", &package_packument.name).into(),
             },
         ));

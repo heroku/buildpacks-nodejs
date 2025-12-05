@@ -15,8 +15,9 @@ heroku/nodejs <buildpack-version>
   - Detected Node.js version range: `^14.0`
   - Resolved Node.js version: `14.21.3`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v14.21.3/node-v14.21.3-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v14.21.3/node-v14.21.3-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `14.21.3 (<arch>)`
   - Installing Node.js `14.21.3 (<arch>)` ... (<time_elapsed>)
@@ -55,8 +56,9 @@ heroku/nodejs <buildpack-version>
   - Detected Node.js version range: `^16.0`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
