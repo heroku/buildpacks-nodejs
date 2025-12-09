@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.3.1] - 2025-12-09
+
 ### Changed
 
 - Improved download stability by switching from parallel to sequential actions for request, checksum validation, and extraction. ([#1249](https://github.com/heroku/buildpacks-nodejs/pull/1249))
@@ -144,7 +146,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.0...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.1...HEAD
+[5.3.1]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.0...v5.3.1
 [5.3.0]: https://github.com/heroku/buildpacks-nodejs/compare/v5.2.9...v5.3.0
 [5.2.9]: https://github.com/heroku/buildpacks-nodejs/compare/v5.2.8...v5.2.9
 [5.2.8]: https://github.com/heroku/buildpacks-nodejs/compare/v5.2.7...v5.2.8
