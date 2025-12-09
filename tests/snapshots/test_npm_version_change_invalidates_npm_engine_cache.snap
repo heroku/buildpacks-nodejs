@@ -15,19 +15,19 @@ heroku/nodejs <buildpack-version>
   - Detected Node.js version range: `16.20.2`
   - Resolved Node.js version: `16.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `16.20.2 (<arch>)`
   - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - Found `engines.npm` version `9.6.6` declared in `package.json`
-  - GET https://registry.npmjs.org/npm ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
   - Resolved npm version `9.6.6` to `9.6.6`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Successfully installed `npm@9.6.6`
 - Installing node modules
   - Using npm version `9.6.6`
@@ -113,8 +113,8 @@ heroku/nodejs <buildpack-version>
   - Resolved npm version `9.6.5` to `9.6.5`
 - Installing npm
   - Invalidating cached npm (version changed)
-  - GET https://registry.npmjs.org/npm/-/npm-9.6.5.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-9.6.5.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Successfully installed `npm@9.6.5`
 - Installing node modules
   - Using npm version `9.6.5`

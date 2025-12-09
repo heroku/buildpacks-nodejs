@@ -16,19 +16,19 @@ heroku/nodejs <buildpack-version>
   - Node.js version not specified, using `24.x`
   - Resolved Node.js version: `24.11.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.11.1/node-v24.11.1-<arch>.tar.gz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v24.11.1/node-v24.11.1-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Verifying checksum
   - Extracting Node.js `24.11.1 (<arch>)`
   - Installing Node.js `24.11.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@4.2.2` in `package.json`
-  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (<time_elapsed>)
   - Resolved yarn version `4.2.2` to `4.2.2`
 - Installing Yarn
-  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.2.2.tgz ... (OK)
-  - Downloading ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.2.2.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
   - Successfully installed `yarn@4.2.2`
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
