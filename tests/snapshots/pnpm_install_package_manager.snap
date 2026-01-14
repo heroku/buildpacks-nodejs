@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `22.x`
-  - Resolved Node.js version: `22.21.1`
+  - Resolved Node.js version: `22.22.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.21.1/node-v22.21.1-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.22.0/node-v22.22.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.21.1 (<arch>)`
-  - Installing Node.js `22.21.1 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.22.0 (<arch>)`
+  - Installing Node.js `22.22.0 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
   - Found `packageManager` set to `pnpm@8.4.0` in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (<time_elapsed>)
