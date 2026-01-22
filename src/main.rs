@@ -173,7 +173,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 &package_json,
                 &buildpack_config,
             )?;
-            package_manager::prune_dev_dependencies(
+            package_manager::optimize_run_image(
                 &context,
                 &env,
                 &installed_package_manager,

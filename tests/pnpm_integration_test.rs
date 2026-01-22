@@ -184,3 +184,12 @@ fn test_pnpm_prune_dev_dependencies_config() {
         },
     );
 }
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_10_workspace() {
+    nodejs_integration_test("./fixtures/pnpm-10-workspace", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "pnpm-10-workspace");
+    });
+}

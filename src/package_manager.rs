@@ -555,7 +555,7 @@ fn create_run_script_error_message(script: &str, error: &fun_run::CmdError) -> E
 }
 
 #[instrument(skip_all)]
-pub(crate) fn prune_dev_dependencies(
+pub(crate) fn optimize_run_image(
     context: &BuildpackBuildContext,
     env: &Env,
     package_manager: &InstalledPackageManager,
