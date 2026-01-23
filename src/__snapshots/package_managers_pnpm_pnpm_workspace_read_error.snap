@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Permission denied
+
+! Error reading `/app/pnpm-workspace.yaml`
+!
+! The Heroku Node.js buildpack reads from `/app/pnpm-workspace.yaml` to determine pnpm workspace configuration but the file can't be read.
+!
+! Suggestions:
+! - Ensure the file has read permissions.
+!
+! Use the debug information above to troubleshoot and retry your build.

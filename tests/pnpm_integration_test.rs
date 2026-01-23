@@ -87,10 +87,6 @@ fn pnpm_8_nuxt() {
                 r"( *)\.\.\./esbuild@\d+\.\d+\.\d+/node_modules/esbuild postinstall.*",
                 "${1}<ESBUILD POSTINSTALL_SCRIPT>",
             )
-            .filter(
-                r"( *)ERROR  \(node:\d+\).*\n *\(Use node --trace-deprecation.*",
-                "${1}<NODE DEPRECATION ERROR>",
-            )
             .assert();
     });
 }
@@ -183,4 +179,13 @@ fn test_pnpm_prune_dev_dependencies_config() {
             create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_10_workspace() {
+    nodejs_integration_test("./fixtures/pnpm-10-workspace", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "pnpm-10-workspace");
+    });
 }
