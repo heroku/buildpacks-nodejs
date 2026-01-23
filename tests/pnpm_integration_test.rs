@@ -87,10 +87,6 @@ fn pnpm_8_nuxt() {
                 r"( *)\.\.\./esbuild@\d+\.\d+\.\d+/node_modules/esbuild postinstall.*",
                 "${1}<ESBUILD POSTINSTALL_SCRIPT>",
             )
-            .filter(
-                r"( *)ERROR  \(node:\d+\).*\n *\(Use node --trace-deprecation.*",
-                "${1}<NODE DEPRECATION ERROR>",
-            )
             .assert();
     });
 }

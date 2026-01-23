@@ -56,9 +56,6 @@ heroku/nodejs <buildpack-version>
       > pnpm-8-nuxt@ postinstall /workspace
       > nuxt prepare
 
-
-       <NODE DEPRECATION ERROR>
-
       ✔ Types generated in .nuxt
       Done in <time_elapsed>
 
