@@ -31,16 +31,15 @@ heroku/nodejs <buildpack-version>
   - Successfully installed `pnpm@7.32.3`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
-  - Creating pnpm virtual store
 - Installing dependencies
   - Running `pnpm install --frozen-lockfile`
 
       Lockfile is up to date, resolution step is skipped
       Packages: +60
       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      Packages are hard linked from the content-addressable store to the virtual store.
+      Packages are copied from the content-addressable store to the virtual store.
         Content-addressable store is at: /layers/heroku_nodejs/addressable/v3
-        Virtual store is at:             ../layers/heroku_nodejs/virtual/store
+        Virtual store is at:             node_modules/.pnpm
 
       Done in <time_elapsed>
 
@@ -49,8 +48,8 @@ heroku/nodejs <buildpack-version>
   - Running `pnpm store prune`
 
       Removed all cached metadata files
-      Removed 0 files
-      Removed 0 packages
+      Removed 1722 files
+      Removed 60 packages
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -69,7 +68,6 @@ heroku/nodejs <buildpack-version>
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)

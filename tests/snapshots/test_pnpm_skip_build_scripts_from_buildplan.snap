@@ -32,7 +32,6 @@ test/skip-build-scripts 0.0.0
   - Successfully installed `pnpm@9.11.0`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
-  - Creating pnpm virtual store
 - Installing dependencies
   - Running `pnpm install --frozen-lockfile`
 
@@ -53,8 +52,8 @@ test/skip-build-scripts 0.0.0
   - Running `pnpm store prune`
 
       Removed all cached metadata files
-      Removed 0 files
-      Removed 0 packages
+      Removed 16 files
+      Removed 2 packages
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -71,7 +70,6 @@ test/skip-build-scripts 0.0.0
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)

@@ -1,5 +1,5 @@
 use crate::utils::error_handling::{
-    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
 use crate::utils::vrs::{Requirement, Version};
@@ -13,10 +13,8 @@ use libcnb::data::layer_name;
 use libcnb::data::store::Store;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
-    UncachedLayerDefinition,
 };
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::LazyLock;
@@ -58,9 +56,7 @@ pub(crate) fn install_dependencies(
 
     let pnpm_store_dir = create_store_directory(context)?;
     set_store_dir_config(env, &pnpm_store_dir, version)?;
-
-    let pnpm_virtual_store_dir = create_virtual_store_directory(context)?;
-    set_virtual_store_dir_config(env, &pnpm_virtual_store_dir, version)?;
+    set_package_import_method_config(env, version)?;
 
     print::bullet("Installing dependencies");
     print::sub_stream_cmd(
@@ -154,92 +150,31 @@ fn create_set_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage 
         .create()
 }
 
-fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackResult<PathBuf> {
-    print::sub_bullet("Creating pnpm virtual store");
-
-    let pnpm_virtual_store_layer = context.uncached_layer(
-        layer_name!("virtual"),
-        UncachedLayerDefinition {
-            build: true,
-            launch: true,
-        },
-    )?;
-
-    let virtual_store_dir = pnpm_virtual_store_layer.path().join("store");
-
-    fs::create_dir(&virtual_store_dir)
-        .map_err(|e| create_virtual_store_error(&virtual_store_dir, &e))?;
-
-    // Install a symlink from {virtual_layer}/node_modules to {app_dir}/node_modules, so that dependencies in
-    // {virtual_layer}/store/ can find their dependencies via the Node module loader's ancestor directory traversal.
-    // https://nodejs.org/api/modules.html#loading-from-node_modules-folders
-    // https://nodejs.org/api/esm.html#resolution-and-loading-algorithm
-    if let Err(error) = std::os::unix::fs::symlink(
-        context.app_dir.join("node_modules"),
-        pnpm_virtual_store_layer.path().join("node_modules"),
-    ) && error.kind() != std::io::ErrorKind::AlreadyExists
-    {
-        Err(create_node_modules_symlink_error(&error))?;
-    }
-
-    Ok(virtual_store_dir)
-}
-
-fn create_virtual_store_error(path: &Path, error: &std::io::Error) -> ErrorMessage {
-    let path = file_value(path);
-    error_message()
-        .id("package_manager/pnpm/create_virtual_store_directory")
-        .error_type(ErrorType::Internal)
-        .header("Failed to create directory")
-        .body(formatdoc! { "
-            An unexpected I/O error occurred while creating the directory at {path}.
-        " })
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn create_node_modules_symlink_error(error: &std::io::Error) -> ErrorMessage {
-    error_message()
-        .id("package_manager/pnpm/create_node_modules_symlink")
-        .error_type(ErrorType::Internal)
-        .header("Failed to create pnpm symlink")
-        .body(formatdoc! { "
-            An unexpected error occurred while creating the symlink for pnpm. This is the location \
-            on disk where pnpm saves all packages.
-        " })
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn set_virtual_store_dir_config(
-    env: &Env,
-    virtual_store_dir: &Path,
-    version: &Version,
-) -> Result<(), ErrorMessage> {
+fn set_package_import_method_config(env: &Env, version: &Version) -> Result<(), ErrorMessage> {
     Command::new("pnpm")
         .args([
             "config",
             "set",
             match version.major() {
-                major if major < 10 => "virtual-store-dir",
-                _ => "virtualStoreDir",
+                major if major < 10 => "package-import-method",
+                _ => "packageImportMethod",
             },
-            &virtual_store_dir.to_string_lossy(),
+            "copy",
         ])
         .envs(env)
         .named_output()
         .map(|_| ())
-        .map_err(|e| create_set_virtual_store_dir_config_error(&e))
+        .map_err(|e| create_set_package_import_method_config_error(&e))
 }
 
-fn create_set_virtual_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage {
+fn create_set_package_import_method_config_error(error: &fun_run::CmdError) -> ErrorMessage {
     error_message()
-        .id("package_manager/pnpm/set_virtual_store_dir_config")
+        .id("package_manager/pnpm/set_package_import_method_config")
         .error_type(ErrorType::Internal)
-        .header("Failed to configure pnpm virtual store dir")
+        .header("Failed to configure pnpm package import method")
         .body(formatdoc! { "
-            An unexpected error occurred while configuring the store directory for pnpm. This is the directory \
-            where pnpm links all installed packages from the store.
+            An unexpected error occurred while configuring the package import method for pnpm. This setting \
+            determines how pnpm copies packages from the store to node_modules.
         " })
         .debug_info(error.to_string())
         .create()
@@ -385,31 +320,23 @@ mod tests {
     }
 
     #[test]
-    fn set_virtual_store_dir_config_error() {
-        assert_error_snapshot(&create_set_virtual_store_dir_config_error(
-            &create_cmd_error("pnpm config set virtual-store-dir /some/dir"),
+    fn set_package_import_method_config_error() {
+        assert_error_snapshot(&create_set_package_import_method_config_error(
+            &create_cmd_error("pnpm config set package-import-method copy"),
         ));
-    }
-
-    #[test]
-    fn virtual_store_directory_error() {
-        assert_error_snapshot(&create_virtual_store_error(
-            &PathBuf::from("/layers/some/dir"),
-            &std::io::Error::other("Insufficient permissions"),
-        ));
-    }
-
-    #[test]
-    fn node_modules_symlink_error() {
-        assert_error_snapshot(&create_node_modules_symlink_error(&std::io::Error::other(
-            "Target directory does not exist",
-        )));
     }
 
     #[test]
     fn prune_store_directory_error() {
         assert_error_snapshot(&create_prune_store_directory_error(&create_cmd_error(
             "pnpm store prune",
+        )));
+    }
+
+    #[test]
+    fn install_dependencies_error() {
+        assert_error_snapshot(&create_pnpm_install_command_error(&create_cmd_error(
+            "pnpm install --frozen-lockfile",
         )));
     }
 }
