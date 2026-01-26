@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The `heroku/nodejs:virtual` created for pnpm's virtual store directory has been removed. The default location of pnpm's virtual store will be used instead. ([#1271](https://github.com/heroku/buildpacks-nodejs/pull/1271))
+
 ## [5.3.4] - 2026-01-20
 
 ### Added
