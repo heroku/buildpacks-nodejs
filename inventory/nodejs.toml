@@ -1,4 +1,18 @@
 [[artifacts]]
+version = "25.5.0"
+os = "linux"
+arch = "arm64"
+url = "https://nodejs.org/download/release/v25.5.0/node-v25.5.0-linux-arm64.tar.gz"
+checksum = "sha256:20f9aa9f2174786754f1941a178a62b906216fcdcd923400817f4bfa72e12336"
+
+[[artifacts]]
+version = "25.5.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v25.5.0/node-v25.5.0-linux-x64.tar.gz"
+checksum = "sha256:e8e50aee2e5328bcbc2ead32d86d0b577220ccdd80c438583dca3aa2965873f2"
+
+[[artifacts]]
 version = "25.4.0"
 os = "linux"
 arch = "arm64"
