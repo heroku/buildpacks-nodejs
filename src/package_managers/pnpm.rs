@@ -1,3 +1,4 @@
+use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -38,14 +39,21 @@ pub(crate) fn install_pnpm(
     pnpm_packument: &PackagePackument,
     node_version: &Version,
 ) -> BuildpackResult<()> {
-    utils::npm_registry::install_package_layer(
+    let pnpm_layer_path = utils::npm_registry::install_package_layer(
         layer_name!("pnpm"),
         context,
         env,
         pnpm_packument,
         node_version,
-    )
-    .map_err(Into::into)
+    )?;
+
+    // Register pnpm layer for cleanup of non-deterministic Python bytecode
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: pnpm_layer_path,
+        kind: LayerKind::Pnpm,
+    });
+
+    Ok(())
 }
 
 pub(crate) fn install_dependencies(
@@ -181,6 +189,12 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
     {
         Err(create_node_modules_symlink_error(&error))?;
     }
+
+    // Register virtual layer for cleanup of non-deterministic Makefiles
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: pnpm_virtual_store_layer.path().clone(),
+        kind: LayerKind::Virtual,
+    });
 
     Ok(virtual_store_dir)
 }

@@ -328,10 +328,11 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // TODO: investigate why the `...native_modules_are_recompiled...`-based tests (mostly the pnpm version)
     //       occassionally switch from Adding layer 'heroku/nodejs:xyz' to Reusing layer 'heroku/nodejs:xyz'
-    filters.push((
-        r"(?:Adding|Reusing) layer 'heroku/nodejs:virtual",
-        "<add_or_reusing> layer 'heroku/nodejs:virtual",
-    ));
+    // TEMPORARILY DISABLED FOR INVESTIGATION
+    // filters.push((
+    //     r"(?:Adding|Reusing) layer 'heroku/nodejs:virtual",
+    //     "<add_or_reusing> layer 'heroku/nodejs:virtual",
+    // ));
 
     filters
         .into_iter()

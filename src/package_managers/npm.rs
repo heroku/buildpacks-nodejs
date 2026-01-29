@@ -1,3 +1,4 @@
+use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -69,14 +70,21 @@ pub(crate) fn install_npm(
     npm_packument: &npm_registry::PackagePackument,
     node_version: &Version,
 ) -> BuildpackResult<()> {
-    npm_registry::install_package_layer(
+    let npm_engine_layer_path = npm_registry::install_package_layer(
         layer_name!("npm_engine"),
         context,
         env,
         npm_packument,
         node_version,
-    )
-    .map_err(Into::into)
+    )?;
+
+    // Register npm_engine layer for cleanup of non-deterministic Python bytecode
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: npm_engine_layer_path,
+        kind: LayerKind::NpmEngine,
+    });
+
+    Ok(())
 }
 
 pub(crate) fn install_npm_dependencies(
