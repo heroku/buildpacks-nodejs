@@ -71,7 +71,7 @@ heroku/nodejs <buildpack-version>
 - Cleaning up pnpm installation layer
   - Removed 3 __pycache__ directories
 - Cleaning up pnpm virtual store layer
-  - Removed 2 Makefile artifacts
+  - Removed 1 Makefile artifacts
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -154,7 +154,7 @@ heroku/nodejs <buildpack-version>
 - Cleaning up pnpm installation layer
   - Removed 3 __pycache__ directories
 - Cleaning up pnpm virtual store layer
-  - Removed 2 Makefile artifacts
+  - Removed 1 Makefile artifacts
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
