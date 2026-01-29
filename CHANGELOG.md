@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Cleanup of non-deterministic files in Node.js, npm, and pnpm layers to prevent unnecessary invalidation of runtime layers for export. ([#1274](https://github.com/heroku/buildpacks-nodejs/pull/1274))
+
 ## [5.3.5] - 2026-01-27
 
 ### Added

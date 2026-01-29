@@ -66,6 +66,8 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
+- Cleaning up Node.js installation layer
+- Cleaning up npm installation layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -151,6 +153,8 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
+- Cleaning up Node.js installation layer
+- Cleaning up npm installation layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
