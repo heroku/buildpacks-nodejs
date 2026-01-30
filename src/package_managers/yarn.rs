@@ -1,4 +1,5 @@
 use crate::o11y::*;
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -284,6 +285,7 @@ pub(crate) fn install_dependencies(
     print::bullet("Installing dependencies");
     let mut yarn_install_command = Command::new("yarn");
     yarn_install_command.envs(env);
+    yarn_install_command.envs(node_gyp_env());
     yarn_install_command.arg("install");
     if version.major() == 1 {
         yarn_install_command.args(["--production=false", "--frozen-lockfile"]);

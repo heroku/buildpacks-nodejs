@@ -72,7 +72,6 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Cleaning up Node.js installation layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -164,7 +163,6 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Cleaning up Node.js installation layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'

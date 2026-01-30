@@ -1,4 +1,3 @@
-use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
@@ -110,12 +109,6 @@ pub(crate) fn install(
     }
 
     env.clone_from(&distribution_layer.read_env()?.apply(Scope::Build, env));
-
-    // Register dist layer for cleanup of non-deterministic Python bytecode
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: distribution_layer.path().clone(),
-        kind: LayerKind::Dist,
-    });
 
     Ok(())
 }

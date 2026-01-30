@@ -34,3 +34,14 @@ pub(crate) fn set_default_env_var(
 
     Ok(())
 }
+
+pub(crate) fn node_gyp_env() -> Vec<(String, String)> {
+    vec![
+        // If this is set to a non-empty string, Python won’t try to write .pyc files on the import of source modules.
+        // see https://docs.python.org/3/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE
+        //
+        // This is used to prevent node-gyp from generating files which invalidate runtime layers whenever
+        // native modules are compiled as `node-gyp` uses Python as part of the compilation process.
+        ("PYTHONDONTWRITEBYTECODE".to_string(), "1".to_string()),
+    ]
+}

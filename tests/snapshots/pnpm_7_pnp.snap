@@ -64,8 +64,6 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Cleaning up Node.js installation layer
-- Cleaning up pnpm installation layer
 - Cleaning up pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
