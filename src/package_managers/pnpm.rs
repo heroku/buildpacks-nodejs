@@ -1,4 +1,5 @@
 use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -39,20 +40,13 @@ pub(crate) fn install_pnpm(
     pnpm_packument: &PackagePackument,
     node_version: &Version,
 ) -> BuildpackResult<()> {
-    let pnpm_layer_path = utils::npm_registry::install_package_layer(
+    utils::npm_registry::install_package_layer(
         layer_name!("pnpm"),
         context,
         env,
         pnpm_packument,
         node_version,
     )?;
-
-    // Register pnpm layer for cleanup of non-deterministic Python bytecode
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: pnpm_layer_path,
-        kind: LayerKind::Pnpm,
-    });
-
     Ok(())
 }
 
@@ -74,7 +68,8 @@ pub(crate) fn install_dependencies(
     print::sub_stream_cmd(
         Command::new("pnpm")
             .args(["install", "--frozen-lockfile"])
-            .envs(env),
+            .envs(env)
+            .envs(node_gyp_env()),
     )
     .map_err(|e| create_pnpm_install_command_error(&e))?;
 
