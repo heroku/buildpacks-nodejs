@@ -20,7 +20,7 @@ use libcnb::layer_env::Scope;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 const NPMJS_ORG_HOST: &str = "https://registry.npmjs.org";
@@ -335,7 +335,7 @@ pub(crate) fn install_package_layer(
     env: &mut Env,
     package_packument: &PackagePackument,
     node_version: &Version,
-) -> Result<(), InstallPackageLayerError> {
+) -> Result<PathBuf, InstallPackageLayerError> {
     let package_name = &package_packument.name;
     let package_version = &package_packument.version;
 
@@ -433,7 +433,7 @@ pub(crate) fn install_package_layer(
 
     env.clone_from(&layer_env.apply(Scope::Build, env));
 
-    Ok(())
+    Ok(install_package_layer.path().clone())
 }
 
 pub(crate) enum InstallPackageLayerError {

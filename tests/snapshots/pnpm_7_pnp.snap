@@ -64,12 +64,15 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
+- Cleaning up Node.js installation layer
+- Cleaning up pnpm installation layer
+- Cleaning up pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
+Adding layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)

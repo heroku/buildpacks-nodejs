@@ -12,35 +12,34 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `16.20.2`
-  - Resolved Node.js version: `16.20.2`
+  - Detected Node.js version range: `^20.0`
+  - Resolved Node.js version: `20.20.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v20.20.0/node-v20.20.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `16.20.2 (<arch>)`
-  - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.20.0 (<arch>)`
+  - Installing Node.js `20.20.0 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
-  - Found `engines.npm` version `9.6.6` declared in `package.json`
+  - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
-  - Resolved npm version `9.6.6` to `9.6.6`
+  - Resolved npm version `11.x` to `11.8.0`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-11.8.0.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@9.6.6`
+  - Successfully installed `npm@11.8.0`
 - Installing node modules
-  - Using npm version `9.6.6`
+  - Using npm version `11.8.0`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
+
+      > dtrace-provider@0.8.8 install
+      > node-gyp rebuild || node suppress-error.js
+
+      <NODE-GYP BUILD OUTPUT> 
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
@@ -52,12 +51,6 @@ heroku/nodejs <buildpack-version>
 - Pruning dev dependencies
   - Running `npm prune`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       up to date, audited <N> packages in <time_elapsed>
 
@@ -68,6 +61,7 @@ heroku/nodejs <buildpack-version>
   - Skipping default web process (no start script defined)
 - Cleaning up Node.js installation layer
 - Cleaning up npm installation layer
+  - Removed 3 __pycache__ directories
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -104,32 +98,29 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `16.20.2`
-  - Resolved Node.js version: `16.20.2`
+  - Detected Node.js version range: `^20.0`
+  - Resolved Node.js version: `20.20.0`
 - Installing Node.js distribution
-  - Reusing Node.js 16.20.2 (<arch>)
+  - Reusing Node.js 20.20.0 (<arch>)
 - Determining npm package information
-  - Found `engines.npm` version `9.6.5` declared in `package.json`
+  - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
   - Using cached packument for npm
-  - Resolved npm version `9.6.5` to `9.6.5`
+  - Resolved npm version `11.x` to `11.8.0`
 - Installing npm
-  - Invalidating cached npm (version changed)
-  - GET https://registry.npmjs.org/npm/-/npm-9.6.5.tgz ... (<time_elapsed>)
-  - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@9.6.5`
+  - Using cached version of npm
+  - Successfully installed `npm@11.8.0`
 - Installing node modules
-  - Using npm version `9.6.5`
+  - Using npm version `11.8.0`
   - Restoring npm cache
   - Configuring npm cache directory
   - Running `npm ci`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
+
+      > dtrace-provider@0.8.8 install
+      > node-gyp rebuild || node suppress-error.js
+
+      <NODE-GYP BUILD OUTPUT> 
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
@@ -141,12 +132,6 @@ heroku/nodejs <buildpack-version>
 - Pruning dev dependencies
   - Running `npm prune`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       up to date, audited <N> packages in <time_elapsed>
 
@@ -157,15 +142,16 @@ heroku/nodejs <buildpack-version>
   - Skipping default web process (no start script defined)
 - Cleaning up Node.js installation layer
 - Cleaning up npm installation layer
+  - Removed 3 __pycache__ directories
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:npm_engine'
+Reusing layer 'heroku/nodejs:npm_engine'
 Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Added 1/1 app layer(s)
+Reused 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
@@ -178,6 +164,7 @@ Saving <image-name>...
 Reusing cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:npm_cache'
+Reusing cache layer 'heroku/nodejs:npm_engine'
 Adding cache layer 'heroku/nodejs:npm_engine'
 Reusing cache layer 'heroku/nodejs:npm_packument'
 Adding cache layer 'heroku/nodejs:npm_packument'
