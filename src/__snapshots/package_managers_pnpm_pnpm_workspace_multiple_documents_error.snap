@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+
+! Multiple YAML documents found in `pnpm-workspace.yaml`
+!
+! The Heroku Node.js buildpack reads from `pnpm-workspace.yaml` to determine pnpm workspace configuration but the file contains multiple YAML documents. There must only be a single document in this file.
+!
+! YAML documents are separated by a line containing three hyphens (`---`).
+!
+! Suggestions:
+! - Ensure the file has only a single document.
+!
+! Use the debug information above to troubleshoot and retry your build.

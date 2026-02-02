@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Support pnpm workspace pruning. ([#1270](https://github.com/heroku/buildpacks-nodejs/pull/1270)) 
+ 
 ## [5.3.5] - 2026-01-27
 
 ### Added

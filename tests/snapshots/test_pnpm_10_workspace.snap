@@ -12,51 +12,37 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `22.x`
-  - Resolved Node.js version: `22.22.0`
+  - Node.js version not specified, using `24.x`
+  - Resolved Node.js version: `24.13.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.22.0/node-v22.22.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v24.13.0/node-v24.13.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.22.0 (<arch>)`
-  - Installing Node.js `22.22.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `24.13.0 (<arch>)`
+  - Installing Node.js `24.13.0 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
-  - Found `packageManager` set to `pnpm@8.11.0` in `package.json`
+  - Found `packageManager` set to `pnpm@10.0.0` in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (<time_elapsed>)
-  - Resolved pnpm version `8.11.0` to `8.11.0`
+  - Resolved pnpm version `10.0.0` to `10.0.0`
 - Installing pnpm
-  - GET https://registry.npmjs.org/pnpm/-/pnpm-8.11.0.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-10.0.0.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `pnpm@8.11.0`
+  - Successfully installed `pnpm@10.0.0`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
 - Installing dependencies
   - Running `pnpm install --frozen-lockfile`
 
+      Scope: all 3 workspace projects
       Lockfile is up to date, resolution step is skipped
-      Packages: +676
+      Packages: +85
       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      <ESBUILD POSTINSTALL_SCRIPT>
-      <ESBUILD POSTINSTALL_SCRIPT>
-      <ESBUILD POSTINSTALL_SCRIPT>
-      <ESBUILD POSTINSTALL_SCRIPT>
 
       devDependencies:
-      + @nuxt/devtools 1.0.4
-      + nuxt 3.8.2
-      + vue 3.3.9
-      + vue-router 4.2.5
+      + typescript 5.9.3
 
-      The dependency was already listed in devDependencies.
-      If you want to make it a prod dependency, then move it manually.
-
-
-      > pnpm-8-nuxt@ postinstall /workspace
-      > nuxt prepare
-
-      ✔ Types generated in .nuxt
       Done in <time_elapsed>
 
   - Done (<time_elapsed>)
@@ -64,33 +50,25 @@ heroku/nodejs <buildpack-version>
   - Running `pnpm store prune`
 
       Removed all cached metadata files
-      Removed 12 files
-      Removed 2 packages
+      Removed 0 files
+      Removed 0 packages
 
   - Done (<time_elapsed>)
 - Running scripts
-  - Running `pnpm run build`
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `pnpm install --prod --frozen-lockfile`
 
+      Scope: all 3 workspace projects
+      Lockfile is up to date, resolution step is skipped
+      Packages: +69
+      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-      > pnpm-8-nuxt@ build /workspace
-      > nuxt build
+      devDependencies: skipped
 
-      <NUXT BUILD OUTPUT>
+      Done in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Pruning dev dependencies
-
-! Pruning skipped due to presence of lifecycle scripts
-!
-! The version of pnpm used (8.11.0) will execute the following lifecycle scripts declared in package.json during pruning which can cause build failures:
-! - pnpm:devPreinstall
-! - preinstall
-! - install
-! - postinstall
-! - prepare
-!
-! Since pruning can't be done safely for your build, it will be skipped. To fix this you must upgrade your version of pnpm to 8.15.6 or higher.
-
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

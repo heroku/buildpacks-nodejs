@@ -99,6 +99,8 @@ pub fn integration_test_with_config(
     build_config.env("npm_config_update_notifier", "false");
     // similar for the message looking for funding which doesn't need to appear in testing scenarios
     build_config.env("npm_config_fund", "false");
+    // silence deprecation warnings from Node.js which cause unreliable output in snapshots
+    build_config.env("NODE_OPTIONS", "--no-deprecation");
 
     with_config(&mut build_config);
 
@@ -122,13 +124,18 @@ pub fn retry<T, E>(
 }
 
 pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
-    ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
-            std::panic::catch_unwind(|| container.address_for_port(PORT))
-        })
-        .unwrap();
-        in_container(&container, &socket_addr);
-    });
+    ctx.start_container(
+        ContainerConfig::new()
+            .env("PORT", PORT.to_string())
+            .expose_port(PORT),
+        |container| {
+            let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+                std::panic::catch_unwind(|| container.address_for_port(PORT))
+            })
+            .unwrap();
+            in_container(&container, &socket_addr);
+        },
+    );
 }
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {

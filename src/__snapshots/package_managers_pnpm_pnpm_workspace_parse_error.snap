@@ -1,0 +1,14 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - mapping values are not allowed in this context at byte 13 line 1 column 14
+
+! Error parsing `pnpm-workspace.yaml`
+!
+! The Heroku Node.js buildpack reads from `pnpm-workspace.yaml` to determine pnpm workspace configuration but the file isn't valid YAML.
+!
+! Suggestions:
+! - Ensure the file follows the YAML format described at https://yaml.org/spec/1.2.2/
+!
+! Use the debug information above to troubleshoot and retry your build.
