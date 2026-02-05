@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Skip pnpm workspace pruning when lifecycle scripts are present. ([#1290](https://github.com/heroku/buildpacks-nodejs/pull/1290))
+
 ## [5.4.1] - 2026-02-04
 
 ### Added
