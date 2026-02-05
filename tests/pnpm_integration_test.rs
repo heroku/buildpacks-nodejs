@@ -7,7 +7,7 @@ use libcnb_test::{BuildpackReference, assert_contains};
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    set_package_manager, set_pnpm_engine,
+    set_package_manager, set_pnpm_engine, update_json_file,
 };
 
 #[test]
@@ -188,4 +188,48 @@ fn test_pnpm_10_workspace() {
         create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "pnpm-10-workspace");
     });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_workspace_prune_skipped_if_lifecycle_scripts_are_present_in_root_project() {
+    nodejs_integration_test_with_config(
+        "./fixtures/pnpm-10-workspace",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                add_build_script(&app_dir, "prepare");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_workspace_prune_skipped_if_lifecycle_scripts_are_present_in_workspace_project() {
+    nodejs_integration_test_with_config(
+        "./fixtures/pnpm-10-workspace",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("packages/client/package.json"), |json| {
+                    let scripts = json
+                        .as_object_mut()
+                        .unwrap()
+                        .entry("scripts")
+                        .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+                        .as_object_mut()
+                        .unwrap();
+                    scripts.insert(
+                        "prepare".to_string(),
+                        serde_json::Value::String("echo 'executed prepare'".to_string()),
+                    );
+                });
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+        },
+    );
 }

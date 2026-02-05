@@ -1,3 +1,4 @@
+use crate::package_json::PackageJson;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -423,7 +424,31 @@ pub(crate) fn prune_dev_dependencies(
     };
 
     if is_workspace {
-        delete_workspace_node_modules(&context.app_dir, env)?;
+        // Get workspace package locations from pnpm (includes root + all workspace packages)
+        let workspace_projects = get_workspace_package_dirs(&context.app_dir, env)?;
+
+        for project in &workspace_projects {
+            if contains_pnpm_lifecycle_script(project.join("package.json"))? {
+                let package_json = file_value(project.join("package.json"));
+                print::warning(formatdoc! { "
+                    Pruning skipped due to presence of lifecycle scripts
+        
+                    Lifecycle scripts were detected in {package_json}. Due to how workspace pruning \
+                    in pnpm operates, it will execute the following lifecycle scripts during reinstallation \
+                    of production dependencies which can cause build failures:
+                    - pnpm:devPreinstall
+                    - preinstall
+                    - install
+                    - postinstall
+                    - prepare
+
+                    Since pruning can't be done safely for your build, it will be skipped.
+                "});
+                return Ok(());
+            }
+        }
+
+        delete_workspace_node_modules(&workspace_projects)?;
 
         print::sub_stream_cmd(
             Command::new("pnpm")
@@ -447,13 +472,7 @@ pub(crate) fn prune_dev_dependencies(
             .map_err(|e| on_prune_command_error(&e));
     }
 
-    let package_json =
-        crate::package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
-
-    if ["pnpm:devPreinstall", "preinstall", "postinstall", "prepare"]
-        .iter()
-        .any(|script| package_json.script(script).is_some())
-    {
+    if contains_pnpm_lifecycle_script(context.app_dir.join("package.json"))? {
         print::warning(formatdoc! { "
             Pruning skipped due to presence of lifecycle scripts
 
@@ -476,15 +495,21 @@ pub(crate) fn prune_dev_dependencies(
         .map_err(|e| on_prune_command_error(&e))
 }
 
+fn contains_pnpm_lifecycle_script(package_json_path: PathBuf) -> Result<bool, ErrorMessage> {
+    let package_json = PackageJson::try_from(package_json_path)?;
+    Ok(
+        ["pnpm:devPreinstall", "preinstall", "postinstall", "prepare"]
+            .iter()
+            .any(|script| package_json.script(script).is_some()),
+    )
+}
+
 static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<Requirement> = LazyLock::new(|| {
     Requirement::parse(">8.15.6")
         .expect("Prune dev dependencies min version requirement should be valid")
 });
 
-fn delete_workspace_node_modules(app_dir: &Path, env: &Env) -> Result<(), ErrorMessage> {
-    // Get workspace package locations from pnpm (includes root + all workspace packages)
-    let workspace_dirs = get_workspace_package_dirs(app_dir, env)?;
-
+fn delete_workspace_node_modules(workspace_dirs: &[PathBuf]) -> Result<(), ErrorMessage> {
     // Delete node_modules in root and each workspace package
     for package_dir in workspace_dirs {
         let node_modules = package_dir.join("node_modules");
@@ -494,7 +519,6 @@ fn delete_workspace_node_modules(app_dir: &Path, env: &Env) -> Result<(), ErrorM
             Err(error) => return Err(create_delete_node_modules_error(&node_modules, &error)),
         }
     }
-
     Ok(())
 }
 
