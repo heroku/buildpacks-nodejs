@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `25.x`
-  - Resolved Node.js version: `25.6.0`
+  - Resolved Node.js version: `25.6.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v25.6.0/node-v25.6.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v25.6.1/node-v25.6.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `25.6.0 (<arch>)`
-  - Installing Node.js `25.6.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `25.6.1 (<arch>)`
+  - Installing Node.js `25.6.1 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
