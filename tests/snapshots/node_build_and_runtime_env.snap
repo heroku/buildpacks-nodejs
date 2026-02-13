@@ -4,7 +4,8 @@ source: crates/test_support/src/lib.rs
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-heroku/nodejs <buildpack-version>
+heroku/nodejs        <buildpack-version>
+test/print-build-env 0.0.0
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
@@ -22,6 +23,8 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `24.13.1 (<arch>)`
   - Installing Node.js `24.13.1 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
+HEROKU_AVAILABLE_PARALLELISM=<number>
+PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'

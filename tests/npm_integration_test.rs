@@ -11,20 +11,29 @@ use std::path::Path;
 use test_support::{
     add_build_script, add_package_json_dependency, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    set_node_engine, set_npm_engine, set_package_manager, update_json_file,
+    print_build_env_buildpack, set_node_engine, set_npm_engine, set_package_manager,
+    update_json_file,
 };
 
 #[test]
 #[ignore = "integration test"]
 fn npm_engine_install() {
-    nodejs_integration_test("./fixtures/npm-engine-project", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
-        // verify that the `npm_engine` layer comes before the `dist` layer in the PATH
-        assert_contains!(
-            ctx.run_shell_command("env").stdout,
-            "PATH=/layers/heroku_nodejs/npm_engine/bin:/layers/heroku_nodejs/dist/bin"
-        );
-    });
+    integration_test_with_config(
+        "./fixtures/npm-engine-project",
+        |_| {},
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            // verify that the `npm_engine` layer comes before the `dist` layer in the PATH
+            assert_contains!(
+                ctx.run_shell_command("env").stdout,
+                "PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/npm_engine/bin:/layers/heroku_nodejs/dist/bin"
+            );
+        },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            print_build_env_buildpack(),
+        ],
+    );
 }
 
 #[test]

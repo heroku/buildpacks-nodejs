@@ -3813,6 +3813,7 @@ name = "test_support"
 version = "0.0.0"
 dependencies = [
  "bon",
+ "indoc",
  "insta",
  "libcnb",
  "libcnb-test",

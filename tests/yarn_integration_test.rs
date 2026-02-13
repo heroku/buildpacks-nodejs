@@ -3,12 +3,33 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::BuildpackReference;
+use libcnb_test::{BuildpackReference, assert_contains};
 use std::os::unix::fs::PermissionsExt;
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
+    print_build_env_buildpack,
 };
+
+#[test]
+#[ignore = "integration test"]
+fn yarn_install() {
+    integration_test_with_config(
+        "./fixtures/yarn-project",
+        |_| {},
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_contains!(
+                ctx.run_shell_command("env").stdout,
+                "PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/yarn/bin:/layers/heroku_nodejs/dist/bin"
+            );
+        },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            print_build_env_buildpack(),
+        ],
+    );
+}
 
 #[test]
 #[ignore = "integration test"]

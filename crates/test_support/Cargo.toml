@@ -8,6 +8,7 @@ workspace = true
 
 [dependencies]
 bon = "3"
+indoc = "2"
 insta = { version = "1", features = ["filters"] }
 libcnb = "=0.30.2"
 libcnb-test = "=0.30.2"

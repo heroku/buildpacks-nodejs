@@ -7,13 +7,13 @@ use libcnb_test::{BuildpackReference, assert_contains};
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    set_package_manager, set_pnpm_engine, update_json_file,
+    print_build_env_buildpack, set_package_manager, set_pnpm_engine, update_json_file,
 };
 
 #[test]
 #[ignore = "integration test"]
 fn pnpm_install_engine() {
-    nodejs_integration_test_with_config(
+    integration_test_with_config(
         "./fixtures/pnpm-project",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
@@ -27,9 +27,16 @@ fn pnpm_install_engine() {
         },
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
-            let output = ctx.run_shell_command("pnpm --version");
-            assert_contains!(output.stdout, "7.32.3");
+            assert_contains!(ctx.run_shell_command("pnpm --version").stdout, "7.32.3");
+            assert_contains!(
+                ctx.run_shell_command("env").stdout,
+                "PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/pnpm/bin:/layers/heroku_nodejs/dist/bin"
+            );
         },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            print_build_env_buildpack(),
+        ],
     );
 }
 

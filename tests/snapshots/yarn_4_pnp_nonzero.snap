@@ -74,6 +74,7 @@ Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:yarn_cache'
 Adding layer 'heroku/nodejs:yarn_vendored'
+Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'

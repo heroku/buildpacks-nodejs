@@ -1,12 +1,12 @@
 // Required due to: https://github.com/rust-lang/rust/issues/95513
 #![allow(unused_crate_dependencies)]
 
-use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{BuildpackReference, assert_contains_match};
+use libcnb_test::{BuildpackReference, assert_contains, assert_contains_match};
 use test_support::{
-    assert_web_response, create_build_snapshot, custom_buildpack, integration_test_with_config,
-    nodejs_integration_test, nodejs_integration_test_with_config, set_node_engine,
+    assert_web_response, create_build_snapshot, integration_test_with_config,
+    nodejs_integration_test, nodejs_integration_test_with_config, print_build_env_buildpack,
+    set_node_engine,
 };
 
 #[test]
@@ -54,28 +54,24 @@ fn reinstalls_node_if_version_changes() {
 
 #[test]
 #[ignore = "integration test"]
-fn heroku_available_parallelism_is_set_at_build_and_runtime() {
+fn node_build_and_runtime_env() {
     integration_test_with_config(
         "./fixtures/node-with-indexjs",
         |_| {},
         |ctx| {
-            assert_contains_match!(ctx.pack_stdout, "HEROKU_AVAILABLE_PARALLELISM=\\d+");
-            assert_contains_match!(
-                ctx.run_shell_command("env").stdout,
-                "HEROKU_AVAILABLE_PARALLELISM=\\d+"
+            create_build_snapshot(&ctx.pack_stdout).assert();
+
+            let env = ctx.run_shell_command("env").stdout;
+            assert_contains!(
+                env,
+                "PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/dist/bin"
             );
+            assert_contains!(env, "LD_LIBRARY_PATH=/layers/heroku_nodejs/dist/lib");
+            assert_contains_match!(env, "HEROKU_AVAILABLE_PARALLELISM=\\d+");
         },
         &[
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
-            BuildpackReference::Other(
-                custom_buildpack()
-                    .id("test/echo-build-parallelism")
-                    .build(indoc! { "
-                        #!/usr/bin/env bash
-                        env
-                    " })
-                    .call(),
-            ),
+            print_build_env_buildpack(),
         ],
     );
 }
