@@ -8,6 +8,7 @@ mod test_builder;
 use crate::snapshot_filters::create_snapshot_filters;
 use crate::test_arch::{TestArch, get_test_arch};
 use crate::test_builder::get_test_builder;
+use indoc::indoc;
 use insta::{assert_snapshot, with_settings};
 use libcnb::data::buildpack_id;
 use libcnb_test::{
@@ -105,6 +106,22 @@ pub fn integration_test_with_config(
     with_config(&mut build_config);
 
     TestRunner::default().build(build_config, test_body);
+}
+
+#[must_use]
+pub fn print_build_env_buildpack() -> BuildpackReference {
+    BuildpackReference::Other(
+        custom_buildpack()
+            .id("test/print-build-env")
+            .build(indoc! { r#"
+                #!/usr/bin/env bash
+                printenv \
+                    | grep -E "^(PATH=|HEROKU_AVAILABLE_PARALLELISM=)" \
+                    | sed 's/\(HEROKU_AVAILABLE_PARALLELISM=\)[0-9]\+/\1<number>/' \
+                    | sort
+            "# })
+            .call(),
+    )
 }
 
 pub fn retry<T, E>(

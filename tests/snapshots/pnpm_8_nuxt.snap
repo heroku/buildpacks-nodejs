@@ -98,6 +98,7 @@ Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
 <add_or_reusing> layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
