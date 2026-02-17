@@ -46,7 +46,7 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
       ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
-      ➤ YN0000: └ Completed
+      ➤ YN0000: └ Completed in 1s
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed
       ➤ YN0000: · Done in <time_elapsed>
