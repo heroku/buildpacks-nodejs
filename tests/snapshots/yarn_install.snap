@@ -4,7 +4,8 @@ source: crates/test_support/src/lib.rs
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
-heroku/nodejs <buildpack-version>
+heroku/nodejs        <buildpack-version>
+test/print-build-env 0.0.0
 ===> RESTORING
 <restoring-output>
 ===> BUILDING
@@ -22,28 +23,35 @@ heroku/nodejs <buildpack-version>
   - Extracting Node.js `24.13.1 (<arch>)`
   - Installing Node.js `24.13.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
-  - Found `yarnPath` set to `.yarn/releases/yarn-2.4.1.cjs` in `.yarnrc.yml`
-  - Using vendored yarn at `.yarn/releases/yarn-2.4.1.cjs`
-- Configuring vendored Yarn
-  - Linking `yarn` to vendored `yarnPath`
-  - Successfully configured `yarn@2.4.1`
+  - Found `packageManager` set to `yarn@4.2.2` in `package.json`
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (<time_elapsed>)
+  - Resolved yarn version `4.2.2` to `4.2.2`
+- Installing Yarn
+  - GET https://registry.npmjs.org/@yarnpkg/cli-dist/-/cli-dist-4.2.2.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Successfully installed `yarn@4.2.2`
 - Setting up yarn dependency cache
   - Running `yarn config set enableGlobalCache false`
 
       ➤ YN0000: Successfully set enableGlobalCache to false
 
   - Done (<time_elapsed>)
-  - Yarn zero-install detected. Skipping dependency cache.
-- Installing dependencies
-  - Running `yarn install --immutable --inline-builds --immutable-cache`
+  - Running `yarn config set cacheFolder /layers/heroku_nodejs/yarn_cache`
 
+      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/yarn_cache'
+
+  - Done (<time_elapsed>)
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ YN0000: · Yarn 4.2.2
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed
-      ➤ YN0000: Done in <time_elapsed>
+      ➤ YN0000: · Done in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -57,28 +65,32 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed
-      ➤ YN0019: dotenv-npm-16.6.1-01334288ea-72204637eb.zip appears to be unused - removing
       ➤ YN0000: Done in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Done (finished in <time_elapsed>)
+HEROKU_AVAILABLE_PARALLELISM=<number>
+PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/yarn/bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:web_env'
-Adding layer 'heroku/nodejs:yarn_vendored'
+Adding layer 'heroku/nodejs:yarn'
+Adding layer 'heroku/nodejs:yarn_cache'
 Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
 Adding layer 'buildpacksio/lifecycle:config'
-Adding layer 'buildpacksio/lifecycle:process-types'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
-Setting default process type 'web'
+no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarn_cache'
+Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

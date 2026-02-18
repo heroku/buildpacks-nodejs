@@ -94,6 +94,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Disable containerd snapshotter feature
+        run: |
+          docker info -f '{{ .DriverStatus }}'
+          sudo systemctl stop docker
+          echo '{"features": {"containerd-snapshotter": false}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl start docker
+          docker info -f '{{ .DriverStatus }}'
+
       # The dpkg man-db trigger is excessively slow on GHA runners, see e.g.:
       # https://github.com/actions/runner-images/issues/10977
       # https://github.com/actions/runner/issues/4030

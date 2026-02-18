@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Prepend `node_modules/.bin` to build and runtime environment `PATH`. ([#1294](https://github.com/heroku/buildpacks-nodejs/pull/1294))
+
 ## [5.4.3] - 2026-02-10
 
 ### Added
