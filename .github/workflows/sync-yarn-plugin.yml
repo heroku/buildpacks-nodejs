@@ -38,8 +38,7 @@ jobs:
         id: upstream-commit
         run: |
           cd upstream-temp
-          echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-          echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Copy plugin file
         run: |
