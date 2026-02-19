@@ -8,6 +8,7 @@ mod test_builder;
 use crate::snapshot_filters::create_snapshot_filters;
 use crate::test_arch::{TestArch, get_test_arch};
 use crate::test_builder::get_test_builder;
+use indoc::indoc;
 use insta::{assert_snapshot, with_settings};
 use libcnb::data::buildpack_id;
 use libcnb_test::{
@@ -99,10 +100,28 @@ pub fn integration_test_with_config(
     build_config.env("npm_config_update_notifier", "false");
     // similar for the message looking for funding which doesn't need to appear in testing scenarios
     build_config.env("npm_config_fund", "false");
+    // silence deprecation warnings from Node.js which cause unreliable output in snapshots
+    build_config.env("NODE_OPTIONS", "--no-deprecation");
 
     with_config(&mut build_config);
 
     TestRunner::default().build(build_config, test_body);
+}
+
+#[must_use]
+pub fn print_build_env_buildpack() -> BuildpackReference {
+    BuildpackReference::Other(
+        custom_buildpack()
+            .id("test/print-build-env")
+            .build(indoc! { r#"
+                #!/usr/bin/env bash
+                printenv \
+                    | grep -E "^(PATH=|HEROKU_AVAILABLE_PARALLELISM=)" \
+                    | sed 's/\(HEROKU_AVAILABLE_PARALLELISM=\)[0-9]\+/\1<number>/' \
+                    | sort
+            "# })
+            .call(),
+    )
 }
 
 pub fn retry<T, E>(
@@ -122,13 +141,18 @@ pub fn retry<T, E>(
 }
 
 pub fn start_container(ctx: &TestContext, in_container: impl Fn(&ContainerContext, &SocketAddr)) {
-    ctx.start_container(ContainerConfig::new().expose_port(PORT), |container| {
-        let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
-            std::panic::catch_unwind(|| container.address_for_port(PORT))
-        })
-        .unwrap();
-        in_container(&container, &socket_addr);
-    });
+    ctx.start_container(
+        ContainerConfig::new()
+            .env("PORT", PORT.to_string())
+            .expose_port(PORT),
+        |container| {
+            let socket_addr = retry(DEFAULT_RETRIES, DEFAULT_RETRY_DELAY, || {
+                std::panic::catch_unwind(|| container.address_for_port(PORT))
+            })
+            .unwrap();
+            in_container(&container, &socket_addr);
+        },
+    );
 }
 
 pub fn assert_web_response(ctx: &TestContext, expected_response_body: &'static str) {

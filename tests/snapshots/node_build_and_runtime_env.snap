@@ -1,0 +1,46 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs        <buildpack-version>
+test/print-build-env 0.0.0
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `24.x`
+  - Resolved Node.js version: `24.13.1`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v24.13.1/node-v24.13.1-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `24.13.1 (<arch>)`
+  - Installing Node.js `24.13.1 (<arch>)` ... (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+HEROKU_AVAILABLE_PARALLELISM=<number>
+PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:z_node_module_bins'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding layer 'buildpacksio/lifecycle:process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Setting default process type 'web'
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:dist'
+Successfully built image '<image-name>'

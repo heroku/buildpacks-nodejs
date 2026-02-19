@@ -1,5 +1,6 @@
 use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::utils::build_env::node_gyp_env;
+use crate::package_json::PackageJson;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -311,6 +312,107 @@ fn create_prune_store_directory_error(error: &fun_run::CmdError) -> ErrorMessage
         .create()
 }
 
+fn create_pnpm_workspace_read_error(workspace_file: &Path, error: &std::io::Error) -> ErrorMessage {
+    let file = file_value(workspace_file);
+    error_message()
+        .id("package_manager/pnpm/read_workspace_file")
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Error reading {file}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {file} to determine pnpm workspace configuration but \
+            the file can't be read.
+
+            Suggestions:
+            - Ensure the file has read permissions.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_pnpm_workspace_parse_error(error: &yaml_rust2::ScanError) -> ErrorMessage {
+    let file = file_value("pnpm-workspace.yaml");
+    let yaml_spec_url = style::url("https://yaml.org/spec/1.2.2/");
+    error_message()
+        .id("package_manager/pnpm/parse_workspace_file")
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Error parsing {file}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {file} to determine pnpm workspace configuration but \
+            the file isn't valid YAML.
+
+            Suggestions:
+            - Ensure the file follows the YAML format described at {yaml_spec_url}
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_pnpm_workspace_multiple_documents_error() -> ErrorMessage {
+    let file = file_value("pnpm-workspace.yaml");
+    let hyphens = style::value("---");
+    error_message()
+        .id("package_manager/pnpm/multiple_documents_in_workspace_file")
+        .error_type(ErrorType::UserFacing(
+            SuggestRetryBuild::Yes,
+            SuggestSubmitIssue::No,
+        ))
+        .header(format!("Multiple YAML documents found in {file}"))
+        .body(formatdoc! { "
+            The Heroku Node.js buildpack reads from {file} to determine pnpm workspace configuration but \
+            the file contains multiple YAML documents. There must only be a single document in this file.
+
+            YAML documents are separated by a line containing three hyphens ({hyphens}).
+
+            Suggestions:
+            - Ensure the file has only a single document.
+        " })
+        .create()
+}
+
+fn create_delete_node_modules_error(path: &Path, error: &std::io::Error) -> ErrorMessage {
+    let path = file_value(path);
+    error_message()
+        .id("package_manager/pnpm/delete_node_modules")
+        .error_type(ErrorType::Internal)
+        .header("Failed to delete node_modules directory")
+        .body(formatdoc! { "
+            An unexpected I/O error occurred while deleting the directory at {path}.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_list_workspace_packages_error(error: &fun_run::CmdError) -> ErrorMessage {
+    let pnpm_list = style::command(error.name());
+    error_message()
+        .id("package_manager/pnpm/list_workspace_packages")
+        .error_type(ErrorType::Internal)
+        .header("Failed to list workspace packages")
+        .body(formatdoc! { "
+            An unexpected error occurred while running {pnpm_list} to determine workspace package locations.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_parse_pnpm_list_output_error(error: &serde_json::Error) -> ErrorMessage {
+    error_message()
+        .id("package_manager/pnpm/parse_list_output")
+        .error_type(ErrorType::Internal)
+        .header("Failed to parse pnpm list output")
+        .body(formatdoc! { "
+            An unexpected error occurred while parsing the JSON output from pnpm list command.
+        " })
+        .debug_info(error.to_string())
+        .create()
+}
+
 pub(crate) fn run_script(name: impl AsRef<str>, env: &Env) -> Command {
     let mut command = Command::new("pnpm");
     command.args(["run", name.as_ref()]);
@@ -324,15 +426,47 @@ pub(crate) fn prune_dev_dependencies(
     version: &Version,
     on_prune_command_error: impl FnOnce(&fun_run::CmdError) -> ErrorMessage,
 ) -> Result<(), ErrorMessage> {
-    let has_workspace_file = ["pnpm-workspace.yaml", "pnpm-workspace.yml"]
-        .iter()
-        .any(|file| context.app_dir.join(file).exists());
+    let is_workspace = match read_pnpm_workspace(&context.app_dir) {
+        None => false,
+        Some(Ok(workspace)) => workspace.has_packages(),
+        Some(Err(error)) => return Err(error),
+    };
 
-    if has_workspace_file {
-        print::sub_bullet(format!(
-            "Skipping because pruning is not supported for pnpm workspaces ({})",
-            style::url("https://pnpm.io/cli/prune")
-        ));
+    if is_workspace {
+        // Get workspace package locations from pnpm (includes root + all workspace packages)
+        let workspace_projects = get_workspace_package_dirs(&context.app_dir, env)?;
+
+        for project in &workspace_projects {
+            if contains_pnpm_lifecycle_script(project.join("package.json"))? {
+                let package_json = file_value(project.join("package.json"));
+                print::warning(formatdoc! { "
+                    Pruning skipped due to presence of lifecycle scripts
+        
+                    Lifecycle scripts were detected in {package_json}. Due to how workspace pruning \
+                    in pnpm operates, it will execute the following lifecycle scripts during reinstallation \
+                    of production dependencies which can cause build failures:
+                    - pnpm:devPreinstall
+                    - preinstall
+                    - install
+                    - postinstall
+                    - prepare
+
+                    Since pruning can't be done safely for your build, it will be skipped.
+                "});
+                return Ok(());
+            }
+        }
+
+        delete_workspace_node_modules(&workspace_projects)?;
+
+        print::sub_stream_cmd(
+            Command::new("pnpm")
+                .args(["install", "--prod", "--frozen-lockfile"])
+                .envs(env),
+        )
+        .map(|_| ())
+        .map_err(|e| on_prune_command_error(&e))?;
+
         return Ok(());
     }
 
@@ -347,13 +481,7 @@ pub(crate) fn prune_dev_dependencies(
             .map_err(|e| on_prune_command_error(&e));
     }
 
-    let package_json =
-        crate::package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
-
-    if ["pnpm:devPreinstall", "preinstall", "postinstall", "prepare"]
-        .iter()
-        .any(|script| package_json.script(script).is_some())
-    {
+    if contains_pnpm_lifecycle_script(context.app_dir.join("package.json"))? {
         print::warning(formatdoc! { "
             Pruning skipped due to presence of lifecycle scripts
 
@@ -376,10 +504,87 @@ pub(crate) fn prune_dev_dependencies(
         .map_err(|e| on_prune_command_error(&e))
 }
 
+fn contains_pnpm_lifecycle_script(package_json_path: PathBuf) -> Result<bool, ErrorMessage> {
+    let package_json = PackageJson::try_from(package_json_path)?;
+    Ok(
+        ["pnpm:devPreinstall", "preinstall", "postinstall", "prepare"]
+            .iter()
+            .any(|script| package_json.script(script).is_some()),
+    )
+}
+
 static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<Requirement> = LazyLock::new(|| {
     Requirement::parse(">8.15.6")
         .expect("Prune dev dependencies min version requirement should be valid")
 });
+
+fn delete_workspace_node_modules(workspace_dirs: &[PathBuf]) -> Result<(), ErrorMessage> {
+    // Delete node_modules in root and each workspace package
+    for package_dir in workspace_dirs {
+        let node_modules = package_dir.join("node_modules");
+        match fs::remove_dir_all(&node_modules) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => return Err(create_delete_node_modules_error(&node_modules, &error)),
+        }
+    }
+    Ok(())
+}
+
+fn get_workspace_package_dirs(app_dir: &Path, env: &Env) -> Result<Vec<PathBuf>, ErrorMessage> {
+    let output = Command::new("pnpm")
+        .args(["list", "--depth", "-1", "--json", "--recursive"])
+        .current_dir(app_dir)
+        .envs(env)
+        .named_output()
+        .map_err(|e| create_list_workspace_packages_error(&e))?;
+
+    parse_pnpm_list_output(&output.stdout_lossy())
+}
+
+fn parse_pnpm_list_output(json_output: &str) -> Result<Vec<PathBuf>, ErrorMessage> {
+    let packages: Vec<serde_json::Value> =
+        serde_json::from_str(json_output).map_err(|e| create_parse_pnpm_list_output_error(&e))?;
+
+    Ok(packages
+        .into_iter()
+        .filter_map(|pkg| pkg["path"].as_str().map(PathBuf::from))
+        .collect())
+}
+
+fn read_pnpm_workspace(app_dir: &Path) -> Option<Result<PnpmWorkspace, ErrorMessage>> {
+    let workspace_file = app_dir.join("pnpm-workspace.yaml");
+
+    let contents = match std::fs::read_to_string(&workspace_file) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(error) => {
+            return Some(Err(create_pnpm_workspace_read_error(
+                &workspace_file,
+                &error,
+            )));
+        }
+    };
+
+    match yaml_rust2::YamlLoader::load_from_str(&contents) {
+        Ok(docs) if docs.len() == 1 => Some(Ok(PnpmWorkspace(docs.into_iter().next()))),
+        Ok(docs) if docs.is_empty() => Some(Ok(PnpmWorkspace(None))),
+        Ok(_) => Some(Err(create_pnpm_workspace_multiple_documents_error())),
+        Err(error) => Some(Err(create_pnpm_workspace_parse_error(&error))),
+    }
+}
+
+#[derive(Debug)]
+struct PnpmWorkspace(Option<yaml_rust2::Yaml>);
+
+impl PnpmWorkspace {
+    fn has_packages(&self) -> bool {
+        self.0
+            .as_ref()
+            .and_then(|doc| doc["packages"].as_vec())
+            .is_some_and(|packages| !packages.is_empty())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -420,5 +625,47 @@ mod tests {
         assert_error_snapshot(&create_prune_store_directory_error(&create_cmd_error(
             "pnpm store prune",
         )));
+    }
+
+    #[test]
+    fn pnpm_workspace_read_error() {
+        assert_error_snapshot(&create_pnpm_workspace_read_error(
+            &PathBuf::from("/app/pnpm-workspace.yaml"),
+            &std::io::Error::other("Permission denied"),
+        ));
+    }
+
+    #[test]
+    fn pnpm_workspace_parse_error() {
+        let yaml_error =
+            yaml_rust2::YamlLoader::load_from_str("invalid: yaml: content:").unwrap_err();
+        assert_error_snapshot(&create_pnpm_workspace_parse_error(&yaml_error));
+    }
+
+    #[test]
+    fn pnpm_workspace_multiple_documents_error() {
+        assert_error_snapshot(&create_pnpm_workspace_multiple_documents_error());
+    }
+
+    #[test]
+    fn delete_node_modules_error() {
+        assert_error_snapshot(&create_delete_node_modules_error(
+            &PathBuf::from("/app/packages/foo/node_modules"),
+            &std::io::Error::other("Device is busy"),
+        ));
+    }
+
+    #[test]
+    fn list_workspace_packages_error() {
+        assert_error_snapshot(&create_list_workspace_packages_error(&create_cmd_error(
+            "pnpm list --depth -1 --json --recursive",
+        )));
+    }
+
+    #[test]
+    fn parse_pnpm_list_output_error() {
+        let json_error =
+            serde_json::from_str::<Vec<serde_json::Value>>("invalid json").unwrap_err();
+        assert_error_snapshot(&create_parse_pnpm_list_output_error(&json_error));
     }
 }

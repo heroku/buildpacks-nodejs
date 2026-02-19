@@ -10,6 +10,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Cleanup of non-deterministic files in Node.js, npm, and pnpm layers to prevent unnecessary invalidation of runtime layers for export. ([#1274](https://github.com/heroku/buildpacks-nodejs/pull/1274))
+ 
+### Changed
+
+- Automated sync of `@yarnpkg/plugin-prune-dev-dependencies.js` from https://github.com/heroku/heroku-buildpack-nodejs/commit/ab3aa2a99c9cc926366d62f8b56342f623b0acaa
+
+## [5.5.0] - 2026-02-18
+
+### Added
+
+- Prepend `node_modules/.bin` to build and runtime environment `PATH`. ([#1294](https://github.com/heroku/buildpacks-nodejs/pull/1294))
+
+## [5.4.3] - 2026-02-10
+
+### Added
+
+- 25.6.1 (linux-amd64, linux-arm64)
+- 24.13.1 (linux-amd64, linux-arm64)
+
+## [5.4.2] - 2026-02-06
+
+### Changed
+
+- Skip pnpm workspace pruning when lifecycle scripts are present. ([#1290](https://github.com/heroku/buildpacks-nodejs/pull/1290))
+
+## [5.4.1] - 2026-02-04
+
+### Added
+
+- 25.6.0 (linux-amd64, linux-arm64)
+
+## [5.4.0] - 2026-02-02
+
+### Changed
+
+- Support pnpm workspace pruning. ([#1270](https://github.com/heroku/buildpacks-nodejs/pull/1270))
 
 ## [5.3.5] - 2026-01-27
 
@@ -177,7 +212,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.5...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.0...HEAD
+[5.5.0]: https://github.com/heroku/buildpacks-nodejs/compare/v5.4.3...v5.5.0
+[5.4.3]: https://github.com/heroku/buildpacks-nodejs/compare/v5.4.2...v5.4.3
+[5.4.2]: https://github.com/heroku/buildpacks-nodejs/compare/v5.4.1...v5.4.2
+[5.4.1]: https://github.com/heroku/buildpacks-nodejs/compare/v5.4.0...v5.4.1
+[5.4.0]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.5...v5.4.0
 [5.3.5]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.4...v5.3.5
 [5.3.4]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.3...v5.3.4
 [5.3.3]: https://github.com/heroku/buildpacks-nodejs/compare/v5.3.2...v5.3.3

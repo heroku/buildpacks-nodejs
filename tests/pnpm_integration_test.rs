@@ -7,13 +7,13 @@ use libcnb_test::{BuildpackReference, assert_contains};
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    set_package_manager, set_pnpm_engine,
+    print_build_env_buildpack, set_package_manager, set_pnpm_engine, update_json_file,
 };
 
 #[test]
 #[ignore = "integration test"]
 fn pnpm_install_engine() {
-    nodejs_integration_test_with_config(
+    integration_test_with_config(
         "./fixtures/pnpm-project",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
@@ -27,9 +27,16 @@ fn pnpm_install_engine() {
         },
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
-            let output = ctx.run_shell_command("pnpm --version");
-            assert_contains!(output.stdout, "7.32.3");
+            assert_contains!(ctx.run_shell_command("pnpm --version").stdout, "7.32.3");
+            assert_contains!(
+                ctx.run_shell_command("env").stdout,
+                "PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/pnpm/bin:/layers/heroku_nodejs/dist/bin"
+            );
         },
+        &[
+            BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
+            print_build_env_buildpack(),
+        ],
     );
 }
 
@@ -86,10 +93,6 @@ fn pnpm_8_nuxt() {
             .filter(
                 r"( *)\.\.\./esbuild@\d+\.\d+\.\d+/node_modules/esbuild postinstall.*",
                 "${1}<ESBUILD POSTINSTALL_SCRIPT>",
-            )
-            .filter(
-                r"( *)ERROR  \(node:\d+\).*\n *\(Use node --trace-deprecation.*",
-                "${1}<NODE DEPRECATION ERROR>",
             )
             .assert();
     });
@@ -177,6 +180,59 @@ fn test_pnpm_prune_dev_dependencies_config() {
                 " },
                 )
                 .unwrap();
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_10_workspace() {
+    nodejs_integration_test("./fixtures/pnpm-10-workspace", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "pnpm-10-workspace");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_workspace_prune_skipped_if_lifecycle_scripts_are_present_in_root_project() {
+    nodejs_integration_test_with_config(
+        "./fixtures/pnpm-10-workspace",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                add_build_script(&app_dir, "prepare");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_workspace_prune_skipped_if_lifecycle_scripts_are_present_in_workspace_project() {
+    nodejs_integration_test_with_config(
+        "./fixtures/pnpm-10-workspace",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("packages/client/package.json"), |json| {
+                    let scripts = json
+                        .as_object_mut()
+                        .unwrap()
+                        .entry("scripts")
+                        .or_insert(serde_json::Value::Object(serde_json::Map::new()))
+                        .as_object_mut()
+                        .unwrap();
+                    scripts.insert(
+                        "prepare".to_string(),
+                        serde_json::Value::String("echo 'executed prepare'".to_string()),
+                    );
+                });
             });
         },
         |ctx| {

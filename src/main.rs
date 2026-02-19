@@ -12,6 +12,8 @@ use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::store::Store;
 use libcnb::data::{layer_name, process_type};
 use libcnb::detect::DetectResultBuilder;
+use libcnb::layer::UncachedLayerDefinition;
+use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use libcnb::{Env, additional_buildpack_binary_path, buildpack_main};
 #[cfg(test)]
 use libcnb_test as _;
@@ -221,7 +223,26 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 }
             }
         }
+      
+        let node_module_bins_layer = context.uncached_layer(
+            layer_name!("z_node_module_bins"),
+            UncachedLayerDefinition {
+                build: true,
+                launch: true,
+            },
+        )?;
 
+        node_module_bins_layer.write_env(
+            LayerEnv::new()
+                .chainable_insert(Scope::All, ModificationBehavior::Delimiter, "PATH", ":")
+                .chainable_insert(
+                    Scope::All,
+                    ModificationBehavior::Prepend,
+                    "PATH",
+                    context.app_dir.join("node_modules/.bin"),
+                ),
+        )?;
+      
         // Clean up non-deterministic build artifacts from registered layers
         let layers_to_cleanup = context.layers_to_cleanup();
         if !layers_to_cleanup.is_empty() {

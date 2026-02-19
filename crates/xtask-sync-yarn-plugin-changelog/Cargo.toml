@@ -1,0 +1,7 @@
+[package]
+name = "xtask-sync-yarn-plugin-changelog"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["cargo", "derive"] }
+keep_a_changelog_file = "0.1.0"

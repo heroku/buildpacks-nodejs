@@ -1,0 +1,88 @@
+name: Sync Yarn Prune Plugin
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '00 4 * * 1-5'
+
+# Disable all GITHUB_TOKEN permissions, since the GitHub App token is used instead.
+permissions: { }
+
+jobs:
+  sync-yarn-plugin:
+    name: Sync Yarn Prune Plugin
+    runs-on: pub-hk-ubuntu-24.04-ip
+
+    steps:
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
+      - name: Checkout current repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Sparse checkout upstream Yarn plugin
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: heroku/heroku-buildpack-nodejs
+          sparse-checkout: |
+            yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js
+          path: upstream-temp
+          fetch-depth: 1
+
+      - name: Get upstream commit SHA
+        id: upstream-commit
+        run: |
+          cd upstream-temp
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Copy plugin file
+        run: |
+          cp upstream-temp/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js \
+             src/package_managers/@yarnpkg/plugin-prune-dev-dependencies.js
+
+      - name: Cleanup upstream repo
+        run: rm -rf upstream-temp
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --exit-code; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update Changelog
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: update-changelog
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "msg<<${delimiter}"
+            cargo sync-yarn-plugin-changelog "https://github.com/heroku/heroku-buildpack-nodejs/commit/${{ steps.upstream-commit.outputs.sha }}"
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: pr
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          title: "Sync Yarn prune plugin from upstream"
+          commit-message: "Sync Yarn prune plugin from upstream"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          branch: sync-yarn-plugin
+          body: "${{ steps.update-changelog.outputs.msg }}"
+
+      - name: Configure PR
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"

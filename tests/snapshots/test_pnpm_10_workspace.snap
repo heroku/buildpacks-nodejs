@@ -1,0 +1,96 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `24.x`
+  - Resolved Node.js version: `24.13.1`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v24.13.1/node-v24.13.1-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `24.13.1 (<arch>)`
+  - Installing Node.js `24.13.1 (<arch>)` ... (<time_elapsed>)
+- Determining pnpm package information
+  - Found `packageManager` set to `pnpm@10.0.0` in `package.json`
+  - GET https://registry.npmjs.org/pnpm ... (<time_elapsed>)
+  - Resolved pnpm version `10.0.0` to `10.0.0`
+- Installing pnpm
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-10.0.0.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Successfully installed `pnpm@10.0.0`
+- Setting up pnpm dependency store
+  - Creating new pnpm content-addressable store
+  - Creating pnpm virtual store
+- Installing dependencies
+  - Running `pnpm install --frozen-lockfile`
+
+      Scope: all 3 workspace projects
+      Lockfile is up to date, resolution step is skipped
+      Packages: +85
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+      devDependencies:
+      + typescript 5.9.3
+
+      Done in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Pruning unused dependencies from pnpm content-addressable store
+  - Running `pnpm store prune`
+
+      Removed all cached metadata files
+      Removed 0 files
+      Removed 0 packages
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `pnpm install --prod --frozen-lockfile`
+
+      Scope: all 3 workspace projects
+      Lockfile is up to date, resolution step is skipped
+      Packages: +69
+      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+      devDependencies: skipped
+
+      Done in <time_elapsed>
+
+  - Done (<time_elapsed>)
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:pnpm'
+<add_or_reusing> layer 'heroku/nodejs:virtual'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:z_node_module_bins'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding layer 'buildpacksio/lifecycle:process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Setting default process type 'web'
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:addressable'
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:pnpm'
+Adding cache layer 'heroku/nodejs:pnpm_packument'
+Successfully built image '<image-name>'

@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.13.0`
+  - Resolved Node.js version: `24.13.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.13.0/node-v24.13.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v24.13.1/node-v24.13.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `24.13.0 (<arch>)`
-  - Installing Node.js `24.13.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `24.13.1 (<arch>)`
+  - Installing Node.js `24.13.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@4.2.2` in `package.json`
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (<time_elapsed>)
@@ -79,6 +79,7 @@ Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:yarn'
 Adding layer 'heroku/nodejs:yarn_cache'
+Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -109,9 +110,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.13.0`
+  - Resolved Node.js version: `24.13.1`
 - Installing Node.js distribution
-  - Reusing Node.js 24.13.0 (<arch>)
+  - Reusing Node.js 24.13.1 (<arch>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@4.2.2` in `package.json`
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (Not Modified)
@@ -170,6 +171,7 @@ Reusing layer 'heroku/nodejs:dist'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'heroku/nodejs:yarn'
 Reusing layer 'heroku/nodejs:yarn_cache'
+Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
