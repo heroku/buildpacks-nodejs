@@ -1,6 +1,8 @@
 ---
 source: crates/test_support/src/lib.rs
 ---
+Warning: Exporting to docker daemon (building without --publish) and daemon uses containerd storage; performance may be significantly degraded.
+For more information, see https://github.com/buildpacks/pack/issues/2272.
 ===> ANALYZING
 Image with name "<image-name>" not found
 ===> DETECTING
