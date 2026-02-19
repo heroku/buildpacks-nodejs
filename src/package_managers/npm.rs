@@ -1,4 +1,4 @@
-use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -70,20 +70,13 @@ pub(crate) fn install_npm(
     npm_packument: &npm_registry::PackagePackument,
     node_version: &Version,
 ) -> BuildpackResult<()> {
-    let npm_engine_layer_path = npm_registry::install_package_layer(
+    npm_registry::install_package_layer(
         layer_name!("npm_engine"),
         context,
         env,
         npm_packument,
         node_version,
     )?;
-
-    // Register npm_engine layer for cleanup of non-deterministic Python bytecode
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: npm_engine_layer_path,
-        kind: LayerKind::NpmEngine,
-    });
-
     Ok(())
 }
 
@@ -113,8 +106,13 @@ pub(crate) fn install_npm_dependencies(
         .named_output()
         .map_err(|e| create_set_npm_cache_directory_command_error(&e))?;
 
-    print::sub_stream_cmd(Command::new("npm").args(["ci"]).envs(env))
-        .map_err(|e| create_npm_install_error(&e))?;
+    print::sub_stream_cmd(
+        Command::new("npm")
+            .args(["ci"])
+            .envs(env)
+            .envs(node_gyp_env()),
+    )
+    .map_err(|e| create_npm_install_error(&e))?;
 
     Ok(())
 }
