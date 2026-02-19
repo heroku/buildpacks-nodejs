@@ -1,6 +1,6 @@
 use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
-use crate::utils::build_env::node_gyp_env;
 use crate::package_json::PackageJson;
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };

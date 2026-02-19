@@ -223,7 +223,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                 }
             }
         }
-      
+
         let node_module_bins_layer = context.uncached_layer(
             layer_name!("z_node_module_bins"),
             UncachedLayerDefinition {
@@ -242,7 +242,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     context.app_dir.join("node_modules/.bin"),
                 ),
         )?;
-      
+
         // Clean up non-deterministic build artifacts from registered layers
         let layers_to_cleanup = context.layers_to_cleanup();
         if !layers_to_cleanup.is_empty() {
