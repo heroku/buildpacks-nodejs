@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Automated sync of `@yarnpkg/plugin-prune-dev-dependencies.js` from https://github.com/heroku/heroku-buildpack-nodejs/commit/ab3aa2a99c9cc926366d62f8b56342f623b0acaa
+
 ## [5.5.0] - 2026-02-18
 
 ### Added
