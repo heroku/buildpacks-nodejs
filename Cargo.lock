@@ -5012,6 +5012,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "xtask-sync-yarn-plugin-changelog"
+version = "0.0.0"
+dependencies = [
+ "clap",
+ "keep_a_changelog_file",
+]
+
+[[package]]
 name = "xtask-update-nodejs-inventory"
 version = "0.0.0"
 dependencies = [

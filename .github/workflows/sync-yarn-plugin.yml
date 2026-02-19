@@ -45,7 +45,31 @@ jobs:
           cp upstream-temp/yarn2-plugins/prune-dev-dependencies/bundles/@yarnpkg/plugin-prune-dev-dependencies.js \
              src/package_managers/@yarnpkg/plugin-prune-dev-dependencies.js
 
+      - name: Cleanup upstream repo
+        run: rm -rf upstream-temp
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if git diff --exit-code; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update Changelog
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: update-changelog
+        run: |
+          delimiter="$(openssl rand -hex 8)"
+          {
+            echo "msg<<${delimiter}"
+            cargo sync-yarn-plugin-changelog "https://github.com/heroku/heroku-buildpack-nodejs/commit/${{ steps.upstream-commit.outputs.sha }}"
+            echo "${delimiter}"
+          } >> $GITHUB_OUTPUT
+
       - name: Create Pull Request
+        if: steps.check-changes.outputs.has_changes == 'true'
         id: pr
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         with:
@@ -55,13 +79,10 @@ jobs:
           committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
           branch: sync-yarn-plugin
-          body: |
-            Automated sync of @yarnpkg/plugin-prune-dev-dependencies.js from heroku/heroku-buildpack-nodejs
-
-            Upstream commit: https://github.com/heroku/heroku-buildpack-nodejs/commit/${{ steps.upstream-commit.outputs.sha }}
+          body: "${{ steps.update-changelog.outputs.msg }}"
 
       - name: Configure PR
-        if: steps.pr.outputs.pull-request-operation == 'created'
+        if: steps.check-changes.outputs.has_changes == 'true' && steps.pr.outputs.pull-request-operation == 'created'
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
