@@ -24,13 +24,13 @@ heroku/nodejs <buildpack-version>
 - Determining npm package information
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
-  - Resolved npm version `11.x` to `11.8.0`
+  - Resolved npm version `11.x` to `11.10.1`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-11.8.0.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-11.10.1.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@11.8.0`
+  - Successfully installed `npm@11.10.1`
 - Installing node modules
-  - Using npm version `11.8.0`
+  - Using npm version `11.10.1`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -66,6 +66,7 @@ Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:npm_engine'
 Adding layer 'heroku/nodejs:npm_runtime_config'
 Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
 Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
@@ -103,12 +104,12 @@ heroku/nodejs <buildpack-version>
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
   - Using cached packument for npm
-  - Resolved npm version `11.x` to `11.8.0`
+  - Resolved npm version `11.x` to `11.10.1`
 - Installing npm
   - Using cached version of npm
-  - Successfully installed `npm@11.8.0`
+  - Successfully installed `npm@11.10.1`
 - Installing node modules
-  - Using npm version `11.8.0`
+  - Using npm version `11.10.1`
   - Restoring npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -144,6 +145,7 @@ Reusing layer 'heroku/nodejs:dist'
 Reusing layer 'heroku/nodejs:npm_engine'
 Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
+Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
 Reused 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
