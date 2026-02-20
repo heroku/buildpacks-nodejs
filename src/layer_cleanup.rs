@@ -15,32 +15,18 @@ pub(crate) struct LayerCleanupTarget {
     pub(crate) kind: LayerKind,
 }
 
-/// Remove Makefile and *.mk files from native module build directories
+/// Remove Makefile files from native module build directories
 /// These files have non-deterministic dependency ordering causing layer invalidation
-fn remove_build_makefiles(base_path: &Path) -> Result<usize, std::io::Error> {
-    let mut removed_count = 0;
-
-    // Walk directory tree looking for build/Makefile patterns
-    for entry in WalkDir::new(base_path)
+fn remove_build_makefiles(base_path: &Path) -> std::io::Result<usize> {
+    let makefile_dir_entries = WalkDir::new(base_path)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| {
-            if !e.file_type().is_file() {
-                return false;
-            }
+        .filter(|dir_entry| {
+            dir_entry.file_type().is_file() && dir_entry.path().ends_with("build/Makefile")
+        });
 
-            // Check if this is a Makefile or .mk file in a build/ directory
-            let path = e.path();
-            if let Some(parent) = path.parent()
-                && parent.file_name() == Some(std::ffi::OsStr::new("build"))
-                && let Some(filename) = path.file_name()
-            {
-                return filename.to_string_lossy() == "Makefile";
-            }
-
-            false
-        })
-    {
+    let mut removed_count = 0;
+    for entry in makefile_dir_entries {
         fs::remove_file(entry.path())?;
         removed_count += 1;
     }
