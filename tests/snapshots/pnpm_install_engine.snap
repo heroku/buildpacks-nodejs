@@ -68,6 +68,7 @@ test/print-build-env 0.0.0
       devDependencies: skipped
 
   - Done (<time_elapsed>)
+- Cleaning up pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 HEROKU_AVAILABLE_PARALLELISM=<number>
 PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/pnpm/bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -75,7 +76,7 @@ PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/pnpm/bin:/layers/heroku_
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
+Adding layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'

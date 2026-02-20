@@ -1,3 +1,4 @@
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -75,8 +76,8 @@ pub(crate) fn install_npm(
         env,
         npm_packument,
         node_version,
-    )
-    .map_err(Into::into)
+    )?;
+    Ok(())
 }
 
 pub(crate) fn install_npm_dependencies(
@@ -105,8 +106,13 @@ pub(crate) fn install_npm_dependencies(
         .named_output()
         .map_err(|e| create_set_npm_cache_directory_command_error(&e))?;
 
-    print::sub_stream_cmd(Command::new("npm").args(["ci"]).envs(env))
-        .map_err(|e| create_npm_install_error(&e))?;
+    print::sub_stream_cmd(
+        Command::new("npm")
+            .args(["ci"])
+            .envs(env)
+            .envs(node_gyp_env()),
+    )
+    .map_err(|e| create_npm_install_error(&e))?;
 
     Ok(())
 }

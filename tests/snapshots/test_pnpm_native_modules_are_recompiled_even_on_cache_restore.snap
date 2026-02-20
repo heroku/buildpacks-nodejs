@@ -67,12 +67,14 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
+- Cleaning up pnpm virtual store layer
+  - Removed 1 Makefile artifacts
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
 Adding layer 'heroku/nodejs:dist'
 Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
+Adding layer 'heroku/nodejs:virtual'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
@@ -146,12 +148,14 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
+- Cleaning up pnpm virtual store layer
+  - Removed 1 Makefile artifacts
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
 Reusing layer 'heroku/nodejs:dist'
-Adding layer 'heroku/nodejs:pnpm'
-<add_or_reusing> layer 'heroku/nodejs:virtual'
+Reusing layer 'heroku/nodejs:pnpm'
+Reusing layer 'heroku/nodejs:virtual'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
@@ -168,6 +172,7 @@ Saving <image-name>...
 Adding cache layer 'heroku/nodejs:addressable'
 Reusing cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:dist'
+Reusing cache layer 'heroku/nodejs:pnpm'
 Adding cache layer 'heroku/nodejs:pnpm'
 Reusing cache layer 'heroku/nodejs:pnpm_packument'
 Adding cache layer 'heroku/nodejs:pnpm_packument'
