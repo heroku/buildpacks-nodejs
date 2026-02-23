@@ -1,4 +1,6 @@
+use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::package_json::PackageJson;
+use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
@@ -45,8 +47,8 @@ pub(crate) fn install_pnpm(
         env,
         pnpm_packument,
         node_version,
-    )
-    .map_err(Into::into)
+    )?;
+    Ok(())
 }
 
 pub(crate) fn install_dependencies(
@@ -67,7 +69,8 @@ pub(crate) fn install_dependencies(
     print::sub_stream_cmd(
         Command::new("pnpm")
             .args(["install", "--frozen-lockfile"])
-            .envs(env),
+            .envs(env)
+            .envs(node_gyp_env()),
     )
     .map_err(|e| create_pnpm_install_command_error(&e))?;
 
@@ -182,6 +185,12 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
     {
         Err(create_node_modules_symlink_error(&error))?;
     }
+
+    // Register virtual layer for cleanup of non-deterministic Makefiles
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: pnpm_virtual_store_layer.path().clone(),
+        kind: LayerKind::Virtual,
+    });
 
     Ok(virtual_store_dir)
 }

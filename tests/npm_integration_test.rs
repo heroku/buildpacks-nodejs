@@ -242,6 +242,27 @@ fn test_npm_native_modules_are_recompiled_even_on_cache_restore() {
 
 #[test]
 #[ignore = "integration test"]
+fn test_npm_engine_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project-with-native-module",
+        |config| {
+            config.env("npm_config_foreground-scripts", "true");
+            config.app_dir_preprocessor(|app_dir| {
+                set_npm_engine(&app_dir, "11.x");
+            });
+        },
+        |ctx| {
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+            let config = ctx.config.clone();
+            ctx.rebuild(config, |ctx| {
+                build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            });
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_npm_skip_build_scripts_from_buildplan() {
     integration_test_with_config(
         "./fixtures/npm-project",

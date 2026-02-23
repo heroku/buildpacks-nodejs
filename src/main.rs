@@ -1,4 +1,6 @@
 use crate::buildpack_config::{ConfigValue, ConfigValueSource};
+use crate::context::NodeJsBuildContext;
+use crate::layer_cleanup::cleanup_layer;
 use crate::o11y::*;
 use crate::package_manager::InstalledPackageManager;
 use crate::utils::error_handling::{ErrorMessage, on_framework_error};
@@ -18,6 +20,8 @@ use libcnb_test as _;
 use toml::Table;
 
 mod buildpack_config;
+mod context;
+mod layer_cleanup;
 mod o11y;
 mod package_json;
 mod package_manager;
@@ -27,7 +31,7 @@ mod runtimes;
 mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
-type BuildpackBuildContext = libcnb::build::BuildContext<NodeJsBuildpack>;
+type BuildpackBuildContext = NodeJsBuildContext;
 type BuildpackError = libcnb::Error<ErrorMessage>;
 type BuildpackResult<T> = Result<T, BuildpackError>;
 
@@ -70,8 +74,11 @@ impl libcnb::Buildpack for NodeJsBuildpack {
     #[allow(clippy::too_many_lines)]
     fn build(
         &self,
-        context: BuildpackBuildContext,
+        context: libcnb::build::BuildContext<NodeJsBuildpack>,
     ) -> libcnb::Result<libcnb::build::BuildResult, ErrorMessage> {
+        // Wrap the context to track layers needing cleanup
+        let context = NodeJsBuildContext::new(context);
+
         let buildpack_start = print::buildpack(
             context
                 .buildpack_descriptor
@@ -235,6 +242,16 @@ impl libcnb::Buildpack for NodeJsBuildpack {
                     context.app_dir.join("node_modules/.bin"),
                 ),
         )?;
+
+        // Clean up non-deterministic build artifacts from registered layers
+        let layers_to_cleanup = context.layers_to_cleanup();
+        if !layers_to_cleanup.is_empty() {
+            for layer_to_cleanup in layers_to_cleanup {
+                if let Err(e) = cleanup_layer(&layer_to_cleanup) {
+                    print::sub_bullet(format!("- Error during cleanup: {e}"));
+                }
+            }
+        }
 
         print::all_done(&Some(buildpack_start));
 
