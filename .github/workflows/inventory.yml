@@ -45,10 +45,10 @@ jobs:
         uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
 
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@f3ec16c6d708761c6e87bbc8fe7f97375f80e7cd # v5.10.1
+        uses: buildpacks/github-actions/setup-pack@06e250da5bb4ccb9a2103719a21d2a7f2252fe83 # v5.11.0
 
       - name: Install Nextest
-        uses: taiki-e/install-action@650c5ca14212efbbf3e580844b04bdccf68dac31 # v2.67.18
+        uses: taiki-e/install-action@cfdb446e391c69574ebc316dfb7d7849ec12b940 # v2.68.8
         with:
           tool: nextest
 
