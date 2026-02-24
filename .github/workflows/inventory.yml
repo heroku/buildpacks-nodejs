@@ -73,7 +73,19 @@ jobs:
             echo "${delimiter}"
           } >> $GITHUB_OUTPUT
 
+      - name: Check for inventory changes
+        id: check-inventory
+        run: |
+          if git diff --quiet inventory/nodejs.toml; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No inventory changes detected, skipping PR creation."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Inventory changes detected."
+          fi
+
       - name: Rebuild Snapshots
+        if: steps.check-inventory.outputs.changed == 'true'
         env:
           # this will prevent a snapshot difference from failing a test
           INSTA_FORCE_PASS: 1
@@ -82,6 +94,7 @@ jobs:
         run: cargo nextest run --run-ignored only --locked
 
       - name: Create Pull Request
+        if: steps.check-inventory.outputs.changed == 'true'
         id: pr
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
         with:
@@ -94,7 +107,7 @@ jobs:
           body: "Automated pull-request to update heroku/nodejs-engine inventory:\n\n${{ steps.rebuild-inventory.outputs.msg }}"
 
       - name: Configure PR
-        if: steps.pr.outputs.pull-request-operation == 'created'
+        if: steps.check-inventory.outputs.changed == 'true' && steps.pr.outputs.pull-request-operation == 'created'
         env:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
