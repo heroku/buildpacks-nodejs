@@ -186,23 +186,29 @@ pub(crate) fn link_vendored_yarn(
 
     let bin_dir = bin_layer.path().join("bin");
     let yarn = bin_dir.join("yarn");
+    let yarnpkg = bin_dir.join("yarnpkg");
     let vendored_yarn = context.app_dir.join(vendored_yarn);
+    let file_mode = 0o755;
+
+    let contents = formatdoc! { "
+        #!/usr/bin/env node
+        require({});
+    ", serde_json::json!(vendored_yarn) };
 
     std::fs::create_dir_all(&bin_dir)
-        .and_then(|()| {
-            std::fs::write(
-                &yarn,
-                formatdoc! { "
-                    #!/usr/bin/env node
-                    require({});
-                ", serde_json::json!(vendored_yarn) },
-            )
-        })
+        .and_then(|()| std::fs::write(&yarn, &contents))
+        .and_then(|()| std::fs::write(&yarnpkg, &contents))
         .and_then(|()| std::fs::metadata(&yarn))
         .and_then(|metadata| {
             let mut permissions = metadata.permissions();
-            permissions.set_mode(0o755);
+            permissions.set_mode(file_mode);
             std::fs::set_permissions(&yarn, permissions)
+        })
+        .and_then(|()| std::fs::metadata(&yarnpkg))
+        .and_then(|metadata| {
+            let mut permissions = metadata.permissions();
+            permissions.set_mode(file_mode);
+            std::fs::set_permissions(&yarnpkg, permissions)
         })
         .map_err(|e| create_write_vendored_yarn_executable_error(&vendored_yarn, &e))?;
 
