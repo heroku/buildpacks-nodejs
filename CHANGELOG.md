@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- 25.7.0 (linux-amd64, linux-arm64)
+- 24.14.0 (linux-amd64, linux-arm64)
+
 ## [5.5.1] - 2026-02-23
 
 ### Added
 
 - Cleanup of non-deterministic files in Node.js, npm, and pnpm layers to prevent unnecessary invalidation of runtime layers for export. ([#1274](https://github.com/heroku/buildpacks-nodejs/pull/1274))
- 
+
 ### Changed
 
 - Automated sync of `@yarnpkg/plugin-prune-dev-dependencies.js` from https://github.com/heroku/heroku-buildpack-nodejs/commit/ab3aa2a99c9cc926366d62f8b56342f623b0acaa
