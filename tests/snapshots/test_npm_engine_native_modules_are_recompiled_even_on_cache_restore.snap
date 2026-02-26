@@ -148,7 +148,7 @@ Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Reused 1/1 app layer(s)
+<REUSED_OR_ADDED> 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
