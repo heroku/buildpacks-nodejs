@@ -68,7 +68,7 @@ Adding layer 'heroku/nodejs:npm_runtime_config'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
-Added 1/1 app layer(s)
+<REUSED_OR_ADDED> 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
 Adding layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
