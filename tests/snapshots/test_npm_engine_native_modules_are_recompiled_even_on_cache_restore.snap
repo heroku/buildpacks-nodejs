@@ -24,13 +24,13 @@ heroku/nodejs <buildpack-version>
 - Determining npm package information
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
-  - Resolved npm version `11.x` to `11.10.1`
+  - Resolved npm version `11.x` to `11.11.0`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-11.10.1.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-11.11.0.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@11.10.1`
+  - Successfully installed `npm@11.11.0`
 - Installing node modules
-  - Using npm version `11.10.1`
+  - Using npm version `11.11.0`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -74,6 +74,7 @@ Adding layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
 no default process type
 Saving <image-name>...
 *** Images (<random-hex>):
@@ -104,12 +105,12 @@ heroku/nodejs <buildpack-version>
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
   - Using cached packument for npm
-  - Resolved npm version `11.x` to `11.10.1`
+  - Resolved npm version `11.x` to `11.11.0`
 - Installing npm
   - Using cached version of npm
-  - Successfully installed `npm@11.10.1`
+  - Successfully installed `npm@11.11.0`
 - Installing node modules
-  - Using npm version `11.10.1`
+  - Using npm version `11.11.0`
   - Restoring npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -153,6 +154,7 @@ Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
 no default process type
 Saving <image-name>...
 *** Images (<random-hex>):

@@ -83,6 +83,7 @@ Adding layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
 no default process type
 Saving <image-name>...
 *** Images (<random-hex>):

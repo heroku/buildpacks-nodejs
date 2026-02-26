@@ -82,6 +82,7 @@ Adding layer 'buildpacksio/lifecycle:process-types'
 Adding label 'io.buildpacks.lifecycle.metadata'
 Adding label 'io.buildpacks.build.metadata'
 Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
 Setting default process type 'web'
 Saving <image-name>...
 *** Images (<random-hex>):
