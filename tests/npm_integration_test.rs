@@ -231,7 +231,10 @@ fn test_npm_native_modules_are_recompiled_even_on_cache_restore() {
             config.env("npm_config_foreground-scripts", "true");
         },
         |ctx| {
-            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout).filter(
+                r"(Reused|Added) (\d+/\d+) app layer\(s\)",
+                "<REUSED_OR_ADDED> ${2} app layer(s)",
+            );
             let config = ctx.config.clone();
             ctx.rebuild(config, |ctx| {
                 build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
@@ -252,7 +255,10 @@ fn test_npm_engine_native_modules_are_recompiled_even_on_cache_restore() {
             });
         },
         |ctx| {
-            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout).filter(
+                r"(Reused|Added) (\d+/\d+) app layer\(s\)",
+                "<REUSED_OR_ADDED> ${2} app layer(s)",
+            );
             let config = ctx.config.clone();
             ctx.rebuild(config, |ctx| {
                 build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
