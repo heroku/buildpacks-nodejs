@@ -17,3 +17,4 @@ pnpm-lock.yaml @colincasey
 yarn.lock @colincasey
 /.github/workflows/ @colincasey
 /src/package_managers/@yarnpkg/plugin-prune-dev-dependencies.js @colincasey
+/tests/snapshots/ @colincasey
