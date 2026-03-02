@@ -60,7 +60,7 @@ jobs:
         uses: Swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5 # v2.8.2
 
       - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@650c5ca14212efbbf3e580844b04bdccf68dac31 # v2.67.18
+        uses: taiki-e/install-action@68675c5a5f1a6950c3975d33f3ae0ef155e5bf3d # v2.68.15
         with:
           tool: cargo-llvm-cov
 
@@ -125,7 +125,7 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@06e250da5bb4ccb9a2103719a21d2a7f2252fe83 # v5.11.0
 
       - name: Install Nextest
-        uses: taiki-e/install-action@650c5ca14212efbbf3e580844b04bdccf68dac31 # v2.67.18
+        uses: taiki-e/install-action@68675c5a5f1a6950c3975d33f3ae0ef155e5bf3d # v2.68.15
         with:
           tool: nextest
 
