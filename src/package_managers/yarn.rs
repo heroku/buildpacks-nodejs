@@ -1,3 +1,4 @@
+use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::o11y::*;
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
@@ -274,13 +275,15 @@ pub(crate) fn install_dependencies(
 
     let yarn_cache = get_cache_folder_config(env, version)?;
     let zero_install_mode = is_yarn_zero_install_mode(&yarn_cache);
-    if zero_install_mode {
+    let node_linker = if zero_install_mode {
         print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+        None
     } else {
         let node_linker = get_node_linker_config(env, version)?;
         let cache_dir = create_cache_directory(context, version, node_linker.as_ref())?;
         set_cache_folder_config(env, version, &cache_dir)?;
-    }
+        node_linker
+    };
 
     print::bullet("Installing dependencies");
     let mut yarn_install_command = Command::new("yarn");
@@ -298,6 +301,18 @@ pub(crate) fn install_dependencies(
 
     print::sub_stream_cmd(yarn_install_command)
         .map_err(|e| create_yarn_install_command_error(&e))?;
+
+    let cleanup_app_node_modules = match version.major() {
+        1 => true,
+        _ => matches!(node_linker, Some(NodeLinker::NodeModules)),
+    };
+
+    if cleanup_app_node_modules {
+        context.register_layer_for_cleanup(LayerCleanupTarget {
+            path: context.app_dir.join("node_modules"),
+            kind: LayerKind::App,
+        });
+    }
 
     Ok(())
 }
