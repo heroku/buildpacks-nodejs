@@ -19,6 +19,7 @@ pub(crate) struct LayerCleanupTarget {
 
 /// Remove Makefile files from native module build directories
 /// These files have non-deterministic dependency ordering causing layer invalidation
+/// See: https://github.com/nodejs/node-gyp/issues/3061
 fn remove_build_makefiles(base_path: &Path) -> std::io::Result<usize> {
     let makefile_dir_entries = WalkDir::new(base_path)
         .into_iter()
