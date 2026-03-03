@@ -18,8 +18,20 @@ pub(crate) struct LayerCleanupTarget {
 }
 
 /// Remove Makefile files from native module build directories
-/// These files have non-deterministic dependency ordering causing layer invalidation
+///
+/// These files have non-deterministic dependency ordering causing layer invalidation.
 /// See: https://github.com/nodejs/node-gyp/issues/3061
+///
+/// This is fixed in node-gyp 11.3.0 (https://github.com/nodejs/node-gyp/releases/tag/v11.3.0) which
+/// includes changes from https://github.com/nodejs/gyp-next/releases/tag/v0.20.1 that close the above
+/// issue. Support availability in tooling follows:
+///
+/// | Tool    | Version Range | Notes                                                                          |
+/// |---------|---------------|--------------------------------------------------------------------------------|
+/// | Node.js | >= 24.10.0    | Via bundled npm v11.6.1                                                        |
+/// | npm     | >= 11.6.1     |                                                                                |
+/// | pnpm    | >= 10.29.0    |                                                                                |
+/// | Yarn    | N/A           | Yarn does not bundle node-gyp but relies on node-gyp being provided by Node.js |
 fn remove_build_makefiles(base_path: &Path) -> std::io::Result<usize> {
     let makefile_dir_entries = WalkDir::new(base_path)
         .into_iter()
