@@ -20,10 +20,10 @@ pub(crate) struct LayerCleanupTarget {
 /// Remove Makefile files from native module build directories
 ///
 /// These files have non-deterministic dependency ordering causing layer invalidation.
-/// See: https://github.com/nodejs/node-gyp/issues/3061
+/// See: <https://github.com/nodejs/node-gyp/issues/3061>
 ///
-/// This is fixed in node-gyp 11.3.0 (https://github.com/nodejs/node-gyp/releases/tag/v11.3.0) which
-/// includes changes from https://github.com/nodejs/gyp-next/releases/tag/v0.20.1 that close the above
+/// This is fixed in node-gyp [11.3.0](https://github.com/nodejs/node-gyp/releases/tag/v11.3.0) which
+/// includes changes from <https://github.com/nodejs/gyp-next/releases/tag/v0.20.1> that close the above
 /// issue. Support availability in tooling follows:
 ///
 /// | Tool    | Version Range | Notes                                                                          |
