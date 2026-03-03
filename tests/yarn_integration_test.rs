@@ -111,8 +111,32 @@ fn yarn_4_modules_zero() {
 
 #[test]
 #[ignore = "integration test"]
-fn test_yarn_native_modules_are_recompiled_even_on_cache_restore() {
-    nodejs_integration_test("./fixtures/yarn-project-with-native-module", |ctx| {
+fn test_yarn_1_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test("./fixtures/yarn-1-project-with-native-module", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_yarn_4_modules_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test("./fixtures/yarn-4-node-modules-with-native-module", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_yarn_4_pnp_native_modules_are_recompiled_even_on_cache_restore() {
+    nodejs_integration_test("./fixtures/yarn-4-pnp-with-native-module", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
