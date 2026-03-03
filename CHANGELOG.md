@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed non-deterministic app layer caching when native modules are compiled by npm or yarn. ([#1317](https://github.com/heroku/buildpacks-nodejs/pull/1317))
+- Fixed non-deterministic app layer caching when native modules are compiled by yarn with PnP linker. ([#1319](https://github.com/heroku/buildpacks-nodejs/pull/1319))
 
 ## [5.5.2] - 2026-02-25
 
