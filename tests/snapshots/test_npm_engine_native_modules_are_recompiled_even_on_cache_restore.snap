@@ -59,6 +59,8 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
+- Removing non-deterministic node-gyp artifacts
+  - Removed 1 Makefile artifact from the application's node_modules directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -68,7 +70,7 @@ Adding layer 'heroku/nodejs:npm_runtime_config'
 Adding layer 'heroku/nodejs:web_env'
 Adding layer 'heroku/nodejs:z_node_module_bins'
 Adding layer 'buildpacksio/lifecycle:launch.sbom'
-<REUSED_OR_ADDED> 1/1 app layer(s)
+Added 1/1 app layer(s)
 Adding layer 'buildpacksio/lifecycle:launcher'
 Adding layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'
@@ -139,6 +141,8 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
+- Removing non-deterministic node-gyp artifacts
+  - Removed 1 Makefile artifact from the application's node_modules directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
@@ -148,7 +152,7 @@ Reusing layer 'heroku/nodejs:npm_runtime_config'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-<REUSED_OR_ADDED> 1/1 app layer(s)
+Reused 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'

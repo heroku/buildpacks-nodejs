@@ -68,7 +68,8 @@ test/print-build-env 0.0.0
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Cleaning up pnpm virtual store layer
+- Removing non-deterministic node-gyp artifacts
+  - Nothing to remove from pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 HEROKU_AVAILABLE_PARALLELISM=<number>
 PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/pnpm/bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

@@ -66,7 +66,8 @@ test/skip-build-scripts 0.0.0
 
 ! Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
 
-- Cleaning up pnpm virtual store layer
+- Removing non-deterministic node-gyp artifacts
+  - Nothing to remove from pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

@@ -1,3 +1,4 @@
+use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
@@ -113,6 +114,11 @@ pub(crate) fn install_npm_dependencies(
             .envs(node_gyp_env()),
     )
     .map_err(|e| create_npm_install_error(&e))?;
+
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: context.app_dir.join("node_modules"),
+        kind: LayerKind::App,
+    });
 
     Ok(())
 }

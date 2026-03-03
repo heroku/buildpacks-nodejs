@@ -189,7 +189,7 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
     // Register virtual layer for cleanup of non-deterministic Makefiles
     context.register_layer_for_cleanup(LayerCleanupTarget {
         path: pnpm_virtual_store_layer.path().clone(),
-        kind: LayerKind::Virtual,
+        kind: LayerKind::PnpmVirtualStore,
     });
 
     Ok(virtual_store_dir)

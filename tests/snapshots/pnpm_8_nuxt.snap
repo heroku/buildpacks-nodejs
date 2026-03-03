@@ -91,7 +91,8 @@ heroku/nodejs <buildpack-version>
 !
 ! Since pruning can't be done safely for your build, it will be skipped. To fix this you must upgrade your version of pnpm to 8.15.6 or higher.
 
-- Cleaning up pnpm virtual store layer
+- Removing non-deterministic node-gyp artifacts
+  - Nothing to remove from pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

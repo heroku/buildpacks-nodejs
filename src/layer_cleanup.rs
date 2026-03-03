@@ -6,7 +6,9 @@ use walkdir::WalkDir;
 #[derive(Debug, Clone)]
 pub(crate) enum LayerKind {
     /// pnpm virtual store layer (contains native module builds with Makefiles)
-    Virtual,
+    PnpmVirtualStore,
+    /// App `node_modules` directory (contains native module builds with Makefiles)
+    App,
 }
 
 #[derive(Debug, Clone)]
@@ -16,7 +18,20 @@ pub(crate) struct LayerCleanupTarget {
 }
 
 /// Remove Makefile files from native module build directories
-/// These files have non-deterministic dependency ordering causing layer invalidation
+///
+/// These files have non-deterministic dependency ordering causing layer invalidation.
+/// See: <https://github.com/nodejs/node-gyp/issues/3061>
+///
+/// This is fixed in node-gyp [11.3.0](https://github.com/nodejs/node-gyp/releases/tag/v11.3.0) which
+/// includes changes from <https://github.com/nodejs/gyp-next/releases/tag/v0.20.1> that close the above
+/// issue. Support availability in tooling follows:
+///
+/// | Tool    | Version Range | Notes                                                                          |
+/// |---------|---------------|--------------------------------------------------------------------------------|
+/// | Node.js | >= 24.10.0    | Via bundled npm v11.6.1                                                        |
+/// | npm     | >= 11.6.1     |                                                                                |
+/// | pnpm    | >= 10.29.0    |                                                                                |
+/// | Yarn    | N/A           | Yarn does not bundle node-gyp but relies on node-gyp being provided by Node.js |
 fn remove_build_makefiles(base_path: &Path) -> std::io::Result<usize> {
     let makefile_dir_entries = WalkDir::new(base_path)
         .into_iter()
@@ -43,16 +58,24 @@ pub(crate) fn cleanup_layer(target: &LayerCleanupTarget) -> Result<(), std::io::
         return Ok(());
     }
 
-    match target.kind {
-        LayerKind::Virtual => {
-            // pnpm virtual store: contains symlinked packages with native module builds
-            // Clean Makefiles from: virtual/store/*/node_modules/*/build/
-            print::bullet("Cleaning up pnpm virtual store layer");
-            let removed = remove_build_makefiles(path)?;
-            if removed > 0 {
-                print::sub_bullet(format!("Removed {removed} Makefile artifacts"));
+    let removed = remove_build_makefiles(path)?;
+
+    let from = match target.kind {
+        LayerKind::PnpmVirtualStore => "pnpm virtual store layer",
+        LayerKind::App => "the application's node_modules directory",
+    };
+
+    if removed > 0 {
+        print::sub_bullet(format!(
+            "Removed {removed} Makefile {} from {from}",
+            if removed <= 1 {
+                "artifact"
+            } else {
+                "artifacts"
             }
-        }
+        ));
+    } else {
+        print::sub_bullet(format!("Nothing to remove from {from}"));
     }
 
     Ok(())
