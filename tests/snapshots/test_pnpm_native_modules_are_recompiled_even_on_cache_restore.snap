@@ -67,8 +67,8 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Cleaning up pnpm virtual store layer
-  - Removed 1 Makefile artifacts
+- Removing non-deterministic node-gyp artifacts
+  - Removed 1 Makefile artifact from pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -149,8 +149,8 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Cleaning up pnpm virtual store layer
-  - Removed 1 Makefile artifacts
+- Removing non-deterministic node-gyp artifacts
+  - Removed 1 Makefile artifact from pnpm virtual store layer
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'

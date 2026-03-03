@@ -246,6 +246,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         // Clean up non-deterministic build artifacts from registered layers
         let layers_to_cleanup = context.layers_to_cleanup();
         if !layers_to_cleanup.is_empty() {
+            print::bullet("Removing non-deterministic node-gyp artifacts");
             for layer_to_cleanup in layers_to_cleanup {
                 if let Err(e) = cleanup_layer(&layer_to_cleanup) {
                     print::sub_bullet(format!("- Error during cleanup: {e}"));

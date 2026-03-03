@@ -6,7 +6,7 @@ use walkdir::WalkDir;
 #[derive(Debug, Clone)]
 pub(crate) enum LayerKind {
     /// pnpm virtual store layer (contains native module builds with Makefiles)
-    Virtual,
+    PnpmVirtualStore,
     /// App `node_modules` directory (contains native module builds with Makefiles)
     App,
 }
@@ -45,21 +45,24 @@ pub(crate) fn cleanup_layer(target: &LayerCleanupTarget) -> Result<(), std::io::
         return Ok(());
     }
 
-    match target.kind {
-        LayerKind::Virtual => {
-            print::bullet("Cleaning up pnpm virtual store layer");
-            let removed = remove_build_makefiles(path)?;
-            if removed > 0 {
-                print::sub_bullet(format!("Removed {removed} Makefile artifacts"));
+    let removed = remove_build_makefiles(path)?;
+
+    let from = match target.kind {
+        LayerKind::PnpmVirtualStore => "pnpm virtual store layer",
+        LayerKind::App => "the application's node_modules directory",
+    };
+
+    if removed > 0 {
+        print::sub_bullet(format!(
+            "Removed {removed} Makefile {} from {from}",
+            if removed <= 1 {
+                "artifact"
+            } else {
+                "artifacts"
             }
-        }
-        LayerKind::App => {
-            print::bullet("Cleaning up app node_modules");
-            let removed = remove_build_makefiles(path)?;
-            if removed > 0 {
-                print::sub_bullet(format!("Removed {removed} Makefile artifacts"));
-            }
-        }
+        ));
+    } else {
+        print::sub_bullet(format!("Nothing to remove from {from}"));
     }
 
     Ok(())
