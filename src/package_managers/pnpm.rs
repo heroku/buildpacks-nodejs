@@ -76,6 +76,11 @@ pub(crate) fn install_dependencies(
 
     maybe_prune_store_directory(env, store)?;
 
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: context.app_dir.clone(),
+        kind: LayerKind::PnpmModulesYaml,
+    });
+
     Ok(())
 }
 

@@ -7,8 +7,10 @@ use walkdir::WalkDir;
 pub(crate) enum LayerKind {
     /// pnpm virtual store layer (contains native module builds with Makefiles)
     PnpmVirtualStore,
-    /// App `node_modules` directory (contains native module builds with Makefiles)
+    /// App directory (contains native module builds with Makefiles)
     App,
+    /// pnpm `node_modules/.modules.yaml` (contains non-deterministic `prunedAt` timestamp)
+    PnpmModulesYaml,
 }
 
 #[derive(Debug, Clone)]
@@ -49,6 +51,21 @@ fn remove_build_makefiles(base_path: &Path) -> std::io::Result<usize> {
     Ok(removed_count)
 }
 
+/// Remove pnpm's `.modules.yaml` file from `node_modules/`
+///
+/// This file contains a `prunedAt` timestamp that changes on every install,
+/// causing non-deterministic app layer content. pnpm regenerates this file
+/// on every install so it is safe to remove.
+fn remove_pnpm_modules_yaml(app_dir: &Path) -> std::io::Result<bool> {
+    let modules_yaml = app_dir.join("node_modules/.modules.yaml");
+    if modules_yaml.exists() {
+        fs::remove_file(&modules_yaml)?;
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 /// Clean up non-deterministic build artifacts from a layer
 pub(crate) fn cleanup_layer(target: &LayerCleanupTarget) -> Result<(), std::io::Error> {
     let path = &target.path;
@@ -58,24 +75,34 @@ pub(crate) fn cleanup_layer(target: &LayerCleanupTarget) -> Result<(), std::io::
         return Ok(());
     }
 
-    let removed = remove_build_makefiles(path)?;
+    match target.kind {
+        LayerKind::PnpmVirtualStore | LayerKind::App => {
+            let removed = remove_build_makefiles(path)?;
 
-    let from = match target.kind {
-        LayerKind::PnpmVirtualStore => "pnpm virtual store layer",
-        LayerKind::App => "the application's node_modules directory",
-    };
+            let from = match target.kind {
+                LayerKind::PnpmVirtualStore => "pnpm virtual store layer",
+                LayerKind::App => "the application directory",
+                LayerKind::PnpmModulesYaml => unreachable!(),
+            };
 
-    if removed > 0 {
-        print::sub_bullet(format!(
-            "Removed {removed} Makefile {} from {from}",
-            if removed <= 1 {
-                "artifact"
+            if removed > 0 {
+                print::sub_bullet(format!(
+                    "Removed {removed} Makefile {} from {from}",
+                    if removed <= 1 {
+                        "artifact"
+                    } else {
+                        "artifacts"
+                    }
+                ));
             } else {
-                "artifacts"
+                print::sub_bullet(format!("Nothing to remove from {from}"));
             }
-        ));
-    } else {
-        print::sub_bullet(format!("Nothing to remove from {from}"));
+        }
+        LayerKind::PnpmModulesYaml => {
+            if remove_pnpm_modules_yaml(path)? {
+                print::sub_bullet("Removed non-deterministic .modules.yaml from node_modules");
+            }
+        }
     }
 
     Ok(())
@@ -86,6 +113,28 @@ mod tests {
     use super::*;
     use std::fs;
     use tempfile::TempDir;
+
+    #[test]
+    fn test_remove_pnpm_modules_yaml() {
+        let temp = TempDir::new().unwrap();
+        let base = temp.path();
+
+        let node_modules = base.join("node_modules");
+        fs::create_dir_all(&node_modules).unwrap();
+        fs::write(node_modules.join(".modules.yaml"), b"prunedAt: some-date").unwrap();
+
+        let removed = remove_pnpm_modules_yaml(base).unwrap();
+
+        assert!(removed);
+        assert!(!node_modules.join(".modules.yaml").exists());
+    }
+
+    #[test]
+    fn test_remove_pnpm_modules_yaml_when_missing() {
+        let temp = TempDir::new().unwrap();
+        let removed = remove_pnpm_modules_yaml(temp.path()).unwrap();
+        assert!(!removed);
+    }
 
     #[test]
     fn test_remove_build_makefiles() {
