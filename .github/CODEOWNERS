@@ -6,7 +6,6 @@
 # However, request review from the language owner instead for files that are updated
 # by Dependabot or inventory/release automation, to reduce team review request noise.
 CHANGELOG.md @colincasey
-inventory.toml @colincasey
 Cargo.toml @colincasey
 Cargo.lock @colincasey
 buildpack.toml @colincasey
@@ -16,5 +15,6 @@ package-lock.json @colincasey
 pnpm-lock.yaml @colincasey
 yarn.lock @colincasey
 /.github/workflows/ @colincasey
+/inventory/ @colincasey
 /src/package_managers/@yarnpkg/plugin-prune-dev-dependencies.js @colincasey
 /tests/snapshots/ @colincasey
