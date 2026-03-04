@@ -54,8 +54,8 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Configuring default processes
   - Skipping default web process (no start script defined)
-- Removing non-deterministic node-gyp artifacts
-  - Nothing to remove from the application's node_modules directory
+- Removing non-deterministic build artifacts before export
+  - Nothing to cleanup
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

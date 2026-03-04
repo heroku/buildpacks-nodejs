@@ -1,4 +1,4 @@
-use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
+use crate::cleanup::{CleanupTask, NodeGypArtifactLocation};
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
@@ -115,10 +115,9 @@ pub(crate) fn install_npm_dependencies(
     )
     .map_err(|e| create_npm_install_error(&e))?;
 
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: context.app_dir.clone(),
-        kind: LayerKind::App,
-    });
+    context.register_cleanup(CleanupTask::NodeGypMakefiles(
+        NodeGypArtifactLocation::AppDir(context.app_dir.clone()),
+    ));
 
     Ok(())
 }

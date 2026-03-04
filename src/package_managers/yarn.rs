@@ -1,4 +1,4 @@
-use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
+use crate::cleanup::{CleanupTask, NodeGypArtifactLocation};
 use crate::o11y::*;
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
@@ -303,10 +303,9 @@ pub(crate) fn install_dependencies(
     // Register app directory for cleanup of non-deterministic Makefiles generated
     // by node-gyp. Native modules may be compiled into node_modules/ (yarn v1 and
     // node-modules linker) or .yarn/unplugged/ (PnP linker).
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: context.app_dir.clone(),
-        kind: LayerKind::App,
-    });
+    context.register_cleanup(CleanupTask::NodeGypMakefiles(
+        NodeGypArtifactLocation::AppDir(context.app_dir.clone()),
+    ));
 
     Ok(())
 }
