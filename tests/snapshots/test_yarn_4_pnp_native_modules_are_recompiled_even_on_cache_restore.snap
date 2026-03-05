@@ -72,8 +72,8 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Removing non-deterministic node-gyp artifacts
-  - Removed 1 Makefile artifact from the application's node_modules directory
+- Removing non-deterministic build artifacts before export
+  - Removed 1 Makefile artifact from the application directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -167,8 +167,8 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Removing non-deterministic node-gyp artifacts
-  - Removed 1 Makefile artifact from the application's node_modules directory
+- Removing non-deterministic build artifacts before export
+  - Removed 1 Makefile artifact from the application directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'

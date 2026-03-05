@@ -1,29 +1,29 @@
 use crate::NodeJsBuildpack;
-use crate::layer_cleanup::LayerCleanupTarget;
+use crate::cleanup::CleanupTask;
 use std::cell::RefCell;
 use std::ops::Deref;
 
-/// Wrapper around libcnb `BuildContext` that tracks layers needing cleanup
-/// of non-deterministic build artifacts (Python bytecode, Makefiles)
+/// Wrapper around libcnb `BuildContext` that tracks cleanup tasks
+/// for non-deterministic build artifacts
 pub(crate) struct NodeJsBuildContext {
     inner: libcnb::build::BuildContext<NodeJsBuildpack>,
-    cleanup_registry: RefCell<Vec<LayerCleanupTarget>>,
+    cleanup_tasks: RefCell<Vec<CleanupTask>>,
 }
 
 impl NodeJsBuildContext {
     pub(crate) fn new(inner: libcnb::build::BuildContext<NodeJsBuildpack>) -> Self {
         Self {
             inner,
-            cleanup_registry: RefCell::new(Vec::new()),
+            cleanup_tasks: RefCell::new(Vec::new()),
         }
     }
 
-    pub(crate) fn register_layer_for_cleanup(&self, target: LayerCleanupTarget) {
-        self.cleanup_registry.borrow_mut().push(target);
+    pub(crate) fn register_cleanup(&self, task: CleanupTask) {
+        self.cleanup_tasks.borrow_mut().push(task);
     }
 
-    pub(crate) fn layers_to_cleanup(&self) -> Vec<LayerCleanupTarget> {
-        self.cleanup_registry.borrow().iter().cloned().collect()
+    pub(crate) fn cleanup_tasks(&self) -> Vec<CleanupTask> {
+        self.cleanup_tasks.borrow().clone()
     }
 }
 

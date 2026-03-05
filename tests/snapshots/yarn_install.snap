@@ -68,8 +68,8 @@ test/print-build-env 0.0.0
       ➤ YN0000: Done in <time_elapsed>
 
   - Done (<time_elapsed>)
-- Removing non-deterministic node-gyp artifacts
-  - Nothing to remove from the application's node_modules directory
+- Removing non-deterministic build artifacts before export
+  - Nothing to cleanup
 - Done (finished in <time_elapsed>)
 HEROKU_AVAILABLE_PARALLELISM=<number>
 PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/yarn/bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin

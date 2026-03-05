@@ -64,8 +64,8 @@ heroku/nodejs <buildpack-version>
 
 ! Warning: Experimental configuration `com.heroku.buildpacks.nodejs.actions.prune_dev_dependencies` found in `project.toml`. This feature may change unexpectedly in the future.
 
-- Removing non-deterministic node-gyp artifacts
-  - Nothing to remove from pnpm virtual store layer
+- Removing non-deterministic build artifacts before export
+  - Removed pnpm metadata file node_modules/.modules.yaml
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

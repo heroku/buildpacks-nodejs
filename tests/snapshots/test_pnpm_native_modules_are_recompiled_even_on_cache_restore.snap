@@ -67,8 +67,9 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Removing non-deterministic node-gyp artifacts
+- Removing non-deterministic build artifacts before export
   - Removed 1 Makefile artifact from pnpm virtual store layer
+  - Removed pnpm metadata file node_modules/.modules.yaml
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -149,8 +150,9 @@ heroku/nodejs <buildpack-version>
       devDependencies: skipped
 
   - Done (<time_elapsed>)
-- Removing non-deterministic node-gyp artifacts
+- Removing non-deterministic build artifacts before export
   - Removed 1 Makefile artifact from pnpm virtual store layer
+  - Removed pnpm metadata file node_modules/.modules.yaml
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
@@ -160,7 +162,7 @@ Reusing layer 'heroku/nodejs:virtual'
 Reusing layer 'heroku/nodejs:web_env'
 Reusing layer 'heroku/nodejs:z_node_module_bins'
 Reusing layer 'buildpacksio/lifecycle:launch.sbom'
-Added 1/1 app layer(s)
+Reused 1/1 app layer(s)
 Reusing layer 'buildpacksio/lifecycle:launcher'
 Reusing layer 'buildpacksio/lifecycle:config'
 Adding label 'io.buildpacks.lifecycle.metadata'

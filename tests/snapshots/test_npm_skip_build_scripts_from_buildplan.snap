@@ -45,8 +45,8 @@ test/skip-build-scripts 0.0.0
 
 ! Warning: Experimental configuration `node_build_scripts.metadata.skip_pruning` was added to the buildplan by a later buildpack. This feature may change unexpectedly in the future.
 
-- Removing non-deterministic node-gyp artifacts
-  - Nothing to remove from the application's node_modules directory
+- Removing non-deterministic build artifacts before export
+  - Nothing to cleanup
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

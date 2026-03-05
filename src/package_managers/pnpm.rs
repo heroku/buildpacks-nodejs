@@ -1,4 +1,4 @@
-use crate::layer_cleanup::{LayerCleanupTarget, LayerKind};
+use crate::cleanup::{CleanupTask, NodeGypArtifactLocation};
 use crate::package_json::PackageJson;
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
@@ -75,6 +75,8 @@ pub(crate) fn install_dependencies(
     .map_err(|e| create_pnpm_install_command_error(&e))?;
 
     maybe_prune_store_directory(env, store)?;
+
+    context.register_cleanup(CleanupTask::PnpmModulesYaml(context.app_dir.clone()));
 
     Ok(())
 }
@@ -187,10 +189,9 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
     }
 
     // Register virtual layer for cleanup of non-deterministic Makefiles
-    context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: pnpm_virtual_store_layer.path().clone(),
-        kind: LayerKind::PnpmVirtualStore,
-    });
+    context.register_cleanup(CleanupTask::NodeGypMakefiles(
+        NodeGypArtifactLocation::PnpmVirtualStore(pnpm_virtual_store_layer.path().clone()),
+    ));
 
     Ok(virtual_store_dir)
 }
