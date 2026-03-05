@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.20.0`
+  - Resolved Node.js version: `20.20.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.20.0/node-v20.20.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v20.20.1/node-v20.20.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.20.0 (<arch>)`
-  - Installing Node.js `20.20.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.20.1 (<arch>)`
+  - Installing Node.js `20.20.1 (<arch>)` ... (<time_elapsed>)
 - Installing node modules
   - Using npm version `10.8.2`
   - Creating npm cache
@@ -89,9 +89,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.20.0`
+  - Resolved Node.js version: `20.20.1`
 - Installing Node.js distribution
-  - Reusing Node.js 20.20.0 (<arch>)
+  - Reusing Node.js 20.20.1 (<arch>)
 - Installing node modules
   - Using npm version `10.8.2`
   - Restoring npm cache
