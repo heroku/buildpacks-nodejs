@@ -275,15 +275,13 @@ pub(crate) fn install_dependencies(
 
     let yarn_cache = get_cache_folder_config(env, version)?;
     let zero_install_mode = is_yarn_zero_install_mode(&yarn_cache);
-    let node_linker = if zero_install_mode {
+    if zero_install_mode {
         print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
-        None
     } else {
         let node_linker = get_node_linker_config(env, version)?;
         let cache_dir = create_cache_directory(context, version, node_linker.as_ref())?;
         set_cache_folder_config(env, version, &cache_dir)?;
-        node_linker
-    };
+    }
 
     print::bullet("Installing dependencies");
     let mut yarn_install_command = Command::new("yarn");
@@ -302,17 +300,13 @@ pub(crate) fn install_dependencies(
     print::sub_stream_cmd(yarn_install_command)
         .map_err(|e| create_yarn_install_command_error(&e))?;
 
-    let cleanup_app_node_modules = match version.major() {
-        1 => true,
-        _ => matches!(node_linker, Some(NodeLinker::NodeModules)),
-    };
-
-    if cleanup_app_node_modules {
-        context.register_layer_for_cleanup(LayerCleanupTarget {
-            path: context.app_dir.join("node_modules"),
-            kind: LayerKind::App,
-        });
-    }
+    // Register app directory for cleanup of non-deterministic Makefiles generated
+    // by node-gyp. Native modules may be compiled into node_modules/ (yarn v1 and
+    // node-modules linker) or .yarn/unplugged/ (PnP linker).
+    context.register_layer_for_cleanup(LayerCleanupTarget {
+        path: context.app_dir.clone(),
+        kind: LayerKind::App,
+    });
 
     Ok(())
 }

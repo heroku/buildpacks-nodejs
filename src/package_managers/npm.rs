@@ -116,7 +116,7 @@ pub(crate) fn install_npm_dependencies(
     .map_err(|e| create_npm_install_error(&e))?;
 
     context.register_layer_for_cleanup(LayerCleanupTarget {
-        path: context.app_dir.join("node_modules"),
+        path: context.app_dir.clone(),
         kind: LayerKind::App,
     });
 
