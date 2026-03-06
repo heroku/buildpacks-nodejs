@@ -74,7 +74,7 @@ fn test_npm_version_change_invalidates_npm_engine_cache() {
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
-            set_npm_engine(&app_dir, "9.6.5");
+            set_npm_engine(&app_dir, "10.9.1");
         });
 
         ctx.rebuild(config, |ctx| {
@@ -91,7 +91,7 @@ fn test_node_version_change_invalidates_npm_engine_cache() {
 
         let mut config = ctx.config.clone();
         config.app_dir_preprocessor(|app_dir| {
-            set_node_engine(&app_dir, "16.20.1");
+            set_node_engine(&app_dir, "22.21.0");
         });
 
         ctx.rebuild(config, |ctx| {
