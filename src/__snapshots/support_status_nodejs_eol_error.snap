@@ -1,0 +1,12 @@
+---
+source: src/utils/error_handling.rs
+---
+! Node.js version not supported
+!
+! Node.js 18.x reached end-of-life on April 30, 2025 and is no longer supported on Heroku.
+!
+! Suggestions:
+! - Upgrade to a supported LTS version (20.x, 22.x, 24.x)
+! - Set `com.heroku.buildpacks.nodejs.support.ignore_eol_error_nodejs = true` in `project.toml` to temporarily bypass this check
+!
+! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions

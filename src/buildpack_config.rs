@@ -8,6 +8,7 @@ use indoc::formatdoc;
 use libcnb::data::buildpack::BuildpackId;
 use libcnb::data::buildpack_plan::BuildpackPlan;
 use std::fmt::{Display, Formatter};
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::str::FromStr;
 use toml::Table;
@@ -42,11 +43,27 @@ impl Display for ConfigValueSource {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct IgnoreEolError(bool);
+
+impl std::ops::Deref for IgnoreEolError {
+    type Target = bool;
+    fn deref(&self) -> &bool {
+        &self.0
+    }
+}
+
+impl From<bool> for IgnoreEolError {
+    fn from(value: bool) -> Self {
+        IgnoreEolError(value)
+    }
+}
+
 #[derive(Debug, Default)]
 pub(crate) struct BuildpackConfig {
     pub(crate) build_scripts_enabled: Option<ConfigValue<bool>>,
     pub(crate) prune_dev_dependencies: Option<ConfigValue<bool>>,
-    pub(crate) ignore_eol_error_nodejs: Option<ConfigValue<bool>>,
+    pub(crate) ignore_eol_error_nodejs: Option<ConfigValue<IgnoreEolError>>,
     errors: Vec<String>,
 }
 
@@ -128,7 +145,7 @@ impl TryFrom<&BuildpackBuildContext> for BuildpackConfig {
             {
                 tracing::info!(
                     { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
-                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = value,
+                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = value.deref(),
                     "buildpack_config"
                 );
             }
@@ -283,14 +300,14 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
                 .and_then(|v| v.get("ignore_eol_error_nodejs"))
                 .and_then(toml_edit::Item::as_bool)
                 .map(|value| ConfigValue {
-                    value,
+                    value: IgnoreEolError::from(value),
                     source: source.clone(),
                 }),
         };
         if let Some(ignore_eol_error_nodejs) = &ignore_eol_error_nodejs {
             tracing::info!(
                 { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
-                { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = ignore_eol_error_nodejs.value,
+                { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = *ignore_eol_error_nodejs.value,
                 "buildpack_config"
             );
         }
@@ -530,7 +547,7 @@ mod tests {
         assert_eq!(
             config.ignore_eol_error_nodejs,
             Some(ConfigValue {
-                value: true,
+                value: IgnoreEolError::from(true),
                 source: ConfigValueSource::ProjectToml,
             })
         );
