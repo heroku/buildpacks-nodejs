@@ -46,10 +46,18 @@ impl Display for ConfigValueSource {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct IgnoreEolError(bool);
 
-impl std::ops::Deref for IgnoreEolError {
+impl Deref for IgnoreEolError {
     type Target = bool;
     fn deref(&self) -> &bool {
         &self.0
+    }
+}
+
+impl Default for IgnoreEolError {
+    fn default() -> Self {
+        // EOL error is ignored by default (warning only). When enabled in the future,
+        // flip this default to `false` and users can opt out via project.toml.
+        IgnoreEolError(true)
     }
 }
 
@@ -140,9 +148,7 @@ impl TryFrom<&BuildpackBuildContext> for BuildpackConfig {
                     "buildpack_config"
                 );
             }
-            if let Some(ConfigValue { value, source }) =
-                &buildpack_config.ignore_eol_error_nodejs
-            {
+            if let Some(ConfigValue { value, source }) = &buildpack_config.ignore_eol_error_nodejs {
                 tracing::info!(
                     { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
                     { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = value.deref(),
