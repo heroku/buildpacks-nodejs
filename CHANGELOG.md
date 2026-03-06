@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a warning when deploying with end-of-life Node.js versions. ([#1324](https://github.com/heroku/buildpacks-nodejs/pull/1324))
+
 ## [5.5.4] - 2026-03-12
 
 ### Added
