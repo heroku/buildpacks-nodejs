@@ -46,6 +46,7 @@ impl Display for ConfigValueSource {
 pub(crate) struct BuildpackConfig {
     pub(crate) build_scripts_enabled: Option<ConfigValue<bool>>,
     pub(crate) prune_dev_dependencies: Option<ConfigValue<bool>>,
+    pub(crate) ignore_eol_error_nodejs: Option<ConfigValue<bool>>,
     errors: Vec<String>,
 }
 
@@ -79,6 +80,7 @@ impl BuildpackConfig {
             let BuildpackConfig {
                 build_scripts_enabled,
                 prune_dev_dependencies,
+                ignore_eol_error_nodejs,
                 errors,
             } = config;
             if build_scripts_enabled.is_some() {
@@ -86,6 +88,9 @@ impl BuildpackConfig {
             }
             if prune_dev_dependencies.is_some() {
                 merged_config.prune_dev_dependencies = prune_dev_dependencies;
+            }
+            if ignore_eol_error_nodejs.is_some() {
+                merged_config.ignore_eol_error_nodejs = ignore_eol_error_nodejs;
             }
             merged_config.errors.extend(errors);
         }
@@ -115,6 +120,15 @@ impl TryFrom<&BuildpackBuildContext> for BuildpackConfig {
                 tracing::info!(
                     { CONFIG_BUILD_SCRIPT_ENABLED_SOURCE } = source.to_string(),
                     { CONFIG_BUILD_SCRIPT_ENABLED_VALUE } = value,
+                    "buildpack_config"
+                );
+            }
+            if let Some(ConfigValue { value, source }) =
+                &buildpack_config.ignore_eol_error_nodejs
+            {
+                tracing::info!(
+                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
+                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = value,
                     "buildpack_config"
                 );
             }
@@ -261,9 +275,29 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
                 "buildpack_config"
             );
         }
+        let ignore_eol_error_nodejs = match source {
+            ConfigValueSource::Buildplan(_) => None,
+            ConfigValueSource::ProjectToml => table
+                .get("support")
+                .and_then(|v| v.as_table_like())
+                .and_then(|v| v.get("ignore_eol_error_nodejs"))
+                .and_then(toml_edit::Item::as_bool)
+                .map(|value| ConfigValue {
+                    value,
+                    source: source.clone(),
+                }),
+        };
+        if let Some(ignore_eol_error_nodejs) = &ignore_eol_error_nodejs {
+            tracing::info!(
+                { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
+                { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = ignore_eol_error_nodejs.value,
+                "buildpack_config"
+            );
+        }
         Ok(BuildpackConfig {
             build_scripts_enabled,
             prune_dev_dependencies,
+            ignore_eol_error_nodejs,
             errors: Vec::new(),
         })
     }
@@ -487,6 +521,27 @@ mod tests {
         );
     }
 
+    #[test]
+    fn config_ignore_eol_error_nodejs_from_project_toml() {
+        let config = multisource_buildpack_config()
+            .project_toml(|config| config.ignore_eol_error_nodejs(true))
+            .build()
+            .unwrap();
+        assert_eq!(
+            config.ignore_eol_error_nodejs,
+            Some(ConfigValue {
+                value: true,
+                source: ConfigValueSource::ProjectToml,
+            })
+        );
+    }
+
+    #[test]
+    fn config_ignore_eol_error_nodejs_defaults_to_none() {
+        let config = multisource_buildpack_config().build().unwrap();
+        assert_eq!(config.ignore_eol_error_nodejs, None);
+    }
+
     #[bon::builder(finish_fn = build)]
     fn multisource_buildpack_config(
         #[builder(field)] buildpack_plan_configs: Vec<BuildplanConfig>,
@@ -542,6 +597,7 @@ mod tests {
     struct ProjectTomlConfig {
         build_scripts_enabled: Option<bool>,
         prune_dev_dependencies: Option<bool>,
+        ignore_eol_error_nodejs: Option<bool>,
     }
 
     impl ProjectTomlConfig {
@@ -555,6 +611,12 @@ mod tests {
                 let _ = writeln!(
                     toml,
                     "actions.prune_dev_dependencies = {prune_dev_dependencies}"
+                );
+            }
+            if let Some(ignore_eol_error_nodejs) = self.ignore_eol_error_nodejs {
+                let _ = writeln!(
+                    toml,
+                    "support.ignore_eol_error_nodejs = {ignore_eol_error_nodejs}"
                 );
             }
             toml::from_str(&toml).unwrap()

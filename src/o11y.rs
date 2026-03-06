@@ -51,6 +51,10 @@ pub(crate) const CONFIG_BUILD_SCRIPT_ENABLED_SOURCE: &str =
     formatcp!("{CONFIG}.build_script_enabled_source");
 pub(crate) const CONFIG_BUILD_SCRIPT_ENABLED_VALUE: &str =
     formatcp!("{CONFIG}.build_script_enabled_value");
+pub(crate) const CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE: &str =
+    formatcp!("{CONFIG}.ignore_eol_error_nodejs_source");
+pub(crate) const CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE: &str =
+    formatcp!("{CONFIG}.ignore_eol_error_nodejs_value");
 
 const BUILD_SCRIPTS: &str = formatcp!("{NAMESPACE}.build_scripts");
 
