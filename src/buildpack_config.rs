@@ -151,7 +151,7 @@ impl TryFrom<&BuildpackBuildContext> for BuildpackConfig {
             if let Some(ConfigValue { value, source }) = &buildpack_config.ignore_eol_error_nodejs {
                 tracing::info!(
                     { CONFIG_IGNORE_EOL_ERROR_NODEJS_SOURCE } = source.to_string(),
-                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = value.deref(),
+                    { CONFIG_IGNORE_EOL_ERROR_NODEJS_VALUE } = &**value,
                     "buildpack_config"
                 );
             }

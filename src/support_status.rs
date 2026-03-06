@@ -47,9 +47,8 @@ pub(crate) fn check_nodejs_support_status(
     major_version: u64,
     ignore_eol_error: IgnoreEolError,
 ) -> Result<(), ErrorMessage> {
-    let version_info = match NODEJS_VERSIONS.get(&major_version) {
-        Some(info) => info,
-        None => return Ok(()),
+    let Some(version_info) = NODEJS_VERSIONS.get(&major_version) else {
+        return Ok(());
     };
 
     if version_info.status != NodejsVersionStatus::Eol {
@@ -61,13 +60,13 @@ pub(crate) fn check_nodejs_support_status(
         version_info.end_of_life_date,
     ));
 
-    if !*ignore_eol_error {
+    if *ignore_eol_error {
+        Ok(())
+    } else {
         Err(create_nodejs_eol_error(
             major_version,
             version_info.end_of_life_date,
         ))
-    } else {
-        Ok(())
     }
 }
 
