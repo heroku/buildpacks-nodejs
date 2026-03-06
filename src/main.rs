@@ -28,6 +28,7 @@ mod package_manager;
 mod package_managers;
 mod runtime;
 mod runtimes;
+mod support_status;
 mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
