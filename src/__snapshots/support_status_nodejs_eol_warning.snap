@@ -1,7 +1,9 @@
 ---
-source: src/support_status.rs
+source: src/utils/error_handling.rs
 ---
-Node.js 18.x has reached end-of-life as of April 30, 2025 and is no longer supported. EOL versions no longer receive security updates or bug fixes from the Node.js project.
+Node.js 18.x reached end-of-life on April 30, 2025 and is no longer supported on Heroku. EOL versions no longer receive security updates or bug fixes from the Node.js project.
+
+In a future buildpack release, this warning will become a build error. Please upgrade to a supported version as soon as possible to avoid build failures.
 
 Supported versions: 20.x (LTS), 22.x (LTS), 24.x (LTS), 25.x (Current)
 

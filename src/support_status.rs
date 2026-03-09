@@ -113,9 +113,12 @@ fn create_nodejs_eol_warning(major_version: u64, eol_date: Date) -> String {
     let supported_versions = format_supported_versions();
     let support_url = style::url(SUPPORT_URL);
     formatdoc! {"
-        Node.js {major_version}.x has reached end-of-life as of {eol_date_formatted} and is no \
-        longer supported. EOL versions no longer receive security updates or bug fixes from the \
-        Node.js project.
+        Node.js {major_version}.x reached end-of-life on {eol_date_formatted} and is no longer \
+        supported on Heroku. EOL versions no longer receive security updates or bug fixes from \
+        the Node.js project.
+
+        In a future buildpack release, this warning will become a build error. Please upgrade \
+        to a supported version as soon as possible to avoid build failures.
 
         Supported versions: {supported_versions}
 
