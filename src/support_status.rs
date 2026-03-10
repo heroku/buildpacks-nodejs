@@ -40,9 +40,9 @@ const SUPPORT_URL: &str =
 
 /// Checks the support status of a resolved Node.js version against the lifecycle map.
 ///
-/// - If the version is EOL, emits a warning via `print::warning()`.
-/// - If `ignore_eol_error` is `false`, returns an error that fails the build.
-/// - Returns `Ok(())` for supported versions or when the error is ignored.
+/// - If the version is EOL and `ignore_eol_error` is `true`, emits a warning and returns `Ok(())`.
+/// - If the version is EOL and `ignore_eol_error` is `false`, returns an error that fails the build.
+/// - Returns `Ok(())` for supported versions or unknown versions.
 pub(crate) fn check_nodejs_support_status(
     major_version: u64,
     ignore_eol_error: IgnoreEolError,
@@ -55,12 +55,11 @@ pub(crate) fn check_nodejs_support_status(
         return Ok(());
     }
 
-    print::warning(create_nodejs_eol_warning(
-        major_version,
-        version_info.end_of_life_date,
-    ));
-
     if *ignore_eol_error {
+        print::warning(create_nodejs_eol_warning(
+            major_version,
+            version_info.end_of_life_date,
+        ));
         Ok(())
     } else {
         Err(create_nodejs_eol_error(
@@ -222,12 +221,15 @@ mod tests {
     }
 
     #[test]
-    fn eol_version_without_ignore_emits_warning_returns_err() {
+    fn eol_version_without_ignore_returns_err_without_warning() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
             let result = check_nodejs_support_status(18, IgnoreEolError::from(false));
             assert!(result.is_err());
         });
         let output = String::from_utf8_lossy(&log);
-        assert!(output.contains("end-of-life"));
+        assert!(
+            !output.contains("end-of-life"),
+            "warning should not be emitted when error is returned"
+        );
     }
 }
