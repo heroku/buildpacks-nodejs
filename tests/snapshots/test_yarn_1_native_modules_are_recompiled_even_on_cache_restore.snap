@@ -33,7 +33,6 @@ heroku/nodejs <buildpack-version>
   - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`
 
       yarn config v1.22.22
-      warning package.json: No license field
       success Set "cache-folder" to "/layers/heroku_nodejs/yarn_cache".
       Done in <time_elapsed>.
 
@@ -42,8 +41,6 @@ heroku/nodejs <buildpack-version>
   - Running `yarn install "--production=false" --frozen-lockfile`
 
       yarn install v1.22.22
-      warning package.json: No license field
-      warning yarn-1-project-with-native-module@1.0.0: No license field
       [1/4] Resolving packages...
       [2/4] Fetching packages...
       [3/4] Linking dependencies...
@@ -57,8 +54,6 @@ heroku/nodejs <buildpack-version>
   - Running `yarn install --production --frozen-lockfile --ignore-engines --ignore-scripts --prefer-offline`
 
       yarn install v1.22.22
-      warning package.json: No license field
-      warning yarn-1-project-with-native-module@1.0.0: No license field
       [1/4] Resolving packages...
       [2/4] Fetching packages...
       [3/4] Linking dependencies...
@@ -122,7 +117,6 @@ heroku/nodejs <buildpack-version>
   - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`
 
       yarn config v1.22.22
-      warning package.json: No license field
       success Set "cache-folder" to "/layers/heroku_nodejs/yarn_cache".
       Done in <time_elapsed>.
 
@@ -131,8 +125,6 @@ heroku/nodejs <buildpack-version>
   - Running `yarn install "--production=false" --frozen-lockfile`
 
       yarn install v1.22.22
-      warning package.json: No license field
-      warning yarn-1-project-with-native-module@1.0.0: No license field
       [1/4] Resolving packages...
       [2/4] Fetching packages...
       [3/4] Linking dependencies...
@@ -147,8 +139,6 @@ heroku/nodejs <buildpack-version>
 
       yarn install v1.22.22
       [1/4] Resolving packages...
-      warning package.json: No license field
-      warning yarn-1-project-with-native-module@1.0.0: No license field
       [2/4] Fetching packages...
       [3/4] Linking dependencies...
       [4/4] Building fresh packages...
