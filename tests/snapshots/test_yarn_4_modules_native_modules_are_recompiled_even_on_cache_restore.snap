@@ -144,9 +144,6 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: ┌ Link step
       ➤ YN0007: │ dtrace-provider@npm:0.8.8 must be built because it never has been before or the last one failed
       ➤ YN0000: │ <NODE-GYP BUILD OUTPUT> 
-      ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT make: Entering directory '/workspace/node_modules/dtrace-provider/build'
-      ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT   TOUCH Release/obj.target/DTraceProviderStub.stamp
-      ➤ YN0000: │ dtrace-provider@npm:0.8.8 STDOUT make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
       ➤ YN0000: └ Completed
       ➤ YN0000: · Done in <time_elapsed>
 
