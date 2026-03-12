@@ -1,6 +1,7 @@
 {
   "name": "yarn-1-project-with-native-module",
   "version": "1.0.0",
+  "license": "UNLICENSED",
   "dependencies": {
     "dtrace-provider": "0.8.8"
   },
