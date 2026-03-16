@@ -79,12 +79,24 @@ pub(crate) static NODEJS_VERSIONS: LazyLock<HashMap<u64, NodejsVersionInfo>> =
 //       doesn't (yet), so this wrapper type will have to do for now.
 pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<DefaultNodeRequirement> =
     LazyLock::new(|| {
-        let active_lts_major = NODEJS_VERSIONS
+        let active_lts_versions = NODEJS_VERSIONS
             .iter()
-            .find(|(_, info)| info.status == NodejsVersionStatus::ActiveLts)
+            .filter(|(_, info)| info.status == NodejsVersionStatus::ActiveLts)
+            .collect::<Vec<_>>();
+
+        assert!(
+            active_lts_versions.len() == 1,
+            "NODEJS_VERSIONS should have exactly one ActiveLts entry"
+        );
+
+        let active_lts_major = active_lts_versions
+            .into_iter()
             .map(|(major, _)| major)
+            .next()
             .expect("NODEJS_VERSIONS should contain an ActiveLts entry");
+
         let current_lts = format!("{active_lts_major}.x");
+
         DefaultNodeRequirement {
             value: current_lts.clone(),
             requirement: Requirement::parse(&current_lts)
