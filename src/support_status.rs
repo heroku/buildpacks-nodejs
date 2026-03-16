@@ -1,4 +1,4 @@
-use crate::buildpack_config::{IgnoreEolError, NAMESPACED_CONFIG};
+use crate::buildpack_config::{IgnoreEolErrorNodejs, NAMESPACED_CONFIG};
 use crate::runtimes::nodejs::NODEJS_VERSIONS;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -45,7 +45,7 @@ const SUPPORT_URL: &str =
 /// - Returns `Ok(())` for supported versions or unknown versions.
 pub(crate) fn check_nodejs_support_status(
     major_version: u64,
-    ignore_eol_error: IgnoreEolError,
+    ignore_eol_error: IgnoreEolErrorNodejs,
 ) -> Result<(), ErrorMessage> {
     let Some(version_info) = NODEJS_VERSIONS.get(&major_version) else {
         return Ok(());
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn version_not_in_map_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(99, IgnoreEolError::from(false));
+            let result = check_nodejs_support_status(99, IgnoreEolErrorNodejs::from(false));
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn current_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(25, IgnoreEolError::from(false));
+            let result = check_nodejs_support_status(25, IgnoreEolErrorNodejs::from(false));
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn active_lts_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(24, IgnoreEolError::from(false));
+            let result = check_nodejs_support_status(24, IgnoreEolErrorNodejs::from(false));
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn maintenance_lts_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(22, IgnoreEolError::from(false));
+            let result = check_nodejs_support_status(22, IgnoreEolErrorNodejs::from(false));
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn eol_version_with_ignore_emits_warning_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(18, IgnoreEolError::from(true));
+            let result = check_nodejs_support_status(18, IgnoreEolErrorNodejs::from(true));
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -223,7 +223,7 @@ mod tests {
     #[test]
     fn eol_version_without_ignore_returns_err_without_warning() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(18, IgnoreEolError::from(false));
+            let result = check_nodejs_support_status(18, IgnoreEolErrorNodejs::from(false));
             assert!(result.is_err());
         });
         let output = String::from_utf8_lossy(&log);

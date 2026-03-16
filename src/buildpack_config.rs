@@ -44,26 +44,26 @@ impl Display for ConfigValueSource {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) struct IgnoreEolError(bool);
+pub(crate) struct IgnoreEolErrorNodejs(bool);
 
-impl Deref for IgnoreEolError {
+impl Deref for IgnoreEolErrorNodejs {
     type Target = bool;
     fn deref(&self) -> &bool {
         &self.0
     }
 }
 
-impl Default for IgnoreEolError {
+impl Default for IgnoreEolErrorNodejs {
     fn default() -> Self {
         // EOL error is ignored by default (warning only). When enabled in the future,
         // flip this default to `false` and users can opt out via project.toml.
-        IgnoreEolError(true)
+        IgnoreEolErrorNodejs(true)
     }
 }
 
-impl From<bool> for IgnoreEolError {
+impl From<bool> for IgnoreEolErrorNodejs {
     fn from(value: bool) -> Self {
-        IgnoreEolError(value)
+        IgnoreEolErrorNodejs(value)
     }
 }
 
@@ -71,7 +71,7 @@ impl From<bool> for IgnoreEolError {
 pub(crate) struct BuildpackConfig {
     pub(crate) build_scripts_enabled: Option<ConfigValue<bool>>,
     pub(crate) prune_dev_dependencies: Option<ConfigValue<bool>>,
-    pub(crate) ignore_eol_error_nodejs: Option<ConfigValue<IgnoreEolError>>,
+    pub(crate) ignore_eol_error_nodejs: Option<ConfigValue<IgnoreEolErrorNodejs>>,
     errors: Vec<String>,
 }
 
@@ -306,7 +306,7 @@ impl TryFrom<(&ConfigValueSource, &dyn TableLike)> for BuildpackConfig {
                 .and_then(|v| v.get("ignore_eol_error_nodejs"))
                 .and_then(toml_edit::Item::as_bool)
                 .map(|value| ConfigValue {
-                    value: IgnoreEolError::from(value),
+                    value: IgnoreEolErrorNodejs::from(value),
                     source: source.clone(),
                 }),
         };
@@ -553,7 +553,7 @@ mod tests {
         assert_eq!(
             config.ignore_eol_error_nodejs,
             Some(ConfigValue {
-                value: IgnoreEolError::from(true),
+                value: IgnoreEolErrorNodejs::from(true),
                 source: ConfigValueSource::ProjectToml,
             })
         );

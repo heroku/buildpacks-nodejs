@@ -1,4 +1,4 @@
-use crate::buildpack_config::IgnoreEolError;
+use crate::buildpack_config::IgnoreEolErrorNodejs;
 use crate::o11y::*;
 use crate::package_json::PackageJson;
 use crate::runtimes::nodejs::{
@@ -108,7 +108,7 @@ pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
 #[instrument(skip_all)]
 pub(crate) fn check_runtime_support_status(
     resolved_runtime: &ResolvedRuntime,
-    ignore_eol_error: IgnoreEolError,
+    ignore_eol_error: IgnoreEolErrorNodejs,
 ) -> BuildpackResult<()> {
     match resolved_runtime {
         ResolvedRuntime::Nodejs(artifact) => {
