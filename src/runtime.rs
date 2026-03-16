@@ -125,7 +125,7 @@ pub(crate) fn check_runtime_support_status(
                         }),
                 "runtime"
             );
-            check_nodejs_support_status(major_version, ignore_eol_error)
+            check_nodejs_support_status(&artifact.version, ignore_eol_error)
                 .map_err(libcnb::Error::BuildpackError)
         }
     }

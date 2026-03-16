@@ -3,6 +3,7 @@ use crate::runtimes::nodejs::NODEJS_VERSIONS;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
+use crate::utils::vrs::Version;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use indoc::formatdoc;
@@ -44,9 +45,10 @@ const SUPPORT_URL: &str =
 /// - If the version is EOL and `ignore_eol_error` is `false`, returns an error that fails the build.
 /// - Returns `Ok(())` for supported versions or unknown versions.
 pub(crate) fn check_nodejs_support_status(
-    major_version: u64,
+    nodejs_version: &Version,
     ignore_eol_error: IgnoreEolErrorNodejs,
 ) -> Result<(), ErrorMessage> {
+    let major_version = nodejs_version.major();
     let Some(version_info) = NODEJS_VERSIONS.get(&major_version) else {
         return Ok(());
     };
@@ -157,6 +159,7 @@ fn create_nodejs_eol_error(major_version: u64, eol_date: Date) -> ErrorMessage {
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, assert_warning_snapshot};
+    use crate::utils::vrs::Version;
     use bullet_stream::global;
     use time::macros::date;
 
@@ -173,7 +176,10 @@ mod tests {
     #[test]
     fn version_not_in_map_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(99, IgnoreEolErrorNodejs::from(false));
+            let result = check_nodejs_support_status(
+                &Version::parse("99.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(false),
+            );
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -183,7 +189,10 @@ mod tests {
     #[test]
     fn current_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(25, IgnoreEolErrorNodejs::from(false));
+            let result = check_nodejs_support_status(
+                &Version::parse("25.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(false),
+            );
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -193,7 +202,10 @@ mod tests {
     #[test]
     fn active_lts_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(24, IgnoreEolErrorNodejs::from(false));
+            let result = check_nodejs_support_status(
+                &Version::parse("24.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(false),
+            );
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -203,7 +215,10 @@ mod tests {
     #[test]
     fn maintenance_lts_version_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(22, IgnoreEolErrorNodejs::from(false));
+            let result = check_nodejs_support_status(
+                &Version::parse("22.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(false),
+            );
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -213,7 +228,10 @@ mod tests {
     #[test]
     fn eol_version_with_ignore_emits_warning_returns_ok() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(18, IgnoreEolErrorNodejs::from(true));
+            let result = check_nodejs_support_status(
+                &Version::parse("18.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(true),
+            );
             assert!(result.is_ok());
         });
         let output = String::from_utf8_lossy(&log);
@@ -223,7 +241,10 @@ mod tests {
     #[test]
     fn eol_version_without_ignore_returns_err_without_warning() {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            let result = check_nodejs_support_status(18, IgnoreEolErrorNodejs::from(false));
+            let result = check_nodejs_support_status(
+                &Version::parse("18.0.0").unwrap(),
+                IgnoreEolErrorNodejs::from(false),
+            );
             assert!(result.is_err());
         });
         let output = String::from_utf8_lossy(&log);
