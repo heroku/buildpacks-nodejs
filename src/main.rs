@@ -28,6 +28,7 @@ mod package_manager;
 mod package_managers;
 mod runtime;
 mod runtimes;
+mod support_status;
 mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
@@ -102,11 +103,21 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         let package_json =
             package_json::PackageJson::try_from(context.app_dir.join("package.json"))?;
 
+        let ignore_eol_error = buildpack_config
+            .ignore_eol_error_nodejs
+            .as_ref()
+            .map(|config| config.value)
+            .unwrap_or_default();
+
         print::bullet("Checking Node.js version");
         Ok(runtime::determine_runtime(&package_json))
             .inspect(runtime::log_requested_runtime)
             .and_then(runtime::resolve_runtime)
             .inspect(runtime::log_resolved_runtime)
+            .and_then(|resolved_runtime| {
+                runtime::check_runtime_support_status(&resolved_runtime, ignore_eol_error)
+                    .map(|()| resolved_runtime)
+            })
             .and_then(|resolved_runtime| {
                 runtime::install_runtime(&context, &mut env, resolved_runtime)
             })?;

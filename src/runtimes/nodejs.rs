@@ -1,3 +1,4 @@
+use crate::support_status::{NodejsVersionInfo, NodejsVersionStatus};
 use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
@@ -21,22 +22,84 @@ use libherokubuildpack::inventory::Inventory;
 use libherokubuildpack::inventory::artifact::Artifact;
 use serde::{Deserialize, Serialize};
 use sha2::Sha256;
+use std::collections::HashMap;
 use std::process::Command;
 use std::sync::LazyLock;
+use time::macros::date;
 
 pub(crate) static NODEJS_INVENTORY: LazyLock<NodejsInventory> = LazyLock::new(|| {
     toml::from_str(include_str!("../../inventory/nodejs.toml"))
         .expect("Inventory file should be valid")
 });
 
+// Node.js version lifecycle data.
+// EOL dates sourced from the official Node.js release schedule:
+// https://raw.githubusercontent.com/nodejs/Release/main/schedule.json
+#[rustfmt::skip]
+pub(crate) static NODEJS_VERSIONS: LazyLock<HashMap<u64, NodejsVersionInfo>> =
+    LazyLock::new(|| {
+        use NodejsVersionStatus::{Current, ActiveLts, MaintenanceLts, Eol};
+        // NOTE: Node.js “skipped” v1–v3 because those version numbers were used by a fork
+        //       of Node called io.js and when the two projects merged back together they continued
+        //       from io.js’s latest major version (3.x) and called the merged release Node.js v4.
+        //       See - https://nodejs.org/en/blog/announcements/foundation-v4-announce/
+        HashMap::from([
+            // currently supported releases documented at https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+            (25, NodejsVersionInfo { status: Current,        end_of_life_date: date!(2026 - 06 - 01) }),
+            (24, NodejsVersionInfo { status: ActiveLts,      end_of_life_date: date!(2028 - 04 - 30) }),
+            (22, NodejsVersionInfo { status: MaintenanceLts, end_of_life_date: date!(2027 - 04 - 30) }),
+            (20, NodejsVersionInfo { status: MaintenanceLts, end_of_life_date: date!(2026 - 04 - 30) }),
+
+            // even numbered releases are stable, have extended support, and recommended for production use
+            (18, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2025 - 04 - 30) }),
+            (16, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2023 - 09 - 11) }), // Node.js 16's EOL was moved earlier than normal because of OpenSSL 1.1.1 (https://nodejs.org/en/blog/announcements/nodejs16-eol)
+            (14, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2023 - 04 - 30) }),
+            (12, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2022 - 04 - 30) }),
+            (10, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2021 - 04 - 30) }),
+            ( 8, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2019 - 12 - 31) }), // Node.js 8's EOL was moved earlier than normal because of OpenSSL 1.0.2
+            ( 6, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2019 - 04 - 30) }),
+            ( 4, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2018 - 04 - 30) }),
+            ( 0, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2016 - 12 - 31) }), // The earliest major version of Node.js does have entries for v0.8, v0.10, and v0.12, but we're going to treat those as equivalent to v0.12 for support messaging.
+
+            // odd numbered releases are experimental, short-lived, and not recommended for production use
+            (23, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2025 - 06 - 01) }),
+            (21, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2024 - 06 - 01) }),
+            (19, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2023 - 06 - 01) }),
+            (17, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2022 - 06 - 01) }),
+            (15, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2021 - 06 - 01) }),
+            (13, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2020 - 06 - 01) }),
+            (11, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2019 - 06 - 01) }),
+            ( 9, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2018 - 06 - 30) }),
+            ( 7, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2017 - 06 - 30) }),
+            ( 5, NodejsVersionInfo { status: Eol, end_of_life_date: date!(2016 - 06 - 30) }),
+        ])
+    });
+
 // TODO: Requirement should capture the original requirement string for display purposes but it
 //       doesn't (yet), so this wrapper type will have to do for now.
 pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<DefaultNodeRequirement> =
     LazyLock::new(|| {
-        let current_lts = "24.x";
+        let active_lts_versions = NODEJS_VERSIONS
+            .iter()
+            .filter(|(_, info)| info.status == NodejsVersionStatus::ActiveLts)
+            .collect::<Vec<_>>();
+
+        assert!(
+            active_lts_versions.len() == 1,
+            "NODEJS_VERSIONS should have exactly one ActiveLts entry"
+        );
+
+        let active_lts_major = active_lts_versions
+            .into_iter()
+            .map(|(major, _)| major)
+            .next()
+            .expect("NODEJS_VERSIONS should contain an ActiveLts entry");
+
+        let current_lts = format!("{active_lts_major}.x");
+
         DefaultNodeRequirement {
-            value: current_lts.to_string(),
-            requirement: Requirement::parse(current_lts)
+            value: current_lts.clone(),
+            requirement: Requirement::parse(&current_lts)
                 .expect("Default Node.js version should be valid"),
         }
     });

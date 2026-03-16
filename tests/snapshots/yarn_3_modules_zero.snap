@@ -12,15 +12,15 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `18.x`
-  - Resolved Node.js version: `18.20.8`
+  - Detected Node.js version range: `22.x`
+  - Resolved Node.js version: `22.22.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v18.20.8/node-v18.20.8-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.22.1/node-v22.22.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `18.20.8 (<arch>)`
-  - Installing Node.js `18.20.8 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.22.1 (<arch>)`
+  - Installing Node.js `22.22.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found `yarnPath` set to `.yarn/releases/yarn-3.2.4.cjs` in `.yarnrc.yml`
   - Using vendored yarn at `.yarn/releases/yarn-3.2.4.cjs`

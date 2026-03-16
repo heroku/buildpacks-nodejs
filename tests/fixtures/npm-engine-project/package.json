@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "engines": {
-    "node": "16.20.2",
-    "npm": "9.6.6"
+    "node": "22.x",
+    "npm": "10.9.2"
   },
   "dependencies": {
     "node-fetch": "^2.6.1"
