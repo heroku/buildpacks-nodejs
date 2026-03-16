@@ -1,4 +1,5 @@
 use crate::buildpack_config::{IgnoreEolErrorNodejs, NAMESPACED_CONFIG};
+use crate::o11y::RUNTIME_SUPPORT_STATUS;
 use crate::runtimes::nodejs::NODEJS_VERSIONS;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -49,7 +50,22 @@ pub(crate) fn check_nodejs_support_status(
     ignore_eol_error: IgnoreEolErrorNodejs,
 ) -> Result<(), ErrorMessage> {
     let major_version = nodejs_version.major();
-    let Some(version_info) = NODEJS_VERSIONS.get(&major_version) else {
+
+    let version_info = if let Some(version_info) = NODEJS_VERSIONS.get(&major_version) {
+        tracing::info!(
+            { RUNTIME_SUPPORT_STATUS } = match version_info.status {
+                NodejsVersionStatus::Current => "current",
+                NodejsVersionStatus::ActiveLts => "active_lts",
+                NodejsVersionStatus::MaintenanceLts => "maintenance_lts",
+                NodejsVersionStatus::Eol => "eol",
+            },
+            "runtime"
+        );
+        version_info
+    } else {
+        // NOTE: This should never happen unless there is a gap in the NODEJS_VERSIONS major
+        //       versions. If we can't determine the status here we'll have to return early.
+        tracing::info!({ RUNTIME_SUPPORT_STATUS } = "unknown", "runtime");
         return Ok(());
     };
 

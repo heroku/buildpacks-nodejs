@@ -1,10 +1,8 @@
 use crate::buildpack_config::IgnoreEolErrorNodejs;
 use crate::o11y::*;
 use crate::package_json::PackageJson;
-use crate::runtimes::nodejs::{
-    DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NODEJS_VERSIONS, NodejsArtifact,
-};
-use crate::support_status::{NodejsVersionStatus, check_nodejs_support_status};
+use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
+use crate::support_status::check_nodejs_support_status;
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -112,19 +110,6 @@ pub(crate) fn check_runtime_support_status(
 ) -> BuildpackResult<()> {
     match resolved_runtime {
         ResolvedRuntime::Nodejs(artifact) => {
-            let major_version = artifact.version.major();
-            tracing::info!(
-                { RUNTIME_SUPPORT_STATUS } =
-                    NODEJS_VERSIONS
-                        .get(&major_version)
-                        .map_or("unknown", |info| match info.status {
-                            NodejsVersionStatus::Current => "current",
-                            NodejsVersionStatus::ActiveLts => "active_lts",
-                            NodejsVersionStatus::MaintenanceLts => "maintenance_lts",
-                            NodejsVersionStatus::Eol => "eol",
-                        }),
-                "runtime"
-            );
             check_nodejs_support_status(&artifact.version, ignore_eol_error)
                 .map_err(libcnb::Error::BuildpackError)
         }
