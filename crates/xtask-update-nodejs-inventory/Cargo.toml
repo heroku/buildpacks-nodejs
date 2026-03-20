@@ -10,6 +10,7 @@ libherokubuildpack = { version = "=0.30.3", default-features = false, features =
     "inventory-sha2",
 ] }
 node-semver = "2"
+nodejs-data.workspace = true
 regex = "1"
 reqwest = "0.13"
 reqwest-middleware = "0.5"

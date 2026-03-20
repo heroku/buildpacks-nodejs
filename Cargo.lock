@@ -2354,6 +2354,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "nodejs-data"
+version = "0.0.0"
+dependencies = [
+ "fun_run",
+ "libherokubuildpack",
+ "node-semver",
+ "serde",
+ "sha2",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5037,6 +5048,7 @@ dependencies = [
  "keep_a_changelog_file",
  "libherokubuildpack",
  "node-semver",
+ "nodejs-data",
  "regex",
  "reqwest 0.13.1",
  "reqwest-middleware",
