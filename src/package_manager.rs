@@ -7,7 +7,6 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::npm_registry::PackagePackument;
-use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -17,6 +16,7 @@ use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::data::store::Store;
+use nodejs_data::{Range, Version};
 use std::path::{Path, PathBuf};
 use tracing::instrument;
 
@@ -24,10 +24,10 @@ use tracing::instrument;
 #[derive(Debug, Clone)]
 pub(crate) enum RequestedPackageManager {
     BundledNpm,
-    NpmEngine(Requirement),
-    PnpmEngine(Requirement),
-    YarnEngine(Requirement),
-    YarnDefault(Requirement),
+    NpmEngine(Range),
+    PnpmEngine(Range),
+    YarnEngine(Range),
+    YarnDefault(Range),
     YarnVendored(PathBuf),
     PackageManager(PackageManagerField),
 }
@@ -203,10 +203,10 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 }
 
 pub(crate) enum ResolvedPackageManager {
-    Npm(Requirement, PackagePackument),
+    Npm(Range, PackagePackument),
     NpmBundled,
-    Pnpm(Requirement, PackagePackument),
-    Yarn(Requirement, PackagePackument),
+    Pnpm(Range, PackagePackument),
+    Yarn(Range, PackagePackument),
     YarnVendored(PathBuf),
 }
 
@@ -263,7 +263,7 @@ pub(crate) fn resolve_package_manager(
             Ok(ResolvedPackageManager::YarnVendored(yarn_path.clone()))
         }
         RequestedPackageManager::PackageManager(package_manager_field) => {
-            let requirement = Requirement::parse(&package_manager_field.version.to_string())
+            let requirement = Range::parse(&package_manager_field.version.to_string())
                 .expect("Exact version string should be a valid requirement range");
             match package_manager_field.name {
                 PackageManagerFieldPackageManager::Npm => npm::resolve_npm_package_packument(
