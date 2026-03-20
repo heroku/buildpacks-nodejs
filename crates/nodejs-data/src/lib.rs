@@ -165,7 +165,7 @@ pub struct NodejsInventoryWithMetadata {
     pub inventory: libherokubuildpack::inventory::Inventory<Version, sha2::Sha256, Option<()>>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NodejsInventoryMetadata {
     pub current_version: u64,
     pub active_lts_version: u64,
@@ -174,7 +174,7 @@ pub struct NodejsInventoryMetadata {
     pub release_schedule: BTreeMap<String, ReleaseScheduleEntry>,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ReleaseScheduleEntry {
     pub start: toml_datetime::Date,
     pub end: toml_datetime::Date,

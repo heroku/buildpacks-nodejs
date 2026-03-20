@@ -45,16 +45,37 @@ pub(super) fn write_inventory(
 
     if let Some(toml_edit::Item::Table(meta_table)) = doc.get_mut("metadata") {
         if let Some(toml_edit::Item::Table(schedule)) = meta_table.get_mut("release_schedule") {
-            for (_, item) in schedule.iter_mut() {
-                if let toml_edit::Item::Table(entry_table) = item {
-                    let mut inline = toml_edit::InlineTable::new();
-                    for (k, v) in entry_table.iter() {
-                        if let Some(value) = v.as_value() {
-                            inline.insert(k, value.clone());
+            // Collect entries, convert to inline tables, and rebuild in reverse key order
+            let mut entries: Vec<(String, toml_edit::InlineTable)> = schedule
+                .iter()
+                .filter_map(|(key, item)| {
+                    if let toml_edit::Item::Table(entry_table) = item {
+                        let mut inline = toml_edit::InlineTable::new();
+                        for (k, v) in entry_table.iter() {
+                            if let Some(value) = v.as_value() {
+                                inline.insert(k, value.clone());
+                            }
                         }
+                        Some((key.to_string(), inline))
+                    } else {
+                        None
                     }
-                    *item = toml_edit::value(inline);
-                }
+                })
+                .collect();
+            // Sort by major version number descending
+            entries.sort_by(|(a, _), (b, _)| {
+                let parse_major = |key: &str| -> u64 {
+                    key.strip_prefix('v')
+                        .and_then(|s| s.split('.').next())
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .unwrap_or(0)
+                };
+                parse_major(b).cmp(&parse_major(a))
+            });
+
+            schedule.clear();
+            for (key, inline) in entries {
+                schedule.insert(&key, toml_edit::value(inline));
             }
         }
     }

@@ -308,7 +308,7 @@ pub(super) fn derive_inventory_metadata(
         })
         .filter_map(|(k, _)| parse_major(k))
         .collect();
-    maintenance_lts_versions.sort();
+    maintenance_lts_versions.sort_by(|a, b| b.cmp(a));
 
     let reject_major_versions: Vec<u64> = vec![];
 
