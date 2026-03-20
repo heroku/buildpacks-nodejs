@@ -63,12 +63,18 @@ async fn main() {
     eprintln!("Loading releases from inventory...");
     let inventory_artifacts = node_releases::from_inventory(inventory_path);
 
+    eprintln!("Fetching Node.js release schedule...");
+    let release_schedule = node_releases::fetch_release_schedule().await;
+
+    eprintln!("Deriving inventory metadata...");
+    let metadata = node_releases::derive_inventory_metadata(release_schedule);
+
     eprintln!("Fetching upstream releases from nodejs.org...");
     let upstream_artifacts =
         node_releases::from_upstream(&inventory_artifacts, &platforms, node_release_keys).await;
 
     eprintln!("Writing inventory...");
-    output::write_inventory(inventory_path, &upstream_artifacts);
+    output::write_inventory(inventory_path, &upstream_artifacts, &metadata);
 
     eprintln!("Writing changelog...");
     output::write_changelog(

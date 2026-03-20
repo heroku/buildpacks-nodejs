@@ -24,15 +24,21 @@ static BASE_NODEJS_RELEASE_URL: LazyLock<Url> = LazyLock::new(|| {
 static STARTING_NODE_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::parse("0.8.6").expect("Starting Node.js version should be valid"));
 
-#[allow(dead_code)]
 static RELEASE_SCHEDULE_URL: &str =
     "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
 
 pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodejsArtifact> {
-    std::fs::read_to_string(inventory_path)
-        .expect("Failed to read inventory file")
+    let contents = std::fs::read_to_string(inventory_path).expect("Failed to read inventory file");
+
+    // Try new format with metadata first
+    if let Ok(inv) = toml::from_str::<nodejs_data::NodejsInventoryWithMetadata>(&contents) {
+        return inv.inventory.artifacts;
+    }
+
+    // Fall back to old format (no metadata section)
+    contents
         .parse::<NodejsInventory>()
-        .unwrap_or(NodejsInventory::default())
+        .unwrap_or_default()
         .artifacts
 }
 
@@ -221,7 +227,6 @@ async fn download_file(url: impl IntoUrl + std::fmt::Display + Clone) -> PathBuf
     output_path
 }
 
-#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct UpstreamScheduleEntry {
     start: String,
@@ -235,7 +240,6 @@ struct UpstreamScheduleEntry {
 /// Deserializes a field that can be a date string, `false`, or absent.
 /// In the upstream Node.js release schedule JSON, `lts` and `maintenance` fields
 /// are either a date string like `"2024-10-29"` or the boolean `false`.
-#[allow(dead_code)]
 fn deserialize_optional_date_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
     D: serde::Deserializer<'de>,
@@ -250,7 +254,6 @@ where
     }
 }
 
-#[allow(dead_code)]
 fn parse_date(date_str: &str) -> toml_datetime::Date {
     let parts: Vec<&str> = date_str.split('-').collect();
     assert!(parts.len() == 3, "Invalid date format: {date_str}");
@@ -261,7 +264,63 @@ fn parse_date(date_str: &str) -> toml_datetime::Date {
     }
 }
 
-#[allow(dead_code)]
+fn to_time_date(d: toml_datetime::Date) -> time::Date {
+    time::Date::from_calendar_date(
+        i32::from(d.year),
+        time::Month::try_from(d.month).expect("month should be valid"),
+        d.day,
+    )
+    .expect("date should be valid")
+}
+
+pub(super) fn derive_inventory_metadata(
+    release_schedule: std::collections::BTreeMap<String, nodejs_data::ReleaseScheduleEntry>,
+) -> nodejs_data::NodejsInventoryMetadata {
+    let today = time::OffsetDateTime::now_utc().date();
+
+    let parse_major = |key: &str| -> Option<u64> {
+        key.strip_prefix('v')
+            .and_then(|s| s.split('.').next())
+            .and_then(|s| s.parse::<u64>().ok())
+    };
+
+    let current_version = release_schedule
+        .iter()
+        .filter(|(_, e)| to_time_date(e.start) <= today && today < to_time_date(e.end))
+        .filter_map(|(k, _)| parse_major(k))
+        .max()
+        .expect("Should find a current version in release schedule");
+
+    let active_lts_version = release_schedule
+        .iter()
+        .filter(|(_, e)| {
+            e.lts.is_some_and(|lts| to_time_date(lts) <= today)
+                && e.maintenance.is_some_and(|m| today < to_time_date(m))
+        })
+        .filter_map(|(k, _)| parse_major(k))
+        .max()
+        .expect("Should find an active LTS version in release schedule");
+
+    let mut maintenance_lts_versions: Vec<u64> = release_schedule
+        .iter()
+        .filter(|(_, e)| {
+            e.maintenance.is_some_and(|m| to_time_date(m) <= today) && today < to_time_date(e.end)
+        })
+        .filter_map(|(k, _)| parse_major(k))
+        .collect();
+    maintenance_lts_versions.sort();
+
+    let reject_major_versions: Vec<u64> = vec![];
+
+    nodejs_data::NodejsInventoryMetadata {
+        current_version,
+        active_lts_version,
+        maintenance_lts_versions,
+        reject_major_versions,
+        release_schedule,
+    }
+}
+
 pub(super) async fn fetch_release_schedule()
 -> std::collections::BTreeMap<String, nodejs_data::ReleaseScheduleEntry> {
     let schedule_file = download_file(RELEASE_SCHEDULE_URL).await;
