@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Extracted shared Node.js version types into `nodejs-data` crate. ([#1328](https://github.com/heroku/buildpacks-nodejs/pull/1328))
+
 ## [5.5.4] - 2026-03-12
 
 ### Added
