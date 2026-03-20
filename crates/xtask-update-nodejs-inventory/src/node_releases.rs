@@ -24,6 +24,10 @@ static BASE_NODEJS_RELEASE_URL: LazyLock<Url> = LazyLock::new(|| {
 static STARTING_NODE_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::parse("0.8.6").expect("Starting Node.js version should be valid"));
 
+#[allow(dead_code)]
+static RELEASE_SCHEDULE_URL: &str =
+    "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+
 pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodejsArtifact> {
     std::fs::read_to_string(inventory_path)
         .expect("Failed to read inventory file")
@@ -215,6 +219,71 @@ async fn download_file(url: impl IntoUrl + std::fmt::Display + Clone) -> PathBuf
         .unwrap_or_else(|_| panic!("failed to write response to {}", output_path.display()));
 
     output_path
+}
+
+#[allow(dead_code)]
+#[derive(Deserialize, Debug)]
+struct UpstreamScheduleEntry {
+    start: String,
+    end: String,
+    #[serde(default, deserialize_with = "deserialize_optional_date_string")]
+    lts: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_date_string")]
+    maintenance: Option<String>,
+}
+
+/// Deserializes a field that can be a date string, `false`, or absent.
+/// In the upstream Node.js release schedule JSON, `lts` and `maintenance` fields
+/// are either a date string like `"2024-10-29"` or the boolean `false`.
+#[allow(dead_code)]
+fn deserialize_optional_date_string<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value: serde_json::Value = Deserialize::deserialize(deserializer)?;
+    match value {
+        serde_json::Value::String(s) => Ok(Some(s)),
+        serde_json::Value::Bool(false) | serde_json::Value::Null => Ok(None),
+        _ => Err(serde::de::Error::custom(
+            "expected a date string, false, or null",
+        )),
+    }
+}
+
+#[allow(dead_code)]
+fn parse_date(date_str: &str) -> toml_datetime::Date {
+    let parts: Vec<&str> = date_str.split('-').collect();
+    assert!(parts.len() == 3, "Invalid date format: {date_str}");
+    toml_datetime::Date {
+        year: parts[0].parse().expect("Invalid year"),
+        month: parts[1].parse().expect("Invalid month"),
+        day: parts[2].parse().expect("Invalid day"),
+    }
+}
+
+#[allow(dead_code)]
+pub(super) async fn fetch_release_schedule()
+-> std::collections::BTreeMap<String, nodejs_data::ReleaseScheduleEntry> {
+    let schedule_file = download_file(RELEASE_SCHEDULE_URL).await;
+    let schedule_contents =
+        std::fs::read_to_string(&schedule_file).expect("Failed to read release schedule file");
+    let upstream: HashMap<String, UpstreamScheduleEntry> =
+        serde_json::from_str(&schedule_contents).expect("Failed to parse release schedule");
+
+    upstream
+        .into_iter()
+        .map(|(key, entry)| {
+            (
+                key,
+                nodejs_data::ReleaseScheduleEntry {
+                    start: parse_date(&entry.start),
+                    end: parse_date(&entry.end),
+                    lts: entry.lts.as_deref().map(parse_date),
+                    maintenance: entry.maintenance.as_deref().map(parse_date),
+                },
+            )
+        })
+        .collect()
 }
 
 #[derive(Deserialize, Debug)]

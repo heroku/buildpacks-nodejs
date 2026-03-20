@@ -2362,6 +2362,8 @@ dependencies = [
  "node-semver",
  "serde",
  "sha2",
+ "toml",
+ "toml_datetime 1.0.0+spec-1.1.0",
 ]
 
 [[package]]
@@ -5059,6 +5061,7 @@ dependencies = [
  "sha2",
  "tempfile",
  "tokio",
+ "toml_datetime 1.0.0+spec-1.1.0",
 ]
 
 [[package]]
