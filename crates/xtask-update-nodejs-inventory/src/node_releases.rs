@@ -1,9 +1,7 @@
 use crate::SupportedNodeReleasePlatform;
 use crate::trusted_release_keys::NodeReleaseKeys;
-use libherokubuildpack::inventory::Inventory;
-use libherokubuildpack::inventory::artifact::Artifact;
 use libherokubuildpack::inventory::checksum::Checksum;
-use node_semver::Version;
+use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
 use reqwest::{IntoUrl, Url};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::RetryTransientMiddleware;
@@ -26,19 +24,19 @@ static BASE_NODEJS_RELEASE_URL: LazyLock<Url> = LazyLock::new(|| {
 static STARTING_NODE_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::parse("0.8.6").expect("Starting Node.js version should be valid"));
 
-pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodeArtifact> {
+pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodejsArtifact> {
     std::fs::read_to_string(inventory_path)
         .expect("Failed to read inventory file")
-        .parse::<Inventory<Version, Sha256, Option<()>>>()
-        .unwrap_or(Inventory::default())
+        .parse::<NodejsInventory>()
+        .unwrap_or(NodejsInventory::default())
         .artifacts
 }
 
 pub(super) async fn from_upstream(
-    inventory: &[NodeArtifact],
+    inventory: &[NodejsArtifact],
     supported_node_release_platforms: &[&SupportedNodeReleasePlatform],
     node_release_keys: NodeReleaseKeys,
-) -> Vec<NodeArtifact> {
+) -> Vec<NodejsArtifact> {
     let mut upstream_artifacts = vec![];
     'release: for node_release in get_release_index().await {
         if node_release.version < *STARTING_NODE_VERSION {
@@ -100,7 +98,7 @@ pub(super) async fn from_upstream(
                     )
                 });
 
-            upstream_artifacts.push(NodeArtifact {
+            upstream_artifacts.push(NodejsArtifact {
                 url: node_release.binary_url(supported_platform).to_string(),
                 version: node_release.version.clone(),
                 checksum: format!("sha256:{checksum}")
@@ -269,5 +267,3 @@ impl NodeRelease {
         }
     }
 }
-
-pub(crate) type NodeArtifact = Artifact<Version, Sha256, Option<()>>;

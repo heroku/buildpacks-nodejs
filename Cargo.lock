@@ -5047,7 +5047,6 @@ dependencies = [
  "clap",
  "keep_a_changelog_file",
  "libherokubuildpack",
- "node-semver",
  "nodejs-data",
  "regex",
  "reqwest 0.13.1",
