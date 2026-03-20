@@ -1,6 +1,7 @@
 use fun_run::NamedOutput;
 use libherokubuildpack::inventory::version::VersionRequirement;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug, PartialEq)]
@@ -157,6 +158,32 @@ pub type NodejsArtifact =
 pub type NodejsInventory =
     libherokubuildpack::inventory::Inventory<Version, sha2::Sha256, Option<()>>;
 
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct NodejsInventoryWithMetadata {
+    pub metadata: NodejsInventoryMetadata,
+    #[serde(flatten)]
+    pub inventory: libherokubuildpack::inventory::Inventory<Version, sha2::Sha256, Option<()>>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct NodejsInventoryMetadata {
+    pub current_version: u64,
+    pub active_lts_version: u64,
+    pub maintenance_lts_versions: Vec<u64>,
+    pub reject_major_versions: Vec<u64>,
+    pub release_schedule: BTreeMap<String, ReleaseScheduleEntry>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct ReleaseScheduleEntry {
+    pub start: toml_datetime::Date,
+    pub end: toml_datetime::Date,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lts: Option<toml_datetime::Date>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maintenance: Option<toml_datetime::Date>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -268,5 +295,34 @@ mod tests {
     fn parse_returns_error_for_invalid_reqs() {
         let result = Range::parse("12.%");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn inventory_with_metadata_round_trip() {
+        let toml_str = r#"
+[metadata]
+current_version = 25
+active_lts_version = 24
+maintenance_lts_versions = [20, 22]
+reject_major_versions = []
+
+[metadata.release_schedule]
+v24 = { start = 2025-04-22, end = 2028-04-30, lts = 2025-10-28, maintenance = 2026-10-20 }
+v25 = { start = 2025-04-22, end = 2026-06-01 }
+
+[[artifacts]]
+version = "25.0.0"
+os = "linux"
+arch = "amd64"
+url = "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz"
+checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+"#;
+        let parsed: NodejsInventoryWithMetadata = toml::from_str(toml_str).expect("should parse");
+        assert_eq!(parsed.metadata.current_version, 25);
+        assert_eq!(parsed.metadata.active_lts_version, 24);
+        assert_eq!(parsed.metadata.maintenance_lts_versions, vec![20, 22]);
+        assert!(parsed.metadata.reject_major_versions.is_empty());
+        assert_eq!(parsed.metadata.release_schedule.len(), 2);
+        assert_eq!(parsed.inventory.artifacts.len(), 1);
     }
 }

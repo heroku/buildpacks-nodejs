@@ -1,15 +1,25 @@
 use crate::OutputFormat;
 use keep_a_changelog_file::{ChangeGroup, Changelog};
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
+use nodejs_data::{NodejsArtifact, NodejsInventory, NodejsInventoryMetadata, Version};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodejsArtifact]) {
-    fs::write(
-        inventory_path,
-        NodejsInventory {
+pub(super) fn write_inventory(
+    inventory_path: &Path,
+    upstream_artifacts: &[NodejsArtifact],
+    metadata: &NodejsInventoryMetadata,
+) {
+    let inventory_with_metadata = nodejs_data::NodejsInventoryWithMetadata {
+        metadata: nodejs_data::NodejsInventoryMetadata {
+            current_version: metadata.current_version,
+            active_lts_version: metadata.active_lts_version,
+            maintenance_lts_versions: metadata.maintenance_lts_versions.clone(),
+            reject_major_versions: metadata.reject_major_versions.clone(),
+            release_schedule: metadata.release_schedule.clone(),
+        },
+        inventory: NodejsInventory {
             artifacts: {
                 let mut artifacts = upstream_artifacts.to_vec();
                 artifacts.sort_by(|a, b| {
@@ -21,10 +31,56 @@ pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[Nodej
                 });
                 artifacts
             },
+        },
+    };
+
+    // Serialize via `toml` for correctness, then re-parse with `toml_edit` to reformat
+    // release_schedule entries as inline tables for a more compact and readable output.
+    let toml_string = toml::to_string_pretty(&inventory_with_metadata)
+        .expect("Failed to serialize inventory with metadata");
+
+    let mut doc: toml_edit::DocumentMut = toml_string
+        .parse()
+        .expect("Failed to parse inventory TOML for formatting");
+
+    if let Some(toml_edit::Item::Table(meta_table)) = doc.get_mut("metadata") {
+        if let Some(toml_edit::Item::Table(schedule)) = meta_table.get_mut("release_schedule") {
+            // Collect entries, convert to inline tables, and rebuild in reverse key order
+            let mut entries: Vec<(String, toml_edit::InlineTable)> = schedule
+                .iter()
+                .filter_map(|(key, item)| {
+                    if let toml_edit::Item::Table(entry_table) = item {
+                        let mut inline = toml_edit::InlineTable::new();
+                        for (k, v) in entry_table.iter() {
+                            if let Some(value) = v.as_value() {
+                                inline.insert(k, value.clone());
+                            }
+                        }
+                        Some((key.to_string(), inline))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            // Sort by major version number descending
+            entries.sort_by(|(a, _), (b, _)| {
+                let parse_major = |key: &str| -> u64 {
+                    key.strip_prefix('v')
+                        .and_then(|s| s.split('.').next())
+                        .and_then(|s| s.parse::<u64>().ok())
+                        .unwrap_or(0)
+                };
+                parse_major(b).cmp(&parse_major(a))
+            });
+
+            schedule.clear();
+            for (key, inline) in entries {
+                schedule.insert(&key, toml_edit::value(inline));
+            }
         }
-        .to_string(),
-    )
-    .unwrap_or_else(|_| {
+    }
+
+    fs::write(inventory_path, doc.to_string()).unwrap_or_else(|_| {
         panic!(
             "Failed to write inventory to '{}'",
             inventory_path.display()
