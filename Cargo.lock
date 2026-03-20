@@ -2334,7 +2334,7 @@ dependencies = [
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
- "node-semver",
+ "nodejs-data",
  "regex",
  "reqwest 0.12.24",
  "retry",

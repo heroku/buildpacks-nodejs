@@ -5,7 +5,6 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
 use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
-use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult, utils};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -18,6 +17,7 @@ use libcnb::layer::{
     UncachedLayerDefinition,
 };
 use libcnb::layer_env::Scope;
+use nodejs_data::{Range, Version, VersionCommandError};
 use serde::{Deserialize, Serialize};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -26,17 +26,15 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use tracing::instrument;
 
-static YARN_BERRY_RANGE: LazyLock<Requirement> = LazyLock::new(|| {
-    Requirement::parse(">=2").expect("Yarn berry requirement range should be valid")
-});
+static YARN_BERRY_RANGE: LazyLock<Range> =
+    LazyLock::new(|| Range::parse(">=2").expect("Yarn berry requirement range should be valid"));
 
-pub(crate) static DEFAULT_YARN_REQUIREMENT: LazyLock<Requirement> = LazyLock::new(|| {
-    Requirement::parse("1.22.x").expect("Default Yarn requirement should be valid")
-});
+pub(crate) static DEFAULT_YARN_REQUIREMENT: LazyLock<Range> =
+    LazyLock::new(|| Range::parse("1.22.x").expect("Default Yarn requirement should be valid"));
 
 pub(crate) fn resolve_yarn_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Requirement,
+    requirement: &Range,
 ) -> BuildpackResult<PackagePackument> {
     let (yarn_layer_name, yarn_package_name) = if requirement.allows_any(&YARN_BERRY_RANGE) {
         (
