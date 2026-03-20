@@ -1,11 +1,11 @@
 use fun_run::NamedOutput;
 use libherokubuildpack::inventory::version::VersionRequirement;
-use node_semver::{Range, Version as NSVersion};
 use serde::{Deserialize, Serialize};
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct VersionError(String);
+pub struct VersionError(String);
+
 impl Error for VersionError {}
 impl fmt::Display for VersionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -15,7 +15,7 @@ impl fmt::Display for VersionError {
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(try_from = "String")]
-pub(crate) struct Version(NSVersion);
+pub struct Version(node_semver::Version);
 
 impl Version {
     /// Parses a Node.js semver string as a `Version`.
@@ -23,9 +23,9 @@ impl Version {
     /// # Errors
     ///
     /// Invalid Node.js semver strings will return a `VersionError`
-    pub(crate) fn parse(version: &str) -> Result<Self, VersionError> {
+    pub fn parse(version: &str) -> Result<Self, VersionError> {
         let trimmed = version.trim();
-        match NSVersion::parse(trimmed) {
+        match node_semver::Version::parse(trimmed) {
             Ok(v) => Ok(Version(v)),
             Err(e) => Err(VersionError(format!("{e}"))),
         }
@@ -33,7 +33,7 @@ impl Version {
 
     /// Returns the major version identifier.
     #[must_use]
-    pub(crate) fn major(&self) -> u64 {
+    pub fn major(&self) -> u64 {
         self.0.major
     }
 }
@@ -73,26 +73,26 @@ impl TryFrom<Result<NamedOutput, fun_run::CmdError>> for Version {
 }
 
 #[derive(Debug)]
-pub(crate) enum VersionCommandError {
+pub enum VersionCommandError {
     Command(fun_run::CmdError),
     Parse(String, VersionError),
 }
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
-pub(crate) struct Requirement {
-    range: Range,
+pub struct Range {
+    range: node_semver::Range,
     original: String,
 }
 
-impl VersionRequirement<Version> for Requirement {
+impl VersionRequirement<Version> for Range {
     fn satisfies(&self, version: &Version) -> bool {
         self.satisfies(version)
     }
 }
 
-impl Requirement {
-    /// Parses `package.json` version string into a Requirement. Handles
+impl Range {
+    /// Parses `package.json` version string into a Range. Handles
     /// these cases:
     ///
     /// * Any node-semver compatible string
@@ -101,26 +101,26 @@ impl Requirement {
     ///
     /// # Errors
     ///
-    /// Invalid version strings wil return a `VersionErr`
-    pub(crate) fn parse(requirement: &str) -> Result<Self, VersionError> {
+    /// Invalid version strings wil return a `VersionError`
+    pub fn parse(requirement: &str) -> Result<Self, VersionError> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
-            return Ok(Requirement {
-                range: Range::any(),
+            return Ok(Range {
+                range: node_semver::Range::any(),
                 original: requirement.to_string(),
             });
         }
         if trimmed.starts_with("~=") {
             let version = trimmed.replacen('=', "", 1);
-            if let Ok(range) = Range::parse(version) {
-                return Ok(Requirement {
+            if let Ok(range) = node_semver::Range::parse(version) {
+                return Ok(Range {
                     range,
                     original: requirement.to_string(),
                 });
             }
         }
-        match Range::parse(trimmed) {
-            Ok(range) => Ok(Requirement {
+        match node_semver::Range::parse(trimmed) {
+            Ok(range) => Ok(Range {
                 range,
                 original: requirement.to_string(),
             }),
@@ -129,28 +129,33 @@ impl Requirement {
     }
 
     #[must_use]
-    pub(crate) fn satisfies(&self, ver: &Version) -> bool {
+    pub fn satisfies(&self, ver: &Version) -> bool {
         self.range.satisfies(&ver.0)
     }
 
     #[must_use]
-    pub(crate) fn allows_any(&self, other: &Requirement) -> bool {
+    pub fn allows_any(&self, other: &Range) -> bool {
         self.range.allows_any(&other.range)
     }
 }
 
-impl TryFrom<String> for Requirement {
+impl TryFrom<String> for Range {
     type Error = VersionError;
     fn try_from(val: String) -> Result<Self, Self::Error> {
-        Requirement::parse(&val)
+        Range::parse(&val)
     }
 }
 
-impl fmt::Display for Requirement {
+impl fmt::Display for Range {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.original)
     }
 }
+
+pub type NodejsArtifact =
+    libherokubuildpack::inventory::artifact::Artifact<Version, sha2::Sha256, Option<()>>;
+pub type NodejsInventory =
+    libherokubuildpack::inventory::Inventory<Version, sha2::Sha256, Option<()>>;
 
 #[cfg(test)]
 mod tests {
@@ -158,7 +163,7 @@ mod tests {
 
     #[test]
     fn parse_handles_latest() {
-        let result = Requirement::parse("latest");
+        let result = Range::parse("latest");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -168,7 +173,7 @@ mod tests {
 
     #[test]
     fn parse_handles_exact_versions() {
-        let result = Requirement::parse("14.0.0");
+        let result = Range::parse("14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -178,7 +183,7 @@ mod tests {
 
     #[test]
     fn parse_handles_starts_with_v() {
-        let result = Requirement::parse("v14.0.0");
+        let result = Range::parse("v14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -188,7 +193,7 @@ mod tests {
 
     #[test]
     fn parse_handles_semver_semantics() {
-        let result = Requirement::parse(">= 12.0.0");
+        let result = Range::parse(">= 12.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -198,7 +203,7 @@ mod tests {
 
     #[test]
     fn parse_handles_pipe_statements() {
-        let result = Requirement::parse("^12 || ^13 || ^14");
+        let result = Range::parse("^12 || ^13 || ^14");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -211,7 +216,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals() {
-        let result = Requirement::parse("~=14.4");
+        let result = Range::parse("~=14.4");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -221,7 +226,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals_and_patch() {
-        let result = Requirement::parse("~=14.4.3");
+        let result = Range::parse("~=14.4.3");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -231,7 +236,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_within_string() {
-        let result = Requirement::parse(">v15.5.0");
+        let result = Range::parse(">v15.5.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -241,7 +246,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_with_space() {
-        let result = Requirement::parse(">= v10.0.0");
+        let result = Range::parse(">= v10.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -251,7 +256,7 @@ mod tests {
 
     #[test]
     fn parse_handles_equal_with_v() {
-        let result = Requirement::parse("=v10.22.0");
+        let result = Range::parse("=v10.22.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -261,7 +266,7 @@ mod tests {
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
-        let result = Requirement::parse("12.%");
+        let result = Range::parse("12.%");
         assert!(result.is_err());
     }
 }

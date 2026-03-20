@@ -2334,7 +2334,7 @@ dependencies = [
  "libcnb",
  "libcnb-test",
  "libherokubuildpack",
- "node-semver",
+ "nodejs-data",
  "regex",
  "reqwest 0.12.24",
  "retry",
@@ -2351,6 +2351,17 @@ dependencies = [
  "walkdir",
  "wiremock",
  "yaml-rust2",
+]
+
+[[package]]
+name = "nodejs-data"
+version = "0.0.0"
+dependencies = [
+ "fun_run",
+ "libherokubuildpack",
+ "node-semver",
+ "serde",
+ "sha2",
 ]
 
 [[package]]
@@ -5036,7 +5047,7 @@ dependencies = [
  "clap",
  "keep_a_changelog_file",
  "libherokubuildpack",
- "node-semver",
+ "nodejs-data",
  "regex",
  "reqwest 0.13.1",
  "reqwest-middleware",
