@@ -5,7 +5,6 @@ use crate::utils::error_handling::{
 use crate::utils::http::{
     DownloadError, DownloadTask, Extractor, GetError, GetRequest, GzipOptions, download, get,
 };
-use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackError};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -17,6 +16,7 @@ use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
+use nodejs_data::{Range, Version};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -288,7 +288,7 @@ pub(crate) struct PackagePackumentDist {
 
 pub(crate) fn resolve_package_packument(
     packument: &Packument,
-    requirement: &Requirement,
+    requirement: &Range,
 ) -> Result<PackagePackument, ErrorMessage> {
     let mut package_packuments = packument.versions.values().cloned().collect::<Vec<_>>();
 
@@ -303,7 +303,7 @@ pub(crate) fn resolve_package_packument(
 
 fn create_resolve_package_packument_error(
     packument: &Packument,
-    requirement: &Requirement,
+    requirement: &Range,
 ) -> ErrorMessage {
     let package_name = &packument.name;
     let npm_releases_url =
