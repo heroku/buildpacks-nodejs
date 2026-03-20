@@ -1,17 +1,15 @@
 use crate::OutputFormat;
-use crate::node_releases::NodeArtifact;
 use keep_a_changelog_file::{ChangeGroup, Changelog};
-use libherokubuildpack::inventory::Inventory;
-use node_semver::Version;
+use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodeArtifact]) {
+pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodejsArtifact]) {
     fs::write(
         inventory_path,
-        Inventory {
+        NodejsInventory {
             artifacts: {
                 let mut artifacts = upstream_artifacts.to_vec();
                 artifacts.sort_by(|a, b| {
@@ -36,8 +34,8 @@ pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodeA
 
 pub(super) fn write_changelog(
     changelog_path: &Path,
-    upstream_artifacts: &[NodeArtifact],
-    inventory_artifacts: &[NodeArtifact],
+    upstream_artifacts: &[NodejsArtifact],
+    inventory_artifacts: &[NodejsArtifact],
     format: &OutputFormat,
 ) {
     let changes = [
@@ -70,7 +68,7 @@ pub(super) fn write_changelog(
 
 fn write_keep_a_changelog_format(
     changelog_path: &Path,
-    changes: Vec<(ChangeGroup, Vec<&NodeArtifact>)>,
+    changes: Vec<(ChangeGroup, Vec<&NodejsArtifact>)>,
 ) {
     let changelog_contents = fs::read_to_string(changelog_path)
         .unwrap_or_else(|_| panic!("Failed to read changelog at '{}'", changelog_path.display()));
@@ -103,7 +101,7 @@ fn write_keep_a_changelog_format(
 
 fn write_classic_changelog_format(
     changelog_path: &Path,
-    changes: Vec<(ChangeGroup, Vec<&NodeArtifact>)>,
+    changes: Vec<(ChangeGroup, Vec<&NodejsArtifact>)>,
 ) {
     // utility enum to differentiate between before/after [Unreleased] section
     #[derive(PartialEq)]
@@ -201,7 +199,7 @@ fn write_classic_changelog_format(
 }
 
 fn group_artifacts_into_archs_by_version_sorted(
-    artifact_diff: &[&NodeArtifact],
+    artifact_diff: &[&NodejsArtifact],
 ) -> Vec<(Version, BTreeSet<String>)> {
     let mut os_arch_labels_by_version: HashMap<Version, BTreeSet<String>> = HashMap::new();
     for artifact in artifact_diff {
