@@ -14,6 +14,20 @@ heroku/nodejs <buildpack-version>
 - Checking Node.js version
   - Detected Node.js version range: `16.20.2`
   - Resolved Node.js version: `16.20.2`
+
+! Node.js v16 reached end-of-life on 2023-09-11 and is no
+! longer supported on Heroku. EOL versions no longer receive
+! security updates or bug fixes from the Node.js project.
+!
+! In a future buildpack release, this warning will become a
+! build error. Please upgrade to a supported version as soon as
+! possible to avoid build failures.
+!
+! Suggested upgrade targets: <suggested-versions>.
+!
+! For more information, see:
+! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
@@ -108,6 +122,21 @@ heroku/nodejs <buildpack-version>
 - Checking Node.js version
   - Detected Node.js version range: `16.20.1`
   - Resolved Node.js version: `16.20.1`
+  - Note: Latest available <release-line> release is `<version>`
+
+! Node.js v16 reached end-of-life on 2023-09-11 and is no
+! longer supported on Heroku. EOL versions no longer receive
+! security updates or bug fixes from the Node.js project.
+!
+! In a future buildpack release, this warning will become a
+! build error. Please upgrade to a supported version as soon as
+! possible to avoid build failures.
+!
+! Suggested upgrade targets: <suggested-versions>.
+!
+! For more information, see:
+! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+
 - Installing Node.js distribution
   - GET https://nodejs.org/download/release/v16.20.1/node-v16.20.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
