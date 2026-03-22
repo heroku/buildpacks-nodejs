@@ -63,6 +63,9 @@ jobs:
           )
           docker pull "${RUN_IMAGE}"
 
+      - name: Update Release Schedule
+        run: cargo update-nodejs-release-schedule
+
       - name: Rebuild Inventory
         id: rebuild-inventory
         run: |
@@ -76,7 +79,7 @@ jobs:
       - name: Check for inventory changes
         id: check-inventory
         run: |
-          if git diff --quiet inventory/nodejs.toml; then
+          if git diff --quiet inventory/; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "No inventory changes detected, skipping PR creation."
           else

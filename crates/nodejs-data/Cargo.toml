@@ -13,5 +13,7 @@ libherokubuildpack = { version = "=0.30.3", default-features = false, features =
     "inventory-sha2",
 ] }
 node-semver = "2"
+release-schedule.workspace = true
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10.9"
+time = { version = "0.3", features = ["serde-human-readable"] }

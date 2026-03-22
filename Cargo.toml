@@ -51,9 +51,11 @@ resolver = "2"
 members = [
     "crates/available-parallelism",
     "crates/nodejs-data",
+    "crates/release-schedule",
     "crates/test_support",
     "crates/xtask-sync-yarn-plugin-changelog",
-    "crates/xtask-update-nodejs-inventory"
+    "crates/xtask-update-nodejs-inventory",
+    "crates/xtask-update-nodejs-release-schedule",
 ]
 
 [workspace.package]
@@ -80,6 +82,7 @@ missing_panics_doc = "allow"
 [workspace.dependencies]
 available-parallelism = { path = "./crates/available-parallelism" }
 nodejs-data = { path = "./crates/nodejs-data" }
+release-schedule = { path = "./crates/release-schedule" }
 test_support = { path = "./crates/test_support" }
 
 [profile.release]

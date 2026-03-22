@@ -40,6 +40,20 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "heroku/nodejs$1<buildpack-version>",
     ));
 
+    // [misc] Filter out the "Latest available" note since the version changes with inventory updates. e.g.;
+    // - Note: Latest available v22 release is `22.14.0`
+    filters.push((
+        r"Latest available v\d+ release is `[^`]+`",
+        "Latest available <release-line> release is `<version>`",
+    ));
+
+    // [misc] Filter out suggested upgrade targets since they change as Node.js releases new versions. e.g.;
+    // - Suggested upgrade targets: v24 (Active LTS, recommended), v25 (Current).
+    filters.push((
+        r"Suggested upgrade targets: .*\.",
+        "Suggested upgrade targets: <suggested-versions>.",
+    ));
+
     // [misc] Filter out architectures from output and download urls. e.g.;
     // - Downloading Node.js `22.14.0 (linux-amd64)`
     // - https://nodejs.org/download/release/v22.14.0/node-v22.14.0-linux-x64.tar.gz
