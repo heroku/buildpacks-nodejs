@@ -54,7 +54,8 @@ members = [
     "crates/release-schedule",
     "crates/test_support",
     "crates/xtask-sync-yarn-plugin-changelog",
-    "crates/xtask-update-nodejs-inventory"
+    "crates/xtask-update-nodejs-inventory",
+    "crates/xtask-update-nodejs-release-schedule",
 ]
 
 [workspace.package]

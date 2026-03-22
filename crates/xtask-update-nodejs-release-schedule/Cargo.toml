@@ -1,0 +1,12 @@
+[package]
+name = "xtask-update-nodejs-release-schedule"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4", features = ["cargo", "derive"] }
+nodejs-data.workspace = true
+serde = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+time = { version = "0.3", features = ["macros"] }
+toml = "1.0"
+ureq = { version = "3", features = ["json"] }
