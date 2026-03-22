@@ -16,7 +16,7 @@ use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use nodejs_data::{Range, Version, VersionCommandError};
+use nodejs_data::{NodejsReleaseSchedule, Range, Version, VersionCommandError};
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::sync::LazyLock;
@@ -24,6 +24,12 @@ use std::sync::LazyLock;
 pub(crate) static NODEJS_INVENTORY: LazyLock<NodejsInventory> = LazyLock::new(|| {
     toml::from_str(include_str!("../../inventory/nodejs.toml"))
         .expect("Inventory file should be valid")
+});
+
+pub(crate) static NODEJS_RELEASE_SCHEDULE: LazyLock<NodejsReleaseSchedule> = LazyLock::new(|| {
+    include_str!("../../inventory/nodejs_release_schedule.toml")
+        .parse()
+        .expect("Release schedule file should be valid")
 });
 
 pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<Range> =

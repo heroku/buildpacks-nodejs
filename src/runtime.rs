@@ -1,6 +1,8 @@
 use crate::o11y::*;
 use crate::package_json::PackageJson;
-use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
+use crate::runtimes::nodejs::{
+    DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NODEJS_RELEASE_SCHEDULE, NodejsArtifact,
+};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -12,6 +14,7 @@ use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
 use nodejs_data::Range;
+use nodejs_data::{active_lts_release, current_release, is_eol};
 use std::env::consts;
 use std::sync::LazyLock;
 use tracing::instrument;
@@ -92,10 +95,58 @@ fn resolve_nodejs_runtime(requirement: &Range) -> BuildpackResult<ResolvedRuntim
 
 pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
     match resolved_runtime {
-        ResolvedRuntime::Nodejs(artifact) => print::sub_bullet(format!(
-            "Resolved Node.js version: {}",
-            style::value(artifact.version.to_string())
-        )),
+        ResolvedRuntime::Nodejs(artifact) => {
+            print::sub_bullet(format!(
+                "Resolved Node.js version: {}",
+                style::value(artifact.version.to_string())
+            ));
+
+            if let Some(release) = NODEJS_RELEASE_SCHEDULE.lookup(&artifact.version) {
+                if let Some(latest) = NODEJS_INVENTORY
+                    .resolve(artifact.os, artifact.arch, &release.range)
+                    .filter(|a| a.version > artifact.version)
+                {
+                    print::sub_bullet(format!(
+                        "{} Latest available {} release is {}",
+                        style::important("Note:"),
+                        release.range,
+                        style::value(latest.version.to_string()),
+                    ));
+                }
+
+                if is_eol(release) {
+                    let current = current_release(&NODEJS_RELEASE_SCHEDULE)
+                        .map(|r| format!("{} (Current)", r.range));
+                    let active_lts = active_lts_release(&NODEJS_RELEASE_SCHEDULE)
+                        .map(|r| format!("{} (Active LTS, recommended)", r.range));
+                    let suggested = [active_lts, current]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<_>>()
+                        .join(", ");
+
+                    let range = release.range.to_string();
+                    let eol_date = release.end_of_life.to_string();
+                    let support_url = style::url(
+                        "https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions",
+                    );
+                    print::warning(formatdoc! {"
+                        Node.js {range} reached end-of-life on {eol_date} and is no
+                        longer supported on Heroku. EOL versions no longer receive
+                        security updates or bug fixes from the Node.js project.
+
+                        In a future buildpack release, this warning will become a
+                        build error. Please upgrade to a supported version as soon as
+                        possible to avoid build failures.
+
+                        Suggested upgrade targets: {suggested}.
+
+                        For more information, see:
+                        {support_url}
+                    "});
+                }
+            }
+        }
     }
 }
 
