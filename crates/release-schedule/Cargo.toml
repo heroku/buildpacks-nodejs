@@ -1,0 +1,13 @@
+[package]
+name = "release-schedule"
+edition.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+libherokubuildpack = { version = "=0.30.3", default-features = false, features = ["inventory"] }
+serde = { version = "1", features = ["derive"] }
+thiserror = "2"
+toml = "1.0"
