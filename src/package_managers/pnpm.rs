@@ -17,7 +17,7 @@ use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
     UncachedLayerDefinition,
 };
-use nodejs_data::{Range, Version};
+use nodejs_data::{Version, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ use std::sync::LazyLock;
 
 pub(crate) fn resolve_pnpm_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Range,
+    requirement: &VersionRange,
 ) -> BuildpackResult<PackagePackument> {
     resolve_package_packument(
         &packument_layer(layer_name!("pnpm_packument"), context, "pnpm")?,
@@ -514,8 +514,9 @@ fn contains_pnpm_lifecycle_script(package_json_path: PathBuf) -> Result<bool, Er
     )
 }
 
-static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<Range> = LazyLock::new(|| {
-    Range::parse(">8.15.6").expect("Prune dev dependencies min version requirement should be valid")
+static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse(">8.15.6")
+        .expect("Prune dev dependencies min version requirement should be valid")
 });
 
 fn delete_workspace_node_modules(workspace_dirs: &[PathBuf]) -> Result<(), ErrorMessage> {

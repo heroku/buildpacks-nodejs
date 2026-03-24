@@ -15,14 +15,14 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
-use nodejs_data::{Range, Version, VersionCommandError};
+use nodejs_data::{Version, VersionCommandError, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::Command;
 
 pub(crate) fn resolve_npm_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Range,
+    requirement: &VersionRange,
 ) -> BuildpackResult<npm_registry::PackagePackument> {
     npm_registry::resolve_package_packument(
         &npm_registry::packument_layer(layer_name!("npm_packument"), context, "npm")?,

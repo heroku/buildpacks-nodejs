@@ -4,7 +4,7 @@ use crate::utils::error_handling::{
 };
 use bullet_stream::style;
 use indoc::formatdoc;
-use nodejs_data::{Range, Version, VersionError};
+use nodejs_data::{Version, VersionError, VersionRange};
 use std::fmt::Display;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -13,32 +13,32 @@ use tracing::instrument;
 pub(crate) struct PackageJson(serde_json::Value);
 
 impl PackageJson {
-    pub(crate) fn node_engine(&self) -> Option<Result<Range, VersionError>> {
+    pub(crate) fn node_engine(&self) -> Option<Result<VersionRange, VersionError>> {
         self.engines()
             .and_then(|engines| engines.get("node"))
             .and_then(|node| node.as_str())
-            .map(Range::parse)
+            .map(VersionRange::parse)
     }
 
-    pub(crate) fn npm_engine(&self) -> Option<Result<Range, VersionError>> {
+    pub(crate) fn npm_engine(&self) -> Option<Result<VersionRange, VersionError>> {
         self.engines()
             .and_then(|engines| engines.get("npm"))
             .and_then(|node| node.as_str())
-            .map(Range::parse)
+            .map(VersionRange::parse)
     }
 
-    pub(crate) fn pnpm_engine(&self) -> Option<Result<Range, VersionError>> {
+    pub(crate) fn pnpm_engine(&self) -> Option<Result<VersionRange, VersionError>> {
         self.engines()
             .and_then(|val| val.get("pnpm"))
             .and_then(|val| val.as_str())
-            .map(Range::parse)
+            .map(VersionRange::parse)
     }
 
-    pub(crate) fn yarn_engine(&self) -> Option<Result<Range, VersionError>> {
+    pub(crate) fn yarn_engine(&self) -> Option<Result<VersionRange, VersionError>> {
         self.engines()
             .and_then(|val| val.get("yarn"))
             .and_then(|val| val.as_str())
-            .map(Range::parse)
+            .map(VersionRange::parse)
     }
 
     fn engines(&self) -> Option<&serde_json::Value> {
@@ -296,7 +296,7 @@ mod tests {
         }));
         assert_eq!(
             package_json.node_engine().unwrap().unwrap().to_string(),
-            Range::parse("16.0.0").unwrap().to_string()
+            VersionRange::parse("16.0.0").unwrap().to_string()
         );
     }
 
