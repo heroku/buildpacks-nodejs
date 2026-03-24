@@ -17,7 +17,7 @@ use libcnb::layer::{
     UncachedLayerDefinition,
 };
 use libcnb::layer_env::Scope;
-use nodejs_data::{Range, Version, VersionCommandError};
+use nodejs_data::{Version, VersionCommandError, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -26,15 +26,17 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 use tracing::instrument;
 
-static YARN_BERRY_RANGE: LazyLock<Range> =
-    LazyLock::new(|| Range::parse(">=2").expect("Yarn berry requirement range should be valid"));
+static YARN_BERRY_RANGE: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse(">=2").expect("Yarn berry requirement range should be valid")
+});
 
-pub(crate) static DEFAULT_YARN_REQUIREMENT: LazyLock<Range> =
-    LazyLock::new(|| Range::parse("1.22.x").expect("Default Yarn requirement should be valid"));
+pub(crate) static DEFAULT_YARN_REQUIREMENT: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse("1.22.x").expect("Default Yarn requirement should be valid")
+});
 
 pub(crate) fn resolve_yarn_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Range,
+    requirement: &VersionRange,
 ) -> BuildpackResult<PackagePackument> {
     let (yarn_layer_name, yarn_package_name) = if requirement.allows_any(&YARN_BERRY_RANGE) {
         (

@@ -11,7 +11,7 @@ use bullet_stream::style;
 use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use nodejs_data::Range;
+use nodejs_data::VersionRange;
 use std::env::consts;
 use std::sync::LazyLock;
 use tracing::instrument;
@@ -22,7 +22,7 @@ static ARCH: LazyLock<Arch> =
     LazyLock::new(|| consts::ARCH.parse::<Arch>().expect("ARCH should be valid"));
 
 pub(crate) enum RequestedRuntime {
-    NodeJsEngine(Range),
+    NodeJsEngine(VersionRange),
     NodeJsDefault,
 }
 
@@ -76,7 +76,7 @@ pub(crate) fn resolve_runtime(
     }
 }
 
-fn resolve_nodejs_runtime(requirement: &Range) -> BuildpackResult<ResolvedRuntime> {
+fn resolve_nodejs_runtime(requirement: &VersionRange) -> BuildpackResult<ResolvedRuntime> {
     let artifact = NODEJS_INVENTORY
         .resolve(*OS, *ARCH, requirement)
         .ok_or(create_unknown_nodejs_version_error(requirement))?;
@@ -99,7 +99,7 @@ pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
     }
 }
 
-fn create_unknown_nodejs_version_error(requirement: &Range) -> ErrorMessage {
+fn create_unknown_nodejs_version_error(requirement: &VersionRange) -> ErrorMessage {
     let node_releases_url = style::url(format!(
         "https://github.com/nodejs/node/releases?q=\"v{requirement}\"&expanded=true"
     ));
@@ -144,7 +144,7 @@ mod tests {
     #[test]
     fn unknown_nodejs_version_error() {
         assert_error_snapshot(&create_unknown_nodejs_version_error(
-            &Range::parse("0.0.0").unwrap(),
+            &VersionRange::parse("0.0.0").unwrap(),
         ));
     }
 }

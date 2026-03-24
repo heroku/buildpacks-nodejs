@@ -80,19 +80,19 @@ pub enum VersionCommandError {
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(try_from = "String")]
-pub struct Range {
+pub struct VersionRange {
     range: node_semver::Range,
     original: String,
 }
 
-impl VersionRequirement<Version> for Range {
+impl VersionRequirement<Version> for VersionRange {
     fn satisfies(&self, version: &Version) -> bool {
         self.satisfies(version)
     }
 }
 
-impl Range {
-    /// Parses `package.json` version string into a Range. Handles
+impl VersionRange {
+    /// Parses `package.json` version string into a `VersionRange`. Handles
     /// these cases:
     ///
     /// * Any node-semver compatible string
@@ -105,7 +105,7 @@ impl Range {
     pub fn parse(requirement: &str) -> Result<Self, VersionError> {
         let trimmed = requirement.trim();
         if requirement == "latest" {
-            return Ok(Range {
+            return Ok(VersionRange {
                 range: node_semver::Range::any(),
                 original: requirement.to_string(),
             });
@@ -113,14 +113,14 @@ impl Range {
         if trimmed.starts_with("~=") {
             let version = trimmed.replacen('=', "", 1);
             if let Ok(range) = node_semver::Range::parse(version) {
-                return Ok(Range {
+                return Ok(VersionRange {
                     range,
                     original: requirement.to_string(),
                 });
             }
         }
         match node_semver::Range::parse(trimmed) {
-            Ok(range) => Ok(Range {
+            Ok(range) => Ok(VersionRange {
                 range,
                 original: requirement.to_string(),
             }),
@@ -134,19 +134,19 @@ impl Range {
     }
 
     #[must_use]
-    pub fn allows_any(&self, other: &Range) -> bool {
+    pub fn allows_any(&self, other: &VersionRange) -> bool {
         self.range.allows_any(&other.range)
     }
 }
 
-impl TryFrom<String> for Range {
+impl TryFrom<String> for VersionRange {
     type Error = VersionError;
     fn try_from(val: String) -> Result<Self, Self::Error> {
-        Range::parse(&val)
+        VersionRange::parse(&val)
     }
 }
 
-impl fmt::Display for Range {
+impl fmt::Display for VersionRange {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.original)
     }
@@ -163,7 +163,7 @@ mod tests {
 
     #[test]
     fn parse_handles_latest() {
-        let result = Range::parse("latest");
+        let result = VersionRange::parse("latest");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -173,7 +173,7 @@ mod tests {
 
     #[test]
     fn parse_handles_exact_versions() {
-        let result = Range::parse("14.0.0");
+        let result = VersionRange::parse("14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn parse_handles_starts_with_v() {
-        let result = Range::parse("v14.0.0");
+        let result = VersionRange::parse("v14.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -193,7 +193,7 @@ mod tests {
 
     #[test]
     fn parse_handles_semver_semantics() {
-        let result = Range::parse(">= 12.0.0");
+        let result = VersionRange::parse(">= 12.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn parse_handles_pipe_statements() {
-        let result = Range::parse("^12 || ^13 || ^14");
+        let result = VersionRange::parse("^12 || ^13 || ^14");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals() {
-        let result = Range::parse("~=14.4");
+        let result = VersionRange::parse("~=14.4");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn parse_handles_tilde_with_equals_and_patch() {
-        let result = Range::parse("~=14.4.3");
+        let result = VersionRange::parse("~=14.4.3");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -236,7 +236,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_within_string() {
-        let result = Range::parse(">v15.5.0");
+        let result = VersionRange::parse(">v15.5.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -246,7 +246,7 @@ mod tests {
 
     #[test]
     fn parse_handles_v_with_space() {
-        let result = Range::parse(">= v10.0.0");
+        let result = VersionRange::parse(">= v10.0.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn parse_handles_equal_with_v() {
-        let result = Range::parse("=v10.22.0");
+        let result = VersionRange::parse("=v10.22.0");
 
         assert!(result.is_ok());
         if let Ok(reqs) = result {
@@ -266,7 +266,7 @@ mod tests {
 
     #[test]
     fn parse_returns_error_for_invalid_reqs() {
-        let result = Range::parse("12.%");
+        let result = VersionRange::parse("12.%");
         assert!(result.is_err());
     }
 }
