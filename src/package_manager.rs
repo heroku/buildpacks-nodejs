@@ -16,7 +16,7 @@ use libcnb::build::BuildResultBuilder;
 use libcnb::data::launch::{LaunchBuilder, ProcessBuilder};
 use libcnb::data::process_type;
 use libcnb::data::store::Store;
-use nodejs_data::{Range, Version};
+use nodejs_data::{Version, VersionRange};
 use std::path::{Path, PathBuf};
 use tracing::instrument;
 
@@ -24,10 +24,10 @@ use tracing::instrument;
 #[derive(Debug, Clone)]
 pub(crate) enum RequestedPackageManager {
     BundledNpm,
-    NpmEngine(Range),
-    PnpmEngine(Range),
-    YarnEngine(Range),
-    YarnDefault(Range),
+    NpmEngine(VersionRange),
+    PnpmEngine(VersionRange),
+    YarnEngine(VersionRange),
+    YarnDefault(VersionRange),
     YarnVendored(PathBuf),
     PackageManager(PackageManagerField),
 }
@@ -203,10 +203,10 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 }
 
 pub(crate) enum ResolvedPackageManager {
-    Npm(Range, PackagePackument),
+    Npm(VersionRange, PackagePackument),
     NpmBundled,
-    Pnpm(Range, PackagePackument),
-    Yarn(Range, PackagePackument),
+    Pnpm(VersionRange, PackagePackument),
+    Yarn(VersionRange, PackagePackument),
     YarnVendored(PathBuf),
 }
 
@@ -263,7 +263,7 @@ pub(crate) fn resolve_package_manager(
             Ok(ResolvedPackageManager::YarnVendored(yarn_path.clone()))
         }
         RequestedPackageManager::PackageManager(package_manager_field) => {
-            let requirement = Range::parse(&package_manager_field.version.to_string())
+            let requirement = VersionRange::parse(&package_manager_field.version.to_string())
                 .expect("Exact version string should be a valid requirement range");
             match package_manager_field.name {
                 PackageManagerFieldPackageManager::Npm => npm::resolve_npm_package_packument(
