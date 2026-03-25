@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.20.1`
+  - Resolved Node.js version: `20.20.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.20.1/node-v20.20.1-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v20.20.2/node-v20.20.2-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.20.1 (<arch>)`
-  - Installing Node.js `20.20.1 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `20.20.2 (<arch>)`
+  - Installing Node.js `20.20.2 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
@@ -100,9 +100,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^20.0`
-  - Resolved Node.js version: `20.20.1`
+  - Resolved Node.js version: `20.20.2`
 - Installing Node.js distribution
-  - Reusing Node.js 20.20.1 (<arch>)
+  - Reusing Node.js 20.20.2 (<arch>)
 - Determining npm package information
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
@@ -122,6 +122,9 @@ heroku/nodejs <buildpack-version>
       > node-gyp rebuild || node suppress-error.js
 
       <NODE-GYP BUILD OUTPUT> 
+      make: Entering directory '/workspace/node_modules/dtrace-provider/build'
+        TOUCH Release/obj.target/DTraceProviderStub.stamp
+      make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
