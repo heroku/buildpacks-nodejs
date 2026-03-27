@@ -5,7 +5,7 @@ rust-version.workspace = true
 edition.workspace = true
 
 [dependencies]
-libcnb = { version = "=0.30.3", default-features = false }
+libcnb = { git = "https://github.com/heroku/libcnb.rs", branch = "add-release-schedule-module", default-features = false }
 
 [lints]
 workspace = true

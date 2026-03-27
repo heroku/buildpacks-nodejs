@@ -5,7 +5,7 @@ edition = "2024"
 [dependencies]
 clap = { version = "4", features = ["cargo", "derive"] }
 keep_a_changelog_file = "0.1.0"
-libherokubuildpack = { version = "=0.30.3", default-features = false, features = [
+libherokubuildpack = { git = "https://github.com/heroku/libcnb.rs", branch = "add-release-schedule-module", default-features = false, features = [
     "inventory",
     "inventory-sha2",
 ] }
