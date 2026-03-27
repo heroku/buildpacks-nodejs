@@ -12,15 +12,24 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `22.x`
-  - Resolved Node.js version: `22.22.2`
+  - Detected Node.js version range: `18.x`
+  - Resolved Node.js version: `18.20.8`
+
+! Node.js `v18` reached its official End-of-Life (EOL) on `2025-04-30`. It no longer receives security updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+!
+! In a future buildpack release, this warning will become a build error. Please upgrade to a supported version as soon as possible to avoid build failures.
+!
+! Supported versions: 20.x, 22.x, 24.x
+!
+! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
+
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.22.2/node-v22.22.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v18.20.8/node-v18.20.8-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.22.2 (<arch>)`
-  - Installing Node.js `22.22.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `18.20.8 (<arch>)`
+  - Installing Node.js `18.20.8 (<arch>)` ... (<time_elapsed>)
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

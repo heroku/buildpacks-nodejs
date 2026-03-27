@@ -186,6 +186,12 @@ impl<'de> Deserialize<'de> for TomlDate {
     }
 }
 
+impl From<TomlDate> for time::Date {
+    fn from(d: TomlDate) -> Self {
+        d.0
+    }
+}
+
 impl fmt::Display for TomlDate {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -347,6 +353,136 @@ pub struct NodejsInventoryWithSchedule {
     /// The artifact inventory containing downloadable Node.js versions.
     #[serde(flatten)]
     pub inventory: NodejsInventory,
+}
+
+// --- Lifecycle computation functions ---
+
+/// Major versions that should cause an immediate build failure when resolved.
+/// Currently empty; versions here would be rejected outright during builds.
+pub const REJECTED_VERSIONS: &[u64] = &[];
+
+/// Returns the major version of the current (non-LTS) release line.
+///
+/// This is the highest-numbered release line in the schedule that has no `lts` date.
+///
+/// # Panics
+///
+/// Panics if no current (non-LTS) release line is found in the schedule.
+#[must_use]
+pub fn current_version(schedule: &NodejsReleaseSchedule) -> u64 {
+    let today = time::OffsetDateTime::now_utc().date();
+    schedule
+        .releases
+        .iter()
+        .filter(|r| r.metadata.lts.is_none() && time::Date::from(r.end_of_life) > today)
+        .map(|r| r.requirement.major())
+        .max()
+        // Safe to expect — the `current_version_is_present` test verifies that the
+        // real inventory always contains at least one current release line.
+        .expect("Schedule should contain at least one current (non-LTS) release line")
+}
+
+/// Returns the major version of the active LTS release line.
+///
+/// The active LTS is the highest-numbered release line whose `lts` date has
+/// passed and whose `maintenance` date either hasn't been set or hasn't
+/// arrived yet.
+///
+/// # Panics
+///
+/// Panics if no active LTS release line is found in the schedule.
+#[must_use]
+pub fn active_lts_version(schedule: &NodejsReleaseSchedule) -> u64 {
+    let today = time::OffsetDateTime::now_utc().date();
+    schedule
+        .releases
+        .iter()
+        .filter(|r| {
+            r.metadata.lts.is_some_and(|lts| lts <= today)
+                && r.metadata.maintenance.is_none_or(|maint| maint > today)
+        })
+        .map(|r| r.requirement.major())
+        .max()
+        // Safe to expect — the `active_lts_version_is_present` test verifies that the
+        // real inventory always contains at least one active LTS release line.
+        .expect("Schedule should contain at least one active LTS release line")
+}
+
+/// Returns the major versions of all maintenance LTS release lines.
+///
+/// A maintenance LTS release line has an `lts` date, a `maintenance` date that
+/// has already passed, and an EOL date still in the future.
+#[must_use]
+pub fn maintenance_lts_versions(schedule: &NodejsReleaseSchedule) -> Vec<u64> {
+    let today = time::OffsetDateTime::now_utc().date();
+    schedule
+        .releases
+        .iter()
+        .filter(|r| {
+            r.metadata.lts.is_some()
+                && r.metadata.maintenance.is_some_and(|maint| maint <= today)
+                && time::Date::from(r.end_of_life) > today
+        })
+        .map(|r| r.requirement.major())
+        .collect()
+}
+
+/// Returns true if the range satisfies versions across multiple major versions
+/// present in the inventory.
+#[must_use]
+pub fn is_wide_range(
+    requested_range: &VersionRange,
+    inventory: &NodejsInventoryWithSchedule,
+) -> bool {
+    let mut majors = std::collections::HashSet::new();
+    for artifact in &inventory.inventory.artifacts {
+        if requested_range.satisfies(&artifact.version) {
+            majors.insert(artifact.version.major());
+        }
+    }
+    majors.len() > 1
+}
+
+/// Returns the highest version matching the active LTS major from the inventory,
+/// or None if no LTS artifacts match the range.
+#[must_use]
+pub fn lts_upper_bound(
+    requested_range: &VersionRange,
+    inventory: &NodejsInventoryWithSchedule,
+) -> Option<Version> {
+    let lts_major = active_lts_version(&inventory.schedule);
+    inventory
+        .inventory
+        .artifacts
+        .iter()
+        .filter(|a| a.version.major() == lts_major && requested_range.satisfies(&a.version))
+        .map(|a| &a.version)
+        .max()
+        .cloned()
+}
+
+/// Returns the EOL date for the given version from the release schedule.
+///
+/// Uses `Schedule::resolve` with `NodejsReleaseLine`'s `VersionRequirement` impl,
+/// which handles v0.9/v0.11 development release edge cases automatically.
+///
+/// # Panics
+///
+/// Panics if the version is not represented in the release schedule.
+/// The `all_inventory_artifacts_have_eol_dates` test verifies this holds for every
+/// artifact in the inventory.
+#[must_use]
+pub fn eol_date_for_version(
+    version: &Version,
+    inventory: &NodejsInventoryWithSchedule,
+) -> time::Date {
+    // Safe to unwrap via map_or_else here — the `all_inventory_artifacts_have_eol_dates`
+    // test exhaustively verifies that every artifact in the inventory has a matching
+    // release schedule entry. A panic here would only surface as a unit test failure.
+    inventory.schedule.resolve(version).map_or_else(
+        || panic!("No release schedule entry found for Node.js {version}"),
+        |release| release.end_of_life.into(),
+    )
 }
 
 #[cfg(test)]
@@ -576,5 +712,98 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
             toml::from_str(&reserialized).expect("should parse re-serialized TOML");
         assert_eq!(reparsed.schedule.releases.len(), 2);
         assert_eq!(reparsed.inventory.artifacts.len(), 1);
+    }
+
+    // --- Lifecycle computation tests using real inventory ---
+
+    fn load_inventory() -> NodejsInventoryWithSchedule {
+        let toml_str = std::fs::read_to_string(
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../inventory/nodejs.toml"),
+        )
+        .expect("should read inventory file");
+        toml::from_str(&toml_str).expect("should parse inventory")
+    }
+
+    #[test]
+    fn is_wide_range_narrow() {
+        let inv = load_inventory();
+        let range = VersionRange::parse("24.x").unwrap();
+        assert!(!is_wide_range(&range, &inv));
+    }
+
+    #[test]
+    fn is_wide_range_wide() {
+        let inv = load_inventory();
+        let range = VersionRange::parse(">= 22").unwrap();
+        assert!(is_wide_range(&range, &inv));
+    }
+
+    #[test]
+    fn lts_upper_bound_returns_highest_lts_match() {
+        let inv = load_inventory();
+        let lts_major = active_lts_version(&inv.schedule);
+        let range = VersionRange::parse(">= 22").unwrap();
+        let result = lts_upper_bound(&range, &inv).expect("should find an LTS version");
+        assert_eq!(result.major(), lts_major);
+        // It should be the highest artifact for the LTS major
+        let highest_lts = inv
+            .inventory
+            .artifacts
+            .iter()
+            .filter(|a| a.version.major() == lts_major)
+            .map(|a| &a.version)
+            .max()
+            .unwrap();
+        assert_eq!(&result, highest_lts);
+    }
+
+    #[test]
+    fn eol_date_for_version_returns_correct_date() {
+        let inv = load_inventory();
+        let version = Version::parse("24.0.0").unwrap();
+        let eol = eol_date_for_version(&version, &inv);
+        assert_eq!(
+            eol,
+            time::Date::from_calendar_date(2028, time::Month::April, 30).unwrap()
+        );
+    }
+
+    #[test]
+    fn all_inventory_artifacts_have_eol_dates() {
+        let inv = load_inventory();
+        for artifact in &inv.inventory.artifacts {
+            let eol = eol_date_for_version(&artifact.version, &inv);
+            assert!(
+                eol.year() > 0,
+                "Expected a valid EOL date for {}, got {eol}",
+                artifact.version
+            );
+        }
+    }
+
+    #[test]
+    fn rejected_versions_does_not_include_current() {
+        let version = Version::parse("24.0.0").unwrap();
+        assert!(!REJECTED_VERSIONS.contains(&version.major()));
+    }
+
+    #[test]
+    fn current_version_is_present() {
+        let inv = load_inventory();
+        assert_eq!(current_version(&inv.schedule), 25);
+    }
+
+    #[test]
+    fn active_lts_version_is_present() {
+        let inv = load_inventory();
+        assert_eq!(active_lts_version(&inv.schedule), 24);
+    }
+
+    #[test]
+    fn maintenance_lts_versions_are_correct() {
+        let inv = load_inventory();
+        let mut versions = maintenance_lts_versions(&inv.schedule);
+        versions.sort_unstable();
+        assert_eq!(versions, vec![20, 22]);
     }
 }
