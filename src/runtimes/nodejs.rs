@@ -16,20 +16,22 @@ use libcnb::layer::{
     CachedLayerDefinition, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
-use nodejs_data::{Version, VersionCommandError, VersionRange};
+use nodejs_data::{NodejsArtifact, Version, VersionCommandError, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::sync::LazyLock;
 
-pub(crate) static NODEJS_INVENTORY: LazyLock<NodejsInventory> = LazyLock::new(|| {
-    toml::from_str(include_str!("../../inventory/nodejs.toml"))
-        .expect("Inventory file should be valid")
+pub(crate) static NODEJS_INVENTORY: LazyLock<nodejs_data::NodejsInventoryWithSchedule> =
+    LazyLock::new(|| {
+        toml::from_str(include_str!("../../inventory/nodejs.toml"))
+            .expect("Inventory file should be valid")
+    });
+
+pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<VersionRange> = LazyLock::new(|| {
+    let lts = nodejs_data::active_lts_version(&NODEJS_INVENTORY.schedule);
+    let current_lts = format!("{lts}.x");
+    VersionRange::parse(&current_lts).expect("Default Node.js version should be valid")
 });
-
-pub(crate) static DEFAULT_NODEJS_REQUIREMENT: LazyLock<VersionRange> =
-    LazyLock::new(|| VersionRange::parse("24.x").expect("Default Node.js version should be valid"));
-
-pub(crate) use nodejs_data::{NodejsArtifact, NodejsInventory};
 
 pub(crate) fn install(
     context: &BuildpackBuildContext,

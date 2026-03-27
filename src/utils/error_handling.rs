@@ -152,7 +152,15 @@ pub(crate) mod test_util {
     use test_support::test_name;
 
     pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
-        let error_message = strip_ansi(error.to_string());
+        assert_test_snapshot(error.to_string());
+    }
+
+    pub(crate) fn assert_warning_snapshot(warning: &str) {
+        assert_test_snapshot(warning);
+    }
+
+    fn assert_test_snapshot(output: impl AsRef<str>) {
+        let output = strip_ansi(output.as_ref());
         let test_name = test_name()
             .replace("::", "_")
             .replace("_tests", "")
@@ -168,7 +176,7 @@ pub(crate) mod test_util {
             omit_expression => true,
             snapshot_path => snapshot_path,
         }, {
-            assert_snapshot!(test_name, error_message);
+            assert_snapshot!(test_name, output);
         });
     }
 

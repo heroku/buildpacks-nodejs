@@ -34,7 +34,7 @@ fn reinstalls_node_if_version_changes() {
         "./fixtures/node-with-indexjs",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
-                set_node_engine(&app_dir, "^14.0");
+                set_node_engine(&app_dir, "^20.0");
             });
         },
         |ctx| {
@@ -42,7 +42,7 @@ fn reinstalls_node_if_version_changes() {
 
             let mut config = ctx.config.clone();
             config.app_dir_preprocessor(|app_dir| {
-                set_node_engine(&app_dir, "^16.0");
+                set_node_engine(&app_dir, "^22.0");
             });
 
             ctx.rebuild(config, |ctx| {
@@ -73,6 +73,22 @@ fn node_build_and_runtime_env() {
             BuildpackReference::WorkspaceBuildpack(buildpack_id!("heroku/nodejs")),
             print_build_env_buildpack(),
         ],
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn node_18_eol_warning() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-serverjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "18.x");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+        },
     );
 }
 

@@ -1,0 +1,11 @@
+---
+source: src/utils/error_handling.rs
+---
+! Support for Node.js `v18` has ended
+!
+! Node.js `v18` reached its official End-of-Life (EOL) on `2025-04-30`. It no longer receives security updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
+!
+! Suggestions:
+! - Upgrade to a supported LTS version (20.x, 22.x, 24.x)
+!
+! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
