@@ -8,10 +8,15 @@ workspace = true
 
 [dependencies]
 fun_run = "0.6"
-libherokubuildpack = { version = "=0.30.3", default-features = false, features = [
+libherokubuildpack = { git = "https://github.com/heroku/libcnb.rs", branch = "add-release-schedule-module", default-features = false, features = [
     "inventory",
     "inventory-sha2",
 ] }
+time = "0.3"
+toml-datetime-compat = { version = "0.3", features = ["time"] }
 node-semver = "2"
 serde = { version = "1", features = ["derive"] }
 sha2 = "0.10.9"
+
+[dev-dependencies]
+toml = "1.0"
