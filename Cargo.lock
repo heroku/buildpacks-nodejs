@@ -2344,6 +2344,7 @@ dependencies = [
  "tar",
  "tempfile",
  "test_support",
+ "time",
  "tokio",
  "toml",
  "toml_edit",

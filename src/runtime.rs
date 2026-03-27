@@ -1,6 +1,6 @@
 use crate::o11y::*;
 use crate::package_json::PackageJson;
-use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
+use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -11,6 +11,7 @@ use bullet_stream::style;
 use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
+use nodejs_data::NodejsArtifact;
 use nodejs_data::VersionRange;
 use std::env::consts;
 use std::sync::LazyLock;
@@ -78,6 +79,7 @@ pub(crate) fn resolve_runtime(
 
 fn resolve_nodejs_runtime(requirement: &VersionRange) -> BuildpackResult<ResolvedRuntime> {
     let artifact = NODEJS_INVENTORY
+        .inventory
         .resolve(*OS, *ARCH, requirement)
         .ok_or(create_unknown_nodejs_version_error(requirement))?;
     tracing::info!(
@@ -88,6 +90,17 @@ fn resolve_nodejs_runtime(requirement: &VersionRange) -> BuildpackResult<Resolve
         "runtime"
     );
     Ok(ResolvedRuntime::Nodejs(artifact.clone()))
+}
+
+pub(crate) fn check_runtime_support_status(
+    resolved_runtime: ResolvedRuntime,
+) -> BuildpackResult<ResolvedRuntime> {
+    match &resolved_runtime {
+        ResolvedRuntime::Nodejs(artifact) => {
+            crate::support_status::check_nodejs_support_status(artifact)?;
+        }
+    }
+    Ok(resolved_runtime)
 }
 
 pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
