@@ -26,6 +26,8 @@ pub(crate) const RUNTIME_VERSION_MAJOR: &str = formatcp!("{RUNTIME}.version_majo
 
 pub(crate) const RUNTIME_URL: &str = formatcp!("{RUNTIME}.url");
 
+pub(crate) const RUNTIME_SUPPORT_STATUS: &str = formatcp!("{RUNTIME}.support_status");
+
 const PACKAGE_MANAGER: &str = formatcp!("{NAMESPACE}.package_manager");
 
 pub(crate) const PACKAGE_MANAGER_REQUESTED_SOURCE: &str =
