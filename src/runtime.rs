@@ -5,13 +5,13 @@ use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
-use crate::utils::vrs::Requirement;
 use crate::{BuildpackBuildContext, BuildpackResult, runtimes};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
+use nodejs_data::VersionRange;
 use std::env::consts;
 use std::sync::LazyLock;
 use tracing::instrument;
@@ -22,7 +22,7 @@ static ARCH: LazyLock<Arch> =
     LazyLock::new(|| consts::ARCH.parse::<Arch>().expect("ARCH should be valid"));
 
 pub(crate) enum RequestedRuntime {
-    NodeJsEngine(Requirement),
+    NodeJsEngine(VersionRange),
     NodeJsDefault,
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn log_requested_runtime(requested_runtime: &RequestedRuntime) {
         RequestedRuntime::NodeJsDefault => {
             print::sub_bullet(format!(
                 "Node.js version not specified, using {}",
-                style::value(&DEFAULT_NODEJS_REQUIREMENT.value)
+                style::value(DEFAULT_NODEJS_REQUIREMENT.to_string())
             ));
         }
     }
@@ -72,13 +72,11 @@ pub(crate) fn resolve_runtime(
 ) -> BuildpackResult<ResolvedRuntime> {
     match requested_runtime {
         RequestedRuntime::NodeJsEngine(requirement) => resolve_nodejs_runtime(&requirement),
-        RequestedRuntime::NodeJsDefault => {
-            resolve_nodejs_runtime(&DEFAULT_NODEJS_REQUIREMENT.requirement)
-        }
+        RequestedRuntime::NodeJsDefault => resolve_nodejs_runtime(&DEFAULT_NODEJS_REQUIREMENT),
     }
 }
 
-fn resolve_nodejs_runtime(requirement: &Requirement) -> BuildpackResult<ResolvedRuntime> {
+fn resolve_nodejs_runtime(requirement: &VersionRange) -> BuildpackResult<ResolvedRuntime> {
     let artifact = NODEJS_INVENTORY
         .resolve(*OS, *ARCH, requirement)
         .ok_or(create_unknown_nodejs_version_error(requirement))?;
@@ -101,7 +99,7 @@ pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
     }
 }
 
-fn create_unknown_nodejs_version_error(requirement: &Requirement) -> ErrorMessage {
+fn create_unknown_nodejs_version_error(requirement: &VersionRange) -> ErrorMessage {
     let node_releases_url = style::url(format!(
         "https://github.com/nodejs/node/releases?q=\"v{requirement}\"&expanded=true"
     ));
@@ -146,7 +144,7 @@ mod tests {
     #[test]
     fn unknown_nodejs_version_error() {
         assert_error_snapshot(&create_unknown_nodejs_version_error(
-            &Requirement::parse("0.0.0").unwrap(),
+            &VersionRange::parse("0.0.0").unwrap(),
         ));
     }
 }

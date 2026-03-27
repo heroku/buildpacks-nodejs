@@ -5,7 +5,6 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
 use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
-use crate::utils::vrs::{Requirement, Version};
 use crate::{BuildpackBuildContext, BuildpackResult, utils};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -18,6 +17,7 @@ use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
     UncachedLayerDefinition,
 };
+use nodejs_data::{Version, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -26,7 +26,7 @@ use std::sync::LazyLock;
 
 pub(crate) fn resolve_pnpm_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Requirement,
+    requirement: &VersionRange,
 ) -> BuildpackResult<PackagePackument> {
     resolve_package_packument(
         &packument_layer(layer_name!("pnpm_packument"), context, "pnpm")?,
@@ -514,8 +514,8 @@ fn contains_pnpm_lifecycle_script(package_json_path: PathBuf) -> Result<bool, Er
     )
 }
 
-static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<Requirement> = LazyLock::new(|| {
-    Requirement::parse(">8.15.6")
+static PRUNE_DEV_DEPENDENCIES_MIN_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse(">8.15.6")
         .expect("Prune dev dependencies min version requirement should be valid")
 });
 
