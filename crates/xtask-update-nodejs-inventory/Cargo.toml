@@ -20,4 +20,7 @@ sequoia-openpgp = { version = "2", default-features = false, features = ["crypto
 sequoia-net = "0.30"
 sha2 = "0.10.9"
 tempfile = "3"
+time = { version = "0.3", features = ["parsing"] }
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+toml = "1.0"
+toml_edit = "0.24"
