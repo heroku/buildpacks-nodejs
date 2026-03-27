@@ -1,7 +1,10 @@
 use crate::SupportedNodeReleasePlatform;
 use crate::trusted_release_keys::NodeReleaseKeys;
 use libherokubuildpack::inventory::checksum::Checksum;
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
+use nodejs_data::{
+    NodejsArtifact, NodejsInventory, NodejsInventoryWithSchedule, NodejsRelease, NodejsReleaseLine,
+    NodejsReleaseMetadata, TomlDate, Version,
+};
 use reqwest::{IntoUrl, Url};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::RetryTransientMiddleware;
@@ -16,6 +19,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::LazyLock;
 use std::time::Duration;
+use time::format_description::well_known::Iso8601;
 
 static BASE_NODEJS_RELEASE_URL: LazyLock<Url> = LazyLock::new(|| {
     Url::parse("https://nodejs.org/download/release/").expect("base url should be valid")
@@ -24,12 +28,61 @@ static BASE_NODEJS_RELEASE_URL: LazyLock<Url> = LazyLock::new(|| {
 static STARTING_NODE_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::parse("0.8.6").expect("Starting Node.js version should be valid"));
 
+static RELEASE_SCHEDULE_URL: &str =
+    "https://raw.githubusercontent.com/nodejs/Release/main/schedule.json";
+
 pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodejsArtifact> {
-    std::fs::read_to_string(inventory_path)
-        .expect("Failed to read inventory file")
+    let contents = std::fs::read_to_string(inventory_path).expect("Failed to read inventory file");
+    if let Ok(inv) = toml::from_str::<NodejsInventoryWithSchedule>(&contents) {
+        return inv.inventory.artifacts;
+    }
+    contents
         .parse::<NodejsInventory>()
-        .unwrap_or(NodejsInventory::default())
+        .unwrap_or_default()
         .artifacts
+}
+
+pub(super) async fn fetch_release_schedule() -> Vec<NodejsRelease> {
+    let schedule_file = download_file(RELEASE_SCHEDULE_URL).await;
+    let schedule_contents =
+        std::fs::read_to_string(&schedule_file).expect("Failed to read release schedule file");
+
+    let upstream: HashMap<String, UpstreamScheduleEntry> =
+        serde_json::from_str(&schedule_contents).expect("Failed to parse release schedule JSON");
+
+    upstream
+        .into_iter()
+        .map(|(key, entry)| {
+            let requirement = NodejsReleaseLine::try_from(key.clone())
+                .unwrap_or_else(|e| panic!("Failed to parse release line '{key}': {e}"));
+            let end_of_life = TomlDate(parse_date(&entry.end));
+            let metadata = NodejsReleaseMetadata {
+                start: parse_date(&entry.start),
+                lts: entry.lts.as_deref().map(parse_date),
+                maintenance: entry.maintenance.as_deref().map(parse_date),
+            };
+            NodejsRelease {
+                requirement,
+                end_of_life,
+                metadata,
+            }
+        })
+        .collect()
+}
+
+fn parse_date(s: &str) -> time::Date {
+    time::Date::parse(s, &Iso8601::DATE)
+        .unwrap_or_else(|e| panic!("Failed to parse date '{s}': {e}"))
+}
+
+#[derive(Deserialize)]
+struct UpstreamScheduleEntry {
+    start: String,
+    end: String,
+    #[serde(default)]
+    lts: Option<String>,
+    #[serde(default)]
+    maintenance: Option<String>,
 }
 
 pub(super) async fn from_upstream(

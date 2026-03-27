@@ -1,30 +1,66 @@
 use crate::OutputFormat;
 use keep_a_changelog_file::{ChangeGroup, Changelog};
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
+use nodejs_data::{
+    NodejsArtifact, NodejsInventory, NodejsInventoryWithSchedule, NodejsRelease,
+    NodejsReleaseSchedule, Version,
+};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodejsArtifact]) {
-    fs::write(
-        inventory_path,
-        NodejsInventory {
-            artifacts: {
-                let mut artifacts = upstream_artifacts.to_vec();
-                artifacts.sort_by(|a, b| {
-                    if a.version == b.version {
-                        b.arch.to_string().cmp(&a.arch.to_string())
-                    } else {
-                        b.version.cmp(&a.version)
-                    }
-                });
-                artifacts
-            },
+pub(super) fn write_inventory(
+    inventory_path: &Path,
+    upstream_artifacts: &[NodejsArtifact],
+    releases: &[NodejsRelease],
+) {
+    // Sort artifacts descending by version (then by arch for same version)
+    let mut artifacts = upstream_artifacts.to_vec();
+    artifacts.sort_by(|a, b| {
+        if a.version == b.version {
+            b.arch.to_string().cmp(&a.arch.to_string())
+        } else {
+            b.version.cmp(&a.version)
         }
-        .to_string(),
-    )
-    .unwrap_or_else(|_| {
+    });
+
+    // Sort releases descending by NodejsReleaseLine
+    let mut sorted_releases = releases.to_vec();
+    sorted_releases.sort_by(|a, b| b.requirement.cmp(&a.requirement));
+
+    // Pass 1: Build and serialize the complete inventory with schedule
+    let inventory_with_schedule = NodejsInventoryWithSchedule {
+        schedule: NodejsReleaseSchedule {
+            releases: sorted_releases,
+        },
+        inventory: NodejsInventory { artifacts },
+    };
+    let toml_str =
+        toml::to_string(&inventory_with_schedule).expect("Failed to serialize inventory to TOML");
+
+    // Pass 2: Use toml_edit to convert [releases.metadata] standard tables to inline tables
+    let mut doc = toml_str
+        .parse::<toml_edit::DocumentMut>()
+        .expect("Failed to parse TOML for post-processing");
+
+    if let Some(releases_array) = doc
+        .get_mut("releases")
+        .and_then(|v| v.as_array_of_tables_mut())
+    {
+        for release in releases_array.iter_mut() {
+            if let Some(metadata_item) = release.get_mut("metadata")
+                && let Some(table) = metadata_item.as_table().cloned()
+            {
+                let mut inline = toml_edit::InlineTable::new();
+                for (key, value) in table.iter() {
+                    inline.insert(key, value.clone().into_value().unwrap());
+                }
+                *metadata_item = toml_edit::Item::Value(toml_edit::Value::InlineTable(inline));
+            }
+        }
+    }
+
+    fs::write(inventory_path, doc.to_string()).unwrap_or_else(|_| {
         panic!(
             "Failed to write inventory to '{}'",
             inventory_path.display()
