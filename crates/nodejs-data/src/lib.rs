@@ -381,8 +381,7 @@ pub fn active_lts_version(schedule: &NodejsReleaseSchedule) -> u64 {
     schedule
         .iter()
         .filter(|(_, r)| {
-            r.lts.is_some_and(|lts| lts <= today)
-                && r.maintenance.is_none_or(|maint| maint > today)
+            r.lts.is_some_and(|lts| lts <= today) && r.maintenance.is_none_or(|maint| maint > today)
         })
         .map(|(line, _)| line.major())
         .max()
@@ -401,9 +400,7 @@ pub fn maintenance_lts_versions(schedule: &NodejsReleaseSchedule) -> Vec<u64> {
     schedule
         .iter()
         .filter(|(_, r)| {
-            r.lts.is_some()
-                && r.maintenance.is_some_and(|maint| maint <= today)
-                && r.end > today
+            r.lts.is_some() && r.maintenance.is_some_and(|maint| maint <= today) && r.end > today
         })
         .map(|(line, _)| line.major())
         .collect()
@@ -422,7 +419,18 @@ pub fn is_wide_range(
             majors.insert(artifact.version.major());
         }
     }
-    majors.len() > 1
+    if majors.len() > 1 {
+        return true;
+    }
+    // Check if the range would also satisfy a version one major above the highest
+    // in the inventory. This handles cases like ">=25" where 25 is the highest
+    // major available — the range is still wide even though no 26.x artifacts exist yet.
+    if let Some(&highest) = majors.iter().max()
+        && let Ok(next_major) = Version::parse(&format!("{}.0.0", highest + 1))
+    {
+        return requested_range.satisfies(&next_major);
+    }
+    false
 }
 
 /// Returns the highest version matching the active LTS major from the inventory,
@@ -465,8 +473,10 @@ pub fn eol_date_for_version(
         .schedule
         .iter()
         .find(|(line, _)| line.satisfies(version))
-        .map(|(_, release)| release.end)
-        .unwrap_or_else(|| panic!("No release schedule entry found for Node.js {version}"))
+        .map_or_else(
+            || panic!("No release schedule entry found for Node.js {version}"),
+            |(_, release)| release.end,
+        )
 }
 
 #[cfg(test)]
@@ -761,6 +771,20 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
     fn is_wide_range_wide() {
         let inv = load_inventory();
         let range = VersionRange::parse(">= 22").unwrap();
+        assert!(is_wide_range(&range, &inv));
+    }
+
+    #[test]
+    fn is_wide_range_detected_when_range_starts_at_highest_major() {
+        let inv = load_inventory();
+        let highest_major = inv
+            .inventory
+            .artifacts
+            .iter()
+            .map(|a| a.version.major())
+            .max()
+            .unwrap();
+        let range = VersionRange::parse(&format!(">={highest_major}")).unwrap();
         assert!(is_wide_range(&range, &inv));
     }
 
