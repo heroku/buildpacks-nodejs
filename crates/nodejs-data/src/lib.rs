@@ -310,7 +310,7 @@ pub struct NodejsReleaseMetadata {
     pub maintenance: Option<time::Date>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct NodejsRelease {
     #[serde(with = "toml_datetime_compat")]
     pub start: time::Date,
