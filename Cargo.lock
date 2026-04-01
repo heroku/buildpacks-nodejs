@@ -5066,7 +5066,6 @@ dependencies = [
  "time",
  "tokio",
  "toml",
- "toml_edit",
 ]
 
 [[package]]
