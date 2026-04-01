@@ -1,12 +1,14 @@
 use fun_run::NamedOutput;
 use libherokubuildpack::inventory::version::VersionRequirement;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug, PartialEq)]
 pub struct VersionError(String);
 
 impl Error for VersionError {}
+
 impl fmt::Display for VersionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
@@ -165,32 +167,7 @@ pub type NodejsInventory =
 
 // --- Release schedule types ---
 
-/// A newtype wrapper around `time::Date` that serializes as a native TOML date.
-///
-/// This is needed because `Release<R, E, M>` uses `E: Serialize` directly,
-/// so we cannot use `#[serde(with = "toml_datetime_compat")]` on the field.
-/// Instead, this wrapper delegates to `toml_datetime_compat` in its own
-/// `Serialize`/`Deserialize` implementations.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct TomlDate(pub time::Date);
-
-impl Serialize for TomlDate {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        toml_datetime_compat::serialize(&self.0, serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for TomlDate {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        toml_datetime_compat::deserialize(deserializer).map(TomlDate)
-    }
-}
-
-impl fmt::Display for TomlDate {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
+pub type NodejsReleaseSchedule = BTreeMap<NodejsReleaseLine, NodejsRelease>;
 
 /// Represents a Node.js release line like "v24" or "v0.12".
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -268,6 +245,13 @@ impl TryFrom<String> for NodejsReleaseLine {
     }
 }
 
+impl FromStr for NodejsReleaseLine {
+    type Err = VersionError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        NodejsReleaseLine::try_from(s.to_string())
+    }
+}
+
 impl Serialize for NodejsReleaseLine {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.serialize_str(&self.to_string())
@@ -326,23 +310,30 @@ pub struct NodejsReleaseMetadata {
     pub maintenance: Option<time::Date>,
 }
 
-pub type NodejsRelease = libherokubuildpack::inventory::schedule::Release<
-    NodejsReleaseLine,
-    TomlDate,
-    NodejsReleaseMetadata,
->;
-
-pub type NodejsReleaseSchedule = libherokubuildpack::inventory::schedule::Schedule<
-    NodejsReleaseLine,
-    TomlDate,
-    NodejsReleaseMetadata,
->;
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub struct NodejsRelease {
+    #[serde(with = "toml_datetime_compat")]
+    start: time::Date,
+    #[serde(with = "toml_datetime_compat")]
+    end: time::Date,
+    #[serde(
+        with = "toml_datetime_compat",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    lts: Option<time::Date>,
+    #[serde(
+        with = "toml_datetime_compat",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
+    maintenance: Option<time::Date>,
+}
 
 /// Combined inventory and release schedule for Node.js.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NodejsInventoryWithSchedule {
     /// The release schedule containing lifecycle information for each release line.
-    #[serde(flatten)]
     pub schedule: NodejsReleaseSchedule,
     /// The artifact inventory containing downloadable Node.js versions.
     #[serde(flatten)]
@@ -352,6 +343,9 @@ pub struct NodejsInventoryWithSchedule {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use libherokubuildpack::inventory::artifact::{Arch, Os};
+    use libherokubuildpack::inventory::checksum::Checksum;
+    use sha2::Sha256;
 
     #[test]
     fn parse_handles_latest() {
@@ -545,15 +539,9 @@ mod tests {
     #[test]
     fn inventory_with_schedule_round_trip() {
         let toml_str = r#"
-[[releases]]
-requirement = "v24"
-end_of_life = 2028-04-30
-metadata = { start = 2025-04-22, lts = 2025-10-28, maintenance = 2026-10-20 }
-
-[[releases]]
-requirement = "v25"
-end_of_life = 2026-06-01
-metadata = { start = 2025-04-22 }
+[schedule]
+v25 = { start = 2025-04-22, end = 2026-06-01 }
+v24 = { start = 2025-04-22, end = 2028-04-30, lts = 2025-10-28, maintenance = 2026-10-20 }
 
 [[artifacts]]
 version = "25.0.0"
@@ -565,16 +553,61 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         let parsed: NodejsInventoryWithSchedule =
             toml::from_str(toml_str).expect("should parse TOML");
 
-        assert_eq!(parsed.schedule.releases.len(), 2);
-        assert_eq!(parsed.schedule.releases[0].requirement.to_string(), "v24");
-        assert_eq!(parsed.schedule.releases[1].requirement.to_string(), "v25");
+        let expected = NodejsInventoryWithSchedule {
+            schedule: BTreeMap::from_iter([
+                (
+                    NodejsReleaseLine::from_str("v25").unwrap(),
+                    NodejsRelease {
+                        start: time::Date::from_calendar_date(2025, time::Month::April, 22)
+                            .unwrap(),
+                        end: time::Date::from_calendar_date(2026, time::Month::June, 1).unwrap(),
+                        lts: None,
+                        maintenance: None,
+                    },
+                ),
+                (
+                    NodejsReleaseLine::from_str("v24").unwrap(),
+                    NodejsRelease {
+                        start: time::Date::from_calendar_date(2025, time::Month::April, 22)
+                            .unwrap(),
+                        end: time::Date::from_calendar_date(2028, time::Month::April, 30).unwrap(),
+                        lts: Some(
+                            time::Date::from_calendar_date(2025, time::Month::October, 28).unwrap(),
+                        ),
+                        maintenance: Some(
+                            time::Date::from_calendar_date(2026, time::Month::October, 20).unwrap(),
+                        ),
+                    },
+                ),
+            ]),
+            inventory: NodejsInventory {
+                artifacts: vec![NodejsArtifact {
+                    version: Version::from_str("25.0.0").unwrap(),
+                    os: Os::Linux,
+                    arch: Arch::Amd64,
+                    url:
+                        "https://nodejs.org/download/release/v25.0.0/node-v25.0.0-linux-x64.tar.gz"
+                            .to_string(),
+                    checksum:
+                        "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+                            .parse::<Checksum<Sha256>>()
+                            .unwrap(),
+                    metadata: None,
+                }],
+            },
+        };
+        assert_eq!(parsed.schedule, expected.schedule);
         assert_eq!(parsed.inventory.artifacts.len(), 1);
+        assert_eq!(
+            parsed.inventory.artifacts[0],
+            expected.inventory.artifacts[0]
+        );
 
         // Re-serialize and parse again to verify round-trip
         let reserialized = toml::to_string(&parsed).expect("should serialize");
         let reparsed: NodejsInventoryWithSchedule =
             toml::from_str(&reserialized).expect("should parse re-serialized TOML");
-        assert_eq!(reparsed.schedule.releases.len(), 2);
+        assert_eq!(reparsed.schedule.len(), 2);
         assert_eq!(reparsed.inventory.artifacts.len(), 1);
     }
 }
