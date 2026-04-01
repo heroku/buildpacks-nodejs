@@ -2005,7 +2005,8 @@ checksum = "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d"
 [[package]]
 name = "libcnb"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6291b7e78d27535d7fdf015f20df0fd1d17a98af0b7fe48d8c91418e620cdaf1"
 dependencies = [
  "libcnb-common",
  "libcnb-data",
@@ -2025,7 +2026,8 @@ dependencies = [
 [[package]]
 name = "libcnb-common"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c4cbed66e23c39424feb481c65d699c5575762c4cc7415ec781ae611107f6a1f"
 dependencies = [
  "serde",
  "thiserror 2.0.18",
@@ -2035,7 +2037,8 @@ dependencies = [
 [[package]]
 name = "libcnb-data"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0331b1f367939fbef2746966a6b0ad2aa49beea42c45c4132843e86c4a454407"
 dependencies = [
  "fancy-regex",
  "libcnb-proc-macros",
@@ -2048,7 +2051,8 @@ dependencies = [
 [[package]]
 name = "libcnb-package"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4821eaaf3d992aca1cf28c20a51f0ca521876c000544950f9bdb59fc5bb6fb86"
 dependencies = [
  "cargo_metadata",
  "ignore",
@@ -2064,7 +2068,8 @@ dependencies = [
 [[package]]
 name = "libcnb-proc-macros"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9c09089d90fd4938d46c1db934fe561c5ff0e1538b7e96dde8428fd9bc111fd0"
 dependencies = [
  "cargo_metadata",
  "fancy-regex",
@@ -2075,7 +2080,8 @@ dependencies = [
 [[package]]
 name = "libcnb-test"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "40699e3254f64a9ac3747a442bce2a35ce7941ada284b39cdb00c6dae5d9945c"
 dependencies = [
  "fastrand",
  "fs_extra",
@@ -2090,7 +2096,8 @@ dependencies = [
 [[package]]
 name = "libherokubuildpack"
 version = "0.30.3"
-source = "git+https://github.com/heroku/libcnb.rs?branch=add-release-schedule-module#a8a6be798b82bf420e28e50e8a85ff5944feb4b3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9e8d088fe5a6a49aecc159edfc61c7833866a8716d4585e10a929fbc213eeb6"
 dependencies = [
  "flate2",
  "hex",
