@@ -3,7 +3,7 @@ use crate::trusted_release_keys::NodeReleaseKeys;
 use libherokubuildpack::inventory::checksum::Checksum;
 use nodejs_data::{
     NodejsArtifact, NodejsInventory, NodejsInventoryWithSchedule, NodejsRelease, NodejsReleaseLine,
-    NodejsReleaseMetadata, TomlDate, Version,
+    NodejsReleaseSchedule, Version,
 };
 use reqwest::{IntoUrl, Url};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
@@ -42,7 +42,7 @@ pub(super) fn from_inventory(inventory_path: &Path) -> Vec<NodejsArtifact> {
         .artifacts
 }
 
-pub(super) async fn fetch_release_schedule() -> Vec<NodejsRelease> {
+pub(super) async fn fetch_release_schedule() -> NodejsReleaseSchedule {
     let schedule_file = download_file(RELEASE_SCHEDULE_URL).await;
     let schedule_contents =
         std::fs::read_to_string(&schedule_file).expect("Failed to read release schedule file");
@@ -53,19 +53,15 @@ pub(super) async fn fetch_release_schedule() -> Vec<NodejsRelease> {
     upstream
         .into_iter()
         .map(|(key, entry)| {
-            let requirement = NodejsReleaseLine::try_from(key.clone())
+            let release_line = NodejsReleaseLine::try_from(key.clone())
                 .unwrap_or_else(|e| panic!("Failed to parse release line '{key}': {e}"));
-            let end_of_life = TomlDate(parse_date(&entry.end));
-            let metadata = NodejsReleaseMetadata {
+            let release = NodejsRelease {
                 start: parse_date(&entry.start),
+                end: parse_date(&entry.end),
                 lts: entry.lts.as_deref().map(parse_date),
                 maintenance: entry.maintenance.as_deref().map(parse_date),
             };
-            NodejsRelease {
-                requirement,
-                end_of_life,
-                metadata,
-            }
+            (release_line, release)
         })
         .collect()
 }
