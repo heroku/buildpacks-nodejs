@@ -313,21 +313,21 @@ pub struct NodejsReleaseMetadata {
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct NodejsRelease {
     #[serde(with = "toml_datetime_compat")]
-    start: time::Date,
+    pub start: time::Date,
     #[serde(with = "toml_datetime_compat")]
-    end: time::Date,
+    pub end: time::Date,
     #[serde(
         with = "toml_datetime_compat",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    lts: Option<time::Date>,
+    pub lts: Option<time::Date>,
     #[serde(
         with = "toml_datetime_compat",
         default,
         skip_serializing_if = "Option::is_none"
     )]
-    maintenance: Option<time::Date>,
+    pub maintenance: Option<time::Date>,
 }
 
 /// Combined inventory and release schedule for Node.js.
