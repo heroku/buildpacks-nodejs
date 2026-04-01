@@ -186,7 +186,7 @@ impl NodejsReleaseLine {
 
 impl Ord for NodejsReleaseLine {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        (self.major, self.minor.unwrap_or(0)).cmp(&(other.major, other.minor.unwrap_or(0)))
+        (other.major, other.minor.unwrap_or(0)).cmp(&(self.major, self.minor.unwrap_or(0)))
     }
 }
 
@@ -491,7 +491,7 @@ mod tests {
 
     #[test]
     fn release_line_ordering() {
-        let lines: Vec<NodejsReleaseLine> = ["v0.8", "v0.10", "v0.12", "v4", "v25", "v26"]
+        let lines: Vec<NodejsReleaseLine> = ["v26", "v25", "v4", "v0.12", "v0.10", "v0.8"]
             .iter()
             .map(|s| NodejsReleaseLine::try_from(s.to_string()).unwrap())
             .collect();
