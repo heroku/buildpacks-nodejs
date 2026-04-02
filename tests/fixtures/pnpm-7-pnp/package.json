@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "packageManager": "pnpm@7.32.3",
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "scripts": {
     "start": "node ./server.js"

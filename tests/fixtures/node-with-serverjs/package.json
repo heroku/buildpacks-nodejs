@@ -1,6 +1,6 @@
 {
   "name": "node-with-indexjs",
   "engines": {
-    "node": "16.0.0"
+    "node": "22.x"
   }
 }
