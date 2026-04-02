@@ -16,7 +16,7 @@ fun_run = "0.6"
 hex = "0.4"
 http = "1"
 indoc = "2"
-libcnb = { version = "=0.30.3", features = ["trace"] }
+libcnb = { version = "=0.30.3", default-features = false, features = ["trace"] }
 libherokubuildpack = { version = "=0.30.3", default-features = false, features = [
     "fs",
     "inventory",

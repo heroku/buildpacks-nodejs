@@ -1,30 +1,36 @@
 use crate::OutputFormat;
 use keep_a_changelog_file::{ChangeGroup, Changelog};
-use nodejs_data::{NodejsArtifact, NodejsInventory, Version};
+use nodejs_data::{
+    NodejsArtifact, NodejsInventory, NodejsInventoryWithSchedule, NodejsReleaseSchedule, Version,
+};
 use std::collections::{BTreeSet, HashMap};
 use std::fs;
 use std::path::Path;
 use std::str::FromStr;
 
-pub(super) fn write_inventory(inventory_path: &Path, upstream_artifacts: &[NodejsArtifact]) {
-    fs::write(
-        inventory_path,
-        NodejsInventory {
-            artifacts: {
-                let mut artifacts = upstream_artifacts.to_vec();
-                artifacts.sort_by(|a, b| {
-                    if a.version == b.version {
-                        b.arch.to_string().cmp(&a.arch.to_string())
-                    } else {
-                        b.version.cmp(&a.version)
-                    }
-                });
-                artifacts
-            },
+pub(super) fn write_inventory(
+    inventory_path: &Path,
+    upstream_artifacts: &[NodejsArtifact],
+    schedule: &NodejsReleaseSchedule,
+) {
+    // Sort artifacts descending by version (then by arch for same version)
+    let mut artifacts = upstream_artifacts.to_vec();
+    artifacts.sort_by(|a, b| {
+        if a.version == b.version {
+            b.arch.to_string().cmp(&a.arch.to_string())
+        } else {
+            b.version.cmp(&a.version)
         }
-        .to_string(),
-    )
-    .unwrap_or_else(|_| {
+    });
+
+    let inventory_with_schedule = NodejsInventoryWithSchedule {
+        schedule: schedule.clone(),
+        inventory: NodejsInventory { artifacts },
+    };
+    let toml_str =
+        toml::to_string(&inventory_with_schedule).expect("Failed to serialize inventory to TOML");
+
+    fs::write(inventory_path, toml_str).unwrap_or_else(|_| {
         panic!(
             "Failed to write inventory to '{}'",
             inventory_path.display()
