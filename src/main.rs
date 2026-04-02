@@ -28,6 +28,7 @@ mod package_manager;
 mod package_managers;
 mod runtime;
 mod runtimes;
+mod support_status;
 mod utils;
 
 type BuildpackDetectContext = libcnb::detect::DetectContext<NodeJsBuildpack>;
@@ -107,6 +108,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             .inspect(runtime::log_requested_runtime)
             .and_then(runtime::resolve_runtime)
             .inspect(runtime::log_resolved_runtime)
+            .and_then(runtime::check_runtime_support_status)
             .and_then(|resolved_runtime| {
                 runtime::install_runtime(&context, &mut env, resolved_runtime)
             })?;
