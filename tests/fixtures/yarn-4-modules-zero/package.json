@@ -1,7 +1,7 @@
 {
   "name": "yarn-4-modules-zero",
   "engines": {
-    "node": "18.x",
+    "node": "22.x",
     "yarn": "4.x"
   },
   "scripts": {
