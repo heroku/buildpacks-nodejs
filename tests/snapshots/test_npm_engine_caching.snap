@@ -12,35 +12,29 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `16.20.2`
-  - Resolved Node.js version: `16.20.2`
+  - Detected Node.js version range: `22.x`
+  - Resolved Node.js version: `22.22.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v16.20.2/node-v16.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.22.2/node-v22.22.2-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `16.20.2 (<arch>)`
-  - Installing Node.js `16.20.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.22.2 (<arch>)`
+  - Installing Node.js `22.22.2 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
-  - Found `engines.npm` version `9.6.6` declared in `package.json`
+  - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
-  - Resolved npm version `9.6.6` to `9.6.6`
+  - Resolved npm version `11.x` to `11.12.1`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-9.6.6.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-11.12.1.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@9.6.6`
+  - Successfully installed `npm@11.12.1`
 - Installing node modules
-  - Using npm version `9.6.6`
+  - Using npm version `11.12.1`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
@@ -52,12 +46,6 @@ heroku/nodejs <buildpack-version>
 - Pruning dev dependencies
   - Running `npm prune`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       up to date, audited <N> packages in <time_elapsed>
 
@@ -106,30 +94,24 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `16.20.2`
-  - Resolved Node.js version: `16.20.2`
+  - Detected Node.js version range: `22.x`
+  - Resolved Node.js version: `22.22.2`
 - Installing Node.js distribution
-  - Reusing Node.js 16.20.2 (<arch>)
+  - Reusing Node.js 22.22.2 (<arch>)
 - Determining npm package information
-  - Found `engines.npm` version `9.6.6` declared in `package.json`
+  - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
   - Using cached packument for npm
-  - Resolved npm version `9.6.6` to `9.6.6`
+  - Resolved npm version `11.x` to `11.12.1`
 - Installing npm
   - Using cached version of npm
-  - Successfully installed `npm@9.6.6`
+  - Successfully installed `npm@11.12.1`
 - Installing node modules
-  - Using npm version `9.6.6`
+  - Using npm version `11.12.1`
   - Restoring npm cache
   - Configuring npm cache directory
   - Running `npm ci`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
@@ -141,12 +123,6 @@ heroku/nodejs <buildpack-version>
 - Pruning dev dependencies
   - Running `npm prune`
 
-      npm WARN old lockfile 
-      npm WARN old lockfile The package-lock.json file was created with an old version of npm,
-      npm WARN old lockfile so supplemental metadata must be fetched from the registry.
-      npm WARN old lockfile 
-      npm WARN old lockfile This is a one-time fix-up, please be patient...
-      npm WARN old lockfile 
 
       up to date, audited <N> packages in <time_elapsed>
 
