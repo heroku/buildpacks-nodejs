@@ -5,7 +5,6 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::npm_registry;
-use crate::utils::vrs::{Requirement, Version, VersionCommandError};
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -16,13 +15,14 @@ use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
 };
+use nodejs_data::{Version, VersionCommandError, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::process::Command;
 
 pub(crate) fn resolve_npm_package_packument(
     context: &BuildpackBuildContext,
-    requirement: &Requirement,
+    requirement: &VersionRange,
 ) -> BuildpackResult<npm_registry::PackagePackument> {
     npm_registry::resolve_package_packument(
         &npm_registry::packument_layer(layer_name!("npm_packument"), context, "npm")?,

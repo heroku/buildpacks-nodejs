@@ -23,7 +23,7 @@ libherokubuildpack = { version = "=0.30.3", default-features = false, features =
     "inventory-sha2",
     "tar",
 ] }
-node-semver = "2"
+nodejs-data.workspace = true
 retry = { version = "2", default-features = false }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls-native-roots"] }
 serde = "1"
@@ -50,6 +50,7 @@ wiremock = "0.6"
 resolver = "2"
 members = [
     "crates/available-parallelism",
+    "crates/nodejs-data",
     "crates/test_support",
     "crates/xtask-sync-yarn-plugin-changelog",
     "crates/xtask-update-nodejs-inventory"
@@ -78,6 +79,7 @@ missing_panics_doc = "allow"
 
 [workspace.dependencies]
 available-parallelism = { path = "./crates/available-parallelism" }
+nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
 
 [profile.release]
