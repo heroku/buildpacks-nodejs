@@ -78,6 +78,23 @@ fn node_build_and_runtime_env() {
 
 #[test]
 #[ignore = "integration test"]
+fn node_eol_warning() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-serverjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "18.x");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "node-with-serverjs");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn node_24() {
     nodejs_integration_test_with_config(
         "./fixtures/node-with-serverjs",
