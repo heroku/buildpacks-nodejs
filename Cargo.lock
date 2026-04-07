@@ -483,6 +483,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link 0.2.0",
 ]
@@ -2357,10 +2358,12 @@ dependencies = [
 name = "nodejs-data"
 version = "0.0.0"
 dependencies = [
+ "chrono",
  "fun_run",
  "libherokubuildpack",
  "node-semver",
  "serde",
+ "serde_json",
  "sha2",
 ]
 
