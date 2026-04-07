@@ -1,6 +1,7 @@
 ---
 source: src/utils/error_handling.rs
 ---
+
 ! Multiple YAML documents found in `.yarnrc.yml`
 !
 ! The Heroku Node.js buildpack reads from `.yarnrc.yml` to determine Yarn configuration but the file contains multiple YAML documents. There must only be a single document in this file.
