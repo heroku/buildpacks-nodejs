@@ -14,4 +14,4 @@ libherokubuildpack = { version = "=0.30.3", default-features = false, features =
 ] }
 node-semver = "2"
 serde = { version = "1", features = ["derive"] }
-sha2 = "0.10.9"
+sha2 = "0.11.0"
