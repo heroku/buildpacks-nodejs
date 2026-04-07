@@ -1,6 +1,6 @@
 use crate::o11y::*;
 use crate::package_json::PackageJson;
-use crate::runtimes::nodejs::{DEFAULT_NODEJS_REQUIREMENT, NODEJS_INVENTORY, NodejsArtifact};
+use crate::runtimes::nodejs::{NODEJS_INVENTORY, NodejsArtifact};
 use crate::utils::error_handling::ErrorType::UserFacing;
 use crate::utils::error_handling::{
     ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message,
@@ -29,7 +29,7 @@ static ARCH: LazyLock<Arch> =
 
 pub(crate) enum RequestedRuntime {
     NodeJsEngine(VersionRange),
-    NodeJsDefault,
+    NodeJsDefault(VersionRange),
 }
 
 #[instrument(skip_all)]
@@ -42,12 +42,17 @@ pub(crate) fn determine_runtime(package_json: &PackageJson) -> RequestedRuntime 
         );
         RequestedRuntime::NodeJsEngine(version)
     } else {
+        let requirement = NODE_RELEASE_SCHEDULE
+            .newest_supported_lts(Utc::now())
+            .expect("Release schedule should contain at least one supported LTS version")
+            .requirement
+            .clone();
         tracing::info!(
             { RUNTIME_REQUESTED_NAME } = "nodejs",
             { RUNTIME_REQUESTED_VERSION } = "default",
             "runtime"
         );
-        RequestedRuntime::NodeJsDefault
+        RequestedRuntime::NodeJsDefault(requirement)
     }
 }
 
@@ -59,10 +64,15 @@ pub(crate) fn log_requested_runtime(requested_runtime: &RequestedRuntime) {
                 style::value(version.to_string())
             ));
         }
-        RequestedRuntime::NodeJsDefault => {
+        RequestedRuntime::NodeJsDefault(requirement) => {
             print::sub_bullet(format!(
                 "Node.js version not specified, using {}",
-                style::value(DEFAULT_NODEJS_REQUIREMENT.to_string())
+                // The requirement parsed from the schedule uses the `v` prefixed version range notation.
+                // Rewrite this for the currently expected build log output (e.g. v24 => 24.x)
+                style::value(format!(
+                    "{}.x",
+                    requirement.to_string().trim_start_matches('v')
+                ))
             ));
         }
     }
@@ -77,8 +87,8 @@ pub(crate) fn resolve_runtime(
     requested_runtime: RequestedRuntime,
 ) -> BuildpackResult<ResolvedRuntime> {
     match requested_runtime {
-        RequestedRuntime::NodeJsEngine(requirement) => resolve_nodejs_runtime(&requirement),
-        RequestedRuntime::NodeJsDefault => resolve_nodejs_runtime(&DEFAULT_NODEJS_REQUIREMENT),
+        RequestedRuntime::NodeJsEngine(requirement)
+        | RequestedRuntime::NodeJsDefault(requirement) => resolve_nodejs_runtime(&requirement),
     }
 }
 
