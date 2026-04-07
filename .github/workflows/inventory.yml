@@ -112,3 +112,45 @@ jobs:
           GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
 
+  update-nodejs-schedule:
+    name: Update Node.js Release Schedule
+    runs-on: pub-hk-ubuntu-24.04-ip
+
+    steps:
+      - uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+        id: generate-token
+        with:
+          app-id: ${{ vars.LINGUIST_GH_APP_ID }}
+          private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
+
+      - name: Checkout Repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Update Release Schedule
+        run: >-
+          curl
+          --fail
+          --no-progress-meter
+          --retry 5
+          --retry-connrefused
+          --output inventory/schedule.json
+          https://raw.githubusercontent.com/nodejs/Release/main/schedule.json
+
+      - name: Create Pull Request
+        id: pr
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          title: "Update Node.js Release Schedule"
+          commit-message: "Update Node.js release schedule"
+          committer: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          author: ${{ vars.LINGUIST_GH_APP_USERNAME }} <${{ vars.LINGUIST_GH_APP_EMAIL }}>
+          branch: update-nodejs-schedule
+          body: "Automated pull-request to update the Node.js release schedule."
+
+      - name: Configure PR
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: gh pr merge --squash --auto "${{ steps.pr.outputs.pull-request-number }}"
+
