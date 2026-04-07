@@ -3,6 +3,7 @@
 
 use libcnb::data::buildpack_id;
 use libcnb_test::{BuildpackReference, assert_contains, assert_contains_match};
+use nodejs_data::SUPPORTED_NODEJS_VERSIONS;
 use test_support::{
     assert_web_response, create_build_snapshot, integration_test_with_config,
     nodejs_integration_test, nodejs_integration_test_with_config, print_build_env_buildpack,
@@ -106,6 +107,24 @@ fn node_25() {
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "node-with-serverjs");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn node_eol_warning() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-serverjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                // Assumes the version one below the lowest supported major is EOL and present in the inventory.
+                let unsupported_version = format!("{}.x", SUPPORTED_NODEJS_VERSIONS[0] - 1);
+                set_node_engine(&app_dir, &unsupported_version);
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
         },
     );
 }

@@ -1,6 +1,7 @@
 use fun_run::NamedOutput;
 use libherokubuildpack::inventory::version::VersionRequirement;
 use serde::{Deserialize, Serialize};
+use std::sync::LazyLock;
 use std::{error::Error, fmt, str::FromStr};
 
 #[derive(Debug, PartialEq)]
@@ -156,6 +157,17 @@ pub type NodejsArtifact =
     libherokubuildpack::inventory::artifact::Artifact<Version, sha2::Sha256, Option<()>>;
 pub type NodejsInventory =
     libherokubuildpack::inventory::Inventory<Version, sha2::Sha256, Option<()>>;
+
+// Shared with the classic CNB buildpack.
+// Update when the active LTS line changes.
+pub static RECOMMENDED_LTS_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse("24.x").expect("Recommended Node.js version should be valid")
+});
+
+// Major versions currently supported on Heroku.
+// Shared with the classic CNB buildpack.
+// Update when versions enter or leave LTS.
+pub const SUPPORTED_NODEJS_VERSIONS: [u64; 3] = [20, 22, 24];
 
 #[cfg(test)]
 mod tests {
