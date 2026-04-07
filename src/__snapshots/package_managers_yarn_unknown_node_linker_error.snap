@@ -1,6 +1,7 @@
 ---
 source: src/utils/error_handling.rs
 ---
+
 ! Failed to parse Yarn's nodeLinker configuration
 !
 ! An unexpected value was encountered when trying to read Yarn's nodeLinker configuration.
