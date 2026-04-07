@@ -2333,6 +2333,7 @@ dependencies = [
  "available-parallelism",
  "bon",
  "bullet_stream",
+ "chrono",
  "const_format",
  "flate2",
  "fun_run",
