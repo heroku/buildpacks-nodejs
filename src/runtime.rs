@@ -8,13 +8,19 @@ use crate::utils::error_handling::{
 use crate::{BuildpackBuildContext, BuildpackResult, runtimes};
 use bullet_stream::global::print;
 use bullet_stream::style;
+use chrono::Utc;
 use indoc::formatdoc;
 use libcnb::Env;
 use libherokubuildpack::inventory::artifact::{Arch, Os};
-use nodejs_data::VersionRange;
+use nodejs_data::{NodeReleaseSchedule, VersionRange};
 use std::env::consts;
 use std::sync::LazyLock;
 use tracing::instrument;
+
+static NODE_RELEASE_SCHEDULE: LazyLock<NodeReleaseSchedule> = LazyLock::new(|| {
+    NodeReleaseSchedule::from_json(include_str!("../inventory/schedule.json"))
+        .expect("Release schedule file should be valid")
+});
 
 static OS: LazyLock<Os> = LazyLock::new(|| consts::OS.parse::<Os>().expect("OS should be valid"));
 
@@ -92,10 +98,35 @@ fn resolve_nodejs_runtime(requirement: &VersionRange) -> BuildpackResult<Resolve
 
 pub(crate) fn log_resolved_runtime(resolved_runtime: &ResolvedRuntime) {
     match resolved_runtime {
-        ResolvedRuntime::Nodejs(artifact) => print::sub_bullet(format!(
-            "Resolved Node.js version: {}",
-            style::value(artifact.version.to_string())
-        )),
+        ResolvedRuntime::Nodejs(artifact) => {
+            print::sub_bullet(format!(
+                "Resolved Node.js version: {}",
+                style::value(artifact.version.to_string())
+            ));
+            let now = Utc::now();
+            if let Some(release) = NODE_RELEASE_SCHEDULE.resolve(&artifact.version)
+                && release.is_eol(now)
+            {
+                print::warning(formatdoc! {"
+                    Node.js {} reached its official End-of-Life (EOL) on {}.
+                    It no longer receives security updates, bug fixes, or support from the
+                    Node.js project and is no longer supported on Heroku.
+
+                    In a future buildpack release, this warning will become a build error.
+                    Please upgrade to a supported version as soon as possible to avoid
+                    build failures.
+
+                    Supported LTS releases: {}
+
+                    For more information, see:
+                    {}",
+                    release.requirement,
+                    release.end_of_life.format("%B %e, %Y"),
+                    NODE_RELEASE_SCHEDULE.supported_lts_labels(now).join(", "),
+                    style::url("https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions")
+                });
+            }
+        }
     }
 }
 
@@ -146,5 +177,14 @@ mod tests {
         assert_error_snapshot(&create_unknown_nodejs_version_error(
             &VersionRange::parse("0.0.0").unwrap(),
         ));
+    }
+
+    #[test]
+    fn node_release_schedule_parses() {
+        assert!(
+            !NODE_RELEASE_SCHEDULE
+                .supported_lts_labels(Utc::now())
+                .is_empty()
+        );
     }
 }

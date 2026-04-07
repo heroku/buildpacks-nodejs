@@ -10,6 +10,7 @@ workspace = true
 available-parallelism.workspace = true
 bon = "3"
 bullet_stream = "0.11"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 const_format = "0.2"
 flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 fun_run = "0.6"
