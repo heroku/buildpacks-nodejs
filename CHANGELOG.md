@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.5.7] - 2026-04-09
+
 ### Added
 
 - Warn when deploying with end-of-life Node.js versions. ([#1353](https://github.com/heroku/buildpacks-nodejs/pull/1353))
@@ -264,7 +266,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.6...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.7...HEAD
+[5.5.7]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.6...v5.5.7
 [5.5.6]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.5...v5.5.6
 [5.5.5]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.4...v5.5.5
 [5.5.4]: https://github.com/heroku/buildpacks-nodejs/compare/v5.5.3...v5.5.4
