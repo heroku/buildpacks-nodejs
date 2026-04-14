@@ -13,7 +13,7 @@ jobs:
     name: Update Node.js Inventory
     runs-on: pub-hk-ubuntu-24.04-ip
     env:
-      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:24
+      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:26
 
     steps:
       - uses: actions/create-github-app-token@v3
