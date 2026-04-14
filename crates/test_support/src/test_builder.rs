@@ -3,13 +3,14 @@ use std::fmt::Display;
 pub(super) fn get_test_builder() -> TestBuilder {
     std::env::var("INTEGRATION_TEST_CNB_BUILDER")
         .map(TestBuilder::from)
-        .unwrap_or(TestBuilder::Heroku24)
+        .unwrap_or(TestBuilder::Heroku26)
 }
 
 #[derive(Debug, Eq, PartialEq)]
 pub(super) enum TestBuilder {
     Heroku22,
     Heroku24,
+    Heroku26,
     Other(String),
 }
 
@@ -18,6 +19,7 @@ impl Display for TestBuilder {
         match self {
             TestBuilder::Heroku22 => write!(f, "heroku/builder:22"),
             TestBuilder::Heroku24 => write!(f, "heroku/builder:24"),
+            TestBuilder::Heroku26 => write!(f, "heroku/builder:26"),
             TestBuilder::Other(name) => write!(f, "{name}"),
         }
     }
@@ -35,6 +37,8 @@ impl From<String> for TestBuilder {
             TestBuilder::Heroku22
         } else if value == TestBuilder::Heroku24.to_string() {
             TestBuilder::Heroku24
+        } else if value == TestBuilder::Heroku26.to_string() {
+            TestBuilder::Heroku26
         } else {
             TestBuilder::Other(value)
         }

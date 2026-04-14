@@ -25,7 +25,7 @@ To build a Node.js application codebase into a production image:
 
 ```bash
 $ cd ~/workdir/sample-nodejs-app
-$ pack build sample-app --builder heroku/builder:24
+$ pack build sample-app --builder heroku/builder:26
 ```
 
 Then run the image:
