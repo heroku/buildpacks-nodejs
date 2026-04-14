@@ -84,7 +84,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        builder: ["builder:24", "builder:22"]
+        builder: ["builder:26", "builder:24", "builder:22"]
         arch: ["amd64", "arm64"]
         exclude:
           - builder: "builder:22"
