@@ -10,8 +10,8 @@ workspace = true
 bon = "3"
 indoc = "2"
 insta = { version = "1", features = ["filters"] }
-libcnb = "=0.30.3"
-libcnb-test = "=0.30.3"
+libcnb = "=0.30.4"
+libcnb-test = "=0.30.4"
 serde_json = "1"
 tempfile = "3"
 ureq = "3"

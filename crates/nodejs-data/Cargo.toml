@@ -8,10 +8,10 @@ workspace = true
 
 [dependencies]
 fun_run = "0.6"
-libherokubuildpack = { version = "=0.30.3", default-features = false, features = [
+libherokubuildpack = { version = "=0.30.4", default-features = false, features = [
     "inventory",
     "inventory-sha2",
 ] }
 node-semver = "2"
 serde = { version = "1", features = ["derive"] }
-sha2 = "0.10.9"
+sha2 = "0.11.0"
