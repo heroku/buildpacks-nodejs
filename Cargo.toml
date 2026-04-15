@@ -33,7 +33,7 @@ sha2 = "0.11.0"
 tar = { version = "0.4", default-features = false }
 tempfile = "3"
 toml = "1.0"
-toml_edit = "0.24"
+toml_edit = "0.25"
 tracing = "0.1"
 yaml-rust2 = "0.11"
 walkdir = "2.5.0"
