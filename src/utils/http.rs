@@ -1,5 +1,6 @@
 use bullet_stream::global::print;
 use bullet_stream::{GlobalTimer, style};
+use digest_io::IoWrapper;
 use flate2::read::MultiGzDecoder;
 use http::{HeaderMap, StatusCode};
 use reqwest::blocking::Response;
@@ -227,16 +228,16 @@ fn validate_sha256_checksum(
     let mut response_body = response
         .body_as_file()
         .map_err(|e| create_write_error(download_task, e))?;
-    let mut hasher = Sha256::new();
+    let mut hasher = IoWrapper(Sha256::new());
     io::copy(&mut response_body, &mut hasher).map_err(|e| create_write_error(download_task, e))?;
-    let digest = hasher.finalize();
-    if checksum == digest.to_vec() {
+    let digest = hasher.0.finalize();
+    if checksum == digest.as_slice() {
         Ok(())
     } else {
         Err(DownloadError::ChecksumMismatch {
             url: download_task.source_url.clone(),
             expected_checksum: hex::encode(checksum),
-            actual_checksum: format!("{digest:x}"),
+            actual_checksum: hex::encode(digest),
         })
     }
 }
