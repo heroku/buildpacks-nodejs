@@ -40,6 +40,9 @@ heroku/nodejs <buildpack-version>
       > node-gyp rebuild || node suppress-error.js
 
       <NODE-GYP BUILD OUTPUT> 
+      make: Entering directory '/workspace/node_modules/dtrace-provider/build'
+        TOUCH Release/obj.target/DTraceProviderStub.stamp
+      make: Leaving directory '/workspace/node_modules/dtrace-provider/build'
 
       added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
 
