@@ -401,16 +401,9 @@ fn create_set_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessa
 // A yarn cache is populated if it exists and has non-hidden files, indicating a zero-install mode
 // should be employed.
 fn is_yarn_zero_install_mode(yarn_cache: &Path) -> bool {
-    yarn_cache
-        .read_dir()
-        .map(|mut contents| {
-            contents.any(|entry| {
-                entry
-                    .map(|e| !e.file_name().to_string_lossy().starts_with('.'))
-                    .unwrap_or(false)
-            })
-        })
-        .unwrap_or(false)
+    yarn_cache.read_dir().is_ok_and(|mut contents| {
+        contents.any(|entry| entry.is_ok_and(|e| !e.file_name().to_string_lossy().starts_with('.')))
+    })
 }
 
 fn get_node_linker_config(
