@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.14.1`
+  - Resolved Node.js version: `24.15.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.14.1/node-v24.14.1-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v24.15.0/node-v24.15.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `24.14.1 (<arch>)`
-  - Installing Node.js `24.14.1 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `24.15.0 (<arch>)`
+  - Installing Node.js `24.15.0 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e` in `package.json`
   - GET https://registry.npmjs.org/yarn ... (<time_elapsed>)
@@ -101,9 +101,9 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.14.1`
+  - Resolved Node.js version: `24.15.0`
 - Installing Node.js distribution
-  - Reusing Node.js 24.14.1 (<arch>)
+  - Reusing Node.js 24.15.0 (<arch>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e` in `package.json`
   - GET https://registry.npmjs.org/yarn ... (Not Modified)

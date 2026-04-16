@@ -250,6 +250,13 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "${1}<NODE-GYP BUILD OUTPUT>",
     ));
 
+    // [npm/yarn] Stray `make` output that sometimes appears outside the `gyp info` block
+    // non-deterministically (e.g., after `gyp info ok` instead of before it).
+    filters.push((
+        r" *make: Entering directory '.*'\n *(?:TOUCH|CC|CXX|LINK|AR) .*\n *make: Leaving directory '.*'\n",
+        "",
+    ));
+
     // [pnpm] Final progress messages for installed packages. e.g.;
     // - Progress: resolved 9, reused 2, downloaded 7, added 4, done
     //

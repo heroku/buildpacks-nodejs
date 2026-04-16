@@ -1,9 +1,7 @@
 use std::fmt::Display;
 
 pub(super) fn get_test_builder() -> TestBuilder {
-    std::env::var("INTEGRATION_TEST_CNB_BUILDER")
-        .map(TestBuilder::from)
-        .unwrap_or(TestBuilder::Heroku26)
+    std::env::var("INTEGRATION_TEST_CNB_BUILDER").map_or(TestBuilder::Heroku26, TestBuilder::from)
 }
 
 #[derive(Debug, Eq, PartialEq)]
