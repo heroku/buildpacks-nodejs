@@ -19,6 +19,11 @@ impl fmt::Display for VersionError {
 pub struct Version(node_semver::Version);
 
 impl Version {
+    #[must_use]
+    pub fn new(major: u64, minor: u64, patch: u64) -> Self {
+        Self(node_semver::Version::new(major, minor, patch))
+    }
+
     /// Parses a Node.js semver string as a `Version`.
     ///
     /// # Errors
@@ -36,6 +41,18 @@ impl Version {
     #[must_use]
     pub fn major(&self) -> u64 {
         self.0.major
+    }
+
+    /// Returns the minor version identifier.
+    #[must_use]
+    pub fn minor(&self) -> u64 {
+        self.0.minor
+    }
+
+    /// Returns the patch version identifier.
+    #[must_use]
+    pub fn patch(&self) -> u64 {
+        self.0.patch
     }
 }
 
