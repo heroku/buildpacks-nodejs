@@ -138,6 +138,10 @@ impl VersionRange {
     pub fn allows_any(&self, other: &VersionRange) -> bool {
         self.range.allows_any(&other.range)
     }
+
+    pub fn min_version(&self) -> Option<Version> {
+        self.range.min_version().map(Version)
+    }
 }
 
 impl TryFrom<String> for VersionRange {
