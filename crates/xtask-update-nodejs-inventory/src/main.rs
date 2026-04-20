@@ -10,6 +10,10 @@ use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Should be able to install the default rustls crypto provider");
+
     let matches = command!()
         .arg(
             arg!(<inventory_path>)

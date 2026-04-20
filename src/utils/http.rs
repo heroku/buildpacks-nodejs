@@ -413,10 +413,9 @@ mod test {
     use bullet_stream::{global, strip_ansi};
     use flate2::Compression;
     use flate2::write::GzEncoder;
-    use indoc::indoc;
     use regex::Regex;
+    use std::fs;
     use std::io::Write;
-    use std::{env, fs};
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -876,78 +875,6 @@ mod test {
             fs::read_to_string(dst.path().join("parent/child-b/grandchild-b/name.txt")).unwrap(),
             "grandchild-b"
         );
-    }
-
-    #[test]
-    fn test_client_allows_self_signed_cert() {
-        // this is technically not thread-safe but should be okay for now
-        // since this is the only test that sets this env var
-        #[allow(unsafe_code)]
-        unsafe {
-            env::remove_var("SSL_CERT_FILE");
-        };
-
-        global::with_locked_writer(Vec::<u8>::new(), || {
-            assert!(
-                get(&GetRequest::builder("https://self-signed.badssl.com")
-                    .max_retries(0)
-                    .build())
-                .is_err()
-            );
-        });
-
-        let badssl_self_signed_cert_dir = tempfile::tempdir().unwrap();
-        let badssl_self_signed_cert = badssl_self_signed_cert_dir
-            .path()
-            .join("badssl_self_signed_cert.pem");
-
-        // https://github.com/rustls/rustls-native-certs/blob/main/tests/badssl-com-chain.pem
-        fs::write(
-            &badssl_self_signed_cert,
-            indoc! { "
-            -----BEGIN CERTIFICATE-----
-            MIIDeTCCAmGgAwIBAgIJAMnA8BB8xT6wMA0GCSqGSIb3DQEBCwUAMGIxCzAJBgNV
-            BAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNp
-            c2NvMQ8wDQYDVQQKDAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTAeFw0y
-            MTEwMTEyMDAzNTRaFw0yMzEwMTEyMDAzNTRaMGIxCzAJBgNVBAYTAlVTMRMwEQYD
-            VQQIDApDYWxpZm9ybmlhMRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMQ8wDQYDVQQK
-            DAZCYWRTU0wxFTATBgNVBAMMDCouYmFkc3NsLmNvbTCCASIwDQYJKoZIhvcNAQEB
-            BQADggEPADCCAQoCggEBAMIE7PiM7gTCs9hQ1XBYzJMY61yoaEmwIrX5lZ6xKyx2
-            PmzAS2BMTOqytMAPgLaw+XLJhgL5XEFdEyt/ccRLvOmULlA3pmccYYz2QULFRtMW
-            hyefdOsKnRFSJiFzbIRMeVXk0WvoBj1IFVKtsyjbqv9u/2CVSndrOfEk0TG23U3A
-            xPxTuW1CrbV8/q71FdIzSOciccfCFHpsKOo3St/qbLVytH5aohbcabFXRNsKEqve
-            ww9HdFxBIuGa+RuT5q0iBikusbpJHAwnnqP7i/dAcgCskgjZjFeEU4EFy+b+a1SY
-            QCeFxxC7c3DvaRhBB0VVfPlkPz0sw6l865MaTIbRyoUCAwEAAaMyMDAwCQYDVR0T
-            BAIwADAjBgNVHREEHDAaggwqLmJhZHNzbC5jb22CCmJhZHNzbC5jb20wDQYJKoZI
-            hvcNAQELBQADggEBAC4DensZ5tCTeCNJbHABYPwwqLUFOMITKOOgF3t8EqOan0CH
-            ST1NNi4jPslWrVhQ4Y3UbAhRBdqXl5N/NFfMzDosPpOjFgtifh8Z2s3w8vdlEZzf
-            A4mYTC8APgdpWyNgMsp8cdXQF7QOfdnqOfdnY+pfc8a8joObR7HEaeVxhJs+XL4E
-            CLByw5FR+svkYgCbQGWIgrM1cRpmXemt6Gf/XgFNP2PdubxqDEcnWlTMk8FCBVb1
-            nVDSiPjYShwnWsOOshshCRCAiIBPCKPX0QwKDComQlRrgMIvddaSzFFTKPoNZjC+
-            CUspSNnL7V9IIHvqKlRSmu+zIpm2VJCp1xLulk8=
-            -----END CERTIFICATE-----
-        "},
-        )
-        .unwrap();
-
-        #[allow(unsafe_code)]
-        unsafe {
-            env::set_var("SSL_CERT_FILE", badssl_self_signed_cert);
-        };
-
-        global::with_locked_writer(Vec::<u8>::new(), || {
-            assert!(
-                get(&GetRequest::builder("https://self-signed.badssl.com")
-                    .max_retries(0)
-                    .build())
-                .is_ok()
-            );
-        });
-
-        #[allow(unsafe_code)]
-        unsafe {
-            env::remove_var("SSL_CERT_FILE");
-        };
     }
 
     fn assert_log_contains_matches(log: &[u8], matchers: &[Regex]) {

@@ -2,7 +2,7 @@
 #![allow(unused_crate_dependencies)]
 
 use libcnb::data::buildpack_id;
-use libcnb_test::{BuildpackReference, assert_contains, assert_contains_match};
+use libcnb_test::{BuildpackReference, PackResult, assert_contains, assert_contains_match};
 use nodejs_data::SUPPORTED_NODEJS_VERSIONS;
 use test_support::{
     assert_web_response, create_build_snapshot, integration_test_with_config,
@@ -107,6 +107,31 @@ fn node_25() {
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "node-with-serverjs");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn ssl_cert_file_is_respected() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |config| {
+            config.env("SSL_CERT_FILE", "/dev/null");
+            config.env("SSL_CERT_DIR", "/nonexistent");
+            config.expected_pack_result(PackResult::Failure);
+        },
+        |_ctx| {},
+    );
+
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-indexjs",
+        |config| {
+            config.env("SSL_CERT_FILE", "/etc/ssl/certs/ca-certificates.crt");
+            config.env("SSL_CERT_DIR", "/nonexistent");
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "Installing Node.js");
         },
     );
 }

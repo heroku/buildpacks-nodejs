@@ -173,6 +173,9 @@ pub(crate) mod test_util {
     }
 
     pub(crate) fn create_reqwest_error() -> reqwest::Error {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
         reqwest::blocking::get("https://test/error").unwrap_err()
     }
 
