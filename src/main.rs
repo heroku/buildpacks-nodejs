@@ -77,6 +77,10 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         &self,
         context: libcnb::build::BuildContext<NodeJsBuildpack>,
     ) -> libcnb::Result<libcnb::build::BuildResult, ErrorMessage> {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("Should be able to install the default rustls crypto provider");
+
         // Wrap the context to track layers needing cleanup
         let context = NodeJsBuildContext::new(context);
 
