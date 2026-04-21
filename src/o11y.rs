@@ -40,6 +40,8 @@ pub(crate) const PACKAGE_MANAGER_REQUESTED_VERSION: &str =
 pub(crate) const PACKAGE_MANAGER_NAME: &str = formatcp!("{PACKAGE_MANAGER}.name");
 pub(crate) const PACKAGE_MANAGER_VERSION: &str = formatcp!("{PACKAGE_MANAGER}.version");
 pub(crate) const PACKAGE_MANAGER_VERSION_MAJOR: &str = formatcp!("{PACKAGE_MANAGER}.version_major");
+pub(crate) const PACKAGE_MANAGER_NPM_SUPPORT_STATUS: &str =
+    formatcp!("{PACKAGE_MANAGER}.npm_support_status");
 
 const CONFIG: &str = formatcp!("{NAMESPACE}.config");
 

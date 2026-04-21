@@ -31,6 +31,13 @@ heroku/nodejs <buildpack-version>
 - Determining npm package information
   - No npm version requested
   - Using bundled npm version `9.6.3`
+
+! npm `9.6.3` is no longer supported on Heroku. The npm maintainers only make regular releases to the most recent major release-line and recommend using the latest version of npm.
+!
+! Please upgrade to npm `9.6.4` or later to avoid build failures in a future buildpack release.
+!
+! https://devcenter.heroku.com/articles/nodejs-support#npm-version-policy
+
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
