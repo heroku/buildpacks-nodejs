@@ -144,24 +144,17 @@ pub(crate) fn determine_package_manager(
 }
 
 pub(crate) fn log_requested_package_manager(requested_package_manager: &RequestedPackageManager) {
-    // TODO: change this output to something more generic
     if requested_package_manager.is_yarn() {
         print::bullet("Determining Yarn information");
     } else if requested_package_manager.is_pnpm() {
         print::bullet("Determining pnpm package information");
-    } else if requested_package_manager.is_npm()
-        && !matches!(
-            requested_package_manager,
-            RequestedPackageManager::BundledNpm
-        )
-    {
+    } else if requested_package_manager.is_npm() {
         print::bullet("Determining npm package information");
     }
 
     match requested_package_manager {
         RequestedPackageManager::BundledNpm => {
-            // TODO: this should be reported but will be addressed later
-            // E.g.; print::sub_bullet("No npm version requested")
+            print::sub_bullet("No npm version requested");
         }
         RequestedPackageManager::NpmEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",
@@ -204,7 +197,7 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
 
 pub(crate) enum ResolvedPackageManager {
     Npm(VersionRange, PackagePackument),
-    NpmBundled,
+    NpmBundled(Version),
     Pnpm(VersionRange, PackagePackument),
     Yarn(VersionRange, PackagePackument),
     YarnVendored(PathBuf),
@@ -213,12 +206,19 @@ pub(crate) enum ResolvedPackageManager {
 #[instrument(skip_all)]
 pub(crate) fn resolve_package_manager(
     context: &BuildpackBuildContext,
+    env: &mut Env,
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
         RequestedPackageManager::BundledNpm => {
-            tracing::info!({ { PACKAGE_MANAGER_NAME } = "npm", "package_manager" });
-            Ok(ResolvedPackageManager::NpmBundled)
+            let npm_version = npm::get_version(env)?;
+            tracing::info!({
+                { PACKAGE_MANAGER_NAME } = "npm",
+                { PACKAGE_MANAGER_VERSION } = npm_version.to_string(),
+                { PACKAGE_MANAGER_VERSION_MAJOR } = npm_version.major(),
+                "package_manager"
+            });
+            Ok(ResolvedPackageManager::NpmBundled(npm_version))
         }
         RequestedPackageManager::NpmEngine(requirement) => {
             npm::resolve_npm_package_packument(context, requirement).map(|npm_package_packument| {
@@ -312,9 +312,11 @@ pub(crate) fn resolve_package_manager(
 
 pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPackageManager) {
     match resolved_package_manager {
-        ResolvedPackageManager::NpmBundled => {
-            // TODO: this should be reported but will be addressed later
-            // E.g.; print::sub_bullet("Using bundled npm");
+        ResolvedPackageManager::NpmBundled(bundled_version) => {
+            print::sub_bullet(format!(
+                "Using bundled npm version {}",
+                style::value(bundled_version.to_string()),
+            ));
         }
         ResolvedPackageManager::Npm(requested_version, npm_package_packument) => {
             print::sub_bullet(format!(
@@ -353,20 +355,8 @@ pub(crate) fn install_package_manager(
     resolved_package_manager: &ResolvedPackageManager,
 ) -> BuildpackResult<InstalledPackageManager> {
     match resolved_package_manager {
-        ResolvedPackageManager::NpmBundled => {
-            // TODO: this needs to be reported but will be addressed later
-            // E.g.; print::bullet("Installing npm");
-            let npm_version = npm::get_version(env)?;
-            tracing::info!({
-                { PACKAGE_MANAGER_VERSION } = npm_version.to_string(),
-                { PACKAGE_MANAGER_VERSION_MAJOR } = npm_version.major(),
-                "package_manager"
-            });
-            // print::sub_bullet(format!(
-            //     "Skipping, bundled {} will be used",
-            //     style::value(format!("npm@{npm_version}"))
-            // ));
-            Ok(InstalledPackageManager::Npm(npm_version))
+        ResolvedPackageManager::NpmBundled(bundled_version) => {
+            Ok(InstalledPackageManager::Npm(bundled_version.clone()))
         }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
             print::bullet("Installing npm");

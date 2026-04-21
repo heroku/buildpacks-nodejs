@@ -22,6 +22,9 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `22.22.2 (<arch>)`
   - Installing Node.js `22.22.2 (<arch>)` ... (<time_elapsed>)
+- Determining npm package information
+  - No npm version requested
+  - Using bundled npm version `10.9.7`
 - Installing node modules
   - Using npm version `10.9.7`
   - Creating npm cache

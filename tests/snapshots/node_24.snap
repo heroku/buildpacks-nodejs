@@ -21,6 +21,9 @@ heroku/nodejs <buildpack-version>
   - Verifying checksum
   - Extracting Node.js `24.15.0 (<arch>)`
   - Installing Node.js `24.15.0 (<arch>)` ... (<time_elapsed>)
+- Determining npm package information
+  - No npm version requested
+  - Using bundled npm version `11.12.1`
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
