@@ -207,14 +207,14 @@ pub(crate) enum ResolvedPackageManager {
 #[instrument(skip_all)]
 pub(crate) fn resolve_package_manager(
     context: &BuildpackBuildContext,
-    env: &mut Env,
+    env: &Env,
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
         RequestedPackageManager::BundledNpm => {
             let npm_version = npm::get_version(env)?;
-            tracing::info!({ { PACKAGE_MANAGER_NAME } = "npm", "package_manager" });
             tracing::info!({
+                { PACKAGE_MANAGER_NAME } = "npm",
                 { PACKAGE_MANAGER_VERSION } = npm_version.to_string(),
                 { PACKAGE_MANAGER_VERSION_MAJOR } = npm_version.major(),
                 "package_manager"
@@ -376,10 +376,6 @@ pub(crate) fn install_package_manager(
 ) -> BuildpackResult<InstalledPackageManager> {
     match resolved_package_manager {
         ResolvedPackageManager::NpmBundled(bundled_version) => {
-            // print::sub_bullet(format!(
-            //     "Skipping, bundled {} will be used",
-            //     style::value(format!("npm@{npm_version}"))
-            // ));
             Ok(InstalledPackageManager::Npm(bundled_version.clone()))
         }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {
