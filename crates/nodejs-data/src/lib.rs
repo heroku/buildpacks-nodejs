@@ -190,6 +190,13 @@ pub static RECOMMENDED_LTS_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
 // Update when versions enter or leave LTS.
 pub const SUPPORTED_NODEJS_VERSIONS: [u64; 4] = [20, 22, 24, 25];
 
+// Minimum npm version supported on Heroku.
+// npm 9.6.4 shipped with Node.js 20.0.0, the oldest currently supported Node.js version.
+// Update when the oldest supported Node.js version changes.
+pub static MINIMUM_SUPPORTED_NPM_VERSION: LazyLock<Version> = LazyLock::new(|| {
+    Version::new(9, 6, 4)
+});
+
 #[cfg(test)]
 mod tests {
     use super::*;
