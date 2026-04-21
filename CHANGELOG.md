@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
 - Report bundled npm version in build output. ([#1366](https://github.com/heroku/buildpacks-nodejs/pull/1366))
 
 ## [5.5.8] - 2026-04-16
