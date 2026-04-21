@@ -3,11 +3,11 @@ use crate::o11y::*;
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
+use crate::support_status::check_npm_support_status;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::npm_registry::PackagePackument;
-use crate::support_status::check_npm_support_status;
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -213,8 +213,8 @@ pub(crate) fn resolve_package_manager(
     match requested_package_manager {
         RequestedPackageManager::BundledNpm => {
             let npm_version = npm::get_version(env)?;
+            tracing::info!({ { PACKAGE_MANAGER_NAME } = "npm", "package_manager" });
             tracing::info!({
-                { PACKAGE_MANAGER_NAME } = "npm",
                 { PACKAGE_MANAGER_VERSION } = npm_version.to_string(),
                 { PACKAGE_MANAGER_VERSION_MAJOR } = npm_version.major(),
                 "package_manager"
@@ -351,18 +351,20 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
 
 #[instrument(skip_all)]
 pub(crate) fn check_package_manager_support_status(
-    resolved_package_manager: &ResolvedPackageManager,
-) -> BuildpackResult<()> {
-    match resolved_package_manager {
+    resolved_package_manager: ResolvedPackageManager,
+) -> BuildpackResult<ResolvedPackageManager> {
+    match &resolved_package_manager {
         ResolvedPackageManager::Npm(_, packument) => {
-            check_npm_support_status(&packument.version)
+            check_npm_support_status(&packument.version)?;
+            Ok(resolved_package_manager)
         }
         ResolvedPackageManager::NpmBundled(bundled_version) => {
-            check_npm_support_status(bundled_version)
+            check_npm_support_status(bundled_version)?;
+            Ok(resolved_package_manager)
         }
         ResolvedPackageManager::Pnpm(_, _)
         | ResolvedPackageManager::Yarn(_, _)
-        | ResolvedPackageManager::YarnVendored(_) => Ok(()),
+        | ResolvedPackageManager::YarnVendored(_) => Ok(resolved_package_manager),
     }
 }
 
@@ -374,6 +376,10 @@ pub(crate) fn install_package_manager(
 ) -> BuildpackResult<InstalledPackageManager> {
     match resolved_package_manager {
         ResolvedPackageManager::NpmBundled(bundled_version) => {
+            // print::sub_bullet(format!(
+            //     "Skipping, bundled {} will be used",
+            //     style::value(format!("npm@{npm_version}"))
+            // ));
             Ok(InstalledPackageManager::Npm(bundled_version.clone()))
         }
         ResolvedPackageManager::Npm(_, npm_package_packument) => {

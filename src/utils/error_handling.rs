@@ -152,23 +152,29 @@ pub(crate) mod test_util {
     use test_support::test_name;
 
     pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
-        let error_message = strip_ansi(error.to_string());
+        assert_snapshot_message(error.to_string());
+    }
+
+    pub(crate) fn assert_warning_snapshot(warning: &str) {
+        assert_snapshot_message(warning);
+    }
+
+    fn assert_snapshot_message(message: impl AsRef<str>) {
+        let message = strip_ansi(message.as_ref());
         let test_name = test_name()
             .replace("::", "_")
             .replace("_tests", "")
             .replace("_test", "");
         let snapshot_path = std::env::var("CARGO_MANIFEST_DIR")
             .map(PathBuf::from)
-            .expect(
-                "The CARGO_MANIFEST_DIR should be automatically set by Cargo when running tests",
-            )
+            .expect("CARGO_MANIFEST_DIR should be set by Cargo")
             .join("src/__snapshots");
         with_settings!({
             prepend_module_to_snapshot => false,
             omit_expression => true,
             snapshot_path => snapshot_path,
         }, {
-            assert_snapshot!(test_name, error_message);
+            assert_snapshot!(test_name, message);
         });
     }
 
