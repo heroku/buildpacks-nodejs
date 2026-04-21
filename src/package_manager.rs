@@ -7,6 +7,7 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
 use crate::utils::npm_registry::PackagePackument;
+use crate::support_status::check_npm_support_status;
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -345,6 +346,23 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 style::value(yarn_path.to_string_lossy())
             ));
         }
+    }
+}
+
+#[instrument(skip_all)]
+pub(crate) fn check_package_manager_support_status(
+    resolved_package_manager: &ResolvedPackageManager,
+) -> BuildpackResult<()> {
+    match resolved_package_manager {
+        ResolvedPackageManager::Npm(_, packument) => {
+            check_npm_support_status(&packument.version)
+        }
+        ResolvedPackageManager::NpmBundled(bundled_version) => {
+            check_npm_support_status(bundled_version)
+        }
+        ResolvedPackageManager::Pnpm(_, _)
+        | ResolvedPackageManager::Yarn(_, _)
+        | ResolvedPackageManager::YarnVendored(_) => Ok(()),
     }
 }
 

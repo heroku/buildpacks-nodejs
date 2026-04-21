@@ -168,6 +168,10 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         })
         .inspect(package_manager::log_resolved_package_manager)
         .and_then(|resolved_package_manager| {
+            package_manager::check_package_manager_support_status(&resolved_package_manager)
+                .map(|()| resolved_package_manager)
+        })
+        .and_then(|resolved_package_manager| {
             package_manager::install_package_manager(&context, &mut env, &resolved_package_manager)
         })?;
 

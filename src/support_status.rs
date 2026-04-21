@@ -36,7 +36,6 @@ fn create_eol_warning(version: &nodejs_data::Version) -> String {
     "}
 }
 
-#[allow(dead_code)]
 #[instrument(skip_all)]
 pub(crate) fn check_npm_support_status(npm_version: &Version) -> BuildpackResult<()> {
     if npm_version >= &*MINIMUM_SUPPORTED_NPM_VERSION {
