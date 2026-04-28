@@ -333,6 +333,46 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "${1}<NODE-GYP BUILD OUTPUT>",
     ));
 
+    // [npm] Filter out the resolved npm version when `engines.npm` is set to `11.x` (latest).
+    //       These tests break every time a new npm 11.x patch is released. The filters below
+    //       anchor on "Resolved npm version `11.x`" so they only apply to builds requesting
+    //       the latest 11.x version, not builds that pin an exact version.
+    {
+        // Resolved version line. e.g.;
+        // - Resolved npm version `11.x` to `11.12.1`
+        filters.push((
+            r"Resolved npm version `11\.x` to `11\.\d+\.\d+`",
+            "Resolved npm version `11.x` to `<npm-11.x-version>`",
+        ));
+
+        // npm tarball download URL. e.g.;
+        // - Resolved npm version `11.x` to `<npm-11.x-version>`
+        //   ...
+        //   - GET https://registry.npmjs.org/npm/-/npm-11.12.1.tgz ... (<time_elapsed>)
+        filters.push((
+            r"(Resolved npm version `11\.x`)((?:.*\n)*?)(\s+- GET https://registry\.npmjs\.org/npm/-/npm-)11\.\d+\.\d+(\.tgz)",
+            "${1}${2}${3}<npm-11.x-version>${4}",
+        ));
+
+        // Successfully installed message. e.g.;
+        // - Resolved npm version `11.x` to `<npm-11.x-version>`
+        //   ...
+        //   - Successfully installed `npm@11.12.1`
+        filters.push((
+            r"(Resolved npm version `11\.x`)((?:.*\n)*?)(\s+- Successfully installed `npm@)11\.\d+\.\d+(`)",
+            "${1}${2}${3}<npm-11.x-version>${4}",
+        ));
+
+        // Using npm version message. e.g.;
+        // - Resolved npm version `11.x` to `<npm-11.x-version>`
+        //   ...
+        //   - Using npm version `11.12.1`
+        filters.push((
+            r"(Resolved npm version `11\.x`)((?:.*\n)*?)(\s+- Using npm version `)11\.\d+\.\d+(`)",
+            "${1}${2}${3}<npm-11.x-version>${4}",
+        ));
+    }
+
     filters
         .into_iter()
         .map(|(matcher, replacement)| (matcher.to_string(), replacement.to_string()))

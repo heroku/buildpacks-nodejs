@@ -24,13 +24,13 @@ heroku/nodejs <buildpack-version>
 - Determining npm package information
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (<time_elapsed>)
-  - Resolved npm version `11.x` to `11.12.1`
+  - Resolved npm version `11.x` to `<npm-11.x-version>`
 - Installing npm
-  - GET https://registry.npmjs.org/npm/-/npm-11.12.1.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/npm/-/npm-<npm-11.x-version>.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `npm@11.12.1`
+  - Successfully installed `npm@<npm-11.x-version>`
 - Installing node modules
-  - Using npm version `11.12.1`
+  - Using npm version `<npm-11.x-version>`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
@@ -102,12 +102,12 @@ heroku/nodejs <buildpack-version>
   - Found `engines.npm` version `11.x` declared in `package.json`
   - GET https://registry.npmjs.org/npm ... (Not Modified)
   - Using cached packument for npm
-  - Resolved npm version `11.x` to `11.12.1`
+  - Resolved npm version `11.x` to `<npm-11.x-version>`
 - Installing npm
   - Using cached version of npm
-  - Successfully installed `npm@11.12.1`
+  - Successfully installed `npm@<npm-11.x-version>`
 - Installing node modules
-  - Using npm version `11.12.1`
+  - Using npm version `<npm-11.x-version>`
   - Restoring npm cache
   - Configuring npm cache directory
   - Running `npm ci`
