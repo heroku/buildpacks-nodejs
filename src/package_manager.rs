@@ -428,7 +428,7 @@ pub(crate) enum InstalledPackageManager {
 #[instrument(skip_all)]
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
-    env: &Env,
+    env: &mut Env,
     store: &mut Store,
     installed_package_manager: &InstalledPackageManager,
 ) -> BuildpackResult<()> {

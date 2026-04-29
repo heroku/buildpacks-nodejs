@@ -1,0 +1,15 @@
+{
+  "name": "pnpm-11",
+  "private": true,
+  "scripts": {},
+  "packageManager": "pnpm@11.0.0",
+  "dependencies": {
+    "dotenv": "16.4.5"
+  },
+  "devDependencies": {
+    "environment": "^1.1.0"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

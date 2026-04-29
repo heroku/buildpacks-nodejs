@@ -178,7 +178,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         {
             package_manager::install_dependencies(
                 &context,
-                &env,
+                &mut env,
                 &mut store,
                 &installed_package_manager,
             )?;

@@ -17,6 +17,7 @@ use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
     UncachedLayerDefinition,
 };
+use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use nodejs_data::{Version, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -53,35 +54,35 @@ pub(crate) fn install_pnpm(
 
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
-    env: &Env,
+    env: &mut Env,
     store: &mut Store,
     version: &Version,
 ) -> BuildpackResult<()> {
     print::bullet("Setting up pnpm dependency store");
 
-    let pnpm_store_dir = create_store_directory(context)?;
-    set_store_dir_config(env, &pnpm_store_dir, version)?;
-
-    let pnpm_virtual_store_dir = create_virtual_store_directory(context)?;
-    set_virtual_store_dir_config(env, &pnpm_virtual_store_dir, version)?;
+    create_store_directory(context, env)?;
+    create_virtual_store_directory(context, env, version)?;
 
     print::bullet("Installing dependencies");
     print::sub_stream_cmd(
         Command::new("pnpm")
             .args(["install", "--frozen-lockfile"])
-            .envs(env)
+            .envs(&*env)
             .envs(node_gyp_env()),
     )
     .map_err(|e| create_pnpm_install_command_error(&e))?;
 
-    maybe_prune_store_directory(env, store)?;
+    maybe_prune_store_directory(&*env, store)?;
 
     context.register_cleanup(CleanupTask::PnpmModulesYaml(context.app_dir.clone()));
 
     Ok(())
 }
 
-fn create_store_directory(context: &BuildpackBuildContext) -> BuildpackResult<PathBuf> {
+fn create_store_directory(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
+) -> BuildpackResult<PathBuf> {
     let new_metadata = PnpmCacheDirectoryLayerMetadata {
         layer_version: PNPM_CACHE_DIRECTORY_LAYER_VERSION.to_string(),
     };
@@ -115,7 +116,20 @@ fn create_store_directory(context: &BuildpackBuildContext) -> BuildpackResult<Pa
         }
     }
 
-    Ok(pnpm_cache_layer.path())
+    let store_dir = pnpm_cache_layer.path();
+
+    // npm_config_store_dir is recognized by all pnpm versions (7+)
+    let mut layer_env = LayerEnv::new();
+    layer_env.insert(
+        Scope::Build,
+        ModificationBehavior::Override,
+        "npm_config_store_dir",
+        &store_dir,
+    );
+    pnpm_cache_layer.write_env(layer_env)?;
+    env.clone_from(&pnpm_cache_layer.read_env()?.apply(Scope::Build, env));
+
+    Ok(store_dir)
 }
 
 const PNPM_CACHE_DIRECTORY_LAYER_VERSION: &str = "1";
@@ -126,41 +140,11 @@ pub(crate) struct PnpmCacheDirectoryLayerMetadata {
     layer_version: String,
 }
 
-fn set_store_dir_config(
-    env: &Env,
-    store_dir: &Path,
+fn create_virtual_store_directory(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
     version: &Version,
-) -> Result<(), ErrorMessage> {
-    Command::new("pnpm")
-        .args([
-            "config",
-            "set",
-            match version.major() {
-                major if major < 10 => "store-dir",
-                _ => "storeDir",
-            },
-            &store_dir.to_string_lossy(),
-        ])
-        .envs(env)
-        .named_output()
-        .map(|_| ())
-        .map_err(|e| create_set_store_dir_config_error(&e))
-}
-
-fn create_set_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage {
-    error_message()
-        .id("package_manager/pnpm/set_store_dir_config")
-        .error_type(ErrorType::Internal)
-        .header("Failed to configure pnpm store dir")
-        .body(formatdoc! { "
-            An unexpected error occurred while configuring the store directory for pnpm. This is the location \
-            on disk where pnpm saves all packages.
-        " })
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackResult<PathBuf> {
+) -> BuildpackResult<PathBuf> {
     print::sub_bullet("Creating pnpm virtual store");
 
     let pnpm_virtual_store_layer = context.uncached_layer(
@@ -193,6 +177,26 @@ fn create_virtual_store_directory(context: &BuildpackBuildContext) -> BuildpackR
         NodeGypArtifactLocation::PnpmVirtualStore(pnpm_virtual_store_layer.path().clone()),
     ));
 
+    // pnpm 11 dropped npm_config_* env var support for this key in favor of pnpm_config_*
+    let env_var_name = if version.major() >= 11 {
+        "pnpm_config_virtual_store_dir"
+    } else {
+        "npm_config_virtual_store_dir"
+    };
+    let mut layer_env = LayerEnv::new();
+    layer_env.insert(
+        Scope::All,
+        ModificationBehavior::Override,
+        env_var_name,
+        &virtual_store_dir,
+    );
+    pnpm_virtual_store_layer.write_env(layer_env)?;
+    env.clone_from(
+        &pnpm_virtual_store_layer
+            .read_env()?
+            .apply(Scope::Build, env),
+    );
+
     Ok(virtual_store_dir)
 }
 
@@ -217,40 +221,6 @@ fn create_node_modules_symlink_error(error: &std::io::Error) -> ErrorMessage {
         .body(formatdoc! { "
             An unexpected error occurred while creating the symlink for pnpm. This is the location \
             on disk where pnpm saves all packages.
-        " })
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn set_virtual_store_dir_config(
-    env: &Env,
-    virtual_store_dir: &Path,
-    version: &Version,
-) -> Result<(), ErrorMessage> {
-    Command::new("pnpm")
-        .args([
-            "config",
-            "set",
-            match version.major() {
-                major if major < 10 => "virtual-store-dir",
-                _ => "virtualStoreDir",
-            },
-            &virtual_store_dir.to_string_lossy(),
-        ])
-        .envs(env)
-        .named_output()
-        .map(|_| ())
-        .map_err(|e| create_set_virtual_store_dir_config_error(&e))
-}
-
-fn create_set_virtual_store_dir_config_error(error: &fun_run::CmdError) -> ErrorMessage {
-    error_message()
-        .id("package_manager/pnpm/set_virtual_store_dir_config")
-        .error_type(ErrorType::Internal)
-        .header("Failed to configure pnpm virtual store dir")
-        .body(formatdoc! { "
-            An unexpected error occurred while configuring the store directory for pnpm. This is the directory \
-            where pnpm links all installed packages from the store.
         " })
         .debug_info(error.to_string())
         .create()
@@ -591,20 +561,6 @@ impl PnpmWorkspace {
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
-
-    #[test]
-    fn set_store_dir_config_error() {
-        assert_error_snapshot(&create_set_store_dir_config_error(&create_cmd_error(
-            "pnpm config set store-dir /some/dir",
-        )));
-    }
-
-    #[test]
-    fn set_virtual_store_dir_config_error() {
-        assert_error_snapshot(&create_set_virtual_store_dir_config_error(
-            &create_cmd_error("pnpm config set virtual-store-dir /some/dir"),
-        ));
-    }
 
     #[test]
     fn virtual_store_directory_error() {
