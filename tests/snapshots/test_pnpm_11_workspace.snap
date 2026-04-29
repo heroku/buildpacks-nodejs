@@ -12,23 +12,23 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.15.0`
+  - Detected Node.js version range: `22.x`
+  - Resolved Node.js version: `22.22.2`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.15.0/node-v24.15.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.22.2/node-v22.22.2-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `24.15.0 (<arch>)`
-  - Installing Node.js `24.15.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.22.2 (<arch>)`
+  - Installing Node.js `22.22.2 (<arch>)` ... (<time_elapsed>)
 - Determining pnpm package information
-  - Found `packageManager` set to `pnpm@10.0.0` in `package.json`
+  - Found `packageManager` set to `pnpm@11.0.0` in `package.json`
   - GET https://registry.npmjs.org/pnpm ... (<time_elapsed>)
-  - Resolved pnpm version `10.0.0` to `10.0.0`
+  - Resolved pnpm version `11.0.0` to `11.0.0`
 - Installing pnpm
-  - GET https://registry.npmjs.org/pnpm/-/pnpm-10.0.0.tgz ... (<time_elapsed>)
+  - GET https://registry.npmjs.org/pnpm/-/pnpm-11.0.0.tgz ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
-  - Successfully installed `pnpm@10.0.0`
+  - Successfully installed `pnpm@11.0.0`
 - Setting up pnpm dependency store
   - Creating new pnpm content-addressable store
   - Creating pnpm virtual store
@@ -37,21 +37,21 @@ heroku/nodejs <buildpack-version>
 
       Scope: all 3 workspace projects
       Lockfile is up to date, resolution step is skipped
-      Packages: +85
+      Packages: +86
       ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
       devDependencies:
       + typescript 5.9.3
 
-      Done in <time_elapsed>
+      Done in <time_elapsed> using pnpm v11.0.0
 
   - Done (<time_elapsed>)
 - Pruning unused dependencies from pnpm content-addressable store
   - Running `pnpm store prune`
 
       Removed all cached metadata files
-      Removed 0 files
-      Removed 0 packages
+      Removed 2681 files (39.6 MB)
+      Removed 86 packages
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -61,13 +61,12 @@ heroku/nodejs <buildpack-version>
 
       Scope: all 3 workspace projects
       Lockfile is up to date, resolution step is skipped
-      Packages: -16
-      ----------------
+      Packages: +70
+      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-      devDependencies:
-      - typescript
+      devDependencies: skipped
 
-      Done in <time_elapsed>
+      Done in <time_elapsed> using pnpm v11.0.0
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export

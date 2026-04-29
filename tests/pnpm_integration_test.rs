@@ -199,6 +199,23 @@ fn test_pnpm_10_workspace() {
 
 #[test]
 #[ignore = "integration test"]
+fn test_pnpm_11_workspace() {
+    nodejs_integration_test("./fixtures/pnpm-11-workspace", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "pnpm-11-workspace");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_pnpm_11() {
+    nodejs_integration_test("./fixtures/pnpm-11", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_pnpm_workspace_prune_skipped_if_lifecycle_scripts_are_present_in_root_project() {
     nodejs_integration_test_with_config(
         "./fixtures/pnpm-10-workspace",

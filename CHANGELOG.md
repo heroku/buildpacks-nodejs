@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for pnpm 11. ([#1369](https://github.com/heroku/buildpacks-nodejs/pull/1369))
+
 ### Changed
 
+- Replaced `pnpm config set` commands with layer environment variables for configuring pnpm store and virtual store directories. This applies to all pnpm versions. ([#1369](https://github.com/heroku/buildpacks-nodejs/pull/1369))
 - Report bundled npm version in build output. ([#1366](https://github.com/heroku/buildpacks-nodejs/pull/1366))
 
 ## [5.5.8] - 2026-04-16
