@@ -201,8 +201,13 @@ fn test_pnpm_10_workspace() {
 #[ignore = "integration test"]
 fn test_pnpm_11_workspace() {
     nodejs_integration_test("./fixtures/pnpm-11-workspace", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "pnpm-11-workspace");
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "pnpm-11-workspace");
+        });
     });
 }
 
@@ -210,7 +215,11 @@ fn test_pnpm_11_workspace() {
 #[ignore = "integration test"]
 fn test_pnpm_11() {
     nodejs_integration_test("./fixtures/pnpm-11", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+        });
     });
 }
 

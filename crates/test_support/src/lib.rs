@@ -72,6 +72,8 @@ pub fn integration_test_with_config(
     build_config.env("npm_config_fund", "false");
     // silence deprecation warnings from Node.js which cause unreliable output in snapshots
     build_config.env("NODE_OPTIONS", "--no-deprecation");
+    // suppress pnpm slow download warnings which cause non-deterministic output in snapshots
+    build_config.env("pnpm_config_fetch_min_speed_ki_bps", "0");
 
     with_config(&mut build_config);
 
