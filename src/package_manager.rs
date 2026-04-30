@@ -3,6 +3,7 @@ use crate::o11y::*;
 use crate::package_json::{PackageJson, PackageManagerField, PackageManagerFieldPackageManager};
 use crate::package_managers::{npm, pnpm, yarn};
 use crate::runtimes::nodejs;
+use crate::support_status::check_npm_support_status;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
 };
@@ -206,7 +207,7 @@ pub(crate) enum ResolvedPackageManager {
 #[instrument(skip_all)]
 pub(crate) fn resolve_package_manager(
     context: &BuildpackBuildContext,
-    env: &mut Env,
+    env: &Env,
     requested_package_manager: &RequestedPackageManager,
 ) -> BuildpackResult<ResolvedPackageManager> {
     match requested_package_manager {
@@ -345,6 +346,25 @@ pub(crate) fn log_resolved_package_manager(resolved_package_manager: &ResolvedPa
                 style::value(yarn_path.to_string_lossy())
             ));
         }
+    }
+}
+
+#[instrument(skip_all)]
+pub(crate) fn check_package_manager_support_status(
+    resolved_package_manager: ResolvedPackageManager,
+) -> BuildpackResult<ResolvedPackageManager> {
+    match &resolved_package_manager {
+        ResolvedPackageManager::Npm(_, packument) => {
+            check_npm_support_status(&packument.version)?;
+            Ok(resolved_package_manager)
+        }
+        ResolvedPackageManager::NpmBundled(bundled_version) => {
+            check_npm_support_status(bundled_version)?;
+            Ok(resolved_package_manager)
+        }
+        ResolvedPackageManager::Pnpm(_, _)
+        | ResolvedPackageManager::Yarn(_, _)
+        | ResolvedPackageManager::YarnVendored(_) => Ok(resolved_package_manager),
     }
 }
 

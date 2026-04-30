@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `pnpm config set` commands with layer environment variables for configuring pnpm store and virtual store directories. This applies to all pnpm versions. ([#1369](https://github.com/heroku/buildpacks-nodejs/pull/1369))
 - Fixed pnpm 11 store directory configuration to use `pnpm_config_store_dir` env var instead of `npm_config_store_dir` which pnpm 11 no longer reads. Added runtime verification of pnpm store and virtual store directory configuration. ([#1370](https://github.com/heroku/buildpacks-nodejs/pull/1370))
 - Report bundled npm version in build output. ([#1366](https://github.com/heroku/buildpacks-nodejs/pull/1366))
+- Added warnings for unsupported npm versions. ([#1367](https://github.com/heroku/buildpacks-nodejs/pull/1367))
 
 ## [5.5.8] - 2026-04-16
 
