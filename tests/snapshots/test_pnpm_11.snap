@@ -52,8 +52,8 @@ heroku/nodejs <buildpack-version>
   - Running `pnpm store prune`
 
       Removed all cached metadata files
-      Removed 16 files (88 kB)
-      Removed 2 packages
+      Removed 0 files (0 B)
+      Removed 0 packages
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -94,5 +94,93 @@ Saving <image-name>...
 Adding cache layer 'heroku/nodejs:addressable'
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:pnpm'
+Adding cache layer 'heroku/nodejs:pnpm_packument'
+Successfully built image '<image-name>'
+
+--------------------------------------------- REBUILD ---------------------------------------------
+===> ANALYZING
+Restoring data for SBOM from previous image
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Detected Node.js version range: `22.x`
+  - Resolved Node.js version: `22.22.2`
+- Installing Node.js distribution
+  - Reusing Node.js 22.22.2 (<arch>)
+- Determining pnpm package information
+  - Found `packageManager` set to `pnpm@11.0.0` in `package.json`
+  - GET https://registry.npmjs.org/pnpm ... (Not Modified)
+  - Using cached packument for pnpm
+  - Resolved pnpm version `11.0.0` to `11.0.0`
+- Installing pnpm
+  - Using cached version of pnpm
+  - Successfully installed `pnpm@11.0.0`
+- Setting up pnpm dependency store
+  - Restoring pnpm content-addressable store from cache
+  - Creating pnpm virtual store
+- Installing dependencies
+  - Running `pnpm install --frozen-lockfile`
+
+      Lockfile is up to date, resolution step is skipped
+      Packages: +2
+      ++
+
+      dependencies:
+      + dotenv 16.4.5
+
+      devDependencies:
+      + environment 1.1.0
+
+      Done in <time_elapsed> using pnpm v11.0.0
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `pnpm prune --prod --ignore-scripts`
+
+      Lockfile is up to date, resolution step is skipped
+      Packages: -1
+      -
+
+      devDependencies:
+      - environment 1.1.0
+
+  - Done (<time_elapsed>)
+- Removing non-deterministic build artifacts before export
+  - Removed pnpm metadata file node_modules/.modules.yaml
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Reusing layer 'heroku/nodejs:available_parallelism'
+Reusing layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:pnpm'
+Reusing layer 'heroku/nodejs:virtual'
+Reusing layer 'heroku/nodejs:web_env'
+Reusing layer 'heroku/nodejs:z_node_module_bins'
+Reusing layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Reusing layer 'buildpacksio/lifecycle:launcher'
+Reusing layer 'buildpacksio/lifecycle:config'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
+no default process type
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Reusing cache layer 'heroku/nodejs:addressable'
+Adding cache layer 'heroku/nodejs:addressable'
+Reusing cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:dist'
+Reusing cache layer 'heroku/nodejs:pnpm'
+Adding cache layer 'heroku/nodejs:pnpm'
+Reusing cache layer 'heroku/nodejs:pnpm_packument'
 Adding cache layer 'heroku/nodejs:pnpm_packument'
 Successfully built image '<image-name>'

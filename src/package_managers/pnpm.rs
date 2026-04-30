@@ -60,8 +60,11 @@ pub(crate) fn install_dependencies(
 ) -> BuildpackResult<()> {
     print::bullet("Setting up pnpm dependency store");
 
-    create_store_directory(context, env)?;
-    create_virtual_store_directory(context, env, version)?;
+    let store_dir = create_store_directory(context, env, version)?;
+    let virtual_store_dir = create_virtual_store_directory(context, env, version)?;
+
+    verify_pnpm_config(env, "store-dir", &store_dir);
+    verify_pnpm_config(env, "virtual-store-dir", &virtual_store_dir);
 
     print::bullet("Installing dependencies");
     print::sub_stream_cmd(
@@ -82,6 +85,7 @@ pub(crate) fn install_dependencies(
 fn create_store_directory(
     context: &BuildpackBuildContext,
     env: &mut Env,
+    version: &Version,
 ) -> BuildpackResult<PathBuf> {
     let new_metadata = PnpmCacheDirectoryLayerMetadata {
         layer_version: PNPM_CACHE_DIRECTORY_LAYER_VERSION.to_string(),
@@ -118,12 +122,17 @@ fn create_store_directory(
 
     let store_dir = pnpm_cache_layer.path();
 
-    // npm_config_store_dir is recognized by all pnpm versions (7+)
+    // pnpm 11 dropped npm_config_* env var support in favor of pnpm_config_*
+    let env_var_name = if version.major() >= 11 {
+        "pnpm_config_store_dir"
+    } else {
+        "npm_config_store_dir"
+    };
     let mut layer_env = LayerEnv::new();
     layer_env.insert(
         Scope::Build,
         ModificationBehavior::Override,
-        "npm_config_store_dir",
+        env_var_name,
         &store_dir,
     );
     pnpm_cache_layer.write_env(layer_env)?;
@@ -224,6 +233,22 @@ fn create_node_modules_symlink_error(error: &std::io::Error) -> ErrorMessage {
         " })
         .debug_info(error.to_string())
         .create()
+}
+
+fn verify_pnpm_config(env: &Env, config_key: &str, expected: &Path) {
+    let matches = Command::new("pnpm")
+        .args(["config", "get", config_key])
+        .envs(env)
+        .named_output()
+        .is_ok_and(|output| output.stdout_lossy().trim() == expected.to_string_lossy().as_ref());
+
+    if !matches {
+        let expected = file_value(expected);
+        print::warning(formatdoc! { "
+            pnpm config {config_key} is not set to the expected buildpack-managed directory ({expected}). \
+            This may result in slower builds due to reduced caching effectiveness.
+        "});
+    }
 }
 
 fn create_pnpm_install_command_error(error: &fun_run::CmdError) -> ErrorMessage {
