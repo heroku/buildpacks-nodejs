@@ -188,7 +188,7 @@ pub static RECOMMENDED_LTS_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
 // Major versions currently supported on Heroku.
 // Shared with the classic CNB buildpack.
 // Update when versions enter or leave LTS.
-pub const SUPPORTED_NODEJS_VERSIONS: [u64; 4] = [20, 22, 24, 25];
+pub const SUPPORTED_NODEJS_VERSIONS: [u64; 4] = [22, 24, 25, 26];
 
 #[cfg(test)]
 mod tests {

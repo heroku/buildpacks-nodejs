@@ -12,25 +12,18 @@ heroku/nodejs <buildpack-version>
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Detected Node.js version range: `20.x`
-  - Resolved Node.js version: `20.20.2`
-
-! Node.js `20.20.2` is now End-of-Life (EOL). It no longer receives security updates, bug fixes, or support from the Node.js project and is no longer supported on Heroku.
-!
-! In a future buildpack release, this warning will become a build error. Please upgrade to a supported version as soon as possible to avoid build failures.
-!
-! https://devcenter.heroku.com/articles/nodejs-support#supported-node-js-versions
-
+  - Detected Node.js version range: `26.x`
+  - Resolved Node.js version: `26.0.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v20.20.2/node-v20.20.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v26.0.0/node-v26.0.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `20.20.2 (<arch>)`
-  - Installing Node.js `20.20.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `26.0.0 (<arch>)`
+  - Installing Node.js `26.0.0 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - No npm version requested
-  - Using bundled npm version `10.8.2`
+  - Using bundled npm version `11.12.1`
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

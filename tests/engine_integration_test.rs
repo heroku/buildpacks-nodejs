@@ -35,7 +35,7 @@ fn reinstalls_node_if_version_changes() {
         "./fixtures/node-with-indexjs",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
-                set_node_engine(&app_dir, "^20.0");
+                set_node_engine(&app_dir, "^22.0");
             });
         },
         |ctx| {
@@ -43,7 +43,7 @@ fn reinstalls_node_if_version_changes() {
 
             let mut config = ctx.config.clone();
             config.app_dir_preprocessor(|app_dir| {
-                set_node_engine(&app_dir, "^22.0");
+                set_node_engine(&app_dir, "^24.0");
             });
 
             ctx.rebuild(config, |ctx| {
@@ -113,6 +113,23 @@ fn node_25() {
 
 #[test]
 #[ignore = "integration test"]
+fn node_26() {
+    nodejs_integration_test_with_config(
+        "./fixtures/node-with-serverjs",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                set_node_engine(&app_dir, "26.x");
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "node-with-serverjs");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn ssl_cert_file_is_respected() {
     nodejs_integration_test_with_config(
         "./fixtures/node-with-indexjs",
@@ -143,8 +160,8 @@ fn node_eol_warning() {
         "./fixtures/node-with-serverjs",
         |config| {
             config.app_dir_preprocessor(|app_dir| {
-                // Assumes the version one below the lowest supported major is EOL and present in the inventory.
-                let unsupported_version = format!("{}.x", SUPPORTED_NODEJS_VERSIONS[0] - 1);
+                // Assumes the version two below the lowest supported major is EOL and present in the inventory.
+                let unsupported_version = format!("{}.x", SUPPORTED_NODEJS_VERSIONS[0] - 2);
                 set_node_engine(&app_dir, &unsupported_version);
             });
         },
