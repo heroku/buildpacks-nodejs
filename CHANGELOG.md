@@ -11,7 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- 26.0.0 (linux-amd64, linux-arm64)
+- Node.js 26.0.0 (linux-amd64, linux-arm64)
+
+### Changed
+
+- Deprecated Node.js 20.x ([#1374](https://github.com/heroku/buildpacks-nodejs/pull/1374))
 
 ## [5.6.0] - 2026-04-30
 
