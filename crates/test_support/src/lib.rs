@@ -68,8 +68,10 @@ pub fn integration_test_with_config(
     //       prevent from being emitted in test scenarios. By setting the following
     //       environment variable, we can suppress this message in both npm & pnpm.
     build_config.env("npm_config_update_notifier", "false");
+    build_config.env("pnpm_config_update_notifier", "false");
     // similar for the message looking for funding which doesn't need to appear in testing scenarios
     build_config.env("npm_config_fund", "false");
+    build_config.env("pnpm_config_fund", "false");
     // silence deprecation warnings from Node.js which cause unreliable output in snapshots
     build_config.env("NODE_OPTIONS", "--no-deprecation");
     // suppress pnpm slow download warnings which cause non-deterministic output in snapshots
