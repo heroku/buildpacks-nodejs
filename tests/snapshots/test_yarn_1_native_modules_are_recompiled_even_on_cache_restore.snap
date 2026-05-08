@@ -59,7 +59,7 @@ heroku/nodejs <buildpack-version>
       [3/4] Linking dependencies...
       [4/4] Building fresh packages...
       Done in <time_elapsed>.
-
+      
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
   - Removed 1 Makefile artifact from the application directory

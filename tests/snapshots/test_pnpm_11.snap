@@ -39,6 +39,15 @@ heroku/nodejs <buildpack-version>
       Packages: +2
       ++
 
+         ╭─────────────────────────────────────────╮
+         │                                         │
+         │   Update available! 11.0.0 → 11.0.8.    │
+         │   Changelog: https://pnpm.io/v/11.0.8   │
+         │    To update, run: pnpm add -g pnpm     │
+         │                                         │
+         ╰─────────────────────────────────────────╯
+
+
       dependencies:
       + dotenv 16.4.5
 
@@ -130,6 +139,15 @@ heroku/nodejs <buildpack-version>
       Lockfile is up to date, resolution step is skipped
       Packages: +2
       ++
+
+         ╭─────────────────────────────────────────╮
+         │                                         │
+         │   Update available! 11.0.0 → 11.0.8.    │
+         │   Changelog: https://pnpm.io/v/11.0.8   │
+         │    To update, run: pnpm add -g pnpm     │
+         │                                         │
+         ╰─────────────────────────────────────────╯
+
 
       dependencies:
       + dotenv 16.4.5
