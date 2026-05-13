@@ -1,0 +1,93 @@
+name: Coverage
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    name: Generate unified coverage report
+    runs-on: ubuntu-24.04
+
+    env:
+      LIBCNB_COVERAGE: "1"
+      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:24
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: true
+
+      - name: Update Rust toolchain
+        run: rustup update
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Install cargo-nextest
+        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        with:
+          tool: cargo-nextest
+
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@d4a4eee44ee5d38a4e146dd7e2b3cc4a1d6f469c # v5.11.0
+
+      - name: Install musl-tools
+        run: sudo apt-get install -y musl-tools
+
+      - name: Disable containerd snapshotter
+        run: |
+          sudo mkdir -p /etc/docker
+          echo '{"features":{"containerd-snapshotter":false}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Pull builder and run images
+        run: |
+          docker pull "$INTEGRATION_TEST_CNB_BUILDER"
+          RUN_IMAGE=$(docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' "$INTEGRATION_TEST_CNB_BUILDER" | jq -r '.stack.runImage.image')
+          docker pull "${RUN_IMAGE}"
+
+      - name: Run unit tests with coverage
+        run: cargo llvm-cov --no-report --locked
+
+      - name: Run integration tests with coverage
+        run: cargo nextest run --run-ignored only --locked
+
+      - name: Generate unified coverage report
+        run: |
+          cargo llvm-cov report --locked --html --output-dir target/coverage/html \
+            --instr-profile target/coverage/profraw/
+          cargo llvm-cov report --locked --lcov --output-file target/coverage/lcov.info \
+            --instr-profile target/coverage/profraw/
+
+      - name: Write coverage summary
+        run: |
+          echo '## Code Coverage Report' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cargo llvm-cov report --locked \
+            --instr-profile target/coverage/profraw/ 2>/dev/null >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check coverage threshold
+        run: |
+          cargo llvm-cov report --locked --fail-under-lines 50 \
+            --instr-profile target/coverage/profraw/ || \
+          echo "::warning::Coverage below 50% threshold"
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: "coverage-report-${{github.sha}}"
+          path: |
+            target/coverage/html
+            target/coverage/lcov.info
+          if-no-files-found: "error"
