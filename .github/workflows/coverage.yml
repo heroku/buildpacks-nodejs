@@ -56,32 +56,91 @@ jobs:
           RUN_IMAGE=$(docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' "$INTEGRATION_TEST_CNB_BUILDER" | jq -r '.stack.runImage.image')
           docker pull "${RUN_IMAGE}"
 
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools
+
       - name: Run unit tests with coverage
-        run: cargo llvm-cov --no-report --locked
+        run: cargo llvm-cov --no-report --workspace --locked
 
       - name: Run integration tests with coverage
         run: cargo nextest run --run-ignored only --locked
 
+      - name: Merge profraw files
+        run: |
+          LLVM_PROFDATA=$(find "$(rustc --print sysroot)" -name "llvm-profdata" | head -1)
+          "$LLVM_PROFDATA" merge -sparse \
+            target/llvm-cov-target/*.profraw \
+            target/coverage/profraw/*.profraw \
+            -o target/coverage/unified.profdata
+
+      - name: Collect instrumented binaries
+        id: binaries
+        run: |
+          IGNORE_REGEX='/.cargo/|/rustc/|/libcnb|/test_support/'
+          echo "ignore_regex=$IGNORE_REGEX" >> "$GITHUB_OUTPUT"
+
+          OBJECTS=""
+
+          # Unit test binaries (compiled by cargo-llvm-cov)
+          for bin in target/llvm-cov-target/debug/deps/*; do
+            if [ -f "$bin" ] && [ -x "$bin" ] && [[ "$bin" != *.d ]] && [[ "$bin" != *.o ]] && [[ "$bin" != *.rmeta ]] && [[ "$bin" != *.rlib ]] && [[ "$(basename "$bin")" != lib* ]]; then
+              OBJECTS="$OBJECTS -object=$bin"
+            fi
+          done
+
+          # Integration test binaries (cross-compiled for Docker via libcnb-test)
+          for bin in target/x86_64-unknown-linux-musl/debug/*; do
+            if [ -f "$bin" ] && [ -x "$bin" ] && [[ "$bin" != *.d ]] && [[ "$bin" != *.o ]]; then
+              OBJECTS="$OBJECTS -object=$bin"
+            fi
+          done
+
+          echo "objects=$OBJECTS" >> "$GITHUB_OUTPUT"
+
       - name: Generate unified coverage report
         run: |
-          cargo llvm-cov report --locked --html --output-dir target/coverage/html \
-            --instr-profile target/coverage/profraw/
-          cargo llvm-cov report --locked --lcov --output-file target/coverage/lcov.info \
-            --instr-profile target/coverage/profraw/
+          LLVM_COV=$(find "$(rustc --print sysroot)" -name "llvm-cov" | head -1)
+          OBJECTS="${{ steps.binaries.outputs.objects }}"
+          IGNORE_REGEX="${{ steps.binaries.outputs.ignore_regex }}"
+
+          "$LLVM_COV" show $OBJECTS \
+            --instr-profile=target/coverage/unified.profdata \
+            --ignore-filename-regex="$IGNORE_REGEX" \
+            --format=html --output-dir=target/coverage/html
+
+          "$LLVM_COV" export $OBJECTS \
+            --instr-profile=target/coverage/unified.profdata \
+            --ignore-filename-regex="$IGNORE_REGEX" \
+            --format=lcov > target/coverage/lcov.info
 
       - name: Write coverage summary
         run: |
+          LLVM_COV=$(find "$(rustc --print sysroot)" -name "llvm-cov" | head -1)
+          OBJECTS="${{ steps.binaries.outputs.objects }}"
+          IGNORE_REGEX="${{ steps.binaries.outputs.ignore_regex }}"
+
           echo '## Code Coverage Report' >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          cargo llvm-cov report --locked \
-            --instr-profile target/coverage/profraw/ 2>/dev/null >> "$GITHUB_STEP_SUMMARY"
+          "$LLVM_COV" report $OBJECTS \
+            --instr-profile=target/coverage/unified.profdata \
+            --ignore-filename-regex="$IGNORE_REGEX" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check coverage threshold
         run: |
-          cargo llvm-cov report --locked --fail-under-lines 50 \
-            --instr-profile target/coverage/profraw/ || \
-          echo "::warning::Coverage below 50% threshold"
+          LLVM_COV=$(find "$(rustc --print sysroot)" -name "llvm-cov" | head -1)
+          OBJECTS="${{ steps.binaries.outputs.objects }}"
+          IGNORE_REGEX="${{ steps.binaries.outputs.ignore_regex }}"
+
+          TOTAL_LINE=$("$LLVM_COV" report $OBJECTS \
+            --instr-profile=target/coverage/unified.profdata \
+            --ignore-filename-regex="$IGNORE_REGEX" | tail -1)
+          COVERAGE=$(echo "$TOTAL_LINE" | awk '{print $(NF-3)}' | tr -d '%')
+
+          echo "Line coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
+            echo "::warning::Coverage ${COVERAGE}% is below 50% threshold"
+          fi
 
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
