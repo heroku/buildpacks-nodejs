@@ -80,5 +80,14 @@ available-parallelism = { path = "./crates/available-parallelism" }
 nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
 
+[patch.crates-io]
+libcnb = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libcnb-test = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libcnb-data = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libcnb-common = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libcnb-package = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libcnb-proc-macros = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+libherokubuildpack = { git = "https://github.com/heroku/libcnb.rs.git", branch = "ccasey/coverage-support" }
+
 [profile.release]
 strip = true
