@@ -42,8 +42,10 @@ jobs:
       - name: Install Pack CLI
         uses: buildpacks/github-actions/setup-pack@b4faaabcd9dbc5fa332451ae33bce8b583f3ec1b # v5.12.0
 
-      - name: Install musl-tools
-        run: sudo apt-get install -y musl-tools
+      - name: Install musl-tools and target
+        run: |
+          sudo apt-get install -y musl-tools
+          rustup target add x86_64-unknown-linux-musl
 
       - name: Disable containerd snapshotter
         run: |
@@ -56,9 +58,6 @@ jobs:
           docker pull "$INTEGRATION_TEST_CNB_BUILDER"
           RUN_IMAGE=$(docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' "$INTEGRATION_TEST_CNB_BUILDER" | jq -r '.stack.runImage.image')
           docker pull "${RUN_IMAGE}"
-
-      - name: Install llvm-tools
-        run: rustup component add llvm-tools
 
       - name: Run unit tests with coverage
         run: cargo llvm-cov --no-report --workspace --locked
