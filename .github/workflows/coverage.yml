@@ -76,7 +76,7 @@ jobs:
       - name: Collect instrumented binaries
         id: binaries
         run: |
-          IGNORE_REGEX='/.cargo/|/rustc/|/libcnb|/test_support/'
+          IGNORE_REGEX='/.cargo/|/rustc/|/libcnb|/test_support/|/tests/|/xtask-'
           echo "ignore_regex=$IGNORE_REGEX" >> "$GITHUB_OUTPUT"
 
           OBJECTS=""
