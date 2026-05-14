@@ -14,19 +14,19 @@ test/skip-build-scripts 0.0.0
 
 - Checking Node.js version
   - Detected Node.js version range: `^22.0`
-  - Resolved Node.js version: `22.22.2`
+  - Resolved Node.js version: `22.22.3`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.22.2/node-v22.22.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.22.3/node-v22.22.3-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.22.2 (<arch>)`
-  - Installing Node.js `22.22.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.22.3 (<arch>)`
+  - Installing Node.js `22.22.3 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - No npm version requested
-  - Using bundled npm version `10.9.7`
+  - Using bundled npm version `10.9.8`
 - Installing node modules
-  - Using npm version `10.9.7`
+  - Using npm version `10.9.8`
   - Creating npm cache
   - Configuring npm cache directory
   - Running `npm ci`
