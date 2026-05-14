@@ -40,7 +40,7 @@ jobs:
           tool: cargo-nextest
 
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@d4a4eee44ee5d38a4e146dd7e2b3cc4a1d6f469c # v5.11.0
+        uses: buildpacks/github-actions/setup-pack@b4faaabcd9dbc5fa332451ae33bce8b583f3ec1b # v5.12.0
 
       - name: Install musl-tools
         run: sudo apt-get install -y musl-tools
