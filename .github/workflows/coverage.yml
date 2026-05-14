@@ -2,6 +2,8 @@ name: Coverage
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["ccasey/coverage-workflow"]
 
 permissions:
   contents: read
