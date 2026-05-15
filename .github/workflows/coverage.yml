@@ -127,6 +127,7 @@ jobs:
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check coverage threshold
+        id: threshold
         run: |
           LLVM_COV=$(find "$(rustc --print sysroot)" -name "llvm-cov" | head -1)
           OBJECTS="${{ steps.binaries.outputs.objects }}"
@@ -137,12 +138,14 @@ jobs:
             --ignore-filename-regex="$IGNORE_REGEX" | tail -1)
           COVERAGE=$(echo "$TOTAL_LINE" | awk '{print $(NF-3)}' | tr -d '%')
 
+          echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
           echo "Line coverage: ${COVERAGE}%"
           if (( $(echo "$COVERAGE < 50" | bc -l) )); then
             echo "::warning::Coverage ${COVERAGE}% is below 50% threshold"
           fi
 
       - name: Upload HTML coverage report
+        id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: "coverage-report-${{github.sha}}"
@@ -150,3 +153,10 @@ jobs:
             target/coverage/html
             target/coverage/lcov.info
           if-no-files-found: "error"
+
+      - name: Notify Slack
+        if: always() && steps.threshold.outputs.coverage != ''
+        run: |
+          curl -s -X POST "${{ secrets.SLACK_COVERAGE_WEBHOOK_URL }}" \
+            -H 'Content-type: application/json' \
+            -d "{\"message\":\"${{ github.repository }}: ${{ steps.threshold.outputs.coverage }}% line coverage\",\"html_report_url\":\"${{ steps.upload.outputs.artifact-url }}\"}"
