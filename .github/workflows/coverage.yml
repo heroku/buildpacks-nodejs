@@ -140,8 +140,8 @@ jobs:
 
           echo "coverage=$COVERAGE" >> "$GITHUB_OUTPUT"
           echo "Line coverage: ${COVERAGE}%"
-          if (( $(echo "$COVERAGE < 50" | bc -l) )); then
-            echo "::warning::Coverage ${COVERAGE}% is below 50% threshold"
+          if (( $(echo "$COVERAGE < 95" | bc -l) )); then
+            echo "::warning::Coverage ${COVERAGE}% is below 95% threshold"
           fi
 
       - name: Upload HTML coverage report
@@ -154,9 +154,9 @@ jobs:
             target/coverage/lcov.info
           if-no-files-found: "error"
 
-      - name: Notify Slack
-        if: always() && steps.threshold.outputs.coverage != ''
+      - name: Notify Slack on low coverage
+        if: always() && steps.threshold.outputs.coverage != '' && steps.threshold.outputs.coverage < 95
         run: |
           curl -s -X POST "${{ secrets.SLACK_COVERAGE_WEBHOOK_URL }}" \
             -H 'Content-type: application/json' \
-            -d "{\"message\":\"${{ github.repository }}: ${{ steps.threshold.outputs.coverage }}% line coverage\",\"html_report_url\":\"${{ steps.upload.outputs.artifact-url }}\"}"
+            -d "{\"message\":\"${{ github.repository }}: coverage dropped to ${{ steps.threshold.outputs.coverage }}% (below 95% threshold)\",\"html_report_url\":\"${{ steps.upload.outputs.artifact-url }}\"}"
