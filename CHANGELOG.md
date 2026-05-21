@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.7.4] - 2026-05-21
+
 ### Added
 
 - 24.16.0 (linux-amd64, linux-arm64)
@@ -316,7 +318,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.3...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.4...HEAD
+[5.7.4]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.3...v5.7.4
 [5.7.3]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.2...v5.7.3
 [5.7.2]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.1...v5.7.2
 [5.7.1]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.0...v5.7.1
