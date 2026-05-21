@@ -40,9 +40,6 @@ heroku/nodejs <buildpack-version>
       ++
       .../node_modules/dtrace-provider install$ node-gyp rebuild || node suppress-error.js
       <NODE-GYP BUILD OUTPUT> 
-      .../node_modules/dtrace-provider install: make: Entering directory '/layers/heroku_nodejs/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider/build'
-      .../node_modules/dtrace-provider install:   TOUCH Release/obj.target/DTraceProviderStub.stamp
-      .../node_modules/dtrace-provider install: make: Leaving directory '/layers/heroku_nodejs/virtual/store/dtrace-provider@0.8.8/node_modules/dtrace-provider/build'
       .../node_modules/dtrace-provider install: Done
 
       dependencies:
