@@ -1,3 +1,10 @@
 [profile.default]
 retries = 3
 slow-timeout = "5m"
+
+[profile.ci]
+retries = 3
+slow-timeout = "5m"
+
+[profile.ci.junit]
+path = "junit.xml"
