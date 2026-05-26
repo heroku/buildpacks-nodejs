@@ -35,13 +35,13 @@ def test_step_durations_returns_dict_keyed_by_step_name():
         "steps": [
             {
                 "name": "Checkout",
-                "started_at": "2026-05-26T10:00:00Z",
-                "completed_at": "2026-05-26T10:00:30Z",
+                "startedAt": "2026-05-26T10:00:00Z",
+                "completedAt": "2026-05-26T10:00:30Z",
             },
             {
                 "name": "Run integration tests (sharded)",
-                "started_at": "2026-05-26T10:01:00Z",
-                "completed_at": "2026-05-26T10:09:00Z",
+                "startedAt": "2026-05-26T10:01:00Z",
+                "completedAt": "2026-05-26T10:09:00Z",
             },
         ],
     }
@@ -53,11 +53,11 @@ def test_step_durations_returns_dict_keyed_by_step_name():
 def test_step_durations_ignores_steps_without_timestamps():
     job = {
         "steps": [
-            {"name": "Skipped step", "started_at": None, "completed_at": None},
+            {"name": "Skipped step", "startedAt": None, "completedAt": None},
             {
                 "name": "Real step",
-                "started_at": "2026-05-26T10:00:00Z",
-                "completed_at": "2026-05-26T10:00:10Z",
+                "startedAt": "2026-05-26T10:00:00Z",
+                "completedAt": "2026-05-26T10:00:10Z",
             },
         ]
     }

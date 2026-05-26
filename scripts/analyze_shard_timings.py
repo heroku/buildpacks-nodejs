@@ -54,8 +54,8 @@ def step_durations(job: dict[str, Any]) -> dict[str, float]:
     """Map step name -> duration in seconds, skipping steps without timestamps."""
     durations: dict[str, float] = {}
     for step in job.get("steps", []):
-        start = step.get("started_at")
-        end = step.get("completed_at")
+        start = step.get("startedAt")
+        end = step.get("completedAt")
         if not start or not end:
             continue
         s = datetime.fromisoformat(start.replace("Z", "+00:00"))
@@ -130,15 +130,9 @@ def extract_cell_stats(job: dict[str, Any]) -> tuple[CellKey, dict[str, float]] 
     durations = step_durations(job)
     test_dur = durations.get(TEST_STEP_NAME, 0.0)
     setup_dur = sum(d for name, d in durations.items() if name != TEST_STEP_NAME)
-    queue_dur = 0.0
-    if job.get("started_at") and job.get("created_at"):
-        s = datetime.fromisoformat(job["started_at"].replace("Z", "+00:00"))
-        c = datetime.fromisoformat(job["created_at"].replace("Z", "+00:00"))
-        queue_dur = (s - c).total_seconds()
     return key, {
         "test_duration": test_dur,
         "setup_duration": setup_dur,
-        "queue_duration": queue_dur,
     }
 
 
@@ -201,7 +195,10 @@ def main(argv: list[str]) -> int:
 
     tmp = Path(tempfile.mkdtemp(prefix="shard-poc-artifacts-"))
     for rid in args.run_ids:
-        gh_download_artifacts(rid, tmp / rid)
+        try:
+            gh_download_artifacts(rid, tmp / rid)
+        except subprocess.CalledProcessError:
+            print(f"  warning: artifacts not available for run {rid}", file=sys.stderr)
     print(f"\n_Artifacts downloaded to {tmp}_", file=sys.stderr)
     return 0
 
