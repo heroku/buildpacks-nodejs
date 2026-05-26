@@ -1,0 +1,113 @@
+name: CI Shard PoC
+
+on:
+  push:
+    branches:
+      - "shard-poc/initial-measurement"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rust-integration-test-shard-poc:
+    name: Integration PoC (${{ matrix.builder }}, ${{ matrix.arch }}, ${{ matrix.shard-index }}/${{ matrix.shard-total }})
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+
+    env:
+      INTEGRATION_TEST_CNB_BUILDER: heroku/${{ matrix.builder }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        builder: ["builder:26", "builder:24", "builder:22"]
+        arch: ["amd64", "arm64"]
+        shard-total: [1, 2, 4, 8]
+        shard-index: [1, 2, 3, 4, 5, 6, 7, 8]
+        exclude:
+          - { builder: "builder:22", arch: "arm64" }
+          - { shard-total: 1, shard-index: 2 }
+          - { shard-total: 1, shard-index: 3 }
+          - { shard-total: 1, shard-index: 4 }
+          - { shard-total: 1, shard-index: 5 }
+          - { shard-total: 1, shard-index: 6 }
+          - { shard-total: 1, shard-index: 7 }
+          - { shard-total: 1, shard-index: 8 }
+          - { shard-total: 2, shard-index: 3 }
+          - { shard-total: 2, shard-index: 4 }
+          - { shard-total: 2, shard-index: 5 }
+          - { shard-total: 2, shard-index: 6 }
+          - { shard-total: 2, shard-index: 7 }
+          - { shard-total: 2, shard-index: 8 }
+          - { shard-total: 4, shard-index: 5 }
+          - { shard-total: 4, shard-index: 6 }
+          - { shard-total: 4, shard-index: 7 }
+          - { shard-total: 4, shard-index: 8 }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Disable containerd snapshotter feature
+        run: |
+          docker info -f '{{ .DriverStatus }}'
+          sudo systemctl stop docker
+          echo '{"features": {"containerd-snapshotter": false}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl start docker
+          docker info -f '{{ .DriverStatus }}'
+
+      - name: Disable man-db auto-update
+        run: sudo rm -f /var/lib/man-db/auto-update
+
+      - name: Install musl-tools
+        run: sudo apt-get install musl-tools -y --no-install-recommends
+
+      - name: Update Rust toolchain
+        run: rustup update
+
+      - name: Install Rust linux-musl target
+        run: rustup target add ${{ matrix.arch == 'arm64' && 'aarch64-unknown-linux-musl' || 'x86_64-unknown-linux-musl' }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+
+      - name: Install Pack CLI
+        uses: buildpacks/github-actions/setup-pack@b4faaabcd9dbc5fa332451ae33bce8b583f3ec1b # v5.12.0
+
+      - name: Install Nextest
+        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        with:
+          tool: nextest
+
+      - name: Pull builder image
+        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
+
+      - name: Pull run image
+        run: |
+          RUN_IMAGE=$(
+            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
+            | jq --exit-status --raw-output '.stack.runImage.image'
+          )
+          docker pull "${RUN_IMAGE}"
+
+      - name: Compute artifact suffix
+        id: suffix
+        run: |
+          builder_slug="$(echo '${{ matrix.builder }}' | tr ':' '-')"
+          echo "value=${builder_slug}-${{ matrix.arch }}-${{ matrix.shard-total }}-${{ matrix.shard-index }}" >> "$GITHUB_OUTPUT"
+
+      - name: Run integration tests (sharded)
+        run: |
+          cargo nextest run \
+            --profile ci \
+            --run-ignored only \
+            --locked \
+            --partition hash:${{ matrix.shard-index }}/${{ matrix.shard-total }}
+
+      - name: Upload JUnit timings
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: timings-${{ steps.suffix.outputs.value }}
+          path: target/nextest/ci/junit.xml
+          if-no-files-found: error
