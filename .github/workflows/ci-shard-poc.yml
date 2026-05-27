@@ -106,7 +106,7 @@ jobs:
             --profile ci \
             --run-ignored only \
             --locked \
-            --partition hash:${{ matrix.shard-index }}/${{ matrix.shard-total }}
+            --partition slice:${{ matrix.shard-index }}/${{ matrix.shard-total }}
 
       - name: Upload JUnit timings
         if: always()
