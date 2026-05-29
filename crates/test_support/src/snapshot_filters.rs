@@ -257,6 +257,10 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "",
     ));
 
+    // [npm/yarn] Lone `make: Entering`/`make: Leaving` lines that escape the gyp-output filter
+    // when output buffering causes them to land outside the `gyp info ... gyp info ok` block.
+    filters.push((r" *make: (?:Entering|Leaving) directory '.*'\n", ""));
+
     // [pnpm] Final progress messages for installed packages. e.g.;
     // - Progress: resolved 9, reused 2, downloaded 7, added 4, done
     //
