@@ -23,7 +23,7 @@ jobs:
           private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
 
       - name: Checkout Repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
       # The dpkg man-db trigger is excessively slow on GHA runners, see e.g.:
       # https://github.com/actions/runner-images/issues/10977
@@ -45,10 +45,10 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@b4faaabcd9dbc5fa332451ae33bce8b583f3ec1b # v5.12.0
+        uses: buildpacks/github-actions/setup-pack@812ff667850b930be2217c48e1f980e71bd3e14f # v5.12.3
 
       - name: Install Nextest
-        uses: taiki-e/install-action@7769b73c2ec98c38dfcf2e18c83cfd4880c038c1 # v2.75.27
+        uses: taiki-e/install-action@59012be0884e296ca2da49b530610e72c49039ad # v2.81.6
         with:
           tool: nextest
 

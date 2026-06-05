@@ -21,12 +21,12 @@ jobs:
           private-key: ${{ secrets.LINGUIST_GH_PRIVATE_KEY }}
 
       - name: Checkout current repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Sparse checkout upstream Yarn plugin
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           repository: heroku/heroku-buildpack-nodejs
           sparse-checkout: |
