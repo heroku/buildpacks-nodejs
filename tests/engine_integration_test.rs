@@ -96,23 +96,6 @@ fn node_24() {
 
 #[test]
 #[ignore = "integration test"]
-fn node_25() {
-    nodejs_integration_test_with_config(
-        "./fixtures/node-with-serverjs",
-        |config| {
-            config.app_dir_preprocessor(|app_dir| {
-                set_node_engine(&app_dir, "25.x");
-            });
-        },
-        |ctx| {
-            create_build_snapshot(&ctx.pack_stdout).assert();
-            assert_web_response(&ctx, "node-with-serverjs");
-        },
-    );
-}
-
-#[test]
-#[ignore = "integration test"]
 fn node_26() {
     nodejs_integration_test_with_config(
         "./fixtures/node-with-serverjs",

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Deprecated Node.js 25.x (reached end-of-life). ([#1394](https://github.com/heroku/buildpacks-nodejs/pull/1394))
+
 ## [5.7.5] - 2026-06-03
 
 ### Added
