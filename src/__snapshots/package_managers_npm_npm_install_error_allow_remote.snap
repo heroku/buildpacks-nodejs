@@ -1,0 +1,18 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Command failed `npm ci`
+    exit status: 1
+    stdout: <empty>
+    stderr: npm error code EALLOWREMOTE
+
+! Failed to install Node modules (remote dependency blocked)
+!
+! npm refused to fetch a dependency that points to a remote URL (for example an https tarball), because remote dependencies are disabled by default in npm 12+. Check the log output above for the offending package.
+!
+! Suggestions:
+! - Replace the remote dependency with a published registry version.
+! - Set "allow-remote" in your .npmrc to permit it.
+!
+! See https://docs.npmjs.com/cli/v11/using-npm/config#allow-remote

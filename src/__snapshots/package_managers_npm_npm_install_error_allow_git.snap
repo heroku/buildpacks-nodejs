@@ -1,0 +1,18 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Command failed `npm ci`
+    exit status: 1
+    stdout: <empty>
+    stderr: npm error code EALLOWGIT
+
+! Failed to install Node modules (git dependency blocked)
+!
+! npm refused to fetch a dependency that points to a git repository, because git dependencies are disabled by default in npm 12+. Check the log output above for the offending package.
+!
+! Suggestions:
+! - Replace the git dependency with a published registry version.
+! - Set "allow-git" in your .npmrc to permit it.
+!
+! See https://docs.npmjs.com/cli/v11/using-npm/config#allow-git
