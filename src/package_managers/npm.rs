@@ -172,7 +172,6 @@ fn create_set_npm_cache_directory_command_error(error: &fun_run::CmdError) -> Er
 /// Classification of an `npm ci` failure. Recognised npm 12 install-blocking modes plus a
 /// catch-all `Unknown` so the match in `create_npm_install_error` is total and any
 /// unrecognised failure deterministically falls back to the generic message.
-#[cfg_attr(not(test), allow(dead_code))]
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum NpmInstallError {
     /// ESTRICTALLOWSCRIPTS — install scripts blocked unless covered by the allowScripts policy.
@@ -188,7 +187,6 @@ pub(crate) enum NpmInstallError {
 /// Pure classifier: maps an `npm ci` failure's captured output to an `NpmInstallError`.
 /// npm writes its `npm error code <CODE>` summary line to stderr, but stdout is matched too
 /// for robustness. Keyed on npm's stable error codes.
-#[cfg_attr(not(test), allow(dead_code))]
 fn determine_npm_install_error(std_out: &str, std_err: &str) -> NpmInstallError {
     let combined = format!("{std_out}\n{std_err}");
     if combined.contains("code ESTRICTALLOWSCRIPTS") {
@@ -202,22 +200,87 @@ fn determine_npm_install_error(std_out: &str, std_err: &str) -> NpmInstallError 
     }
 }
 
-fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
-    let npm_install = style::value(error.name());
-    error_message()
-        .id("package_manager/npm/install")
-        .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
-        .header("Failed to install Node modules")
-        .body(formatdoc! { "
-            The Heroku Node.js buildpack uses the command {npm_install} to install your Node modules. This command \
-            failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+fn cmd_error_output(error: &fun_run::CmdError) -> (String, String) {
+    match error {
+        fun_run::CmdError::NonZeroExitNotStreamed(out)
+        | fun_run::CmdError::NonZeroExitAlreadyStreamed(out) => {
+            (out.stdout_lossy(), out.stderr_lossy())
+        }
+        fun_run::CmdError::SystemError(_, _) => (String::new(), String::new()),
+    }
+}
 
-            Suggestions:
-            - Ensure that this command runs locally without error (exit status = 0).
-            - Check the status of the upstream Node module repository service at https://status.npmjs.org/
-        " })
-        .debug_info(error.to_string())
-        .create()
+fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
+    let (stdout, stderr) = cmd_error_output(error);
+    match determine_npm_install_error(&stdout, &stderr) {
+        NpmInstallError::StrictAllowScripts => error_message()
+            .id("package_manager/npm/install/strict_allow_scripts")
+            .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+            .header("Failed to install Node modules (install scripts blocked)")
+            .body(formatdoc! { "
+                npm blocked one or more dependencies' install scripts because they are not covered by the \
+                \"allowScripts\" policy in your package.json. Native modules that compile on install (for \
+                example via node-gyp) will not be built until you approve them.
+
+                Suggestions:
+                - Run `npm approve-scripts <package>` locally to review and allow the trusted packages \
+                listed in the log output above, then commit the updated package.json and redeploy.
+
+                See https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts
+            " })
+            .debug_info(error.to_string())
+            .create(),
+        NpmInstallError::AllowGit => error_message()
+            .id("package_manager/npm/install/allow_git")
+            .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+            .header("Failed to install Node modules (git dependency blocked)")
+            .body(formatdoc! { "
+                npm refused to fetch a dependency that points to a git repository, because git dependencies \
+                are disabled by default in npm 12+. Check the log output above for the offending package.
+
+                Suggestions:
+                - Replace the git dependency with a published registry version.
+                - Set \"allow-git\" in your .npmrc to permit it.
+
+                See https://docs.npmjs.com/cli/v11/using-npm/config#allow-git
+            " })
+            .debug_info(error.to_string())
+            .create(),
+        NpmInstallError::AllowRemote => error_message()
+            .id("package_manager/npm/install/allow_remote")
+            .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
+            .header("Failed to install Node modules (remote dependency blocked)")
+            .body(formatdoc! { "
+                npm refused to fetch a dependency that points to a remote URL (for example an https tarball), \
+                because remote dependencies are disabled by default in npm 12+. Check the log output above for \
+                the offending package.
+
+                Suggestions:
+                - Replace the remote dependency with a published registry version.
+                - Set \"allow-remote\" in your .npmrc to permit it.
+
+                See https://docs.npmjs.com/cli/v11/using-npm/config#allow-remote
+            " })
+            .debug_info(error.to_string())
+            .create(),
+        NpmInstallError::Unknown => {
+            let npm_install = style::value(error.name());
+            error_message()
+                .id("package_manager/npm/install")
+                .error_type(ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+                .header("Failed to install Node modules")
+                .body(formatdoc! { "
+                    The Heroku Node.js buildpack uses the command {npm_install} to install your Node modules. This command \
+                    failed and the buildpack cannot continue. This error can occur due to an unstable network connection. See the log output above for more information.
+
+                    Suggestions:
+                    - Ensure that this command runs locally without error (exit status = 0).
+                    - Check the status of the upstream Node module repository service at https://status.npmjs.org/
+                " })
+                .debug_info(error.to_string())
+                .create()
+        }
+    }
 }
 
 const NPM_CACHE_DIRECTORY_LAYER_VERSION: &str = "1";
@@ -252,6 +315,24 @@ mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
 
+    // Builds a CmdError whose captured stderr contains `output`, so error-classification
+    // paths can be exercised. `create_cmd_error` (which runs `false`) yields empty output.
+    fn cmd_error_with_output(name: &str, stderr: &str) -> fun_run::CmdError {
+        use fun_run::CommandWithName;
+        std::process::Command::new("sh")
+            .args([
+                "-c",
+                &format!("printf '%s' {} >&2; exit 1", shell_quote(stderr)),
+            ])
+            .named(name)
+            .named_output()
+            .unwrap_err()
+    }
+
+    fn shell_quote(s: &str) -> String {
+        format!("'{}'", s.replace('\'', "'\\''"))
+    }
+
     #[test]
     fn version_parse_error() {
         assert_error_snapshot(&create_get_npm_version_command_error(
@@ -279,6 +360,30 @@ mod tests {
     #[test]
     fn npm_install_error() {
         assert_error_snapshot(&create_npm_install_error(&create_cmd_error("npm ci")));
+    }
+
+    #[test]
+    fn npm_install_error_strict_allow_scripts() {
+        assert_error_snapshot(&create_npm_install_error(&cmd_error_with_output(
+            "npm ci",
+            "npm error code ESTRICTALLOWSCRIPTS\n",
+        )));
+    }
+
+    #[test]
+    fn npm_install_error_allow_git() {
+        assert_error_snapshot(&create_npm_install_error(&cmd_error_with_output(
+            "npm ci",
+            "npm error code EALLOWGIT\n",
+        )));
+    }
+
+    #[test]
+    fn npm_install_error_allow_remote() {
+        assert_error_snapshot(&create_npm_install_error(&cmd_error_with_output(
+            "npm ci",
+            "npm error code EALLOWREMOTE\n",
+        )));
     }
 
     #[test]
