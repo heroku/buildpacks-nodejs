@@ -175,6 +175,14 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "${1}",
     ));
 
+    // [misc] Normalize space-only lines to empty lines. Some output (e.g. the Yarn v1
+    //        "Ignored scripts" warning above) appears non-deterministically, and when the
+    //        warning is present the filter that removes it leaves behind its captured leading
+    //        whitespace as a space-only line. When the warning is absent that line is genuinely
+    //        empty, so the recorded snapshot and live runs disagree on trailing whitespace.
+    //        Collapsing space-only lines to empty makes the output deterministic either way.
+    filters.push((r"(?m)^[ \t]+$", ""));
+
     // [npm] Summary of added packages with no audit information. e.g.;
     // - added 12 packages in 27s
     // - added 3 packages in 1.13ms

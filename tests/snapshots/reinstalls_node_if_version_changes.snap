@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^22.0`
-  - Resolved Node.js version: `22.23.0`
+  - Resolved Node.js version: `22.23.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v22.23.0/node-v22.23.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v22.23.1/node-v22.23.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `22.23.0 (<arch>)`
-  - Installing Node.js `22.23.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `22.23.1 (<arch>)`
+  - Installing Node.js `22.23.1 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - No npm version requested
   - Using bundled npm version `10.9.8`
@@ -59,17 +59,17 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Detected Node.js version range: `^24.0`
-  - Resolved Node.js version: `24.17.0`
+  - Resolved Node.js version: `24.18.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.17.0/node-v24.17.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v24.18.0/node-v24.18.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `24.17.0 (<arch>)`
-  - Installing Node.js `24.17.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `24.18.0 (<arch>)`
+  - Installing Node.js `24.18.0 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - No npm version requested
-  - Using bundled npm version `11.13.0`
+  - Using bundled npm version `11.16.0`
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Reusing layer 'heroku/nodejs:available_parallelism'
