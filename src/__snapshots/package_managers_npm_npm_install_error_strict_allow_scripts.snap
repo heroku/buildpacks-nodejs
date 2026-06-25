@@ -1,0 +1,17 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Command failed `npm ci`
+    exit status: 1
+    stdout: <empty>
+    stderr: npm error code ESTRICTALLOWSCRIPTS
+
+! Failed to install Node modules (install scripts blocked)
+!
+! npm blocked one or more dependencies' install scripts because they are not covered by the "allowScripts" policy in your package.json. Native modules that compile on install (for example via node-gyp) will not be built until you approve them.
+!
+! Suggestions:
+! - Run `npm approve-scripts <package>` locally to review and allow the trusted packages listed in the log output above, then commit the updated package.json and redeploy.
+!
+! See https://docs.npmjs.com/cli/v11/commands/npm-approve-scripts
