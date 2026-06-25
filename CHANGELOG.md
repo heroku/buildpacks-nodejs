@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 26.4.0 (linux-amd64, linux-arm64)
+- Clearer build errors when npm blocks install scripts (`ESTRICTALLOWSCRIPTS`), git dependencies (`EALLOWGIT`), or remote-URL dependencies (`EALLOWREMOTE`). ([#1401](https://github.com/heroku/buildpacks-nodejs/pull/1401))
 
 ## [5.7.8] - 2026-06-24
 
