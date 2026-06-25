@@ -141,6 +141,49 @@ pub(crate) enum SuggestSubmitIssue {
     No,
 }
 
+/// Defines a package-manager error enum keyed on the stable string error codes a package manager
+/// prints to its logs (e.g. npm's `ESTRICTALLOWSCRIPTS`). Each variant is paired with its code:
+///
+/// ```ignore
+/// error_codes!(NpmError {
+///     StrictAllowScripts => ESTRICTALLOWSCRIPTS,
+///     AllowGit           => EALLOWGIT,
+/// });
+/// ```
+///
+/// The generated enum provides:
+/// - `code(self) -> &'static str` — the error code for a variant (exhaustive `match`, so omitting
+///   a variant won't compile).
+/// - `iter() -> impl Iterator<Item = Self>` — every variant, generated from the same list as
+///   `code()` so the two cannot drift as codes are added.
+/// - `from_code(&str) -> Option<Self>` — the variant for a code, or `None` if unrecognised.
+macro_rules! error_codes {
+    ($name:ident { $($variant:ident => $code:ident),+ $(,)? }) => {
+        #[derive(Debug, PartialEq, Eq, Clone, Copy)]
+        pub(crate) enum $name {
+            $($variant),+
+        }
+
+        impl $name {
+            fn iter() -> impl Iterator<Item = $name> {
+                [$($name::$variant),+].into_iter()
+            }
+
+            fn code(self) -> &'static str {
+                match self {
+                    $($name::$variant => stringify!($code)),+
+                }
+            }
+
+            fn from_code(code: &str) -> Option<$name> {
+                $name::iter().find(|e| e.code() == code)
+            }
+        }
+    };
+}
+
+pub(crate) use error_codes;
+
 #[cfg(test)]
 pub(crate) mod test_util {
     use crate::utils::error_handling::ErrorMessage;

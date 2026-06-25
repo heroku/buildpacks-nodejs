@@ -2,7 +2,7 @@ use crate::cleanup::{CleanupTask, NodeGypArtifactLocation};
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::ErrorType::Internal;
 use crate::utils::error_handling::{
-    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message,
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_codes, error_message,
 };
 use crate::utils::npm_registry;
 use crate::{BuildpackBuildContext, BuildpackResult};
@@ -169,51 +169,35 @@ fn create_set_npm_cache_directory_command_error(error: &fun_run::CmdError) -> Er
         .create()
 }
 
-/// Classification of an `npm ci` failure. Recognised npm 12 install-blocking modes plus a
-/// catch-all `Unknown` so the match in `create_npm_install_error` is total and any
-/// unrecognised failure deterministically falls back to the generic message.
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub(crate) enum NpmInstallError {
-    /// ESTRICTALLOWSCRIPTS — install scripts blocked unless covered by the allowScripts policy.
-    StrictAllowScripts,
-    /// EALLOWGIT — git dependencies refused (allow-git not set).
-    AllowGit,
-    /// EALLOWREMOTE — remote-URL/tarball dependencies refused (allow-remote not set).
-    AllowRemote,
-    /// Any failure we do not specifically classify (network error, E404, ETARGET, etc.).
-    Unknown,
-}
+error_codes!(NpmError {
+    StrictAllowScripts => ESTRICTALLOWSCRIPTS,
+    AllowGit           => EALLOWGIT,
+    AllowRemote        => EALLOWREMOTE,
+});
 
-/// Pure classifier: maps an `npm ci` failure's captured output to an `NpmInstallError`.
-/// npm writes its `npm error code <CODE>` summary line to stderr, but stdout is matched too
-/// for robustness. Keyed on npm's stable error codes.
-fn determine_npm_install_error(std_out: &str, std_err: &str) -> NpmInstallError {
-    let combined = format!("{std_out}\n{std_err}");
-    if combined.contains("code ESTRICTALLOWSCRIPTS") {
-        NpmInstallError::StrictAllowScripts
-    } else if combined.contains("code EALLOWGIT") {
-        NpmInstallError::AllowGit
-    } else if combined.contains("code EALLOWREMOTE") {
-        NpmInstallError::AllowRemote
-    } else {
-        NpmInstallError::Unknown
-    }
-}
-
-fn cmd_error_output(error: &fun_run::CmdError) -> (String, String) {
-    match error {
-        fun_run::CmdError::NonZeroExitNotStreamed(out)
-        | fun_run::CmdError::NonZeroExitAlreadyStreamed(out) => {
-            (out.stdout_lossy(), out.stderr_lossy())
-        }
-        fun_run::CmdError::SystemError(_, _) => (String::new(), String::new()),
-    }
+/// Pure classifier: maps an `npm ci` failure's captured stderr to a recognised `NpmError`, or
+/// `None` for any failure we don't specifically classify (network error, E404, ETARGET, etc.).
+///
+/// npm writes its `npm error code <CODE>` summary line to stderr (it routes through `log.error`,
+/// which npm's display layer always sends to stderr). The code token following `npm error code `
+/// is extracted and matched exactly via `NpmError::from_code`, so one code can't match another by
+/// prefix.
+fn determine_npm_install_error(std_err: &str) -> Option<NpmError> {
+    std_err
+        .lines()
+        .filter_map(|line| line.split("npm error code ").nth(1))
+        .filter_map(|rest| rest.split_whitespace().next())
+        .find_map(NpmError::from_code)
 }
 
 fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
-    let (stdout, stderr) = cmd_error_output(error);
-    match determine_npm_install_error(&stdout, &stderr) {
-        NpmInstallError::StrictAllowScripts => error_message()
+    let stderr = match error {
+        fun_run::CmdError::NonZeroExitNotStreamed(out)
+        | fun_run::CmdError::NonZeroExitAlreadyStreamed(out) => out.stderr_lossy(),
+        fun_run::CmdError::SystemError(_, _) => String::new(),
+    };
+    match determine_npm_install_error(&stderr) {
+        Some(NpmError::StrictAllowScripts) => error_message()
             .id("package_manager/npm/install/strict_allow_scripts")
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
             .header("Failed to install Node modules (install scripts blocked)")
@@ -230,7 +214,7 @@ fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
             " })
             .debug_info(error.to_string())
             .create(),
-        NpmInstallError::AllowGit => error_message()
+        Some(NpmError::AllowGit) => error_message()
             .id("package_manager/npm/install/allow_git")
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
             .header("Failed to install Node modules (git dependency blocked)")
@@ -246,7 +230,7 @@ fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
             " })
             .debug_info(error.to_string())
             .create(),
-        NpmInstallError::AllowRemote => error_message()
+        Some(NpmError::AllowRemote) => error_message()
             .id("package_manager/npm/install/allow_remote")
             .error_type(ErrorType::UserFacing(SuggestRetryBuild::No, SuggestSubmitIssue::No))
             .header("Failed to install Node modules (remote dependency blocked)")
@@ -263,7 +247,7 @@ fn create_npm_install_error(error: &fun_run::CmdError) -> ErrorMessage {
             " })
             .debug_info(error.to_string())
             .create(),
-        NpmInstallError::Unknown => {
+        None => {
             let npm_install = style::value(error.name());
             error_message()
                 .id("package_manager/npm/install")
@@ -389,40 +373,29 @@ mod tests {
     #[test]
     fn determine_npm_install_error_strict_allow_scripts() {
         assert_eq!(
-            determine_npm_install_error("", "npm error code ESTRICTALLOWSCRIPTS\n"),
-            NpmInstallError::StrictAllowScripts
+            determine_npm_install_error("npm error code ESTRICTALLOWSCRIPTS\n"),
+            Some(NpmError::StrictAllowScripts)
         );
     }
 
     #[test]
     fn determine_npm_install_error_allow_git() {
         assert_eq!(
-            determine_npm_install_error("", "npm error code EALLOWGIT\n"),
-            NpmInstallError::AllowGit
+            determine_npm_install_error("npm error code EALLOWGIT\n"),
+            Some(NpmError::AllowGit)
         );
     }
 
     #[test]
     fn determine_npm_install_error_allow_remote() {
         assert_eq!(
-            determine_npm_install_error("", "npm error code EALLOWREMOTE\n"),
-            NpmInstallError::AllowRemote
+            determine_npm_install_error("npm error code EALLOWREMOTE\n"),
+            Some(NpmError::AllowRemote)
         );
     }
 
     #[test]
     fn determine_npm_install_error_unknown() {
-        assert_eq!(
-            determine_npm_install_error("", "npm error code E404\n"),
-            NpmInstallError::Unknown
-        );
-    }
-
-    #[test]
-    fn determine_npm_install_error_matches_stdout() {
-        assert_eq!(
-            determine_npm_install_error("npm error code EALLOWGIT\n", ""),
-            NpmInstallError::AllowGit
-        );
+        assert_eq!(determine_npm_install_error("npm error code E404\n"), None);
     }
 }
