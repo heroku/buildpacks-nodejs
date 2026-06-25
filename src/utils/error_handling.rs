@@ -151,12 +151,10 @@ pub(crate) enum SuggestSubmitIssue {
 /// });
 /// ```
 ///
-/// The generated enum provides:
-/// - `code(self) -> &'static str` — the error code for a variant (exhaustive `match`, so omitting
-///   a variant won't compile).
-/// - `iter() -> impl Iterator<Item = Self>` — every variant, generated from the same list as
-///   `code()` so the two cannot drift as codes are added.
-/// - `from_code(&str) -> Option<Self>` — the variant for a code, or `None` if unrecognised.
+/// The generated enum provides `from_code(&str) -> Option<Self>`, returning the variant for a code
+/// or `None` if unrecognised. Generating the enum and `from_code` from the same list keeps the
+/// variants and their codes as a single source of truth, so adding a variant can't drift into a
+/// missing match arm.
 macro_rules! error_codes {
     ($name:ident { $($variant:ident => $code:ident),+ $(,)? }) => {
         #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -165,18 +163,11 @@ macro_rules! error_codes {
         }
 
         impl $name {
-            fn iter() -> impl Iterator<Item = $name> {
-                [$($name::$variant),+].into_iter()
-            }
-
-            fn code(self) -> &'static str {
-                match self {
-                    $($name::$variant => stringify!($code)),+
-                }
-            }
-
             fn from_code(code: &str) -> Option<$name> {
-                $name::iter().find(|e| e.code() == code)
+                match code {
+                    $(stringify!($code) => Some($name::$variant),)+
+                    _ => None,
+                }
             }
         }
     };
