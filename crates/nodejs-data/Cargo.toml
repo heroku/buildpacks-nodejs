@@ -7,7 +7,7 @@ rust-version.workspace = true
 workspace = true
 
 [dependencies]
-fun_run = "0.6"
+fun_run = "0.7"
 libherokubuildpack = { version = "=0.30.4", default-features = false, features = [
     "inventory",
     "inventory-sha2",
