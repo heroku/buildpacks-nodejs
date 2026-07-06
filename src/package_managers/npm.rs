@@ -298,23 +298,19 @@ pub(crate) fn prune_dev_dependencies(
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+    use fun_run::{ExitStatusFromCode, OutputWithName};
 
     // Builds a CmdError whose captured stderr contains `output`, so error-classification
-    // paths can be exercised. `create_cmd_error` (which runs `false`) yields empty output.
+    // paths can be exercised. `create_cmd_error` yields empty output.
     fn cmd_error_with_output(name: &str, stderr: &str) -> fun_run::CmdError {
-        use fun_run::CommandWithName;
-        std::process::Command::new("sh")
-            .args([
-                "-c",
-                &format!("printf '%s' {} >&2; exit 1", shell_quote(stderr)),
-            ])
-            .named(name)
-            .named_output()
-            .unwrap_err()
-    }
-
-    fn shell_quote(s: &str) -> String {
-        format!("'{}'", s.replace('\'', "'\\''"))
+        std::process::Output {
+            status: std::process::ExitStatus::from_code(1),
+            stdout: Vec::new(),
+            stderr: stderr.into(),
+        }
+        .named(name)
+        .nonzero_captured()
+        .unwrap_err()
     }
 
     #[test]

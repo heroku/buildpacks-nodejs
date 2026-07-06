@@ -179,10 +179,10 @@ pub(crate) use error_codes;
 pub(crate) mod test_util {
     use crate::utils::error_handling::ErrorMessage;
     use bullet_stream::strip_ansi;
-    use fun_run::{CmdError, CommandWithName};
+    use fun_run::{CmdError, ExitStatusFromCode, OutputWithName};
     use insta::{assert_snapshot, with_settings};
     use std::path::PathBuf;
-    use std::process::Command;
+    use std::process::{ExitStatus, Output};
     use test_support::test_name;
 
     pub(crate) fn assert_error_snapshot(error: &ErrorMessage) {
@@ -218,9 +218,13 @@ pub(crate) mod test_util {
     }
 
     pub(crate) fn create_cmd_error(command: impl Into<String>) -> CmdError {
-        Command::new("false")
-            .named(command.into())
-            .named_output()
-            .unwrap_err()
+        Output {
+            status: ExitStatus::from_code(1),
+            stdout: Vec::new(),
+            stderr: Vec::new(),
+        }
+        .named(command.into())
+        .nonzero_captured()
+        .unwrap_err()
     }
 }
