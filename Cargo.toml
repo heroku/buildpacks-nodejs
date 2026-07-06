@@ -83,9 +83,9 @@ missing_panics_doc = "allow"
 available-parallelism = { path = "./crates/available-parallelism" }
 nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
-libcnb = "=0.30.4"
-libcnb-test = "=0.30.4"
-libherokubuildpack = { version = "=0.30.4", default-features = false }
+libcnb = "=0.31.0"
+libcnb-test = "=0.31.0"
+libherokubuildpack = { version = "=0.31.0", default-features = false }
 
 [profile.release]
 strip = true
