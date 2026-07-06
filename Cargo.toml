@@ -17,8 +17,8 @@ fun_run = "0.6"
 hex = "0.4"
 http = "1"
 indoc = "2"
-libcnb = { version = "=0.30.4", features = ["trace"] }
-libherokubuildpack = { version = "=0.30.4", default-features = false, features = [
+libcnb = { workspace = true, features = ["trace"] }
+libherokubuildpack = { workspace = true, features = [
     "fs",
     "inventory",
     "inventory-sha2",
@@ -41,7 +41,7 @@ walkdir = "2.5.0"
 
 [dev-dependencies]
 insta = "1"
-libcnb-test = "=0.30.4"
+libcnb-test = { workspace = true }
 regex = "1"
 serde_json = "1"
 test_support.workspace = true
@@ -83,6 +83,9 @@ missing_panics_doc = "allow"
 available-parallelism = { path = "./crates/available-parallelism" }
 nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
+libcnb = "=0.30.4"
+libcnb-test = "=0.30.4"
+libherokubuildpack = { version = "=0.30.4", default-features = false }
 
 [profile.release]
 strip = true
