@@ -13,7 +13,7 @@ bullet_stream = "0.11"
 const_format = "0.2"
 digest-io = "0.1.0"
 flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
-fun_run = "0.6"
+fun_run.workspace = true
 hex = "0.4"
 http = "1"
 indoc = "2"
@@ -81,6 +81,7 @@ missing_panics_doc = "allow"
 
 [workspace.dependencies]
 available-parallelism = { path = "./crates/available-parallelism" }
+fun_run = "0.7"
 nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
 libcnb = "=0.31.0"
