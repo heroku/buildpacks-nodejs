@@ -59,7 +59,7 @@ members = [
 ]
 
 [workspace.package]
-rust-version = "1.89"
+rust-version = "1.96"
 edition = "2024"
 
 [workspace.lints.rust]
