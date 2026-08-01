@@ -81,7 +81,7 @@ missing_panics_doc = "allow"
 
 [workspace.dependencies]
 available-parallelism = { path = "./crates/available-parallelism" }
-fun_run = "0.7"
+fun_run = "0.8"
 nodejs-data = { path = "./crates/nodejs-data" }
 test_support = { path = "./crates/test_support" }
 libcnb = "=0.31.0"
