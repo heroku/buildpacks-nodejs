@@ -122,7 +122,7 @@ jobs:
         uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
 
       - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@e3b14c6e906f91da358e01dc2849ce068188107f # v5.12.5
+        uses: buildpacks/github-actions/setup-pack@96703334b4d689ea01dce353220c651e294e3261 # v6.0.1
 
       - name: Install Nextest
         uses: taiki-e/install-action@065d6a08a14e61e89fb0a4c10eecdbdef39c7d8e # v2.85.4
