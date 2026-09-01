@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for pnpm 12, which distributes its native binary as a separate platform-specific package. ([#1438](https://github.com/heroku/buildpacks-nodejs/pull/1438))
+
 ## [5.7.15] - 2026-08-27
 
 ### Added
