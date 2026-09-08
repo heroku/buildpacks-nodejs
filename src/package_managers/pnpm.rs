@@ -4,7 +4,11 @@ use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
-use crate::utils::npm_registry::{PackagePackument, packument_layer, resolve_package_packument};
+use crate::utils::npm_registry::{
+    InstallPackageLayerError, PackagePackument, apply_package_layer_env, cached_package_layer,
+    exclude_package_docs, extract_package_tarball, install_package_layer_metadata,
+    link_package_bins, packument_layer, resolve_package_packument,
+};
 use crate::{BuildpackBuildContext, BuildpackResult, utils};
 use bullet_stream::global::print;
 use bullet_stream::style;
@@ -42,14 +46,148 @@ pub(crate) fn install_pnpm(
     pnpm_packument: &PackagePackument,
     node_version: &Version,
 ) -> BuildpackResult<()> {
-    utils::npm_registry::install_package_layer(
-        layer_name!("pnpm"),
-        context,
-        env,
-        pnpm_packument,
-        node_version,
-    )?;
+    // Starting with pnpm 12, the published `pnpm` npm package is a thin wrapper: its tarball ships
+    // a placeholder `pnpm` bin plus a `preinstall` script (`install.js`) that hard-links the real,
+    // platform-specific native binary — distributed separately as `@pnpm/exe.<target>` optional
+    // dependencies — over that placeholder. The buildpack installs from the tarball directly and
+    // never runs npm lifecycle scripts, so pnpm 12+ needs its own install path that relinks the
+    // native binary once the wrapper is extracted.
+    if pnpm_packument.version.major() >= 12 {
+        install_pnpm_layer_with_native_binary_overlay(context, env, pnpm_packument, node_version)
+    } else {
+        utils::npm_registry::install_package_layer(
+            layer_name!("pnpm"),
+            context,
+            env,
+            pnpm_packument,
+            node_version,
+        )?;
+        Ok(())
+    }
+}
+
+/// Installs the pnpm 12+ wrapper package into a cached layer, then overlays the platform-specific
+/// native binary over the wrapper's placeholder `pnpm` bin. This is the same composition as the
+/// generic `install_package_layer` with the native-binary overlay inserted inline in the
+/// layer-population branch: it runs only when the layer is populated (never on a cache hit) and
+/// before the layer metadata is written, so a failed overlay leaves the layer incomplete and the
+/// next build repopulates it rather than caching a broken placeholder.
+fn install_pnpm_layer_with_native_binary_overlay(
+    context: &BuildpackBuildContext,
+    env: &mut Env,
+    pnpm_packument: &PackagePackument,
+    node_version: &Version,
+) -> BuildpackResult<()> {
+    let new_metadata = install_package_layer_metadata(context, pnpm_packument, node_version);
+    let layer = cached_package_layer(layer_name!("pnpm"), context, &new_metadata)?;
+
+    if matches!(layer.state, LayerState::Empty { .. }) {
+        extract_package_tarball(
+            &pnpm_packument.dist.tarball,
+            &layer.path(),
+            exclude_package_docs,
+        )
+        .map_err(|e| InstallPackageLayerError::Download(Box::new(pnpm_packument.clone()), e))?;
+
+        link_package_bins(pnpm_packument, &layer.path())?;
+
+        // Overlay the native binary over the wrapper's placeholder before the layer is marked
+        // complete, so a failed overlay is never captured in a cached layer. The native binary is
+        // pinned to the wrapper's exact version, so it is only resolved and downloaded while
+        // (re)populating the layer — a cache hit needs neither.
+        let native_binary_packument =
+            resolve_pnpm_native_binary_packument(context, &pnpm_packument.version)?;
+        install_pnpm_native_binary(&native_binary_packument, &layer.path())?;
+
+        layer
+            .write_metadata(new_metadata)
+            .map_err(|e| InstallPackageLayerError::Layer(Box::new(e)))?;
+    }
+
+    apply_package_layer_env(&layer, env)?;
+
     Ok(())
+}
+
+/// Resolves the packument for the `@pnpm/exe.<target>` package that ships the native pnpm binary
+/// for the current build target, pinned to the same version as the wrapper package.
+fn resolve_pnpm_native_binary_packument(
+    context: &BuildpackBuildContext,
+    version: &Version,
+) -> BuildpackResult<PackagePackument> {
+    let package_name = pnpm_native_binary_package_name(&context.target.os, &context.target.arch)?;
+    let requirement = VersionRange::parse(&version.to_string())
+        .expect("A pnpm version should be a valid version requirement");
+    resolve_package_packument(
+        &packument_layer(layer_name!("pnpm_exe_packument"), context, &package_name)?,
+        &requirement,
+    )
+    .map_err(Into::into)
+}
+
+/// Maps the build target to the `@pnpm/exe.<target>` package that ships its native binary. Heroku
+/// base images are glibc-based, so the musl variants are never selected.
+fn pnpm_native_binary_package_name(os: &str, arch: &str) -> BuildpackResult<String> {
+    match (os, arch) {
+        ("linux", "amd64") => Ok("@pnpm/exe.linux-x64".to_string()),
+        ("linux", "arm64") => Ok("@pnpm/exe.linux-arm64".to_string()),
+        _ => Err(create_pnpm_unsupported_target_error(os, arch).into()),
+    }
+}
+
+/// Downloads the native pnpm binary package and moves its executable over the wrapper's placeholder
+/// bin. The wrapper's `bin/pnpm` symlink already points at `<layer>/pnpm`, so replacing that file
+/// activates the native binary.
+fn install_pnpm_native_binary(
+    native_binary_packument: &PackagePackument,
+    pnpm_layer_dir: &Path,
+) -> BuildpackResult<()> {
+    let scratch_dir = pnpm_layer_dir.join(".native-binary");
+    extract_package_tarball(
+        &native_binary_packument.dist.tarball,
+        &scratch_dir,
+        // The package ships the executable alongside license files; only the binary is needed.
+        |path| path != Path::new("pnpm"),
+    )
+    .map_err(|e| {
+        InstallPackageLayerError::Download(Box::new(native_binary_packument.clone()), e)
+    })?;
+
+    let native_pnpm_binary = scratch_dir.join("pnpm");
+    let original_pnpm_binary = pnpm_layer_dir.join("pnpm");
+    fs::rename(&native_pnpm_binary, &original_pnpm_binary)
+        .map_err(|e| create_pnpm_native_binary_install_error(&original_pnpm_binary, &e))?;
+
+    fs::remove_dir_all(&scratch_dir)
+        .map_err(|e| create_pnpm_native_binary_install_error(&scratch_dir, &e))?;
+
+    Ok(())
+}
+
+fn create_pnpm_unsupported_target_error(os: &str, arch: &str) -> ErrorMessage {
+    let target = style::value(format!("{os}-{arch}"));
+    error_message()
+        .id("package_manager/pnpm/unsupported_native_binary_target")
+        .error_type(ErrorType::Internal)
+        .header("Unsupported pnpm target")
+        .body(formatdoc! { "
+            pnpm 12 and later ship their native binary as a platform-specific package, but the \
+            buildpack does not know which package to use for the current build target ({target}).
+        " })
+        .create()
+}
+
+fn create_pnpm_native_binary_install_error(path: &Path, error: &std::io::Error) -> ErrorMessage {
+    let path = file_value(path);
+    error_message()
+        .id("package_manager/pnpm/install_native_binary")
+        .error_type(ErrorType::Internal)
+        .header("Failed to install the pnpm native binary")
+        .body(formatdoc! { "
+            An unexpected I/O error occurred while installing the pnpm native binary at {path}.
+        " })
+        .debug_info(error.to_string())
+        .create()
 }
 
 pub(crate) fn install_dependencies(
@@ -649,5 +787,18 @@ mod tests {
         let json_error =
             serde_json::from_str::<Vec<serde_json::Value>>("invalid json").unwrap_err();
         assert_error_snapshot(&create_parse_pnpm_list_output_error(&json_error));
+    }
+
+    #[test]
+    fn pnpm_unsupported_target_error() {
+        assert_error_snapshot(&create_pnpm_unsupported_target_error("windows", "arm64"));
+    }
+
+    #[test]
+    fn pnpm_native_binary_install_error() {
+        assert_error_snapshot(&create_pnpm_native_binary_install_error(
+            &PathBuf::from("/layers/heroku_nodejs/pnpm/pnpm"),
+            &std::io::Error::other("Permission denied"),
+        ));
     }
 }
