@@ -175,9 +175,6 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:addressable'
 Reusing cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:dist'
 Reusing cache layer 'heroku/nodejs:pnpm'
-Adding cache layer 'heroku/nodejs:pnpm'
 Reusing cache layer 'heroku/nodejs:pnpm_packument'
-Adding cache layer 'heroku/nodejs:pnpm_packument'
 Successfully built image '<image-name>'
