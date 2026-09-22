@@ -164,10 +164,7 @@ Saving <image-name>...
 *** Images (<random-hex>):
       <image-name>
 Reusing cache layer 'heroku/nodejs:dist'
-Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:npm_cache'
 Reusing cache layer 'heroku/nodejs:npm_engine'
-Adding cache layer 'heroku/nodejs:npm_engine'
 Reusing cache layer 'heroku/nodejs:npm_packument'
-Adding cache layer 'heroku/nodejs:npm_packument'
 Successfully built image '<image-name>'
