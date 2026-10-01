@@ -1,4 +1,5 @@
 #[allow(clippy::vec_init_then_push)]
+#[allow(clippy::too_many_lines)]
 pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     let mut filters: Vec<(&str, &str)> = vec![];
 
@@ -343,6 +344,41 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     filters.push((
         r"( *).*gyp info.*\n(?:.*\n)*? *.*gyp info ok",
         "${1}<NODE-GYP BUILD OUTPUT>",
+    ));
+
+    // [pnpm] Supply-chain policy verification start line (pnpm 12+). The entry count reflects the
+    //        number of lockfile entries being verified and changes as dependencies are added or
+    //        removed. e.g.;
+    // - ? Verifying lockfile against supply-chain policies (85 entries)...
+    filters.push((
+        r"Verifying lockfile against supply-chain policies \(\d+ entries\)",
+        "Verifying lockfile against supply-chain policies (<N> entries)",
+    ));
+
+    // [pnpm] Supply-chain policy check summary plus the adjacent "lockfile is up to date" notice
+    //        (pnpm 12+). pnpm runs supply-chain verification on a task that deliberately overlaps
+    //        package fetch/link work, and its append-only reporter prints events in arrival order.
+    //        As a result this two-line block races with the "Packages are hard linked..." block and
+    //        lands before or after it non-deterministically. Since the ordering (not just the entry
+    //        count/timing content) is non-deterministic, remove the block entirely rather than
+    //        normalize it. The verification line is always emitted immediately before the buffered
+    //        "lockfile is up to date" line, so matching them adjacently keeps this scoped to pnpm 12
+    //        and leaves the standalone pnpm <= 11 "lockfile is up to date" line untouched. e.g.;
+    // -      ✓ Lockfile passes supply-chain policies (2 entries in 632ms)
+    //        Lockfile is up to date, resolution step is skipped
+    // -      ✓ Lockfile passes supply-chain policies (verified 144ms ago)
+    //        Lockfile is up to date, resolution step is skipped
+    filters.push((
+        r" *✓ Lockfile passes supply-chain policies \([^)]*\)\n *Lockfile is up to date, resolution step is skipped\n",
+        "",
+    ));
+
+    // [pnpm] Store integrity check notice (pnpm 12+). The count of files checked is
+    //        non-deterministic. e.g.;
+    // - The integrity of 2681 files was checked, because their timestamps changed since the store recorded them. A backup tool, an antivirus scan, or a copied store can cause this.
+    filters.push((
+        r"The integrity of \d+ files was checked",
+        "The integrity of <N> files was checked",
     ));
 
     // [npm] Filter out the resolved npm version when `engines.npm` is set to `11.x` (latest).

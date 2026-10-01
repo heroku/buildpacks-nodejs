@@ -5,7 +5,7 @@ use crate::utils::error_handling::{
 use crate::utils::http::{
     DownloadError, DownloadTask, Extractor, GetError, GetRequest, GzipOptions, download, get,
 };
-use crate::{BuildpackBuildContext, BuildpackError};
+use crate::{BuildpackBuildContext, BuildpackError, NodeJsBuildpack};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use http::{HeaderMap, HeaderValue, StatusCode};
@@ -13,7 +13,8 @@ use indoc::formatdoc;
 use libcnb::Env;
 use libcnb::data::layer::LayerName;
 use libcnb::layer::{
-    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
+    CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerRef, LayerState,
+    RestoredLayerAction,
 };
 use libcnb::layer_env::Scope;
 use nodejs_data::{Version, VersionRange};
@@ -329,6 +330,14 @@ fn create_resolve_package_packument_error(
         .create()
 }
 
+/// A reference to the cached layer an npm-registry package is installed into. Named here so the
+/// composable install steps below can hand it between one another.
+pub(crate) type InstallPackageLayerRef = LayerRef<NodeJsBuildpack, (), Vec<String>>;
+
+/// Installs a package from the npm registry into a cached layer for npm, Yarn, and pnpm < 12. It
+/// is assembled from the composable steps below; a package manager that needs an extra
+/// post-extraction step (such as pnpm 12+) reuses the same steps and inserts its own work into the
+/// layer-population branch rather than extending this function.
 pub(crate) fn install_package_layer(
     layer_name: LayerName,
     context: &BuildpackBuildContext,
@@ -336,19 +345,57 @@ pub(crate) fn install_package_layer(
     package_packument: &PackagePackument,
     node_version: &Version,
 ) -> Result<PathBuf, InstallPackageLayerError> {
-    let package_name = &package_packument.name;
-    let package_version = &package_packument.version;
+    let new_metadata = install_package_layer_metadata(context, package_packument, node_version);
+    let layer = cached_package_layer(layer_name, context, &new_metadata)?;
 
-    let new_metadata = InstallPackageLayerMetadata {
+    if matches!(layer.state, LayerState::Empty { .. }) {
+        extract_package_tarball(
+            &package_packument.dist.tarball,
+            &layer.path(),
+            exclude_package_docs,
+        )
+        .map_err(|e| InstallPackageLayerError::Download(Box::new(package_packument.clone()), e))?;
+
+        link_package_bins(package_packument, &layer.path())?;
+
+        layer
+            .write_metadata(new_metadata)
+            .map_err(|e| InstallPackageLayerError::Layer(Box::new(e)))?;
+    }
+
+    apply_package_layer_env(&layer, env)?;
+
+    Ok(layer.path())
+}
+
+/// Builds the metadata that identifies an installed package layer and drives its cache
+/// invalidation.
+pub(crate) fn install_package_layer_metadata(
+    context: &BuildpackBuildContext,
+    package_packument: &PackagePackument,
+    node_version: &Version,
+) -> InstallPackageLayerMetadata {
+    InstallPackageLayerMetadata {
         node_version: node_version.to_string(),
-        package_name: package_name.clone(),
-        package_version: package_version.to_string(),
+        package_name: package_packument.name.clone(),
+        package_version: package_packument.version.to_string(),
         layer_version: INSTALL_PACKAGE_LAYER_VERSION.to_string(),
         arch: context.target.arch.clone(),
         os: context.target.os.clone(),
-    };
+    }
+}
 
-    let install_package_layer = context
+/// Defines (or restores) the cached layer a package is installed into and reports its cache state
+/// to the build log. The caller populates the returned layer when its state is
+/// [`LayerState::Empty`].
+pub(crate) fn cached_package_layer(
+    layer_name: LayerName,
+    context: &BuildpackBuildContext,
+    new_metadata: &InstallPackageLayerMetadata,
+) -> Result<InstallPackageLayerRef, InstallPackageLayerError> {
+    let package_name = &new_metadata.package_name;
+
+    let layer = context
         .cached_layer(
             layer_name,
             CachedLayerDefinition {
@@ -356,12 +403,12 @@ pub(crate) fn install_package_layer(
                 launch: true,
                 invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
                 restored_layer_action: &|old_metadata: &InstallPackageLayerMetadata, _| {
-                    if old_metadata == &new_metadata {
+                    if old_metadata == new_metadata {
                         Ok((RestoredLayerAction::KeepLayer, vec![]))
                     } else {
                         Ok((
                             RestoredLayerAction::DeleteLayer,
-                            install_layer_changed_metadata_fields(old_metadata, &new_metadata),
+                            install_layer_changed_metadata_fields(old_metadata, new_metadata),
                         ))
                     }
                 },
@@ -369,71 +416,86 @@ pub(crate) fn install_package_layer(
         )
         .map_err(|e| InstallPackageLayerError::Layer(Box::new(e)))?;
 
-    match install_package_layer.state {
+    match &layer.state {
         LayerState::Restored { .. } => {
             print::sub_bullet(format!("Using cached version of {package_name}"));
         }
-        LayerState::Empty { ref cause } => {
-            if let EmptyLayerCause::RestoredLayerAction { cause } = cause {
-                print::sub_bullet(format!(
-                    "Invalidating cached {package_name} ({} changed)",
-                    cause.join(", ")
-                ));
-            }
-
-            download(
-                &DownloadTask::builder(
-                    &package_packument.dist.tarball,
-                    install_package_layer.path(),
-                )
-                .extractor(Extractor::Gzip(GzipOptions {
-                    strip_components: 1,
-                    exclude: Box::new(|path| {
-                        path.components()
-                            .take(1)
-                            .next()
-                            .is_some_and(|c| c.as_os_str() == "docs" || c.as_os_str() == "man")
-                    }),
-                }))
-                .build(),
-            )
-            .map_err(|e| {
-                InstallPackageLayerError::Download(Box::new(package_packument.clone()), e)
-            })?;
-
-            // Create symlinks for all binaries declared in packument's `bin` field
-            let bins = package_packument.bin.as_ref().ok_or_else(|| {
-                InstallPackageLayerError::MissingBins(Box::new(package_packument.clone()))
-            })?;
-            for (name, script) in bins {
-                let bin_path = install_package_layer.path().join("bin").join(name);
-                let script_path = install_package_layer.path().join(script);
-                match std::fs::remove_file(&bin_path) {
-                    Ok(()) => Ok(()),
-                    Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-                    Err(e) => Err(InstallPackageLayerError::WriteBin(
-                        Box::new(package_packument.clone()),
-                        e,
-                    )),
-                }?;
-                std::os::unix::fs::symlink(script_path, bin_path).map_err(|e| {
-                    InstallPackageLayerError::WriteBin(Box::new(package_packument.clone()), e)
-                })?;
-            }
-
-            install_package_layer
-                .write_metadata(new_metadata)
-                .map_err(|e| InstallPackageLayerError::Layer(Box::new(e)))?;
+        LayerState::Empty {
+            cause: EmptyLayerCause::RestoredLayerAction { cause },
+        } => {
+            print::sub_bullet(format!(
+                "Invalidating cached {package_name} ({} changed)",
+                cause.join(", ")
+            ));
         }
+        LayerState::Empty { .. } => {}
     }
 
-    let layer_env = &install_package_layer
+    Ok(layer)
+}
+
+/// Downloads a package tarball from the npm registry and extracts it into `destination`, stripping
+/// the leading archive directory and skipping any path matched by `exclude`.
+pub(crate) fn extract_package_tarball(
+    tarball_url: &str,
+    destination: &Path,
+    exclude: impl Fn(&Path) -> bool + 'static,
+) -> Result<(), DownloadError> {
+    download(
+        &DownloadTask::builder(tarball_url, destination)
+            .extractor(Extractor::Gzip(GzipOptions {
+                strip_components: 1,
+                exclude: Box::new(exclude),
+            }))
+            .build(),
+    )
+}
+
+/// The default exclusion for an extracted package tarball: documentation and man pages are not
+/// needed at runtime.
+pub(crate) fn exclude_package_docs(path: &Path) -> bool {
+    path.components()
+        .next()
+        .is_some_and(|c| c.as_os_str() == "docs" || c.as_os_str() == "man")
+}
+
+/// Symlinks every binary declared in the packument's `bin` field into `<layer>/bin`, replacing any
+/// pre-existing entry.
+pub(crate) fn link_package_bins(
+    package_packument: &PackagePackument,
+    layer_dir: &Path,
+) -> Result<(), InstallPackageLayerError> {
+    let bins = package_packument.bin.as_ref().ok_or_else(|| {
+        InstallPackageLayerError::MissingBins(Box::new(package_packument.clone()))
+    })?;
+    for (name, script) in bins {
+        let bin_path = layer_dir.join("bin").join(name);
+        let script_path = layer_dir.join(script);
+        match std::fs::remove_file(&bin_path) {
+            Ok(()) => Ok(()),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
+            Err(e) => Err(InstallPackageLayerError::WriteBin(
+                Box::new(package_packument.clone()),
+                e,
+            )),
+        }?;
+        std::os::unix::fs::symlink(script_path, bin_path).map_err(|e| {
+            InstallPackageLayerError::WriteBin(Box::new(package_packument.clone()), e)
+        })?;
+    }
+    Ok(())
+}
+
+/// Applies the installed layer's build environment to `env`.
+pub(crate) fn apply_package_layer_env(
+    layer: &InstallPackageLayerRef,
+    env: &mut Env,
+) -> Result<(), InstallPackageLayerError> {
+    let layer_env = layer
         .read_env()
         .map_err(|e| InstallPackageLayerError::Layer(Box::new(e)))?;
-
     env.clone_from(&layer_env.apply(Scope::Build, env));
-
-    Ok(install_package_layer.path().clone())
+    Ok(())
 }
 
 pub(crate) enum InstallPackageLayerError {
