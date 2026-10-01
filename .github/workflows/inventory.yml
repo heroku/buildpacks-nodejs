@@ -48,7 +48,7 @@ jobs:
         uses: buildpacks/github-actions/setup-pack@af8c06ccd592e27001cbf78083dcc9b47aa6652a # v6.1.1
 
       - name: Install Nextest
-        uses: taiki-e/install-action@5bf6ce016fd2e72eefc647cbca1e4213f65955b8 # v2.87.5
+        uses: taiki-e/install-action@4cef1412cce204788f482e778a0b9187f9626a29 # v2.87.21
         with:
           tool: nextest
 
