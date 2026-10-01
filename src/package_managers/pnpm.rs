@@ -155,11 +155,11 @@ fn install_pnpm_native_binary(
 
     let native_pnpm_binary = scratch_dir.join("pnpm");
     let original_pnpm_binary = pnpm_layer_dir.join("pnpm");
-    fs::rename(&native_pnpm_binary, &original_pnpm_binary)
-        .map_err(|e| create_pnpm_native_binary_install_error(&original_pnpm_binary, &e))?;
+    fs_err::rename(&native_pnpm_binary, &original_pnpm_binary)
+        .map_err(|e| create_pnpm_native_binary_install_error(&e))?;
 
-    fs::remove_dir_all(&scratch_dir)
-        .map_err(|e| create_pnpm_native_binary_install_error(&scratch_dir, &e))?;
+    fs_err::remove_dir_all(&scratch_dir)
+        .map_err(|e| create_pnpm_native_binary_install_error(&e))?;
 
     Ok(())
 }
@@ -177,14 +177,13 @@ fn create_pnpm_unsupported_target_error(os: &str, arch: &str) -> ErrorMessage {
         .create()
 }
 
-fn create_pnpm_native_binary_install_error(path: &Path, error: &std::io::Error) -> ErrorMessage {
-    let path = file_value(path);
+fn create_pnpm_native_binary_install_error(error: &std::io::Error) -> ErrorMessage {
     error_message()
         .id("package_manager/pnpm/install_native_binary")
         .error_type(ErrorType::Internal)
         .header("Failed to install the pnpm native binary")
         .body(formatdoc! { "
-            An unexpected I/O error occurred while installing the pnpm native binary at {path}.
+            An unexpected I/O error occurred while installing the pnpm native binary.
         " })
         .debug_info(error.to_string())
         .create()
@@ -797,8 +796,9 @@ mod tests {
     #[test]
     fn pnpm_native_binary_install_error() {
         assert_error_snapshot(&create_pnpm_native_binary_install_error(
-            &PathBuf::from("/layers/heroku_nodejs/pnpm/pnpm"),
-            &std::io::Error::other("Permission denied"),
+            &std::io::Error::other(
+                "failed to rename file from /layers/heroku_nodejs/pnpm/.native-binary/pnpm to /layers/heroku_nodejs/pnpm/pnpm",
+            ),
         ));
     }
 }
