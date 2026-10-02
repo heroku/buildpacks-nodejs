@@ -107,6 +107,15 @@ pub(crate) fn install_npm_dependencies(
         .named_output()
         .map_err(|e| create_set_npm_cache_directory_command_error(&e))?;
 
+    print::sub_bullet("Disabling npm audit and fund notices");
+    for key in ["audit", "fund"] {
+        Command::new("npm")
+            .args(["config", "set", key, "false", "--global"])
+            .envs(env)
+            .named_output()
+            .map_err(|e| create_set_npm_config_command_error(key, &e))?;
+    }
+
     print::sub_stream_cmd(
         Command::new("npm")
             .args(["ci"])
@@ -165,6 +174,18 @@ fn create_set_npm_cache_directory_command_error(error: &fun_run::CmdError) -> Er
         .error_type(Internal)
         .header("Failed to set the npm cache directory")
         .body("An unexpected error occurred while setting the npm cache directory.")
+        .debug_info(error.to_string())
+        .create()
+}
+
+fn create_set_npm_config_command_error(key: &str, error: &fun_run::CmdError) -> ErrorMessage {
+    error_message()
+        .id("package_manager/npm/set_config")
+        .error_type(Internal)
+        .header(format!("Failed to set the npm `{key}` config"))
+        .body(format!(
+            "An unexpected error occurred while setting the npm `{key}` config."
+        ))
         .debug_info(error.to_string())
         .create()
 }
@@ -334,6 +355,14 @@ mod tests {
     fn set_npm_cache_directory_command_error() {
         assert_error_snapshot(&create_set_npm_cache_directory_command_error(
             &create_cmd_error("npm config set cache /some/dir --global"),
+        ));
+    }
+
+    #[test]
+    fn set_npm_config_command_error() {
+        assert_error_snapshot(&create_set_npm_config_command_error(
+            "audit",
+            &create_cmd_error("npm config set audit false --global"),
         ));
     }
 

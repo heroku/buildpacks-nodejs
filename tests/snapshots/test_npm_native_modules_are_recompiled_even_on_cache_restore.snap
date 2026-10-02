@@ -28,6 +28,7 @@ heroku/nodejs <buildpack-version>
   - Using npm version `10.9.9`
   - Creating npm cache
   - Configuring npm cache directory
+  - Disabling npm audit and fund notices
   - Running `npm ci`
 
 
@@ -36,9 +37,7 @@ heroku/nodejs <buildpack-version>
 
       <NODE-GYP BUILD OUTPUT> 
 
-      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
-
-      found 0 vulnerabilities
+      added <NUMBER> packages in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -47,9 +46,7 @@ heroku/nodejs <buildpack-version>
   - Running `npm prune`
 
 
-      up to date, audited <N> packages in <time_elapsed>
-
-      found 0 vulnerabilities
+      up to date in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Configuring default processes
@@ -102,6 +99,7 @@ heroku/nodejs <buildpack-version>
   - Using npm version `10.9.9`
   - Restoring npm cache
   - Configuring npm cache directory
+  - Disabling npm audit and fund notices
   - Running `npm ci`
 
 
@@ -110,9 +108,7 @@ heroku/nodejs <buildpack-version>
 
       <NODE-GYP BUILD OUTPUT> 
 
-      added <NUMBER> packages, and audited <NUMBER> packages in <time_elapsed>
-
-      found 0 vulnerabilities
+      added <NUMBER> packages in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Running scripts
@@ -121,9 +117,7 @@ heroku/nodejs <buildpack-version>
   - Running `npm prune`
 
 
-      up to date, audited <N> packages in <time_elapsed>
-
-      found 0 vulnerabilities
+      up to date in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Configuring default processes
