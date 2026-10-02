@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.8.0] - 2026-10-02
+
 ### Added
 
 - Support for pnpm 12, which distributes its native binary as a separate platform-specific package. ([#1438](https://github.com/heroku/buildpacks-nodejs/pull/1438))
@@ -430,7 +432,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.20...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.0...HEAD
+[5.8.0]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.20...v5.8.0
 [5.7.20]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.19...v5.7.20
 [5.7.19]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.18...v5.7.19
 [5.7.18]: https://github.com/heroku/buildpacks-nodejs/compare/v5.7.17...v5.7.18
