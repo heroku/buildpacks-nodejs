@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for pnpm 12, which distributes its native binary as a separate platform-specific package. ([#1438](https://github.com/heroku/buildpacks-nodejs/pull/1438))
 
+### Changed
+
+- Updated libcnb to 0.32.0, which improves tarball decompression performance by switching to the `zlib-rs` backend, and includes OpenTelemetry crate upgrades. ([#1462](https://github.com/heroku/buildpacks-nodejs/pull/1462))
+
 ### Fixed
 
 - Restored hardware-accelerated CRC32 checksums when extracting Node.js and package manager downloads. ([#1459](https://github.com/heroku/buildpacks-nodejs/pull/1459))
