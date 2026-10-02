@@ -27,6 +27,5 @@ fn value() -> usize {
         //      For Heroku Fir Dynos this will always end up reducing the cpu allocation
         //      value by 1 since a small amount of quota is reserved for the system so we need
         //      to add that back unless Rust changes how they deal with rounding.
-        .map(|value| value.get() + 1)
-        .unwrap_or_default()
+        .map_or_default(|value| value.get() + 1)
 }
