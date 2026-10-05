@@ -76,7 +76,9 @@ fn pnpm_install_default() {
             });
         },
         |ctx| {
-            create_build_snapshot(&ctx.pack_stdout).assert();
+            create_build_snapshot(&ctx.pack_stdout)
+                .filter(r"\b(v?)12\.\d+\.\d+\b", "${1}12.<minor>.<patch>")
+                .assert();
             let output = ctx.run_shell_command("pnpm --version");
             assert_contains!(output.stdout, "12.");
         },
