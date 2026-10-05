@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Disabled npm audit and funding notices during builds using npm's global config. These can be re-enabled via a project `.npmrc` or by setting `npm_config_audit`/`npm_config_fund` environment variables. ([#1463](https://github.com/heroku/buildpacks-nodejs/pull/1463))
+- Disabled npm audit and funding notices using npm's global config. These can be re-enabled via a project `.npmrc` or by setting `npm_config_audit`/`npm_config_fund` environment variables. ([#1463](https://github.com/heroku/buildpacks-nodejs/pull/1463))
 
 ## [5.8.0] - 2026-10-02
 
