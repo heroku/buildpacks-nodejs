@@ -65,6 +65,26 @@ fn pnpm_install_package_manager() {
 
 #[test]
 #[ignore = "integration test"]
+fn pnpm_install_default() {
+    nodejs_integration_test_with_config(
+        "./fixtures/pnpm-12",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("package.json"), |json| {
+                    json.as_object_mut().unwrap().remove("packageManager");
+                });
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            let output = ctx.run_shell_command("pnpm --version");
+            assert_contains!(output.stdout, "12.");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn pnpm_7_pnp() {
     nodejs_integration_test("./fixtures/pnpm-7-pnp", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();

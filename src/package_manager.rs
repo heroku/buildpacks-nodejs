@@ -26,6 +26,7 @@ pub(crate) enum RequestedPackageManager {
     BundledNpm,
     NpmEngine(VersionRange),
     PnpmEngine(VersionRange),
+    PnpmDefault(VersionRange),
     YarnEngine(VersionRange),
     YarnDefault(VersionRange),
     YarnVendored(PathBuf),
@@ -47,6 +48,7 @@ impl RequestedPackageManager {
 
     pub(crate) fn is_pnpm(&self) -> bool {
         matches!(self, RequestedPackageManager::PnpmEngine(_))
+            || matches!(self, RequestedPackageManager::PnpmDefault(_))
             || matches!(
                 self,
                 RequestedPackageManager::PackageManager(PackageManagerField {
@@ -134,6 +136,16 @@ pub(crate) fn determine_package_manager(
         return RequestedPackageManager::YarnDefault(yarn::DEFAULT_YARN_REQUIREMENT.clone());
     }
 
+    // fallback to default pnpm if lockfile is detected
+    if let Ok(true) = app_dir.join("pnpm-lock.yaml").try_exists() {
+        tracing::info!({
+            { PACKAGE_MANAGER_REQUESTED_SOURCE } = "pnpm-lock.yaml",
+            { PACKAGE_MANAGER_REQUESTED_NAME } = "pnpm",
+            { PACKAGE_MANAGER_REQUESTED_VERSION } = "default",
+        });
+        return RequestedPackageManager::PnpmDefault(pnpm::DEFAULT_PNPM_REQUIREMENT.clone());
+    }
+
     // default to bundled npm if nothing is requested
     tracing::info!({
         { PACKAGE_MANAGER_REQUESTED_SOURCE } = "bundled npm",
@@ -167,6 +179,10 @@ pub(crate) fn log_requested_package_manager(requested_package_manager: &Requeste
             style::value("engines.pnpm"),
             style::value(requirement.to_string()),
             style::value("package.json")
+        )),
+        RequestedPackageManager::PnpmDefault(requirement) => print::sub_bullet(format!(
+            "Found pnpm lockfile, defaulting to {}",
+            style::value(requirement.to_string()),
         )),
         RequestedPackageManager::YarnEngine(requirement) => print::sub_bullet(format!(
             "Found {} version {} declared in {}",
@@ -231,7 +247,8 @@ pub(crate) fn resolve_package_manager(
                 ResolvedPackageManager::Npm(requirement.clone(), npm_package_packument)
             })
         }
-        RequestedPackageManager::PnpmEngine(requirement) => {
+        RequestedPackageManager::PnpmEngine(requirement)
+        | RequestedPackageManager::PnpmDefault(requirement) => {
             pnpm::resolve_pnpm_package_packument(context, requirement).map(
                 |pnpm_package_packument| {
                     tracing::info!({

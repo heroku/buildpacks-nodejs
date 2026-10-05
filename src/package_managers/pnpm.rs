@@ -29,6 +29,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::LazyLock;
 
+pub(crate) static DEFAULT_PNPM_REQUIREMENT: LazyLock<VersionRange> = LazyLock::new(|| {
+    VersionRange::parse("12.x").expect("Default pnpm requirement should be valid")
+});
+
 pub(crate) fn resolve_pnpm_package_packument(
     context: &BuildpackBuildContext,
     requirement: &VersionRange,
