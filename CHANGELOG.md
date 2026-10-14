@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `WEB_CONCURRENCY` and `WEB_MEMORY` defaults now detect the dyno memory limit when it's set via cgroup v2 `memory.high` (as on Cedar dynos). ([#1468](https://github.com/heroku/buildpacks-nodejs/pull/1468))
+
 ## [5.8.3] - 2026-10-15
 
 ### Added
