@@ -43,16 +43,22 @@ const DEFAULT_AVAILABLE_MEMORY_MB: usize = 512;
 const BYTES_PER_MB: usize = 1_048_576;
 
 fn detect_available_memory() -> usize {
-    [
-        "/sys/fs/cgroup/memory.max",
-        "/sys/fs/cgroup/memory/memory.limit_in_bytes",
-    ]
-    .iter()
-    .find_map(|path| fs::read_to_string(path).ok())
-    .and_then(|contents| contents.trim().parse().ok())
-    .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |max_bytes: usize| {
-        cmp::min(MAX_AVAILABLE_MEMORY_MB, max_bytes / BYTES_PER_MB)
-    })
+    available_memory(|path| fs::read_to_string(path).ok())
+}
+
+// On cgroup v2 the limit may be set in `memory.max`, `memory.high`, or both (e.g., Cedar
+// dynos only set `memory.high`), so use the smallest numeric value before falling back to
+// cgroup v1.
+fn available_memory(read_file: impl Fn(&str) -> Option<String>) -> usize {
+    let read_bytes = |path| read_file(path).and_then(|contents| contents.trim().parse().ok());
+    ["/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory.high"]
+        .into_iter()
+        .filter_map(read_bytes)
+        .min()
+        .or_else(|| read_bytes("/sys/fs/cgroup/memory/memory.limit_in_bytes"))
+        .map_or(DEFAULT_AVAILABLE_MEMORY_MB, |max_bytes: usize| {
+            cmp::min(MAX_AVAILABLE_MEMORY_MB, max_bytes / BYTES_PER_MB)
+        })
 }
 
 const DEFAULT_WEB_MEMORY_BREAKPOINT_MB: usize = 16384;
@@ -109,6 +115,71 @@ mod tests {
 
         assert_eq!(web_concurrency, 42);
         assert_eq!(web_memory, 4242);
+    }
+
+    fn read_from(files: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> {
+        let files: HashMap<String, String> = files
+            .iter()
+            .map(|(path, contents)| ((*path).to_string(), (*contents).to_string()))
+            .collect();
+        move |path| files.get(path).cloned()
+    }
+
+    #[test]
+    fn test_available_memory() {
+        const MAX: &str = "/sys/fs/cgroup/memory.max";
+        const HIGH: &str = "/sys/fs/cgroup/memory.high";
+        const V1: &str = "/sys/fs/cgroup/memory/memory.limit_in_bytes";
+
+        // fir: only memory.max is numeric
+        assert_eq!(
+            available_memory(read_from(&[(MAX, "536870912\n"), (HIGH, "max\n")])),
+            512
+        );
+        // cedar: only memory.high is numeric
+        assert_eq!(
+            available_memory(read_from(&[(MAX, "max\n"), (HIGH, "1073741824\n")])),
+            1024
+        );
+        // both numeric: use the smaller value
+        assert_eq!(
+            available_memory(read_from(&[(MAX, "2147483648\n"), (HIGH, "1073741824\n")])),
+            1024
+        );
+        assert_eq!(
+            available_memory(read_from(&[(MAX, "1073741824\n"), (HIGH, "2147483648\n")])),
+            1024
+        );
+        // neither numeric on v2: fall back to v1
+        assert_eq!(
+            available_memory(read_from(&[
+                (MAX, "max\n"),
+                (HIGH, "max\n"),
+                (V1, "2684354560\n")
+            ])),
+            2560
+        );
+        // v1 only
+        assert_eq!(available_memory(read_from(&[(V1, "2684354560\n")])), 2560);
+        // v2 numeric takes precedence over v1
+        assert_eq!(
+            available_memory(read_from(&[(HIGH, "1073741824\n"), (V1, "2684354560\n")])),
+            1024
+        );
+        // capped at the maximum
+        assert_eq!(
+            available_memory(read_from(&[(V1, "9223372036854771712\n")])),
+            MAX_AVAILABLE_MEMORY_MB
+        );
+        // nothing readable or numeric: use the default
+        assert_eq!(
+            available_memory(read_from(&[])),
+            DEFAULT_AVAILABLE_MEMORY_MB
+        );
+        assert_eq!(
+            available_memory(read_from(&[(MAX, "max\n"), (HIGH, "max\n")])),
+            DEFAULT_AVAILABLE_MEMORY_MB
+        );
     }
 
     #[test]
