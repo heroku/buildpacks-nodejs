@@ -112,6 +112,54 @@ The following scripts from `package.json` will be executed by the configured pac
  
 If any of the above scripts are not defined in `package.json` they will be skipped.
 
+### Private npm Registry via Service Bindings
+
+Configure access to private npm registries using [Kubernetes Service Bindings](https://github.com/k8s-service-bindings/spec)(The recommended format: <https://github.com/buildpacks/spec/blob/main/extensions/bindings.md>).
+
+Supported Bindings:
+
+|type|secret|
+|----|-------|
+|npm|.npmrc|
+|yarn|.yarnrc|
+|pnpm|auth.ini|
+
+Create a binding with the structure:
+
+```
+bindings
+└── npm
+    ├── type #contains npm
+    ├── provider #(optional)
+    └── .npmrc
+```
+
+**Example .npmrc content:**
+
+```
+@myorg:registry=https://private-registry.example.com/
+//private-registry.example.com/:_authToken=TOKEN
+```
+
+**With pack:**
+
+```bash
+mkdir -p bindings/npm
+echo "npm" > bindings/npm/type
+cat > bindings/npm/.npmrc << 'EOF'
+@myorg:registry=https://private-registry.example.com/
+//private-registry.example.com/:_authToken=YOUR_TOKEN
+EOF
+
+pack build my-app --volume $(pwd)/bindings/:/platform/bindings/
+```
+
+**With kpack (Kubernetes):**
+
+See <https://github.com/buildpacks-community/kpack/blob/main/docs/servicebindings.md>
+
+The binding is automatically discovered and applied during the build, making npm,yarn or pnpm configuration available to package managers.
+
 ## Contributing
 
 Issues and pull requests are welcome. See our [contributing guidelines](./CONTRIBUTING.md) if you 

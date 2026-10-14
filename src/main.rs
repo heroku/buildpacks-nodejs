@@ -171,6 +171,10 @@ impl libcnb::Buildpack for NodeJsBuildpack {
             package_manager::install_package_manager(&context, &mut env, &resolved_package_manager)
         })?;
 
+        // Apply package manager service bindings (configuration from bindings directory)
+        let _package_manager_bindings =
+            utils::service_bindings::apply_package_manager_bindings(&env)?;
+
         // dependency installation & process registration
         if ["pnpm-lock.yaml", "yarn.lock", "package-lock.json"]
             .iter()
