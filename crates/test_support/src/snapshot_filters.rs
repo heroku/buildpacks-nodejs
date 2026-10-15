@@ -251,13 +251,24 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // [npm/yarn] Stray `make` output that sometimes appears outside the `gyp info` block
     // non-deterministically (e.g., after `gyp info ok` instead of before it).
     filters.push((
-        r" *make: Entering directory '.*'\n *(?:TOUCH|CC|CXX|LINK|AR) .*\n *make: Leaving directory '.*'\n",
+        r"(?m)^ *make: Entering directory '.*'\n *(?:TOUCH|CC|CXX|LINK|AR) .*\n *make: Leaving directory '.*'\n",
+        "",
+    ));
+
+    // [pnpm] Same stray `make` output as above, but with pnpm's per-module line prefix. e.g.;
+    //       .../node_modules/dtrace-provider install: make: Entering directory '...'
+    //       .../node_modules/dtrace-provider install:   TOUCH Release/obj.target/DTraceProviderStub.stamp
+    //       .../node_modules/dtrace-provider install: make: Leaving directory '...'
+    filters.push((
+        r"(?m)^ *\S+ install: make: Entering directory '.*'\n *\S+ install: +(?:TOUCH|CC|CXX|LINK|AR) .*\n *\S+ install: make: Leaving directory '.*'\n",
         "",
     ));
 
     // [npm/yarn] Lone `make: Entering`/`make: Leaving` lines that escape the gyp-output filter
     // when output buffering causes them to land outside the `gyp info ... gyp info ok` block.
-    filters.push((r" *make: (?:Entering|Leaving) directory '.*'\n", ""));
+    //
+    // NOTE: Anchored to the start of the line so it doesn't truncate pnpm's prefixed lines.
+    filters.push((r"(?m)^ *make: (?:Entering|Leaving) directory '.*'\n", ""));
 
     // [pnpm] Final progress messages for installed packages. e.g.;
     // - Progress: resolved 9, reused 2, downloaded 7, added 4, done

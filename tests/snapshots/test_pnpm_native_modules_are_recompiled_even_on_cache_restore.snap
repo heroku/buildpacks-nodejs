@@ -131,8 +131,7 @@ heroku/nodejs <buildpack-version>
       ++
       .../node_modules/dtrace-provider install$ node-gyp rebuild || node suppress-error.js
       <NODE-GYP BUILD OUTPUT> 
-      .../node_modules/dtrace-provider install:      .../node_modules/dtrace-provider install:   TOUCH Release/obj.target/DTraceProviderStub.stamp
-      .../node_modules/dtrace-provider install:      .../node_modules/dtrace-provider install: Done
+      .../node_modules/dtrace-provider install: Done
 
       dependencies:
       + dtrace-provider 0.8.8
