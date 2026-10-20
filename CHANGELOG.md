@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `HEROKU_AVAILABLE_PARALLELISM` now reflects the dyno's CPU allocation from cgroup v2 `cpu.max` instead of always adding 1 to the detected value. ([#1474](https://github.com/heroku/buildpacks-nodejs/pull/1474))
+
 ## [5.8.4] - 2026-10-21
 
 ### Added
