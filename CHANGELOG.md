@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `HEROKU_AVAILABLE_PARALLELISM` no longer reports one more CPU than the dyno is allocated. ([#1474](https://github.com/heroku/buildpacks-nodejs/pull/1474))
+
 ## [5.8.4] - 2026-10-21
 
 ### Added
