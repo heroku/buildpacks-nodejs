@@ -64,7 +64,7 @@ heroku/nodejs <buildpack-version>
 
   - Done (<time_elapsed>)
 - Pruning dev dependencies
-  - Running `npm prune`
+  - Running `npm prune "--omit=dev"`
 
 
       up to date in <time_elapsed>

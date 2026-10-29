@@ -5,7 +5,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{BuildpackReference, PackResult, assert_contains};
+use libcnb_test::{BuildpackReference, PackResult, assert_contains, assert_not_contains};
 use serde_json::json;
 use std::path::Path;
 use test_support::{
@@ -318,6 +318,16 @@ fn test_npm_default_web_process_registration_is_skipped_if_procfile_exists() {
 
 #[test]
 #[ignore = "integration test"]
+fn test_npm_prune_dev_dependencies() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+        assert_contains!(node_modules, "node-fetch");
+        assert_not_contains!(node_modules, "dotenv");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_npm_prune_dev_dependencies_config() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",
@@ -335,6 +345,9 @@ fn test_npm_prune_dev_dependencies_config() {
         },
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
+            let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+            assert_contains!(node_modules, "node-fetch");
+            assert_contains!(node_modules, "dotenv");
         },
     );
 }
