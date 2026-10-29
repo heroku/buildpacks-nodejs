@@ -308,7 +308,11 @@ pub(crate) fn prune_dev_dependencies(
     on_prune_command_error: impl FnOnce(&fun_run::CmdError) -> ErrorMessage,
 ) -> Result<(), ErrorMessage> {
     let mut cmd = Command::new("npm");
-    cmd.arg("prune");
+    // `npm prune` only removes devDependencies when told to omit them. Pass the
+    // flag explicitly instead of relying on `NODE_ENV=production` in the build
+    // environment, since that variable is not set during the build and setting
+    // it would also make `npm ci` skip devDependencies that build scripts need.
+    cmd.args(["prune", "--omit=dev"]);
     cmd.envs(env);
     print::sub_stream_cmd(cmd)
         .map(|_| ())
