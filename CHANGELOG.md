@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Ensure `npm prune` removes devDependencies from the final image. ([#1481](https://github.com/heroku/buildpacks-nodejs/pull/1481))
+
 ## [5.8.5] - 2026-10-29
 
 ### Added

@@ -43,7 +43,7 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `npm prune`
+  - Running `npm prune "--omit=dev"`
 
 
       up to date in <time_elapsed>
@@ -114,7 +114,7 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `npm prune`
+  - Running `npm prune "--omit=dev"`
 
 
       up to date in <time_elapsed>
