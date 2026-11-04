@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The default Node.js version is now 26.x, the current Active LTS release line. ([#1486](https://github.com/heroku/buildpacks-nodejs/pull/1486))
+
 ## [5.8.5] - 2026-10-29
 
 ### Added

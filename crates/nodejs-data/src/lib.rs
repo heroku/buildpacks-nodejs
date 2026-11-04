@@ -182,7 +182,7 @@ pub type NodejsInventory =
 // Shared with the classic CNB buildpack.
 // Update when the active LTS line changes.
 pub static RECOMMENDED_LTS_VERSION: LazyLock<VersionRange> = LazyLock::new(|| {
-    VersionRange::parse("24.x").expect("Recommended Node.js version should be valid")
+    VersionRange::parse("26.x").expect("Recommended Node.js version should be valid")
 });
 
 // Major versions currently supported on Heroku.
