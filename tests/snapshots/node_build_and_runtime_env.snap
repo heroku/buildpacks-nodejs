@@ -13,18 +13,18 @@ test/print-build-env 0.0.0
 ## Heroku Node.js
 
 - Checking Node.js version
-  - Node.js version not specified, using `24.x`
-  - Resolved Node.js version: `24.22.2`
+  - Node.js version not specified, using `26.x`
+  - Resolved Node.js version: `26.13.0`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v24.22.2/node-v24.22.2-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v26.13.0/node-v26.13.0-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `24.22.2 (<arch>)`
-  - Installing Node.js `24.22.2 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `26.13.0 (<arch>)`
+  - Installing Node.js `26.13.0 (<arch>)` ... (<time_elapsed>)
 - Determining npm package information
   - No npm version requested
-  - Using bundled npm version `11.19.1`
+  - Using bundled npm version `11.20.0`
 - Done (finished in <time_elapsed>)
 HEROKU_AVAILABLE_PARALLELISM=<number>
 PATH=/workspace/node_modules/.bin:/layers/heroku_nodejs/dist/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
