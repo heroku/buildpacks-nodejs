@@ -47,6 +47,15 @@ pub(super) async fn from_upstream(
             continue 'release;
         }
 
+        // Pre-release lines (e.g. Alpha) aren't supported until they reach Current status.
+        if node_release.version.is_prerelease() {
+            eprintln!(
+                "Skipping Node.js version {} as pre-release versions are not supported",
+                node_release.version
+            );
+            continue 'release;
+        }
+
         // This is used to avoid downloading the checksums multiple times for each supported platform
         let mut downloaded_release_checksums = None;
 

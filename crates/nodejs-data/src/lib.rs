@@ -54,6 +54,12 @@ impl Version {
     pub fn patch(&self) -> u64 {
         self.0.patch
     }
+
+    /// Returns `true` if the version has pre-release identifiers (e.g. `27.0.0-alpha.0.0.0`).
+    #[must_use]
+    pub fn is_prerelease(&self) -> bool {
+        self.0.is_prerelease()
+    }
 }
 
 impl TryFrom<String> for Version {
@@ -193,6 +199,17 @@ pub const SUPPORTED_NODEJS_VERSIONS: [u64; 3] = [22, 24, 26];
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn is_prerelease_detects_prerelease_identifiers() {
+        assert!(
+            Version::parse("27.0.0-alpha.0.0.0")
+                .unwrap()
+                .is_prerelease()
+        );
+        assert!(Version::parse("27.0.0-rc.1").unwrap().is_prerelease());
+        assert!(!Version::parse("26.13.0").unwrap().is_prerelease());
+    }
 
     #[test]
     fn parse_handles_latest() {
