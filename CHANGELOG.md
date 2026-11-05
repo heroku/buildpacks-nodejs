@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.9.0] - 2026-11-05
+
 ### Changed
 
 - The default Node.js version is now 26.x, the current Active LTS release line. ([#1486](https://github.com/heroku/buildpacks-nodejs/pull/1486))
@@ -476,7 +478,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dropped provides for `node`, `npm`, `pnpm`, `yarn`, `node_modules`, and `node_build_scripts`. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 - Requires `heroku/nodejs` if `package.json`, `index.js`, or `server.js` is detected. ([#1169](https://github.com/heroku/buildpacks-nodejs/pull/1169))
 
-[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.5...HEAD
+[unreleased]: https://github.com/heroku/buildpacks-nodejs/compare/v5.9.0...HEAD
+[5.9.0]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.5...v5.9.0
 [5.8.5]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.4...v5.8.5
 [5.8.4]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.3...v5.8.4
 [5.8.3]: https://github.com/heroku/buildpacks-nodejs/compare/v5.8.2...v5.8.3
