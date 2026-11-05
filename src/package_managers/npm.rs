@@ -116,9 +116,13 @@ pub(crate) fn install_npm_dependencies(
             .map_err(|e| create_set_npm_config_command_error(key, &e))?;
     }
 
+    // Build scripts typically need devDependencies, so install them even when user config
+    // (e.g., `NODE_ENV=production` or `npm_config_omit=dev`) would otherwise skip them.
+    // `--include` takes precedence over `--omit` regardless of which config layer sets it.
+    // Requires npm 7.7.0+; older versions silently ignore the flag.
     print::sub_stream_cmd(
         Command::new("npm")
-            .args(["ci"])
+            .args(["ci", "--include=dev"])
             .envs(env)
             .envs(node_gyp_env()),
     )
@@ -310,9 +314,12 @@ pub(crate) fn prune_dev_dependencies(
     let mut cmd = Command::new("npm");
     // `npm prune` only removes devDependencies when told to omit them. Pass the
     // flag explicitly instead of relying on `NODE_ENV=production` in the build
-    // environment, since that variable is not set during the build and setting
-    // it would also make `npm ci` skip devDependencies that build scripts need.
-    cmd.args(["prune", "--omit=dev"]);
+    // environment. `--include=prod` replaces any user-configured `include=dev`, which
+    // would otherwise take precedence over `--omit=dev`. Users who want to keep
+    // devDependencies should use the `prune_dev_dependencies` buildpack config instead.
+    // `--omit` requires npm 7.0.0+ and `--include` requires npm 7.7.0+; older versions
+    // silently ignore these flags.
+    cmd.args(["prune", "--omit=dev", "--include=prod"]);
     cmd.envs(env);
     print::sub_stream_cmd(cmd)
         .map(|_| ())

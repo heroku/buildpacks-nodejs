@@ -29,7 +29,7 @@ heroku/nodejs <buildpack-version>
   - Creating npm cache
   - Configuring npm cache directory
   - Disabling npm audit and fund notices
-  - Running `npm ci`
+  - Running `npm ci "--include=dev"`
 
 
       added <NUMBER> packages in <time_elapsed>
@@ -64,7 +64,7 @@ heroku/nodejs <buildpack-version>
 
   - Done (<time_elapsed>)
 - Pruning dev dependencies
-  - Running `npm prune "--omit=dev"`
+  - Running `npm prune "--omit=dev" "--include=prod"`
 
 
       up to date in <time_elapsed>

@@ -328,6 +328,29 @@ fn test_npm_prune_dev_dependencies() {
 
 #[test]
 #[ignore = "integration test"]
+fn test_npm_install_and_prune_ignore_user_dependency_config() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.env("NODE_ENV", "production");
+            config.env("npm_config_include", "dev");
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("package.json"), |package_json| {
+                    package_json["scripts"] = json!({ "build": "node -e \"require('dotenv')\"" });
+                });
+            });
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "Running `npm run build`");
+            let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+            assert_contains!(node_modules, "node-fetch");
+            assert_not_contains!(node_modules, "dotenv");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_npm_prune_dev_dependencies_config() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",

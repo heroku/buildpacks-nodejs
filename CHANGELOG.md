@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Ensure `npm prune` removes devDependencies from the final image. ([#1481](https://github.com/heroku/buildpacks-nodejs/pull/1481))
+- Ensure `npm ci` installs devDependencies and `npm prune` removes them regardless of npm configuration. ([#1488](https://github.com/heroku/buildpacks-nodejs/pull/1488))
 
 ## [5.9.0] - 2026-11-05
 
