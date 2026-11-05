@@ -29,7 +29,7 @@ heroku/nodejs <buildpack-version>
   - Creating npm cache
   - Configuring npm cache directory
   - Disabling npm audit and fund notices
-  - Running `npm ci`
+  - Running `npm ci "--include=dev"`
 
 
       > dtrace-provider@0.8.8 install
@@ -43,7 +43,7 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `npm prune`
+  - Running `npm prune "--omit=dev" "--include=prod"`
 
 
       up to date in <time_elapsed>
@@ -100,7 +100,7 @@ heroku/nodejs <buildpack-version>
   - Restoring npm cache
   - Configuring npm cache directory
   - Disabling npm audit and fund notices
-  - Running `npm ci`
+  - Running `npm ci "--include=dev"`
 
 
       > dtrace-provider@0.8.8 install
@@ -114,7 +114,7 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `npm prune`
+  - Running `npm prune "--omit=dev" "--include=prod"`
 
 
       up to date in <time_elapsed>

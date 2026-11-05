@@ -5,7 +5,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{BuildpackReference, PackResult, assert_contains};
+use libcnb_test::{BuildpackReference, PackResult, assert_contains, assert_not_contains};
 use serde_json::json;
 use std::path::Path;
 use test_support::{
@@ -318,6 +318,39 @@ fn test_npm_default_web_process_registration_is_skipped_if_procfile_exists() {
 
 #[test]
 #[ignore = "integration test"]
+fn test_npm_prune_dev_dependencies() {
+    nodejs_integration_test("./fixtures/npm-project", |ctx| {
+        let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+        assert_contains!(node_modules, "node-fetch");
+        assert_not_contains!(node_modules, "dotenv");
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn test_npm_install_and_prune_ignore_user_dependency_config() {
+    nodejs_integration_test_with_config(
+        "./fixtures/npm-project",
+        |config| {
+            config.env("NODE_ENV", "production");
+            config.env("npm_config_include", "dev");
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("package.json"), |package_json| {
+                    package_json["scripts"] = json!({ "build": "node -e \"require('dotenv')\"" });
+                });
+            });
+        },
+        |ctx| {
+            assert_contains!(ctx.pack_stdout, "Running `npm run build`");
+            let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+            assert_contains!(node_modules, "node-fetch");
+            assert_not_contains!(node_modules, "dotenv");
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_npm_prune_dev_dependencies_config() {
     nodejs_integration_test_with_config(
         "./fixtures/npm-project",
@@ -335,6 +368,9 @@ fn test_npm_prune_dev_dependencies_config() {
         },
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
+            let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+            assert_contains!(node_modules, "node-fetch");
+            assert_contains!(node_modules, "dotenv");
         },
     );
 }
