@@ -22,6 +22,9 @@ pub(crate) const DEFAULT_MAX_RETRIES: usize = 5;
 pub(crate) const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(500); // half a second
 
 pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
+    // The most recent response received across all attempts, attached to any error.
+    let mut last_response: Option<Box<LastResponse>> = None;
+
     let client = reqwest::blocking::ClientBuilder::new()
         .connect_timeout(request.connect_timeout)
         .use_rustls_tls()
@@ -36,7 +39,12 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
         // fail early if the temporary download file can't be created
         let mut response_file = match tempfile::NamedTempFile::new() {
             Ok(named_temp_file) => named_temp_file,
-            Err(e) => return OperationResult::Err(GetError::Write(e)),
+            Err(source) => {
+                return OperationResult::Err(GetError::Write {
+                    source,
+                    last_response: last_response.clone(),
+                });
+            }
         };
 
         let timer = print::sub_start_timer(if attempt == 0 {
@@ -55,20 +63,49 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             }
         };
 
-        let mut response = match client
+        let response = match client
             .get(&request.url)
             .headers(request.headers.clone())
             .send()
-            .and_then(Response::error_for_status)
         {
             Ok(response) => response,
-            Err(e) => {
-                return report_error(timer, GetError::Request(e));
+            Err(source) => {
+                return report_error(
+                    timer,
+                    GetError::Request {
+                        source,
+                        last_response: last_response.clone(),
+                    },
+                );
             }
         };
 
-        if let Err(e) = io::copy(&mut response, response_file.as_file_mut()) {
-            return report_error(timer, GetError::Write(e));
+        last_response = Some(Box::new(LastResponse {
+            status: response.status(),
+            headers: response.headers().clone(),
+        }));
+
+        let mut response = match response.error_for_status() {
+            Ok(response) => response,
+            Err(source) => {
+                return report_error(
+                    timer,
+                    GetError::Request {
+                        source,
+                        last_response: last_response.clone(),
+                    },
+                );
+            }
+        };
+
+        if let Err(source) = io::copy(&mut response, response_file.as_file_mut()) {
+            return report_error(
+                timer,
+                GetError::Write {
+                    source,
+                    last_response: last_response.clone(),
+                },
+            );
         }
 
         if response.status().is_success() {
@@ -87,16 +124,33 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     .map_err(|operation| operation.error)
 }
 
+/// `last_response` is the most recent response received across all attempts, which may not be
+/// from the attempt that produced this error (a retry can fail before any response arrives). It's
+/// `None` if no response was received at all.
 #[derive(Debug)]
 pub(crate) enum GetError {
-    Request(reqwest::Error),
-    Write(io::Error),
+    Request {
+        source: reqwest::Error,
+        last_response: Option<Box<LastResponse>>,
+    },
+    Write {
+        source: io::Error,
+        last_response: Option<Box<LastResponse>>,
+    },
 }
 
 impl GetError {
+    pub(crate) fn last_response(&self) -> Option<&LastResponse> {
+        match self {
+            GetError::Request { last_response, .. } | GetError::Write { last_response, .. } => {
+                last_response.as_deref()
+            }
+        }
+    }
+
     fn cancellation_reason(&self) -> String {
         match self {
-            GetError::Request(error) => {
+            GetError::Request { source: error, .. } => {
                 if error.is_connect() {
                     "connection refused".into()
                 } else if error.is_timeout() {
@@ -112,14 +166,14 @@ impl GetError {
                     error.to_string()
                 }
             }
-            GetError::Write(_) => "write response error".into(),
+            GetError::Write { .. } => "write response error".into(),
         }
     }
 
     fn retry(&self) -> bool {
         match self {
-            GetError::Request(error) => !error.is_builder(),
-            GetError::Write(_) => true,
+            GetError::Request { source, .. } => !source.is_builder(),
+            GetError::Write { .. } => true,
         }
     }
 }
@@ -127,9 +181,16 @@ impl GetError {
 impl fmt::Display for GetError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            GetError::Request(e) => write!(f, "{e}"),
-            GetError::Write(e) => write!(f, "{e}"),
+            GetError::Request { source, .. } => write!(f, "{source}")?,
+            GetError::Write { source, .. } => write!(f, "{source}")?,
         }
+        if let Some(last_response) = self.last_response() {
+            write!(
+                f,
+                "\n\nResponse headers from the most recent response received:\n{last_response}"
+            )?;
+        }
+        Ok(())
     }
 }
 
@@ -145,6 +206,23 @@ pub(crate) struct GetRequest {
     max_retries: usize,
     #[builder(default = DEFAULT_RETRY_DELAY)]
     retry_delay: Duration,
+}
+
+/// The status and headers of the most recent response received by [`get`].
+#[derive(Debug, Clone)]
+pub(crate) struct LastResponse {
+    pub(crate) status: StatusCode,
+    pub(crate) headers: HeaderMap,
+}
+
+impl fmt::Display for LastResponse {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.status)?;
+        for (name, value) in &self.headers {
+            write!(f, "\n{name}: {}", String::from_utf8_lossy(value.as_bytes()))?;
+        }
+        Ok(())
+    }
 }
 
 pub(crate) struct GetResponse {
@@ -410,6 +488,9 @@ pub(crate) enum DownloadError {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::utils::error_handling::test_util::{
+        create_download_error, truncated_body_url, unused_local_url,
+    };
     use bullet_stream::{global, strip_ansi};
     use flate2::Compression;
     use flate2::write::GzEncoder;
@@ -566,6 +647,123 @@ mod test {
                 retry_attempt_failed_matcher(1, 2, "Bad Request"),
                 retry_attempt_failed_matcher(2, 2, "Not Found"),
             ],
+        );
+    }
+
+    #[test]
+    fn test_download_failure_includes_most_recent_response() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(404).insert_header("cf-ray", "test-ray"))
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        match create_download_error(&server.uri()) {
+            DownloadError::Download { source, .. } => {
+                let last_response = source.last_response().unwrap();
+                assert_eq!(last_response.status, StatusCode::NOT_FOUND);
+                assert_eq!(last_response.headers["cf-ray"], "test-ray");
+            }
+            e => panic!("Not the expected error: {e:?}"),
+        }
+    }
+
+    #[test]
+    fn test_download_failure_without_response() {
+        match create_download_error(&unused_local_url()) {
+            DownloadError::Download { source, .. } => {
+                assert!(source.last_response().is_none());
+            }
+            e => panic!("Not the expected error: {e:?}"),
+        }
+    }
+
+    #[test]
+    fn test_download_failure_after_retry_includes_latest_response() {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(500).insert_header("cf-ray", "first"))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(502).insert_header("cf-ray", "second"))
+                    .up_to_n_times(1)
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .max_retries(1)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    let last_response = source.last_response().unwrap();
+                    assert_eq!(last_response.status, StatusCode::BAD_GATEWAY);
+                    assert_eq!(last_response.headers["cf-ray"], "second");
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+        });
+    }
+
+    #[test]
+    fn test_download_body_read_failure_includes_most_recent_response() {
+        match create_download_error(&truncated_body_url()) {
+            DownloadError::Download {
+                source: source @ GetError::Write { .. },
+                ..
+            } => {
+                assert_eq!(source.last_response().unwrap().status, StatusCode::OK);
+            }
+            e => panic!("Not the expected error: {e:?}"),
+        }
+    }
+
+    #[test]
+    fn test_last_response_display() {
+        let mut headers = HeaderMap::new();
+        headers.insert("cf-ray", "test-ray".parse().unwrap());
+        headers.insert("server", "cloudflare".parse().unwrap());
+        let last_response = LastResponse {
+            status: StatusCode::NOT_FOUND,
+            headers,
+        };
+        assert_eq!(
+            last_response.to_string(),
+            "404 Not Found\ncf-ray: test-ray\nserver: cloudflare"
         );
     }
 

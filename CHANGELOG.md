@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Download failures now include most recent response headers and links to upstream status pages. ([#1489](https://github.com/heroku/buildpacks-nodejs/pull/1489))
+
 ### Fixed
 
 - Ensure `npm ci` installs devDependencies and `npm prune` removes them regardless of npm configuration. ([#1488](https://github.com/heroku/buildpacks-nodejs/pull/1488))

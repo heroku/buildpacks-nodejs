@@ -46,7 +46,7 @@ pub(crate) fn error_message(
     let pack_url =
         style::url("https://buildpacks.io/docs/for-platform-operators/how-to/integrate-ci/pack/");
 
-    match error_type {
+    match &error_type {
         ErrorType::Framework => {}
         ErrorType::Internal => {
             message_parts.push(formatdoc! { "
@@ -80,6 +80,23 @@ pub(crate) fn error_message(
                 "}.trim().to_string());
             }
         }
+        ErrorType::Upstream(status_urls) => {
+            let status_urls = status_urls
+                .iter()
+                .map(|status_url| format!("- {}", style::url(status_url)))
+                .collect::<Vec<_>>()
+                .join("\n");
+            message_parts.push(
+                formatdoc! { "
+                Check the following status pages for any reported incidents:
+                {status_urls}
+
+                After all incidents resolve, retry your build.
+            "}
+                .trim()
+                .to_string(),
+            );
+        }
     }
 
     let message = message_parts.join("\n\n");
@@ -88,6 +105,7 @@ pub(crate) fn error_message(
         debug_info,
         message,
         id,
+        error_type,
     }
 }
 
@@ -100,6 +118,7 @@ pub(crate) struct ErrorMessage {
     debug_info: Option<String>,
     message: String,
     pub(crate) id: String,
+    pub(crate) error_type: ErrorType,
 }
 
 impl Display for ErrorMessage {
@@ -127,6 +146,20 @@ pub(crate) enum ErrorType {
     Framework,
     Internal,
     UserFacing(SuggestRetryBuild, SuggestSubmitIssue),
+    /// A failure in an external service, with the status page URLs to check for incidents.
+    Upstream(&'static [&'static str]),
+}
+
+impl ErrorType {
+    /// The party a failure is attributed to, for telemetry.
+    pub(crate) fn classification(&self) -> &'static str {
+        match self {
+            ErrorType::Framework => "framework",
+            ErrorType::Internal => "buildpack",
+            ErrorType::UserFacing(..) => "user",
+            ErrorType::Upstream(_) => "upstream",
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -178,9 +211,11 @@ pub(crate) use error_codes;
 #[cfg(test)]
 pub(crate) mod test_util {
     use crate::utils::error_handling::ErrorMessage;
+    use crate::utils::http::{DownloadError, DownloadTask, download};
     use bullet_stream::strip_ansi;
     use fun_run::{CmdError, ExitStatusFromCode, OutputWithName};
     use insta::{assert_snapshot, with_settings};
+    use std::io::{Read, Write};
     use std::path::PathBuf;
     use std::process::{ExitStatus, Output};
     use test_support::test_name;
@@ -213,6 +248,56 @@ pub(crate) mod test_util {
         reqwest::blocking::get("https://test/error").unwrap_err()
     }
 
+    // A local URL with nothing listening on it, so connections are refused.
+    pub(crate) fn unused_local_url() -> String {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        format!("http://{}", listener.local_addr().unwrap())
+    }
+
+    // Downloads from `url` with no retries, expecting it to fail.
+    pub(crate) fn create_download_error(url: &str) -> DownloadError {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
+        let dst = tempfile::NamedTempFile::new().unwrap();
+        let mut error = None;
+        bullet_stream::global::with_locked_writer(Vec::<u8>::new(), || {
+            error = download(
+                &DownloadTask::builder(url, dst.path())
+                    .max_retries(0)
+                    .build(),
+            )
+            .err();
+        });
+        error.expect("download should fail")
+    }
+
+    // Serves a response that closes the connection before the advertised body length is sent,
+    // so the failure happens while reading the response body.
+    pub(crate) fn truncated_body_url() -> String {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            // Read the full request so closing the connection sends a FIN, not a reset, which
+            // would fail the request before the body is read.
+            let mut request = Vec::new();
+            let mut buf = [0; 1024];
+            while !request.ends_with(b"\r\n\r\n") {
+                let n = stream.read(&mut buf).unwrap();
+                if n == 0 {
+                    return;
+                }
+                request.extend_from_slice(&buf[..n]);
+            }
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial")
+                .unwrap();
+            stream.shutdown(std::net::Shutdown::Write).unwrap();
+        });
+        url
+    }
+
     pub(crate) fn create_json_error() -> serde_json::error::Error {
         serde_json::from_str::<serde_json::Value>(r#"{\n  "name":\n}"#).unwrap_err()
     }
@@ -226,5 +311,21 @@ pub(crate) mod test_util {
         .named(command.into())
         .nonzero_captured()
         .unwrap_err()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn error_type_classification() {
+        assert_eq!(ErrorType::Framework.classification(), "framework");
+        assert_eq!(ErrorType::Internal.classification(), "buildpack");
+        assert_eq!(
+            ErrorType::UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No).classification(),
+            "user"
+        );
+        assert_eq!(ErrorType::Upstream(&[]).classification(), "upstream");
     }
 }
