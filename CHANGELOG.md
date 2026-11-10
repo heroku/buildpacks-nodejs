@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Download failures now include most recent response headers and links to upstream status pages. ([#1489](https://github.com/heroku/buildpacks-nodejs/pull/1489))
+- Downloads now fail fast when stalled or degraded and debug info shows failure details for each download attempt. ([#1490](https://github.com/heroku/buildpacks-nodejs/pull/1490))
 
 ### Fixed
 

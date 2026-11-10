@@ -2,7 +2,8 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - error sending request for url (https://test/error)
+  - Gave up after 1 attempt over 1.2s. Retries are disabled.
+    - Attempt 1 (1.2s) - error sending request for url (http://10.255.255.1/error): operation timed out
 
 ! Failed to download Node.js distribution
 !

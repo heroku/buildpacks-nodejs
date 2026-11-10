@@ -650,7 +650,9 @@ pub(crate) struct InstallPackageLayerMetadata {
 mod test {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_reqwest_error};
+    use crate::utils::http::{AttemptError, FailedAttempt, StopReason};
     use std::str::FromStr;
+    use std::time::Duration;
 
     #[test]
     fn test_packument_metadata() {
@@ -718,8 +720,13 @@ os = "linux"
             &package_packument,
             &DownloadError::Download {
                 url: package_packument.dist.tarball.clone(),
-                source: GetError::Request {
-                    source: create_reqwest_error(),
+                source: GetError {
+                    attempts: vec![FailedAttempt {
+                        error: AttemptError::Request(create_reqwest_error()),
+                        duration: Duration::from_millis(1200),
+                    }],
+                    stop_reason: StopReason::RetriesExhausted(0),
+                    elapsed: Duration::from_millis(1200),
                     last_response: None,
                 },
             },

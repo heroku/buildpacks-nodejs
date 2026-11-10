@@ -3,7 +3,8 @@ use crate::utils::error_handling::{
     ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
 use crate::utils::http::{
-    ChecksumValidator, DownloadError, DownloadTask, Extractor, GetError, GzipOptions, download,
+    AttemptError, ChecksumValidator, DownloadError, DownloadTask, Extractor, GetError, GzipOptions,
+    download,
 };
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
@@ -157,15 +158,17 @@ fn create_downloader_error(error: DownloadError) -> ErrorMessage {
 // stream, HTTP error statuses, failures reading the response body) is treated as an upstream failure.
 // Download URLs come from the inventory, so a 404 or 410 is unlikely and not handled separately.
 fn download_request_error_type(error: &GetError) -> ErrorType {
-    match error {
-        GetError::Request { source, .. } if source.is_builder() => ErrorType::Internal,
-        GetError::Request { .. } => ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
-        // Failures reading the response body surface as I/O errors wrapping the reqwest error;
-        // anything else is a failure creating or writing the temporary download file.
-        GetError::Write { source, .. } if matches!(source.get_ref(), Some(inner) if inner.is::<reqwest::Error>()) => {
+    match error.error() {
+        AttemptError::Request(source) if source.is_builder() => ErrorType::Internal,
+        AttemptError::Request(_) | AttemptError::Timeout(_) => {
             ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
         }
-        GetError::Write { .. } => UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes),
+        // Failures reading the response body surface as I/O errors wrapping the reqwest error;
+        // anything else is a failure creating or writing the temporary download file.
+        AttemptError::Write(source) if matches!(source.get_ref(), Some(inner) if inner.is::<reqwest::Error>()) => {
+            ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
+        }
+        AttemptError::Write(_) => UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes),
     }
 }
 
@@ -233,7 +236,7 @@ mod tests {
         assert_error_snapshot, create_cmd_error, create_download_error, create_reqwest_error,
         truncated_body_url, unused_local_url,
     };
-    use crate::utils::http::LastResponse;
+    use crate::utils::http::{FailedAttempt, LastResponse, StopReason, TransferTimeout};
     use http::StatusCode;
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
@@ -241,6 +244,7 @@ mod tests {
     };
     use sha2::Sha256;
     use std::str::FromStr;
+    use std::time::Duration;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -299,8 +303,13 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
         assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
-            source: GetError::Request {
-                source: create_reqwest_error(),
+            source: GetError {
+                attempts: vec![FailedAttempt {
+                    error: AttemptError::Request(create_reqwest_error()),
+                    duration: Duration::from_millis(1200),
+                }],
+                stop_reason: StopReason::RetriesExhausted(0),
+                elapsed: Duration::from_millis(1200),
                 last_response: None,
             },
         }));
@@ -315,8 +324,22 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         headers.insert("cf-ray", "a56649df2e233704-YYZ".parse().unwrap());
         assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
-            source: GetError::Request {
-                source: create_reqwest_error(),
+            source: GetError {
+                attempts: vec![
+                    FailedAttempt {
+                        error: AttemptError::Timeout(TransferTimeout::SpeedLimit {
+                            speed_limit: 512 * 1024,
+                            speed_time: Duration::from_secs(15),
+                        }),
+                        duration: Duration::from_millis(15_200),
+                    },
+                    FailedAttempt {
+                        error: AttemptError::Request(create_reqwest_error()),
+                        duration: Duration::from_millis(400),
+                    },
+                ],
+                stop_reason: StopReason::RetriesExhausted(1),
+                elapsed: Duration::from_millis(16_600),
                 last_response: Some(Box::new(LastResponse {
                     status: StatusCode::NOT_FOUND,
                     headers,
@@ -375,6 +398,41 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
             };
             assert_eq!(download_request_error_type(&source), expected, "{url}");
         }
+    }
+
+    #[test]
+    fn download_timeout_error() {
+        let error = DownloadError::Download {
+            url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                .into(),
+            source: GetError {
+                attempts: vec![
+                    FailedAttempt {
+                        error: AttemptError::Timeout(TransferTimeout::MaxTime(
+                            Duration::from_secs(120),
+                        )),
+                        duration: Duration::from_secs(120),
+                    },
+                    FailedAttempt {
+                        error: AttemptError::Timeout(TransferTimeout::MaxTime(
+                            Duration::from_secs(120),
+                        )),
+                        duration: Duration::from_secs(120),
+                    },
+                ],
+                stop_reason: StopReason::RetryMaxTime(Duration::from_secs(120)),
+                elapsed: Duration::from_secs(241),
+                last_response: None,
+            },
+        };
+        let DownloadError::Download { source, .. } = &error else {
+            unreachable!()
+        };
+        assert_eq!(
+            download_request_error_type(source),
+            ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
+        );
+        assert_error_snapshot(&create_downloader_error(error));
     }
 
     #[test]

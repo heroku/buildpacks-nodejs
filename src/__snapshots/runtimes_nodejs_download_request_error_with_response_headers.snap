@@ -2,7 +2,9 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - error sending request for url (https://test/error)
+  - Gave up after 2 attempts over 16.6s. The only retry failed.
+    - Attempt 1 (15.2s) - Operation too slow. Less than 524288 bytes/sec transferred the last 15s
+    - Attempt 2 (0.4s) - error sending request for url (http://10.255.255.1/error): operation timed out
     
     Response headers from the most recent response received:
     404 Not Found
