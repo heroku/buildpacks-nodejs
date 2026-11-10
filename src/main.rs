@@ -264,6 +264,7 @@ impl libcnb::Buildpack for NodeJsBuildpack {
         tracing::error!(
             { ERROR_ID } = error_message.id,
             { ERROR_MESSAGE } = error_message.to_string(),
+            { ERROR_CLASSIFICATION } = error_message.error_type.classification(),
             "error"
         );
         print::plain(error_message.to_string());

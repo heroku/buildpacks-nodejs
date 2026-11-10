@@ -1,0 +1,24 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - error sending request for url (https://test/error)
+    
+    Response headers from the most recent response received:
+    404 Not Found
+    cf-cache-status: BYPASS
+    server: cloudflare
+    cf-ray: a56649df2e233704-YYZ
+
+! Failed to download Node.js distribution
+!
+! A request to download the target Node.js distribution from https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz failed unexpectedly. This error can occur due to an unstable network connection or an issue with the upstream Node.js distribution server.
+!
+! Suggestions:
+! - Confirm the download url (https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz) works.
+!
+! Check the following status pages for any reported incidents:
+! - https://status.nodejs.org/
+! - https://www.cloudflarestatus.com/
+!
+! After all incidents resolve, retry your build.

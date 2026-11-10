@@ -9,7 +9,10 @@ source: src/utils/error_handling.rs
 ! A request to download the target Node.js distribution from https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz failed unexpectedly. This error can occur due to an unstable network connection or an issue with the upstream Node.js distribution server.
 !
 ! Suggestions:
-! - Check the status of https://status.nodejs.org/ for any reported issues.
 ! - Confirm the download url (https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz) works.
 !
-! Use the debug information above to troubleshoot and retry your build.
+! Check the following status pages for any reported incidents:
+! - https://status.nodejs.org/
+! - https://www.cloudflarestatus.com/
+!
+! After all incidents resolve, retry your build.

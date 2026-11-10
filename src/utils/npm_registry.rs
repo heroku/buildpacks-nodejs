@@ -718,7 +718,10 @@ os = "linux"
             &package_packument,
             &DownloadError::Download {
                 url: package_packument.dist.tarball.clone(),
-                source: GetError::Request(create_reqwest_error()),
+                source: GetError::Request {
+                    source: create_reqwest_error(),
+                    last_response: None,
+                },
             },
         ));
     }

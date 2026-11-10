@@ -1,9 +1,9 @@
 use crate::utils::error_handling::ErrorType::{Internal, UserFacing};
 use crate::utils::error_handling::{
-    ErrorMessage, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
+    ErrorMessage, ErrorType, SuggestRetryBuild, SuggestSubmitIssue, error_message, file_value,
 };
 use crate::utils::http::{
-    ChecksumValidator, DownloadError, DownloadTask, Extractor, GzipOptions, download,
+    ChecksumValidator, DownloadError, DownloadTask, Extractor, GetError, GzipOptions, download,
 };
 use crate::{BuildpackBuildContext, BuildpackResult};
 use bullet_stream::global::print;
@@ -92,11 +92,10 @@ pub(crate) fn install(
 fn create_downloader_error(error: DownloadError) -> ErrorMessage {
     match error {
         DownloadError::Download { url, source } => {
-            let nodejs_status_url = style::url("https://status.nodejs.org/");
             let url = style::url(url);
             error_message()
                 .id("runtime/nodejs/download/request")
-                .error_type(UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::No))
+                .error_type(download_request_error_type(&source))
                 .header("Failed to download Node.js distribution")
                 .body(formatdoc! {"
                     A request to download the target Node.js distribution from {url} failed unexpectedly. This error can \
@@ -104,7 +103,6 @@ fn create_downloader_error(error: DownloadError) -> ErrorMessage {
                     server.
 
                     Suggestions:
-                    - Check the status of {nodejs_status_url} for any reported issues.
                     - Confirm the download url ({url}) works.
                 "})
                 .debug_info(source.to_string())
@@ -154,6 +152,27 @@ fn create_downloader_error(error: DownloadError) -> ErrorMessage {
         }
     }
 }
+
+// An invalid request means we built a bad URL. Everything else (connect, TLS, timeout, reset, HTTP/2
+// stream, HTTP error statuses, failures reading the response body) is treated as an upstream failure.
+// Download URLs come from the inventory, so a 404 or 410 is unlikely and not handled separately.
+fn download_request_error_type(error: &GetError) -> ErrorType {
+    match error {
+        GetError::Request { source, .. } if source.is_builder() => ErrorType::Internal,
+        GetError::Request { .. } => ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+        // Failures reading the response body surface as I/O errors wrapping the reqwest error;
+        // anything else is a failure creating or writing the temporary download file.
+        GetError::Write { source, .. } if matches!(source.get_ref(), Some(inner) if inner.is::<reqwest::Error>()) => {
+            ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
+        }
+        GetError::Write { .. } => UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes),
+    }
+}
+
+const NODEJS_DOWNLOAD_STATUS_URLS: &[&str] = &[
+    "https://status.nodejs.org/",
+    "https://www.cloudflarestatus.com/",
+];
 
 const LAYER_VERSION: &str = "1";
 
@@ -211,15 +230,19 @@ fn create_get_node_version_command_error(error: &VersionCommandError) -> ErrorMe
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{
-        assert_error_snapshot, create_cmd_error, create_reqwest_error,
+        assert_error_snapshot, create_cmd_error, create_download_error, create_reqwest_error,
+        truncated_body_url, unused_local_url,
     };
-    use crate::utils::http::GetError;
+    use crate::utils::http::LastResponse;
+    use http::StatusCode;
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
         checksum::Checksum,
     };
     use sha2::Sha256;
     use std::str::FromStr;
+    use wiremock::matchers::{method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     fn create_nodejs_artifact(version: &str) -> NodejsArtifact {
         NodejsArtifact {
@@ -276,8 +299,82 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
         assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
-            source: GetError::Request(create_reqwest_error()),
+            source: GetError::Request {
+                source: create_reqwest_error(),
+                last_response: None,
+            },
         }));
+    }
+
+    #[test]
+    fn download_request_error_with_response_headers() {
+        let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
+        let mut headers = http::HeaderMap::new();
+        headers.insert("cf-cache-status", "BYPASS".parse().unwrap());
+        headers.insert("server", "cloudflare".parse().unwrap());
+        headers.insert("cf-ray", "a56649df2e233704-YYZ".parse().unwrap());
+        assert_error_snapshot(&create_downloader_error(DownloadError::Download {
+            url: url.to_string(),
+            source: GetError::Request {
+                source: create_reqwest_error(),
+                last_response: Some(Box::new(LastResponse {
+                    status: StatusCode::NOT_FOUND,
+                    headers,
+                })),
+            },
+        }));
+    }
+
+    #[test]
+    fn download_request_error_classification() {
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+                for (status, route) in [(404, "/404"), (410, "/410"), (500, "/500"), (403, "/403")]
+                {
+                    Mock::given(method("GET"))
+                        .and(path(route))
+                        .respond_with(ResponseTemplate::new(status))
+                        .mount(&server)
+                        .await;
+                }
+                server
+            });
+
+        for (url, expected) in [
+            (
+                format!("{}/404", server.uri()),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+            (
+                format!("{}/410", server.uri()),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+            (
+                format!("{}/500", server.uri()),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+            (
+                format!("{}/403", server.uri()),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+            ("htp://bad.url".to_string(), ErrorType::Internal),
+            (
+                unused_local_url(),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+            (
+                truncated_body_url(),
+                ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+            ),
+        ] {
+            let DownloadError::Download { source, .. } = create_download_error(&url) else {
+                panic!("expected a download error: {url}");
+            };
+            assert_eq!(download_request_error_type(&source), expected, "{url}");
+        }
     }
 
     #[test]
