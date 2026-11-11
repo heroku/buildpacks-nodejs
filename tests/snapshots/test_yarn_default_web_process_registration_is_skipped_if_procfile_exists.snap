@@ -13,14 +13,14 @@ heroku/nodejs <buildpack-version>
 
 - Checking Node.js version
   - Node.js version not specified, using `26.x`
-  - Resolved Node.js version: `26.13.0`
+  - Resolved Node.js version: `26.13.1`
 - Installing Node.js distribution
-  - GET https://nodejs.org/download/release/v26.13.0/node-v26.13.0-<arch>.tar.gz ... (<time_elapsed>)
+  - GET https://nodejs.org/download/release/v26.13.1/node-v26.13.1-<arch>.tar.gz ... (<time_elapsed>)
   - Validating ... (<time_elapsed>)
   - Extracting ... (<time_elapsed>)
   - Verifying checksum
-  - Extracting Node.js `26.13.0 (<arch>)`
-  - Installing Node.js `26.13.0 (<arch>)` ... (<time_elapsed>)
+  - Extracting Node.js `26.13.1 (<arch>)`
+  - Installing Node.js `26.13.1 (<arch>)` ... (<time_elapsed>)
 - Determining Yarn information
   - Found `packageManager` set to `yarn@4.2.2` in `package.json`
   - GET https://registry.npmjs.org/@yarnpkg/cli-dist ... (<time_elapsed>)
