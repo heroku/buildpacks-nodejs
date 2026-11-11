@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ensure `npm ci` installs devDependencies and `npm prune` removes them regardless of npm configuration. ([#1488](https://github.com/heroku/buildpacks-nodejs/pull/1488))
 - `WEB_CONCURRENCY` and `WEB_MEMORY` defaults now detect the dyno memory limit when it's set via cgroup v2 `memory.high` (as on Cedar dynos). ([#1468](https://github.com/heroku/buildpacks-nodejs/pull/1468))
 
+### Added
+
+- 26.13.1 (linux-amd64, linux-arm64)
+- 24.22.3 (linux-amd64, linux-arm64)
+- 22.23.5 (linux-amd64, linux-arm64)
+
 ## [5.9.0] - 2026-11-05
 
 ### Changed
