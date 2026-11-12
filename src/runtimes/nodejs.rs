@@ -296,7 +296,7 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         let url = "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz";
         assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
-            // every attempt timed out connecting, with the default retries and retry delay
+            // every attempt timed out connecting, with the default retries and backoff
             source: GetError {
                 attempts: (0..6)
                     .map(|_| FailedAttempt {
@@ -305,7 +305,7 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                     })
                     .collect(),
                 stop_reason: StopReason::RetriesExhausted,
-                elapsed: Duration::from_millis(32_500),
+                elapsed: Duration::from_secs(61),
                 last_response: None,
             },
         }));
@@ -333,7 +333,7 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                 }))
                 .collect(),
                 stop_reason: StopReason::RetriesExhausted,
-                elapsed: Duration::from_millis(57_700),
+                elapsed: Duration::from_millis(86_200),
                 last_response: Some(Box::new(LastResponse {
                     status: StatusCode::OK,
                     headers,
