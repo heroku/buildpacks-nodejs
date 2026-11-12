@@ -1,5 +1,5 @@
 use bullet_stream::global::print;
-use bullet_stream::{GlobalTimer, style};
+use bullet_stream::style;
 use digest_io::IoWrapper;
 use flate2::read::MultiGzDecoder;
 use http::{HeaderMap, StatusCode};
@@ -11,7 +11,7 @@ use std::fmt;
 use std::fs::File;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tempfile::NamedTempFile;
 use tracing::instrument;
 
@@ -22,8 +22,11 @@ pub(crate) const DEFAULT_MAX_RETRIES: usize = 5;
 pub(crate) const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(500); // half a second
 
 pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
+    let start = Instant::now();
+
     // The most recent response received across all attempts, attached to any error.
     let mut last_response: Option<Box<LastResponse>> = None;
+    let mut attempts: Vec<FailedAttempt> = Vec::new();
 
     let client = reqwest::blocking::ClientBuilder::new()
         .connect_timeout(request.connect_timeout)
@@ -35,15 +38,17 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
 
     retry_with_index(retry_strategy, |index| {
         let attempt = index - 1;
+        let attempt_start = Instant::now();
 
         // fail early if the temporary download file can't be created
         let mut response_file = match tempfile::NamedTempFile::new() {
             Ok(named_temp_file) => named_temp_file,
             Err(source) => {
-                return OperationResult::Err(GetError::Write {
-                    source,
-                    last_response: last_response.clone(),
+                attempts.push(FailedAttempt {
+                    error: AttemptError::Write(source),
+                    duration: attempt_start.elapsed(),
                 });
+                return OperationResult::Err(StopReason::NotRetryable);
             }
         };
 
@@ -53,141 +58,221 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             format!("Retry attempt {attempt} of {}", request.max_retries)
         });
 
-        // helper function to provide a short reason to the timer before returning the error
-        let report_error = |timer: GlobalTimer, error: GetError| {
-            timer.cancel(error.cancellation_reason());
-            if error.retry() {
-                OperationResult::Retry(error)
-            } else {
-                OperationResult::Err(error)
-            }
-        };
-
-        let response = match client
-            .get(&request.url)
-            .headers(request.headers.clone())
-            .send()
-        {
-            Ok(response) => response,
-            Err(source) => {
-                return report_error(
-                    timer,
-                    GetError::Request {
-                        source,
-                        last_response: last_response.clone(),
-                    },
-                );
-            }
-        };
-
-        last_response = Some(Box::new(LastResponse {
-            status: response.status(),
-            headers: response.headers().clone(),
-        }));
-
-        let mut response = match response.error_for_status() {
-            Ok(response) => response,
-            Err(source) => {
-                return report_error(
-                    timer,
-                    GetError::Request {
-                        source,
-                        last_response: last_response.clone(),
-                    },
-                );
-            }
-        };
-
-        if let Err(source) = io::copy(&mut response, response_file.as_file_mut()) {
-            return report_error(
-                timer,
-                GetError::Write {
-                    source,
-                    last_response: last_response.clone(),
-                },
-            );
-        }
-
-        if response.status().is_success() {
-            timer.done();
-        } else if let Some(reason) = response.status().canonical_reason() {
-            timer.cancel(reason);
-        } else {
-            timer.cancel(response.status().as_str());
-        }
-
-        OperationResult::Ok(GetResponse {
-            response,
-            response_file,
-        })
-    })
-    .map_err(|operation| operation.error)
-}
-
-/// `last_response` is the most recent response received across all attempts, which may not be
-/// from the attempt that produced this error (a retry can fail before any response arrives). It's
-/// `None` if no response was received at all.
-#[derive(Debug)]
-pub(crate) enum GetError {
-    Request {
-        source: reqwest::Error,
-        last_response: Option<Box<LastResponse>>,
-    },
-    Write {
-        source: io::Error,
-        last_response: Option<Box<LastResponse>>,
-    },
-}
-
-impl GetError {
-    pub(crate) fn last_response(&self) -> Option<&LastResponse> {
-        match self {
-            GetError::Request { last_response, .. } | GetError::Write { last_response, .. } => {
-                last_response.as_deref()
-            }
-        }
-    }
-
-    fn cancellation_reason(&self) -> String {
-        match self {
-            GetError::Request { source: error, .. } => {
-                if error.is_connect() {
-                    "connection refused".into()
-                } else if error.is_timeout() {
-                    "timed out".into()
-                } else if error.is_builder() {
-                    "invalid request".into()
-                } else if let Some(status_code) = error.status() {
-                    status_code
-                        .canonical_reason()
-                        .map(ToString::to_string)
-                        .unwrap_or(format!("status: {status_code}"))
+        match get_attempt(&client, request, &mut response_file, &mut last_response) {
+            Ok(response) => {
+                if response.status().is_success() {
+                    timer.done();
+                } else if let Some(reason) = response.status().canonical_reason() {
+                    timer.cancel(reason);
                 } else {
-                    error.to_string()
+                    timer.cancel(response.status().as_str());
+                }
+                OperationResult::Ok(GetResponse {
+                    response,
+                    response_file,
+                })
+            }
+            Err(error) => {
+                timer.cancel(error.cancellation_reason());
+                let retry = error.retry();
+                attempts.push(FailedAttempt {
+                    error,
+                    duration: attempt_start.elapsed(),
+                });
+                if retry {
+                    OperationResult::Retry(StopReason::RetriesExhausted)
+                } else {
+                    OperationResult::Err(StopReason::NotRetryable)
                 }
             }
-            GetError::Write { .. } => "write response error".into(),
+        }
+    })
+    .map_err(|operation| GetError {
+        attempts,
+        stop_reason: operation.error,
+        elapsed: start.elapsed(),
+        last_response,
+    })
+}
+
+/// A single request, with the response body written to `response_file`.
+fn get_attempt(
+    client: &reqwest::blocking::Client,
+    request: &GetRequest,
+    response_file: &mut NamedTempFile,
+    last_response: &mut Option<Box<LastResponse>>,
+) -> Result<Response, AttemptError> {
+    let response = client
+        .get(&request.url)
+        .headers(request.headers.clone())
+        .send()
+        .map_err(|error| {
+            // reqwest reports errors building the request (e.g. an invalid URL) when it's sent
+            if error.is_builder() {
+                AttemptError::InvalidRequest(error)
+            } else {
+                AttemptError::Request(error)
+            }
+        })?;
+
+    *last_response = Some(Box::new(LastResponse {
+        status: response.status(),
+        headers: response.headers().clone(),
+    }));
+
+    let mut response = response.error_for_status().map_err(AttemptError::Request)?;
+
+    io::copy(&mut response, response_file.as_file_mut()).map_err(copy_error)?;
+
+    Ok(response)
+}
+
+/// Errors reading the response body arrive as I/O errors wrapping the reqwest error. Anything else
+/// is a failure writing the temporary download file.
+fn copy_error(error: io::Error) -> AttemptError {
+    match error.downcast::<reqwest::Error>() {
+        Ok(source) => AttemptError::Request(source),
+        Err(error) => AttemptError::Write(error),
+    }
+}
+
+/// The error from a single attempt of [`get`].
+#[derive(Debug)]
+pub(crate) enum AttemptError {
+    /// The request couldn't be built, e.g. because the URL is invalid.
+    InvalidRequest(reqwest::Error),
+    /// Sending the request, an HTTP error status, or reading the response body failed.
+    Request(reqwest::Error),
+    /// Creating or writing the temporary download file failed.
+    Write(io::Error),
+}
+
+impl AttemptError {
+    fn cancellation_reason(&self) -> String {
+        match self {
+            AttemptError::InvalidRequest(_) => "invalid request".into(),
+            AttemptError::Request(source) => request_error_reason(source),
+            AttemptError::Write(_) => "write response error".into(),
         }
     }
 
     fn retry(&self) -> bool {
         match self {
-            GetError::Request { source, .. } => !source.is_builder(),
-            GetError::Write { .. } => true,
+            AttemptError::Request(_) => true,
+            // an invalid request will fail the same way again, and local disk failures (e.g. out
+            // of space) won't be fixed by downloading again
+            AttemptError::InvalidRequest(_) | AttemptError::Write(_) => false,
         }
+    }
+}
+
+fn request_error_reason(error: &reqwest::Error) -> String {
+    // checked first because a connect timeout is also a connect error
+    if error.is_timeout() {
+        "timed out".into()
+    } else if error.is_connect() {
+        "connection refused".into()
+    } else if let Some(status_code) = error.status() {
+        status_code
+            .canonical_reason()
+            .map(ToString::to_string)
+            .unwrap_or(format!("status: {status_code}"))
+    } else {
+        error.to_string()
+    }
+}
+
+/// Writes the error and its chain of sources, e.g. `error sending request: connection refused`.
+impl fmt::Display for AttemptError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let error: &dyn std::error::Error = match self {
+            AttemptError::InvalidRequest(source) | AttemptError::Request(source) => source,
+            AttemptError::Write(source) => source,
+        };
+        write!(f, "{error}")?;
+        let mut source = error.source();
+        while let Some(error) = source {
+            write!(f, ": {error}")?;
+            source = error.source();
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct FailedAttempt {
+    pub(crate) error: AttemptError,
+    pub(crate) duration: Duration,
+}
+
+/// Why [`get`] stopped retrying.
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum StopReason {
+    NotRetryable,
+    /// All of the configured `max_retries` were used.
+    RetriesExhausted,
+}
+
+impl fmt::Display for StopReason {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            StopReason::NotRetryable => write!(f, "The error can't be retried"),
+            StopReason::RetriesExhausted => write!(f, "No retries left"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct GetError {
+    /// Every failed attempt in order, so the last one is the error [`get`] gave up on.
+    pub(crate) attempts: Vec<FailedAttempt>,
+    pub(crate) stop_reason: StopReason,
+    /// The total time spent across all attempts, including retry delays.
+    pub(crate) elapsed: Duration,
+    /// The most recent response received across all attempts, which may not be from the last
+    /// attempt (a retry can fail before any response arrives). It's `None` if no response was
+    /// received at all.
+    pub(crate) last_response: Option<Box<LastResponse>>,
+}
+
+impl GetError {
+    /// The error from the last attempt.
+    pub(crate) fn error(&self) -> &AttemptError {
+        &self
+            .attempts
+            .last()
+            .expect("GetError should have at least one failed attempt")
+            .error
+    }
+
+    pub(crate) fn last_response(&self) -> Option<&LastResponse> {
+        self.last_response.as_deref()
     }
 }
 
 impl fmt::Display for GetError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            GetError::Request { source, .. } => write!(f, "{source}")?,
-            GetError::Write { source, .. } => write!(f, "{source}")?,
+        let attempts = self.attempts.len();
+        writeln!(
+            f,
+            "Failed after {attempts} {} over {:.1}s. {}.",
+            if attempts == 1 { "attempt" } else { "attempts" },
+            self.elapsed.as_secs_f32(),
+            self.stop_reason
+        )?;
+        for (index, attempt) in self.attempts.iter().enumerate() {
+            writeln!(
+                f,
+                "- Attempt {} ({:.1}s) - {}",
+                index + 1,
+                attempt.duration.as_secs_f32(),
+                attempt.error
+            )?;
         }
         if let Some(last_response) = self.last_response() {
             write!(
                 f,
-                "\n\nResponse headers from the most recent response received:\n{last_response}"
+                "\nResponse headers from the most recent response received:\n{last_response}"
             )?;
         }
         Ok(())
@@ -496,7 +581,9 @@ mod test {
     use flate2::write::GzEncoder;
     use regex::Regex;
     use std::fs;
-    use std::io::Write;
+    use std::io::{Read, Write};
+    use std::net::{TcpListener, TcpStream};
+    use std::thread;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
@@ -506,7 +593,10 @@ mod test {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
             match download(&DownloadTask::builder("htp://bad.url", dst.path()).build()).unwrap_err()
             {
-                DownloadError::Download { .. } => {}
+                DownloadError::Download { source, .. } => {
+                    assert!(matches!(source.error(), AttemptError::InvalidRequest(_)));
+                    assert_eq!(source.attempts.len(), 1);
+                }
                 e => panic!("Not the expected error: {e:?}"),
             }
         });
@@ -635,7 +725,15 @@ mod test {
             )
             .unwrap_err()
             {
-                DownloadError::Download { .. } => {}
+                DownloadError::Download { source, .. } => {
+                    assert!(matches!(source.stop_reason, StopReason::RetriesExhausted));
+                    let message = source.to_string();
+                    assert!(message.starts_with("Failed after 3 attempts over "));
+                    assert!(message.contains(". No retries left.\n"));
+                    assert!(message.contains("\n- Attempt 1 ("));
+                    assert!(message.contains("\n- Attempt 3 ("));
+                    assert!(message.contains("(404 Not Found)"));
+                }
                 e => panic!("Not the expected error: {e:?}"),
             }
         });
@@ -742,14 +840,44 @@ mod test {
     #[test]
     fn test_download_body_read_failure_includes_most_recent_response() {
         match create_download_error(&truncated_body_url()) {
-            DownloadError::Download {
-                source: source @ GetError::Write { .. },
-                ..
-            } => {
+            DownloadError::Download { source, .. } => {
+                assert!(matches!(source.error(), AttemptError::Request(_)));
                 assert_eq!(source.last_response().unwrap().status, StatusCode::OK);
             }
             e => panic!("Not the expected error: {e:?}"),
         }
+    }
+
+    #[test]
+    fn test_download_success_after_retry_of_body_read_failure() {
+        let url = raw_http_server(|mut stream, index| {
+            if index == 0 {
+                // Close the connection before the advertised body length is sent.
+                stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial")
+                    .unwrap();
+                stream.shutdown(std::net::Shutdown::Write).unwrap();
+            } else {
+                stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ntest")
+                    .unwrap();
+            }
+        });
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(&DownloadTask::builder(&url, dst.path()).build()).unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_failed_matcher(&url, "request or response body error"),
+                retry_attempt_success_matcher(1, DEFAULT_MAX_RETRIES),
+                saving_matcher(),
+            ],
+        );
+        assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
     }
 
     #[test]
@@ -1073,6 +1201,35 @@ mod test {
             fs::read_to_string(dst.path().join("parent/child-b/grandchild-b/name.txt")).unwrap(),
             "grandchild-b"
         );
+    }
+
+    /// A server that runs `handler` with each connection (and its index) after reading the request.
+    fn raw_http_server(handler: impl Fn(TcpStream, usize) + Send + Sync + 'static) -> String {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}", listener.local_addr().unwrap());
+        let handler = std::sync::Arc::new(handler);
+        thread::spawn(move || {
+            for (index, stream) in listener.incoming().enumerate() {
+                let mut stream = stream.unwrap();
+                let handler = handler.clone();
+                thread::spawn(move || {
+                    let mut request = Vec::new();
+                    let mut buf = [0; 1024];
+                    while !request.ends_with(b"\r\n\r\n") {
+                        let n = stream.read(&mut buf).unwrap();
+                        if n == 0 {
+                            break;
+                        }
+                        request.extend_from_slice(&buf[..n]);
+                    }
+                    handler(stream, index);
+                });
+            }
+        });
+        url
     }
 
     fn assert_log_contains_matches(log: &[u8], matchers: &[Regex]) {
