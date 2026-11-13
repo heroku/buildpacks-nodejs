@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Download failure debug info now lists the error from each attempt, and errors writing the downloaded file are no longer retried. ([#1493](https://github.com/heroku/buildpacks-nodejs/pull/1493))
+
 ## [5.9.1] - 2026-11-11
 
 ### Changed

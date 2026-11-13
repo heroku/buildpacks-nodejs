@@ -2,7 +2,13 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - error sending request for url (https://test/error)
+  - Failed after 6 attempts over 32.5s. No retries left.
+    - Attempt 1 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 2 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 3 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 4 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 5 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 6 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
 
 ! Failed to download Node.js distribution
 !
