@@ -1,0 +1,23 @@
+---
+source: src/utils/error_handling.rs
+---
+- Debug Info:
+  - Failed after 2 attempts over 126.0s. Retry time limit exceeded.
+    - Attempt 1 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+    - Attempt 2 (120.0s) - Operation timed out after 120s
+    
+    Response headers from the most recent response received:
+    200 OK
+
+! Failed to download Node.js distribution
+!
+! A request to download the target Node.js distribution from https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz failed unexpectedly. This error can occur due to an unstable network connection or an issue with the upstream Node.js distribution server.
+!
+! Suggestions:
+! - Confirm the download url (https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz) works.
+!
+! Check the following status pages for any reported incidents:
+! - https://status.nodejs.org/
+! - https://www.cloudflarestatus.com/
+!
+! After all incidents resolve, retry your build.
