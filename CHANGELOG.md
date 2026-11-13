@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Download failure debug info now lists the error from each attempt, and errors writing the downloaded file are no longer retried. ([#1493](https://github.com/heroku/buildpacks-nodejs/pull/1493))
 - Instrumented HTTP requests with spans for each request and each attempt. ([#1494](https://github.com/heroku/buildpacks-nodejs/pull/1494))
+- Download retries now back off exponentially (1s, 2s, 4s, …) instead of waiting a fixed 500ms, and stop once 120s have passed. ([#1495](https://github.com/heroku/buildpacks-nodejs/pull/1495))
 
 ## [5.9.1] - 2026-11-11
 

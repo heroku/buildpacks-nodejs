@@ -2,7 +2,7 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Failed after 6 attempts over 57.7s. No retries left.
+  - Failed after 6 attempts over 86.2s. No retries left.
     - Attempt 1 (30.2s) - error sending request for url (http://10.255.255.1/error): operation timed out
     - Attempt 2 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
     - Attempt 3 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out

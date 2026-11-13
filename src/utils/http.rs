@@ -5,7 +5,7 @@ use digest_io::IoWrapper;
 use flate2::read::MultiGzDecoder;
 use http::{HeaderMap, StatusCode};
 use reqwest::blocking::Response;
-use retry::delay::Fixed;
+use retry::delay::{Exponential, Fixed};
 use retry::{OperationResult, retry_with_index};
 use sha2::{Digest, Sha256};
 use std::fmt;
@@ -17,14 +17,25 @@ use tempfile::NamedTempFile;
 use tracing::field::Empty;
 use tracing::{Span, instrument};
 
+// The defaults mirror the curl options proposed for the classic Node.js buildpack in
+// https://github.com/heroku/heroku-buildpack-nodejs/pull/1853.
+
+/// curl `--connect-timeout`
 pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
-pub(crate) const DEFAULT_MAX_RETRIES: usize = 5;
+/// curl `--retry`
+pub(crate) const DEFAULT_RETRY: usize = 5;
 
-pub(crate) const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(500); // half a second
+/// Without `--retry-delay`, curl waits 1s before the first retry and doubles the delay for each
+/// retry after that, up to this cap.
+const MAX_RETRY_BACKOFF: Duration = Duration::from_secs(600);
+
+/// curl `--retry-max-time`
+pub(crate) const DEFAULT_RETRY_MAX_TIME: Duration = Duration::from_secs(120);
 
 pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     let start = Instant::now();
+    let retry_deadline = start + request.retry_max_time;
 
     // A span for the whole request, with a child span for each attempt.
     let url = telemetry_url(&request.url);
@@ -46,9 +57,9 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
         .build()
         .expect("Should be able to create the HTTP client");
 
-    let retry_strategy = Fixed::from(request.retry_delay).take(request.max_retries);
+    let retry_delays = retry_delays(request);
 
-    retry_with_index(retry_strategy, |index| {
+    retry_with_index(retry_delays.clone(), |index| {
         let attempt = index - 1;
         let attempt_start = Instant::now();
         let attempt_span = attempt_span(url.as_ref());
@@ -71,7 +82,7 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
         let timer = print::sub_start_timer(if attempt == 0 {
             format!("GET {}", style::url(&request.url))
         } else {
-            format!("Retry attempt {attempt} of {}", request.max_retries)
+            format!("Retry attempt {attempt} of {}", request.retry)
         });
 
         match get_attempt(
@@ -98,15 +109,26 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             Err(error) => {
                 timer.cancel(error.cancellation_reason());
                 record_attempt_error(&attempt_span, &error);
-                let retry = error.retry();
+                // `retry_delays[attempt]` is the delay before the next attempt
+                let next_retry_delay = usize::try_from(attempt)
+                    .ok()
+                    .and_then(|attempt| retry_delays.get(attempt));
+                let stop_reason = match next_retry_delay {
+                    _ if !error.retry() => Some(StopReason::NotRetryable),
+                    None => Some(StopReason::RetriesExhausted),
+                    // like curl, don't start a retry that would begin after `retry_max_time`
+                    Some(delay) if Instant::now() + *delay >= retry_deadline => {
+                        Some(StopReason::RetryMaxTime)
+                    }
+                    Some(_) => None,
+                };
                 attempts.push(FailedAttempt {
                     error,
                     duration: attempt_start.elapsed(),
                 });
-                if retry {
-                    OperationResult::Retry(StopReason::RetriesExhausted)
-                } else {
-                    OperationResult::Err(StopReason::NotRetryable)
+                match stop_reason {
+                    Some(stop_reason) => OperationResult::Err(stop_reason),
+                    None => OperationResult::Retry(StopReason::RetriesExhausted),
                 }
             }
         }
@@ -159,6 +181,18 @@ fn as_i64(value: impl TryInto<i64>) -> i64 {
 fn record_attempt_error(span: &Span, error: &AttemptError) {
     span.record("otel.status_code", "ERROR");
     span.record("error.message", error.to_string());
+}
+
+/// The delay before each retry. Like curl `--retry-delay`, a fixed delay replaces the default
+/// exponential backoff.
+fn retry_delays(request: &GetRequest) -> Vec<Duration> {
+    match request.retry_delay {
+        Some(delay) => Fixed::from(delay).take(request.retry).collect(),
+        None => Exponential::from_millis(1000)
+            .map(|delay| delay.min(MAX_RETRY_BACKOFF))
+            .take(request.retry)
+            .collect(),
+    }
 }
 
 /// A single request, with the response body written to `response_file`.
@@ -281,8 +315,10 @@ pub(crate) struct FailedAttempt {
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum StopReason {
     NotRetryable,
-    /// All of the configured `max_retries` were used.
+    /// All of the configured `retry` count was used.
     RetriesExhausted,
+    /// The next retry wouldn't start within `retry_max_time`.
+    RetryMaxTime,
 }
 
 impl fmt::Display for StopReason {
@@ -290,6 +326,7 @@ impl fmt::Display for StopReason {
         match self {
             StopReason::NotRetryable => write!(f, "The error can't be retried"),
             StopReason::RetriesExhausted => write!(f, "No retries left"),
+            StopReason::RetryMaxTime => write!(f, "Retry time limit exceeded"),
         }
     }
 }
@@ -359,10 +396,12 @@ pub(crate) struct GetRequest {
     headers: HeaderMap,
     #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
     connect_timeout: Duration,
-    #[builder(default = DEFAULT_MAX_RETRIES)]
-    max_retries: usize,
-    #[builder(default = DEFAULT_RETRY_DELAY)]
-    retry_delay: Duration,
+    #[builder(default = DEFAULT_RETRY)]
+    retry: usize,
+    /// curl `--retry-delay`: a fixed delay between retries instead of exponential backoff.
+    retry_delay: Option<Duration>,
+    #[builder(default = DEFAULT_RETRY_MAX_TIME)]
+    retry_max_time: Duration,
 }
 
 /// The status and headers of the most recent response received by [`get`].
@@ -405,8 +444,9 @@ impl GetResponse {
 pub(crate) fn download(download_task: &DownloadTask) -> Result<(), DownloadError> {
     let response = get(&GetRequest::builder(&download_task.source_url)
         .connect_timeout(download_task.connect_timeout)
-        .retry_delay(download_task.retry_delay)
-        .max_retries(download_task.max_retries)
+        .retry(download_task.retry)
+        .maybe_retry_delay(download_task.retry_delay)
+        .retry_max_time(download_task.retry_max_time)
         .build())
     .map_err(|source| DownloadError::Download {
         url: download_task.source_url.clone(),
@@ -585,10 +625,12 @@ pub(crate) struct DownloadTask<'a> {
     extractor: Option<Extractor>,
     #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
     connect_timeout: Duration,
-    #[builder(default = DEFAULT_MAX_RETRIES)]
-    max_retries: usize,
-    #[builder(default = DEFAULT_RETRY_DELAY)]
-    retry_delay: Duration,
+    #[builder(default = DEFAULT_RETRY)]
+    retry: usize,
+    /// curl `--retry-delay`: a fixed delay between retries instead of exponential backoff.
+    retry_delay: Option<Duration>,
+    #[builder(default = DEFAULT_RETRY_MAX_TIME)]
+    retry_max_time: Duration,
 }
 
 #[derive(Debug)]
@@ -738,14 +780,19 @@ mod test {
         let dst = tempfile::NamedTempFile::new().unwrap();
 
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            download(&DownloadTask::builder(server.uri(), dst.path()).build()).unwrap();
+            download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .retry_delay(TEST_RETRY_DELAY)
+                    .build(),
+            )
+            .unwrap();
         });
 
         assert_log_contains_matches(
             &log,
             &[
                 request_failed_matcher(server.uri(), "Internal Server Error"),
-                retry_attempt_success_matcher(1, DEFAULT_MAX_RETRIES),
+                retry_attempt_success_matcher(1, DEFAULT_RETRY),
                 saving_matcher(),
             ],
         );
@@ -792,7 +839,8 @@ mod test {
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
             match download(
                 &DownloadTask::builder(server.uri(), dst.path())
-                    .max_retries(2)
+                    .retry(2)
+                    .retry_delay(TEST_RETRY_DELAY)
                     .build(),
             )
             .unwrap_err()
@@ -894,7 +942,8 @@ mod test {
         global::with_locked_writer(Vec::<u8>::new(), || {
             match download(
                 &DownloadTask::builder(server.uri(), dst.path())
-                    .max_retries(1)
+                    .retry(1)
+                    .retry_delay(TEST_RETRY_DELAY)
                     .build(),
             )
             .unwrap_err()
@@ -938,14 +987,19 @@ mod test {
         let dst = tempfile::NamedTempFile::new().unwrap();
 
         let log = global::with_locked_writer(Vec::<u8>::new(), || {
-            download(&DownloadTask::builder(&url, dst.path()).build()).unwrap();
+            download(
+                &DownloadTask::builder(&url, dst.path())
+                    .retry_delay(TEST_RETRY_DELAY)
+                    .build(),
+            )
+            .unwrap();
         });
 
         assert_log_contains_matches(
             &log,
             &[
                 request_failed_matcher(&url, "request or response body error"),
-                retry_attempt_success_matcher(1, DEFAULT_MAX_RETRIES),
+                retry_attempt_success_matcher(1, DEFAULT_RETRY),
                 saving_matcher(),
             ],
         );
@@ -1274,6 +1328,86 @@ mod test {
             "grandchild-b"
         );
     }
+
+    #[test]
+    fn test_download_stops_retrying_when_retry_max_time_is_exceeded() {
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .respond_with(ResponseTemplate::new(500))
+                    .expect(2)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(
+                &DownloadTask::builder(server.uri(), dst.path())
+                    .retry_delay(Duration::from_millis(300))
+                    .retry_max_time(Duration::from_millis(500))
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert_eq!(source.attempts.len(), 2);
+                    assert!(matches!(source.stop_reason, StopReason::RetryMaxTime));
+                    assert!(source.to_string().contains(". Retry time limit exceeded."));
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_failed_matcher(server.uri(), "Internal Server Error"),
+                retry_attempt_failed_matcher(1, 5, "Internal Server Error"),
+            ],
+        );
+    }
+
+    #[test]
+    fn test_retry_delays_use_curl_backoff_by_default() {
+        let secs = |secs: &[u64]| {
+            secs.iter()
+                .map(|s| Duration::from_secs(*s))
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(
+            retry_delays(&GetRequest::builder("https://test").build()),
+            secs(&[1, 2, 4, 8, 16])
+        );
+        assert_eq!(
+            retry_delays(&GetRequest::builder("https://test").retry(12).build()),
+            secs(&[1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 600, 600])
+        );
+        assert_eq!(
+            retry_delays(
+                &GetRequest::builder("https://test")
+                    .retry_delay(Duration::from_secs(3))
+                    .retry(3)
+                    .build()
+            ),
+            secs(&[3, 3, 3])
+        );
+    }
+
+    // Keeps tests that aren't about the backoff from sleeping through it.
+    const TEST_RETRY_DELAY: Duration = Duration::from_millis(10);
 
     /// A server that runs `handler` with each connection (and its index) after reading the request.
     fn raw_http_server(handler: impl Fn(TcpStream, usize) + Send + Sync + 'static) -> String {
