@@ -23,6 +23,9 @@ use tracing::{Span, instrument};
 /// curl `--connect-timeout`
 pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// curl `--max-time`
+pub(crate) const DEFAULT_MAX_TIME: Duration = Duration::from_secs(120);
+
 /// curl `--retry`
 pub(crate) const DEFAULT_RETRY: usize = 5;
 
@@ -203,6 +206,8 @@ fn get_attempt(
     last_response: &mut Option<Box<LastResponse>>,
     span: &Span,
 ) -> Result<Response, AttemptError> {
+    let max_time_deadline = Instant::now() + request.max_time;
+
     let response = client
         .get(&request.url)
         .headers(request.headers.clone())
@@ -228,17 +233,83 @@ fn get_attempt(
 
     let mut response = response.error_for_status().map_err(AttemptError::Request)?;
 
-    io::copy(&mut response, response_file.as_file_mut()).map_err(copy_error)?;
+    let mut body = TransferReader {
+        inner: &mut response,
+        max_time: request.max_time,
+        max_time_deadline,
+    };
+    io::copy(&mut body, response_file.as_file_mut()).map_err(copy_error)?;
 
     Ok(response)
 }
 
-/// Errors reading the response body arrive as I/O errors wrapping the reqwest error. Anything else
-/// is a failure writing the temporary download file.
+/// Errors reading the response body arrive as I/O errors wrapping a [`TransferTimeout`] or the
+/// reqwest error. Anything else is a failure writing the temporary download file.
 fn copy_error(error: io::Error) -> AttemptError {
-    match error.downcast::<reqwest::Error>() {
-        Ok(source) => AttemptError::Request(source),
-        Err(error) => AttemptError::Write(error),
+    match error.downcast::<TransferTimeout>() {
+        Ok(timeout) => AttemptError::Timeout(timeout),
+        Err(error) => match error.downcast::<reqwest::Error>() {
+            Ok(source) => AttemptError::Request(source),
+            Err(error) => AttemptError::Write(error),
+        },
+    }
+}
+
+/// Enforces curl's `--max-time` on the response body.
+///
+/// The deadline is only checked when a read returns. A read that gets no data at all is bounded by
+/// the client's timeout (reqwest's default of 30s), so a stalled transfer can run past the
+/// deadline by up to that long, and is reported as exceeding `max_time` if it does.
+struct TransferReader<R> {
+    inner: R,
+    max_time: Duration,
+    max_time_deadline: Instant,
+}
+
+impl<R: io::Read> io::Read for TransferReader<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if Instant::now() >= self.max_time_deadline {
+            return Err(TransferTimeout::MaxTime(self.max_time).into());
+        }
+        match self.inner.read(buf) {
+            Err(error)
+                if is_reqwest_timeout(&error) && Instant::now() >= self.max_time_deadline =>
+            {
+                Err(TransferTimeout::MaxTime(self.max_time).into())
+            }
+            result => result,
+        }
+    }
+}
+
+/// Failures reading the response body are I/O errors wrapping the reqwest error.
+fn is_reqwest_timeout(error: &io::Error) -> bool {
+    error
+        .get_ref()
+        .and_then(|inner| inner.downcast_ref::<reqwest::Error>())
+        .is_some_and(reqwest::Error::is_timeout)
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum TransferTimeout {
+    MaxTime(Duration),
+}
+
+impl fmt::Display for TransferTimeout {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TransferTimeout::MaxTime(max_time) => {
+                write!(f, "Operation timed out after {}s", max_time.as_secs_f32())
+            }
+        }
+    }
+}
+
+impl std::error::Error for TransferTimeout {}
+
+impl From<TransferTimeout> for io::Error {
+    fn from(timeout: TransferTimeout) -> Self {
+        io::Error::new(io::ErrorKind::TimedOut, timeout)
     }
 }
 
@@ -251,6 +322,8 @@ pub(crate) enum AttemptError {
     Request(reqwest::Error),
     /// Creating or writing the temporary download file failed.
     Write(io::Error),
+    /// The response body exceeded `max_time`.
+    Timeout(TransferTimeout),
 }
 
 impl AttemptError {
@@ -259,12 +332,13 @@ impl AttemptError {
             AttemptError::InvalidRequest(_) => "invalid request".into(),
             AttemptError::Request(source) => request_error_reason(source),
             AttemptError::Write(_) => "write response error".into(),
+            AttemptError::Timeout(TransferTimeout::MaxTime(_)) => "timed out".into(),
         }
     }
 
     fn retry(&self) -> bool {
         match self {
-            AttemptError::Request(_) => true,
+            AttemptError::Request(_) | AttemptError::Timeout(_) => true,
             // an invalid request will fail the same way again, and local disk failures (e.g. out
             // of space) won't be fixed by downloading again
             AttemptError::InvalidRequest(_) | AttemptError::Write(_) => false,
@@ -294,6 +368,7 @@ impl fmt::Display for AttemptError {
         let error: &dyn std::error::Error = match self {
             AttemptError::InvalidRequest(source) | AttemptError::Request(source) => source,
             AttemptError::Write(source) => source,
+            AttemptError::Timeout(source) => source,
         };
         write!(f, "{error}")?;
         let mut source = error.source();
@@ -396,6 +471,8 @@ pub(crate) struct GetRequest {
     headers: HeaderMap,
     #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
     connect_timeout: Duration,
+    #[builder(default = DEFAULT_MAX_TIME)]
+    max_time: Duration,
     #[builder(default = DEFAULT_RETRY)]
     retry: usize,
     /// curl `--retry-delay`: a fixed delay between retries instead of exponential backoff.
@@ -444,6 +521,7 @@ impl GetResponse {
 pub(crate) fn download(download_task: &DownloadTask) -> Result<(), DownloadError> {
     let response = get(&GetRequest::builder(&download_task.source_url)
         .connect_timeout(download_task.connect_timeout)
+        .max_time(download_task.max_time)
         .retry(download_task.retry)
         .maybe_retry_delay(download_task.retry_delay)
         .retry_max_time(download_task.retry_max_time)
@@ -625,6 +703,8 @@ pub(crate) struct DownloadTask<'a> {
     extractor: Option<Extractor>,
     #[builder(default = DEFAULT_CONNECT_TIMEOUT)]
     connect_timeout: Duration,
+    #[builder(default = DEFAULT_MAX_TIME)]
+    max_time: Duration,
     #[builder(default = DEFAULT_RETRY)]
     retry: usize,
     /// curl `--retry-delay`: a fixed delay between retries instead of exponential backoff.
@@ -1404,6 +1484,116 @@ mod test {
             ),
             secs(&[3, 3, 3])
         );
+    }
+
+    #[test]
+    fn test_download_fails_when_max_time_is_exceeded() {
+        let url = raw_http_server(|stream, _| trickle_response(stream));
+        let dst = tempfile::NamedTempFile::new().unwrap();
+        let mut elapsed = Duration::ZERO;
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            // timed inside the lock so waiting on other tests' output isn't counted
+            let start = Instant::now();
+            match download(
+                &DownloadTask::builder(&url, dst.path())
+                    .max_time(Duration::from_millis(500))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert!(matches!(
+                        source.error(),
+                        AttemptError::Timeout(TransferTimeout::MaxTime(_))
+                    ));
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+            elapsed = start.elapsed();
+        });
+
+        assert!(elapsed < Duration::from_secs(2));
+        assert_log_contains_matches(&log, &[request_failed_matcher(&url, "timed out")]);
+    }
+
+    #[test]
+    fn test_download_max_time_resets_on_retry() {
+        let url = raw_http_server(|mut stream, index| {
+            if index == 0 {
+                trickle_response(stream);
+            } else {
+                stream
+                    .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ntest")
+                    .unwrap();
+            }
+        });
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(&url, dst.path())
+                    .max_time(Duration::from_millis(300))
+                    .retry_delay(TEST_RETRY_DELAY)
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_log_contains_matches(
+            &log,
+            &[
+                request_failed_matcher(&url, "timed out"),
+                retry_attempt_success_matcher(1, DEFAULT_RETRY),
+                saving_matcher(),
+            ],
+        );
+        assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
+    }
+
+    #[test]
+    fn test_download_is_not_retried_when_max_time_uses_up_retry_max_time() {
+        let url = raw_http_server(|stream, _| trickle_response(stream));
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            match download(
+                &DownloadTask::builder(&url, dst.path())
+                    .max_time(Duration::from_millis(300))
+                    .retry_max_time(Duration::from_millis(300))
+                    .retry_delay(TEST_RETRY_DELAY)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert_eq!(source.attempts.len(), 1);
+                    assert!(matches!(source.stop_reason, StopReason::RetryMaxTime));
+                    assert!(matches!(
+                        source.error(),
+                        AttemptError::Timeout(TransferTimeout::MaxTime(_))
+                    ));
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+        });
+
+        assert_log_contains_matches(&log, &[request_failed_matcher(&url, "timed out")]);
+    }
+
+    // Sends the body one byte every 50ms, so reads never stall but the transfer is very slow.
+    fn trickle_response(mut stream: TcpStream) {
+        stream
+            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 1000\r\n\r\n")
+            .unwrap();
+        for _ in 0..1000 {
+            // stop once the client gives up
+            if stream.write_all(b"x").is_err() {
+                return;
+            }
+            thread::sleep(Duration::from_millis(50));
+        }
     }
 
     // Keeps tests that aren't about the backoff from sleeping through it.

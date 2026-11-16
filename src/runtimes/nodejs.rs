@@ -160,7 +160,9 @@ fn create_downloader_error(error: DownloadError) -> ErrorMessage {
 fn download_request_error_type(error: &GetError) -> ErrorType {
     match error.error() {
         AttemptError::InvalidRequest(_) => ErrorType::Internal,
-        AttemptError::Request(_) => ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS),
+        AttemptError::Request(_) | AttemptError::Timeout(_) => {
+            ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
+        }
         AttemptError::Write(_) => UserFacing(SuggestRetryBuild::Yes, SuggestSubmitIssue::Yes),
     }
 }
@@ -229,7 +231,7 @@ mod tests {
         assert_error_snapshot, create_cmd_error, create_download_error, create_reqwest_error,
         truncated_body_url, unused_local_url,
     };
-    use crate::utils::http::{FailedAttempt, LastResponse, StopReason};
+    use crate::utils::http::{FailedAttempt, LastResponse, StopReason, TransferTimeout};
     use http::StatusCode;
     use libherokubuildpack::inventory::{
         artifact::{Arch, Os},
@@ -392,6 +394,45 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
             };
             assert_eq!(download_request_error_type(&source), expected, "{url}");
         }
+    }
+
+    #[test]
+    fn download_timeout_error() {
+        let error = DownloadError::Download {
+            url: "https://nodejs.org/download/release/v23.6.0/node-v23.6.0-linux-arm64.tar.gz"
+                .into(),
+            source: GetError {
+                // An attempt that hits `max_time` uses up the whole `retry_max_time` by default,
+                // so it's only retried when an earlier attempt failed sooner.
+                attempts: vec![
+                    FailedAttempt {
+                        error: AttemptError::Request(create_reqwest_error()),
+                        duration: Duration::from_secs(5),
+                    },
+                    FailedAttempt {
+                        error: AttemptError::Timeout(TransferTimeout::MaxTime(
+                            Duration::from_secs(120),
+                        )),
+                        duration: Duration::from_secs(120),
+                    },
+                ],
+                stop_reason: StopReason::RetryMaxTime,
+                elapsed: Duration::from_secs(126),
+                // the second attempt got a successful response, but the body was too slow
+                last_response: Some(Box::new(LastResponse {
+                    status: StatusCode::OK,
+                    headers: http::HeaderMap::new(),
+                })),
+            },
+        };
+        let DownloadError::Download { source, .. } = &error else {
+            unreachable!()
+        };
+        assert_eq!(
+            download_request_error_type(source),
+            ErrorType::Upstream(NODEJS_DOWNLOAD_STATUS_URLS)
+        );
+        assert_error_snapshot(&create_downloader_error(error));
     }
 
     #[test]
