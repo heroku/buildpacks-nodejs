@@ -922,7 +922,7 @@ mod test {
     use std::io::{Read, Write};
     use std::net::{TcpListener, TcpStream};
     use std::thread;
-    use wiremock::matchers::{method, path};
+    use wiremock::matchers::{header, method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
@@ -972,6 +972,42 @@ mod test {
             &log,
             &[request_success_matcher(server.uri()), saving_matcher()],
         );
+        assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
+    }
+
+    #[test]
+    fn test_download_decodes_gzip_content_encoding() {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        encoder.write_all(b"test").unwrap();
+        let body = encoder.finish().unwrap();
+
+        let server = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(async {
+                let server = MockServer::start().await;
+
+                Mock::given(method("GET"))
+                    .and(path("/"))
+                    .and(header("accept-encoding", "gzip"))
+                    .respond_with(
+                        ResponseTemplate::new(200)
+                            .insert_header("content-encoding", "gzip")
+                            .set_body_raw(body, "application/json"),
+                    )
+                    .expect(1)
+                    .mount(&server)
+                    .await;
+
+                server
+            });
+
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            download(&DownloadTask::builder(server.uri(), dst.path()).build()).unwrap();
+        });
+
         assert_eq!(fs::read_to_string(dst.path()).unwrap(), "test");
     }
 
