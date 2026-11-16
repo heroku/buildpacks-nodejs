@@ -71,6 +71,10 @@ pub(crate) const DEPENDENCIES_REQUESTED_PACKAGE_VERSION: &str =
 pub(crate) const DEPENDENCIES_REQUESTED_DEPENDENCY_SOURCE_FIELD: &str =
     formatcp!("{DEPENDENCIES}.requested_dependency_source_field");
 
+const HTTP: &str = formatcp!("{NAMESPACE}.http");
+
+pub(crate) const HTTP_ATTEMPTS: &str = formatcp!("{HTTP}.attempts");
+
 const ERROR: &str = formatcp!("{NAMESPACE}.error");
 
 pub(crate) const ERROR_ID: &str = formatcp!("{ERROR}.id");

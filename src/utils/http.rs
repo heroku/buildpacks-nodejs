@@ -1,3 +1,4 @@
+use crate::o11y::HTTP_ATTEMPTS;
 use bullet_stream::global::print;
 use bullet_stream::style;
 use digest_io::IoWrapper;
@@ -13,7 +14,8 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 use tempfile::NamedTempFile;
-use tracing::instrument;
+use tracing::field::Empty;
+use tracing::{Span, instrument};
 
 pub(crate) const DEFAULT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -23,6 +25,16 @@ pub(crate) const DEFAULT_RETRY_DELAY: Duration = Duration::from_millis(500); // 
 
 pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     let start = Instant::now();
+
+    // A span for the whole request, with a child span for each attempt.
+    let url = telemetry_url(&request.url);
+    let get_span = tracing::info_span!(
+        "http_get",
+        url.full = url.as_ref().map(reqwest::Url::as_str),
+        { HTTP_ATTEMPTS } = Empty,
+        otel.status_code = Empty,
+    );
+    let _get_guard = get_span.enter();
 
     // The most recent response received across all attempts, attached to any error.
     let mut last_response: Option<Box<LastResponse>> = None;
@@ -39,13 +51,17 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     retry_with_index(retry_strategy, |index| {
         let attempt = index - 1;
         let attempt_start = Instant::now();
+        let attempt_span = attempt_span(url.as_ref());
+        let _attempt_guard = attempt_span.enter();
 
         // fail early if the temporary download file can't be created
         let mut response_file = match tempfile::NamedTempFile::new() {
             Ok(named_temp_file) => named_temp_file,
             Err(source) => {
+                let error = AttemptError::Write(source);
+                record_attempt_error(&attempt_span, &error);
                 attempts.push(FailedAttempt {
-                    error: AttemptError::Write(source),
+                    error,
                     duration: attempt_start.elapsed(),
                 });
                 return OperationResult::Err(StopReason::NotRetryable);
@@ -58,8 +74,15 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             format!("Retry attempt {attempt} of {}", request.max_retries)
         });
 
-        match get_attempt(&client, request, &mut response_file, &mut last_response) {
+        match get_attempt(
+            &client,
+            request,
+            &mut response_file,
+            &mut last_response,
+            &attempt_span,
+        ) {
             Ok(response) => {
+                get_span.record(HTTP_ATTEMPTS, as_i64(index));
                 if response.status().is_success() {
                     timer.done();
                 } else if let Some(reason) = response.status().canonical_reason() {
@@ -74,6 +97,7 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             }
             Err(error) => {
                 timer.cancel(error.cancellation_reason());
+                record_attempt_error(&attempt_span, &error);
                 let retry = error.retry();
                 attempts.push(FailedAttempt {
                     error,
@@ -87,12 +111,54 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
             }
         }
     })
-    .map_err(|operation| GetError {
-        attempts,
-        stop_reason: operation.error,
-        elapsed: start.elapsed(),
-        last_response,
+    .map_err(|operation| {
+        get_span.record(HTTP_ATTEMPTS, as_i64(attempts.len()));
+        get_span.record("otel.status_code", "ERROR");
+        GetError {
+            attempts,
+            stop_reason: operation.error,
+            elapsed: start.elapsed(),
+            last_response,
+        }
     })
+}
+
+/// A span for a single attempt, with the fields `reqwest-tracing` recorded for each request.
+fn attempt_span(url: Option<&reqwest::Url>) -> Span {
+    tracing::info_span!(
+        "GET",
+        otel.name = "GET",
+        otel.kind = "client",
+        http.request.method = "GET",
+        url.full = url.map(reqwest::Url::as_str),
+        url.scheme = url.map(reqwest::Url::scheme),
+        server.address = url.and_then(reqwest::Url::host_str),
+        server.port = url
+            .and_then(reqwest::Url::port_or_known_default)
+            .map(i64::from),
+        http.response.status_code = Empty,
+        otel.status_code = Empty,
+        error.message = Empty,
+    )
+}
+
+/// The request URL with any credentials removed, as `reqwest-tracing` recorded it.
+fn telemetry_url(url: &str) -> Option<reqwest::Url> {
+    let mut url = reqwest::Url::parse(url).ok()?;
+    let _ = url.set_username("");
+    let _ = url.set_password(None);
+    Some(url)
+}
+
+/// `tracing-opentelemetry` only exports `i64` as a number (unsigned values become strings), so
+/// numeric fields need to be recorded as `i64` to be queried as numbers.
+fn as_i64(value: impl TryInto<i64>) -> i64 {
+    value.try_into().unwrap_or(i64::MAX)
+}
+
+fn record_attempt_error(span: &Span, error: &AttemptError) {
+    span.record("otel.status_code", "ERROR");
+    span.record("error.message", error.to_string());
 }
 
 /// A single request, with the response body written to `response_file`.
@@ -101,6 +167,7 @@ fn get_attempt(
     request: &GetRequest,
     response_file: &mut NamedTempFile,
     last_response: &mut Option<Box<LastResponse>>,
+    span: &Span,
 ) -> Result<Response, AttemptError> {
     let response = client
         .get(&request.url)
@@ -114,6 +181,11 @@ fn get_attempt(
                 AttemptError::Request(error)
             }
         })?;
+
+    span.record(
+        "http.response.status_code",
+        i64::from(response.status().as_u16()),
+    );
 
     *last_response = Some(Box::new(LastResponse {
         status: response.status(),
