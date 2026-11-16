@@ -720,7 +720,7 @@ os = "linux"
             &package_packument,
             &DownloadError::Download {
                 url: package_packument.dist.tarball.clone(),
-                // every attempt timed out connecting, with the default retries and retry delay
+                // every attempt timed out connecting, with the default retries and backoff
                 source: GetError {
                     attempts: (0..6)
                         .map(|_| FailedAttempt {
@@ -729,7 +729,7 @@ os = "linux"
                         })
                         .collect(),
                     stop_reason: StopReason::RetriesExhausted,
-                    elapsed: Duration::from_millis(32_500),
+                    elapsed: Duration::from_secs(61),
                     last_response: None,
                 },
             },

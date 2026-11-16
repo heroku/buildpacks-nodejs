@@ -270,12 +270,7 @@ pub(crate) mod test_util {
         let dst = tempfile::NamedTempFile::new().unwrap();
         let mut error = None;
         bullet_stream::global::with_locked_writer(Vec::<u8>::new(), || {
-            error = download(
-                &DownloadTask::builder(url, dst.path())
-                    .max_retries(0)
-                    .build(),
-            )
-            .err();
+            error = download(&DownloadTask::builder(url, dst.path()).retry(0).build()).err();
         });
         error.expect("download should fail")
     }
