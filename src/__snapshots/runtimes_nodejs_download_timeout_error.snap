@@ -2,8 +2,8 @@
 source: src/utils/error_handling.rs
 ---
 - Debug Info:
-  - Failed after 2 attempts over 126.0s. Retry time limit exceeded.
-    - Attempt 1 (5.0s) - error sending request for url (http://10.255.255.1/error): operation timed out
+  - Failed after 2 attempts over 136.2s. Retry time limit exceeded.
+    - Attempt 1 (15.2s) - Operation too slow. Less than 524288 bytes/sec transferred the last 15s
     - Attempt 2 (120.0s) - Operation timed out after 120s
     
     Response headers from the most recent response received:

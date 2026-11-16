@@ -75,6 +75,11 @@ const HTTP: &str = formatcp!("{NAMESPACE}.http");
 
 pub(crate) const HTTP_ATTEMPTS: &str = formatcp!("{HTTP}.attempts");
 
+pub(crate) const HTTP_TRANSFER_BYTES_PER_SECOND: &str =
+    formatcp!("{HTTP}.transfer.bytes_per_second");
+
+pub(crate) const HTTP_TRANSFER_LONGEST_SLOW_MS: &str = formatcp!("{HTTP}.transfer.longest_slow_ms");
+
 const ERROR: &str = formatcp!("{NAMESPACE}.error");
 
 pub(crate) const ERROR_ID: &str = formatcp!("{ERROR}.id");

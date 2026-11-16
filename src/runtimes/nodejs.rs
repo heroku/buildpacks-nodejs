@@ -323,11 +323,14 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
         assert_error_snapshot(&create_downloader_error(DownloadError::Download {
             url: url.to_string(),
             source: GetError {
-                // the first attempt got a response, then reading the body hit the client's default
-                // 30s timeout, and every retry timed out connecting
+                // the first attempt got a response but the body was too slow, and every retry timed
+                // out connecting
                 attempts: std::iter::once(FailedAttempt {
-                    error: AttemptError::Request(create_reqwest_error()),
-                    duration: Duration::from_millis(30_200),
+                    error: AttemptError::Timeout(TransferTimeout::SpeedLimit {
+                        speed_limit: 512 * 1024,
+                        speed_time: Duration::from_secs(15),
+                    }),
+                    duration: Duration::from_millis(15_200),
                 })
                 .chain((0..5).map(|_| FailedAttempt {
                     error: AttemptError::Request(create_reqwest_error()),
@@ -335,7 +338,7 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                 }))
                 .collect(),
                 stop_reason: StopReason::RetriesExhausted,
-                elapsed: Duration::from_millis(86_200),
+                elapsed: Duration::from_millis(71_200),
                 last_response: Some(Box::new(LastResponse {
                     status: StatusCode::OK,
                     headers,
@@ -406,8 +409,11 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                 // so it's only retried when an earlier attempt failed sooner.
                 attempts: vec![
                     FailedAttempt {
-                        error: AttemptError::Request(create_reqwest_error()),
-                        duration: Duration::from_secs(5),
+                        error: AttemptError::Timeout(TransferTimeout::SpeedLimit {
+                            speed_limit: 512 * 1024,
+                            speed_time: Duration::from_secs(15),
+                        }),
+                        duration: Duration::from_millis(15_200),
                     },
                     FailedAttempt {
                         error: AttemptError::Timeout(TransferTimeout::MaxTime(
@@ -417,8 +423,8 @@ checksum = "sha256:0000000000000000000000000000000000000000000000000000000000000
                     },
                 ],
                 stop_reason: StopReason::RetryMaxTime,
-                elapsed: Duration::from_secs(126),
-                // the second attempt got a successful response, but the body was too slow
+                elapsed: Duration::from_millis(136_200),
+                // both attempts got a successful response, but the body was too slow
                 last_response: Some(Box::new(LastResponse {
                     status: StatusCode::OK,
                     headers: http::HeaderMap::new(),

@@ -1,4 +1,4 @@
-use crate::o11y::HTTP_ATTEMPTS;
+use crate::o11y::{HTTP_ATTEMPTS, HTTP_TRANSFER_BYTES_PER_SECOND, HTTP_TRANSFER_LONGEST_SLOW_MS};
 use bullet_stream::global::print;
 use bullet_stream::style;
 use digest_io::IoWrapper;
@@ -8,6 +8,7 @@ use reqwest::blocking::Response;
 use retry::delay::{Exponential, Fixed};
 use retry::{OperationResult, retry_with_index};
 use sha2::{Digest, Sha256};
+use std::collections::VecDeque;
 use std::fmt;
 use std::fs::File;
 use std::io;
@@ -36,6 +37,12 @@ const MAX_RETRY_BACKOFF: Duration = Duration::from_secs(600);
 /// curl `--retry-max-time`
 pub(crate) const DEFAULT_RETRY_MAX_TIME: Duration = Duration::from_secs(120);
 
+/// curl `--speed-limit` (bytes per second)
+pub(crate) const DEFAULT_SPEED_LIMIT: u64 = 512 * 1024;
+
+/// curl `--speed-time`
+pub(crate) const DEFAULT_SPEED_TIME: Duration = Duration::from_secs(15);
+
 pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     let start = Instant::now();
     let retry_deadline = start + request.retry_max_time;
@@ -54,8 +61,12 @@ pub(crate) fn get(request: &GetRequest) -> Result<GetResponse, GetError> {
     let mut last_response: Option<Box<LastResponse>> = None;
     let mut attempts: Vec<FailedAttempt> = Vec::new();
 
+    // The blocking client applies `timeout` to sending the request and to each read of the response
+    // body separately. Bounding both by `speed_time` fails a transfer that makes no progress at all
+    // for that long, which `TransferReader` can't detect because the read never returns.
     let client = reqwest::blocking::ClientBuilder::new()
         .connect_timeout(request.connect_timeout)
+        .timeout(request.speed_time)
         .use_rustls_tls()
         .build()
         .expect("Should be able to create the HTTP client");
@@ -162,6 +173,8 @@ fn attempt_span(url: Option<&reqwest::Url>) -> Span {
             .and_then(reqwest::Url::port_or_known_default)
             .map(i64::from),
         http.response.status_code = Empty,
+        { HTTP_TRANSFER_BYTES_PER_SECOND } = Empty,
+        { HTTP_TRANSFER_LONGEST_SLOW_MS } = Empty,
         otel.status_code = Empty,
         error.message = Empty,
     )
@@ -233,12 +246,10 @@ fn get_attempt(
 
     let mut response = response.error_for_status().map_err(AttemptError::Request)?;
 
-    let mut body = TransferReader {
-        inner: &mut response,
-        max_time: request.max_time,
-        max_time_deadline,
-    };
-    io::copy(&mut body, response_file.as_file_mut()).map_err(copy_error)?;
+    let mut body = TransferReader::new(&mut response, max_time_deadline, request);
+    let copy_result = io::copy(&mut body, response_file.as_file_mut());
+    body.record_speed(span);
+    copy_result.map_err(copy_error)?;
 
     Ok(response)
 }
@@ -255,15 +266,107 @@ fn copy_error(error: io::Error) -> AttemptError {
     }
 }
 
-/// Enforces curl's `--max-time` on the response body.
+/// curl measures the current transfer speed as an average over about the last 5 seconds.
+const SPEED_WINDOW: Duration = Duration::from_secs(5);
+
+/// Enforces curl's `--max-time` and `--speed-limit`/`--speed-time` on the response body.
 ///
-/// The deadline is only checked when a read returns. A read that gets no data at all is bounded by
-/// the client's timeout (reqwest's default of 30s), so a stalled transfer can run past the
-/// deadline by up to that long, and is reported as exceeding `max_time` if it does.
+/// Like curl, the transfer fails once the current speed has stayed below `speed_limit` for
+/// `speed_time`, and any moment back above the limit resets that. Both checks only run when a read
+/// returns. A read that gets no data at all is bounded by the client's `speed_time` timeout, which
+/// is reported the same way.
 struct TransferReader<R> {
     inner: R,
     max_time: Duration,
     max_time_deadline: Instant,
+    speed_limit: u64,
+    speed_time: Duration,
+    // the current speed is averaged over this window, shortened for a `speed_time` below 5s
+    speed_window: Duration,
+    start: Instant,
+    total_bytes: u64,
+    // `(time, total_bytes)` taken about every `speed_window / 5`, spanning the last `speed_window`
+    samples: VecDeque<(Instant, u64)>,
+    // when the current speed first dropped below `speed_limit`
+    slow_since: Option<Instant>,
+    // the longest the current speed stayed below `speed_limit`, for telemetry
+    longest_slow: Duration,
+}
+
+impl<R> TransferReader<R> {
+    fn new(inner: R, max_time_deadline: Instant, request: &GetRequest) -> Self {
+        let start = Instant::now();
+        Self {
+            inner,
+            max_time: request.max_time,
+            max_time_deadline,
+            speed_limit: request.speed_limit,
+            speed_time: request.speed_time,
+            speed_window: SPEED_WINDOW.min(request.speed_time),
+            start,
+            total_bytes: 0,
+            samples: VecDeque::from([(start, 0)]),
+            slow_since: None,
+            longest_slow: Duration::ZERO,
+        }
+    }
+
+    fn timeout(&self) -> TransferTimeout {
+        if Instant::now() >= self.max_time_deadline {
+            TransferTimeout::MaxTime(self.max_time)
+        } else {
+            TransferTimeout::SpeedLimit {
+                speed_limit: self.speed_limit,
+                speed_time: self.speed_time,
+            }
+        }
+    }
+
+    #[allow(clippy::cast_precision_loss)]
+    fn below_speed_limit(&mut self, now: Instant) -> bool {
+        let sample_interval = self.speed_window / 5;
+        if self
+            .samples
+            .back()
+            .is_none_or(|(time, _)| now - *time >= sample_interval)
+        {
+            self.samples.push_back((now, self.total_bytes));
+        }
+        // keep the newest sample that's at least `speed_window` old as the start of the average
+        while self.samples.len() > 1 && now - self.samples[1].0 >= self.speed_window {
+            self.samples.pop_front();
+        }
+
+        let (start, start_bytes) = self.samples[0];
+        let elapsed = now - start;
+        // too soon to measure a speed
+        if elapsed < sample_interval {
+            return false;
+        }
+        let speed = (self.total_bytes - start_bytes) as f64 / elapsed.as_secs_f64();
+        speed < self.speed_limit as f64
+    }
+
+    /// Records how fast the body transferred, so the speed limit can be checked against real
+    /// downloads.
+    #[allow(clippy::cast_precision_loss, clippy::cast_possible_truncation)]
+    fn record_speed(&self, span: &Span) {
+        let elapsed = self.start.elapsed().as_secs_f64();
+        if elapsed > 0.0 {
+            span.record(
+                HTTP_TRANSFER_BYTES_PER_SECOND,
+                (self.total_bytes as f64 / elapsed) as i64,
+            );
+        }
+        let longest_slow = match self.slow_since {
+            Some(slow_since) => self.longest_slow.max(slow_since.elapsed()),
+            None => self.longest_slow,
+        };
+        span.record(
+            HTTP_TRANSFER_LONGEST_SLOW_MS,
+            as_i64(longest_slow.as_millis()),
+        );
+    }
 }
 
 impl<R: io::Read> io::Read for TransferReader<R> {
@@ -271,14 +374,32 @@ impl<R: io::Read> io::Read for TransferReader<R> {
         if Instant::now() >= self.max_time_deadline {
             return Err(TransferTimeout::MaxTime(self.max_time).into());
         }
-        match self.inner.read(buf) {
-            Err(error)
-                if is_reqwest_timeout(&error) && Instant::now() >= self.max_time_deadline =>
-            {
-                Err(TransferTimeout::MaxTime(self.max_time).into())
-            }
-            result => result,
+
+        let n = match self.inner.read(buf) {
+            Ok(n) => n,
+            // the client's per-read timeout, so no data arrived for `speed_time`
+            Err(error) if is_reqwest_timeout(&error) => return Err(self.timeout().into()),
+            Err(error) => return Err(error),
+        };
+
+        // the transfer is complete, so there's no speed to enforce
+        if n == 0 {
+            return Ok(n);
         }
+
+        self.total_bytes += n as u64;
+        let now = Instant::now();
+        if self.below_speed_limit(now) {
+            let slow_since = *self.slow_since.get_or_insert(now);
+            self.longest_slow = self.longest_slow.max(now - slow_since);
+            if now - slow_since >= self.speed_time {
+                return Err(self.timeout().into());
+            }
+        } else {
+            self.slow_since = None;
+        }
+
+        Ok(n)
     }
 }
 
@@ -293,6 +414,10 @@ fn is_reqwest_timeout(error: &io::Error) -> bool {
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum TransferTimeout {
     MaxTime(Duration),
+    SpeedLimit {
+        speed_limit: u64,
+        speed_time: Duration,
+    },
 }
 
 impl fmt::Display for TransferTimeout {
@@ -301,6 +426,14 @@ impl fmt::Display for TransferTimeout {
             TransferTimeout::MaxTime(max_time) => {
                 write!(f, "Operation timed out after {}s", max_time.as_secs_f32())
             }
+            TransferTimeout::SpeedLimit {
+                speed_limit,
+                speed_time,
+            } => write!(
+                f,
+                "Operation too slow. Less than {speed_limit} bytes/sec transferred the last {}s",
+                speed_time.as_secs_f32()
+            ),
         }
     }
 }
@@ -322,7 +455,7 @@ pub(crate) enum AttemptError {
     Request(reqwest::Error),
     /// Creating or writing the temporary download file failed.
     Write(io::Error),
-    /// The response body exceeded `max_time`.
+    /// The response body exceeded `max_time` or was slower than the speed limit.
     Timeout(TransferTimeout),
 }
 
@@ -333,6 +466,7 @@ impl AttemptError {
             AttemptError::Request(source) => request_error_reason(source),
             AttemptError::Write(_) => "write response error".into(),
             AttemptError::Timeout(TransferTimeout::MaxTime(_)) => "timed out".into(),
+            AttemptError::Timeout(TransferTimeout::SpeedLimit { .. }) => "too slow".into(),
         }
     }
 
@@ -479,6 +613,10 @@ pub(crate) struct GetRequest {
     retry_delay: Option<Duration>,
     #[builder(default = DEFAULT_RETRY_MAX_TIME)]
     retry_max_time: Duration,
+    #[builder(default = DEFAULT_SPEED_LIMIT)]
+    speed_limit: u64,
+    #[builder(default = DEFAULT_SPEED_TIME)]
+    speed_time: Duration,
 }
 
 /// The status and headers of the most recent response received by [`get`].
@@ -525,6 +663,8 @@ pub(crate) fn download(download_task: &DownloadTask) -> Result<(), DownloadError
         .retry(download_task.retry)
         .maybe_retry_delay(download_task.retry_delay)
         .retry_max_time(download_task.retry_max_time)
+        .speed_limit(download_task.speed_limit)
+        .speed_time(download_task.speed_time)
         .build())
     .map_err(|source| DownloadError::Download {
         url: download_task.source_url.clone(),
@@ -711,6 +851,10 @@ pub(crate) struct DownloadTask<'a> {
     retry_delay: Option<Duration>,
     #[builder(default = DEFAULT_RETRY_MAX_TIME)]
     retry_max_time: Duration,
+    #[builder(default = DEFAULT_SPEED_LIMIT)]
+    speed_limit: u64,
+    #[builder(default = DEFAULT_SPEED_TIME)]
+    speed_time: Duration,
 }
 
 #[derive(Debug)]
@@ -1593,6 +1737,182 @@ mod test {
                 return;
             }
             thread::sleep(Duration::from_millis(50));
+        }
+    }
+
+    #[test]
+    fn test_download_fails_when_transfer_stalls() {
+        // Sends part of the body, then stops sending without closing the connection.
+        let url = raw_http_server(|mut stream, _| {
+            stream
+                .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 100\r\n\r\npartial")
+                .unwrap();
+            thread::sleep(Duration::from_secs(5));
+        });
+        let dst = tempfile::NamedTempFile::new().unwrap();
+        let mut elapsed = Duration::ZERO;
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            // timed inside the lock so waiting on other tests' output isn't counted
+            let start = Instant::now();
+            match download(
+                &DownloadTask::builder(&url, dst.path())
+                    .speed_time(Duration::from_millis(200))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert!(matches!(
+                        source.error(),
+                        AttemptError::Timeout(TransferTimeout::SpeedLimit { .. })
+                    ));
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+            elapsed = start.elapsed();
+        });
+
+        assert!(elapsed < Duration::from_secs(2));
+        assert_log_contains_matches(&log, &[request_failed_matcher(&url, "too slow")]);
+    }
+
+    #[test]
+    fn test_download_fails_when_below_speed_limit() {
+        let url = raw_http_server(|stream, _| trickle_response(stream));
+        let dst = tempfile::NamedTempFile::new().unwrap();
+        let mut elapsed = Duration::ZERO;
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            // timed inside the lock so waiting on other tests' output isn't counted
+            let start = Instant::now();
+            match download(
+                &DownloadTask::builder(&url, dst.path())
+                    .speed_limit(1000)
+                    .speed_time(Duration::from_millis(300))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert!(matches!(
+                        source.error(),
+                        AttemptError::Timeout(TransferTimeout::SpeedLimit { .. })
+                    ));
+                    assert!(source.to_string().contains(". No retries left.\n"));
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+            elapsed = start.elapsed();
+        });
+
+        assert!(elapsed < Duration::from_secs(2));
+        assert_log_contains_matches(&log, &[request_failed_matcher(&url, "too slow")]);
+    }
+
+    #[test]
+    fn test_download_success_when_above_speed_limit() {
+        // ~2500 bytes/sec for ~500ms, so the speed is checked many times over several windows
+        let url = raw_http_server(|stream, _| paced_response(stream, &[(50, 25, 20)]));
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(&url, dst.path())
+                    .speed_limit(100)
+                    .speed_time(Duration::from_millis(100))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_eq!(fs::read(dst.path()).unwrap().len(), 50 * 25);
+    }
+
+    #[test]
+    fn test_download_success_when_briefly_below_speed_limit() {
+        // A fast start, a pause shorter than `speed_time`, then fast again. The average over the
+        // first `speed_time` is below the limit, but the speed wasn't below it for all of
+        // `speed_time`, so curl (and this) keeps going.
+        let url = raw_http_server(|mut stream, _| {
+            paced_response_head(&mut stream, 20 * 20 + 100 * 20);
+            paced_body(&mut stream, &[(20, 20, 10)]);
+            thread::sleep(Duration::from_millis(300));
+            paced_body(&mut stream, &[(100, 20, 10)]);
+        });
+        let dst = tempfile::NamedTempFile::new().unwrap();
+
+        global::with_locked_writer(Vec::<u8>::new(), || {
+            download(
+                &DownloadTask::builder(&url, dst.path())
+                    .speed_limit(1000)
+                    .speed_time(Duration::from_millis(500))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap();
+        });
+
+        assert_eq!(fs::read(dst.path()).unwrap().len(), 20 * 20 + 100 * 20);
+    }
+
+    #[test]
+    fn test_download_fails_when_response_headers_stall() {
+        // Accepts the request but never responds.
+        let url = raw_http_server(|_stream, _| thread::sleep(Duration::from_secs(5)));
+        let dst = tempfile::NamedTempFile::new().unwrap();
+        let mut elapsed = Duration::ZERO;
+
+        let log = global::with_locked_writer(Vec::<u8>::new(), || {
+            // timed inside the lock so waiting on other tests' output isn't counted
+            let start = Instant::now();
+            match download(
+                &DownloadTask::builder(&url, dst.path())
+                    .speed_time(Duration::from_millis(200))
+                    .retry(0)
+                    .build(),
+            )
+            .unwrap_err()
+            {
+                DownloadError::Download { source, .. } => {
+                    assert!(
+                        matches!(source.error(), AttemptError::Request(error) if error.is_timeout())
+                    );
+                    assert!(source.last_response().is_none());
+                }
+                e => panic!("Not the expected error: {e:?}"),
+            }
+            elapsed = start.elapsed();
+        });
+
+        assert!(elapsed < Duration::from_secs(1));
+        assert_log_contains_matches(&log, &[request_failed_matcher(&url, "timed out")]);
+    }
+
+    fn paced_response(mut stream: TcpStream, chunks: &[(usize, usize, u64)]) {
+        let length = chunks.iter().map(|(size, count, _)| size * count).sum();
+        paced_response_head(&mut stream, length);
+        paced_body(&mut stream, chunks);
+    }
+
+    fn paced_response_head(stream: &mut TcpStream, content_length: usize) {
+        stream
+            .write_all(
+                format!("HTTP/1.1 200 OK\r\nContent-Length: {content_length}\r\n\r\n").as_bytes(),
+            )
+            .unwrap();
+    }
+
+    // Writes `count` chunks of `size` bytes, sleeping `interval_ms` after each.
+    fn paced_body(stream: &mut TcpStream, chunks: &[(usize, usize, u64)]) {
+        for (size, count, interval_ms) in chunks {
+            for _ in 0..*count {
+                stream.write_all(&vec![b'x'; *size]).unwrap();
+                thread::sleep(Duration::from_millis(*interval_ms));
+            }
         }
     }
 
