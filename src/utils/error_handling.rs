@@ -245,7 +245,15 @@ pub(crate) mod test_util {
         rustls::crypto::ring::default_provider()
             .install_default()
             .ok();
-        reqwest::blocking::get("https://test/error").unwrap_err()
+        // A timeout, since its error message doesn't vary by platform like DNS or connection
+        // errors do. The address is non-routable so the request can't complete in time.
+        reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_millis(1))
+            .build()
+            .unwrap()
+            .get("http://10.255.255.1/error")
+            .send()
+            .unwrap_err()
     }
 
     // A local URL with nothing listening on it, so connections are refused.

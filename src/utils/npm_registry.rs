@@ -650,7 +650,9 @@ pub(crate) struct InstallPackageLayerMetadata {
 mod test {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_reqwest_error};
+    use crate::utils::http::{AttemptError, FailedAttempt, StopReason};
     use std::str::FromStr;
+    use std::time::Duration;
 
     #[test]
     fn test_packument_metadata() {
@@ -718,8 +720,16 @@ os = "linux"
             &package_packument,
             &DownloadError::Download {
                 url: package_packument.dist.tarball.clone(),
-                source: GetError::Request {
-                    source: create_reqwest_error(),
+                // every attempt timed out connecting, with the default retries and retry delay
+                source: GetError {
+                    attempts: (0..6)
+                        .map(|_| FailedAttempt {
+                            error: AttemptError::Request(create_reqwest_error()),
+                            duration: Duration::from_secs(5),
+                        })
+                        .collect(),
+                    stop_reason: StopReason::RetriesExhausted,
+                    elapsed: Duration::from_millis(32_500),
                     last_response: None,
                 },
             },
