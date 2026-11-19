@@ -55,8 +55,27 @@ jobs:
             echo "Inventory changes detected."
           fi
 
-      - name: Create Pull Request
+      # Skip updating an open inventory PR that already contains these inventory changes, so
+      # manual changes pushed to the PR branch aren't overwritten by a run that would push the
+      # same inventory again.
+      - name: Check for an up-to-date inventory PR
         if: steps.check-inventory.outputs.changed == 'true'
+        id: existing-pr
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          pr_number=$(gh pr list --head update-nodejs-inventory --state open --json number --jq '.[0].number')
+          if [[ -n "${pr_number}" ]] \
+            && git fetch --quiet --depth 1 origin update-nodejs-inventory \
+            && git diff --quiet FETCH_HEAD -- inventory/nodejs.toml; then
+            echo "up-to-date=true" >> "$GITHUB_OUTPUT"
+            echo "Inventory PR #${pr_number} already contains these inventory changes, skipping PR update."
+          else
+            echo "up-to-date=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check-inventory.outputs.changed == 'true' && steps.existing-pr.outputs.up-to-date != 'true'
         id: pr
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
