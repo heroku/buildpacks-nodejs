@@ -414,8 +414,8 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     //       version" line that immediately follows when bundled npm is used to install modules, so
     //       the two lines stay consistent. e.g.;
     // - Using bundled npm version `10.9.9`
-    //   - Installing node modules
-    //   - Using npm version `10.9.9`
+    // - Installing node modules
+    // - Using npm version `10.9.9`
     filters.push((
         r"(Using bundled npm version `)\d+\.\d+\.\d+(`\n- Installing node modules\n\s+- Using npm version `)\d+\.\d+\.\d+(`)",
         "${1}<npm-bundled-version>${2}<npm-bundled-version>${3}",
