@@ -16,9 +16,7 @@ jobs:
   update-nodejs-inventory:
     name: Update Node.js Inventory
     runs-on: pub-hk-ubuntu-24.04-ip
-    timeout-minutes: 30
-    env:
-      INTEGRATION_TEST_CNB_BUILDER: heroku/builder:26
+    timeout-minutes: 10
 
     steps:
       - uses: actions/create-github-app-token@v3
@@ -30,43 +28,11 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # The dpkg man-db trigger is excessively slow on GHA runners, see e.g.:
-      # https://github.com/actions/runner-images/issues/10977
-      # https://github.com/actions/runner/issues/4030
-      # We disable it here so it does not fire at the end of the following apt-get install
-      - name: Disable man-db auto-update
-        run: sudo rm -f /var/lib/man-db/auto-update
-
-      - name: Install musl-tools
-        run: sudo apt-get install musl-tools -y --no-install-recommends
-
       - name: Update Rust toolchain
         run: rustup update
 
-      - name: Install Rust linux-musl target
-        run: rustup target add x86_64-unknown-linux-musl
-
       - name: Rust cache
         uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
-
-      - name: Install Pack CLI
-        uses: buildpacks/github-actions/setup-pack@324e5c43145b68f60bf74a269f5ba7b2969e03db # v6.2.1
-
-      - name: Install Nextest
-        uses: taiki-e/install-action@86f7a0ffb25f40114606501a311ebcfaf882ea32 # v2.88.0
-        with:
-          tool: nextest
-
-      - name: Pull builder image
-        run: docker pull ${{ env.INTEGRATION_TEST_CNB_BUILDER }}
-
-      - name: Pull run image
-        run: |
-          RUN_IMAGE=$(
-            docker inspect --format='{{index .Config.Labels "io.buildpacks.builder.metadata"}}' '${{ env.INTEGRATION_TEST_CNB_BUILDER }}' \
-            | jq --exit-status --raw-output '.stack.runImage.image'
-          )
-          docker pull "${RUN_IMAGE}"
 
       - name: Rebuild Inventory
         id: rebuild-inventory
@@ -88,15 +54,6 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "Inventory changes detected."
           fi
-
-      - name: Rebuild Snapshots
-        if: steps.check-inventory.outputs.changed == 'true'
-        env:
-          # this will prevent a snapshot difference from failing a test
-          INSTA_FORCE_PASS: 1
-          # this will force all snapshot differences to be accepted
-          INSTA_UPDATE: force
-        run: cargo nextest run --run-ignored only --locked
 
       - name: Create Pull Request
         if: steps.check-inventory.outputs.changed == 'true'
