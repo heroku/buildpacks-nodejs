@@ -1,3 +1,6 @@
+use nodejs_data::{NodejsInventory, Version};
+use std::collections::BTreeMap;
+
 #[allow(clippy::vec_init_then_push)]
 #[allow(clippy::too_many_lines)]
 pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
@@ -64,6 +67,20 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [bullet-stream] Dots from background activity
     filters.push((r" \.+ ", " ... "));
+
+    // [buildpack] HTTP retries that eventually succeed. These depend on network conditions, so the
+    //             retry attempts are collapsed into the original request line, leaving the same
+    //             output as a request that succeeded on the first attempt. Retries that never
+    //             succeed are left as-is. e.g.;
+    // - GET https://nodejs.org/download/release/v22.23.5/node-v22.23.5-<arch>.tar.gz ... (too slow)
+    //   - Retry attempt 1 of 5 ... (too slow)
+    //   - Retry attempt 2 of 5 ... (<time_elapsed>)
+    //
+    // NOTE: This must be listed after the timer and background activity dot filters above.
+    filters.push((
+        r"(- GET \S+ \.\.\. )\([^)\n]*\)\n(?: *- Retry attempt \d+ of \d+ \.\.\. \([^)\n]*\)\n)*? *- Retry attempt \d+ of \d+ \.\.\. (\((?:<time_elapsed>|Not Modified)\))",
+        "${1}${2}",
+    ));
 
     // [Yarn] Post `yarn install` timer output. e.g.;
     // - Done in 30s 9ms
@@ -270,6 +287,16 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     // NOTE: Anchored to the start of the line so it doesn't truncate pnpm's prefixed lines.
     filters.push((r"(?m)^ *make: (?:Entering|Leaving) directory '.*'\n", ""));
 
+    // [pnpm] Same lone stray `make` lines as above, but with pnpm's per-module line prefix. This also
+    //        covers the build step lines, since the `make: Entering` line can land inside the
+    //        `gyp info ... gyp info ok` block while the rest of the stray block lands after it. e.g.;
+    //       .../node_modules/dtrace-provider install:   TOUCH Release/obj.target/DTraceProviderStub.stamp
+    //       .../node_modules/dtrace-provider install: make: Leaving directory '...'
+    filters.push((
+        r"(?m)^ *\S+ install: (?:make: (?:Entering|Leaving) directory '.*'| +(?:TOUCH|CC|CXX|LINK|AR) .*)\n",
+        "",
+    ));
+
     // [pnpm] Final progress messages for installed packages. e.g.;
     // - Progress: resolved 9, reused 2, downloaded 7, added 4, done
     //
@@ -381,6 +408,23 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
         "The integrity of <N> files was checked",
     ));
 
+    // [npm] Filter out the npm version bundled with Node.js. This changes whenever a Node.js release
+    //       ships a new npm (including new npm majors partway through a Node.js release line), so
+    //       it's replaced with a version-agnostic placeholder. The first filter covers the "Using npm
+    //       version" line that immediately follows when bundled npm is used to install modules, so
+    //       the two lines stay consistent. e.g.;
+    // - Using bundled npm version `10.9.9`
+    //   - Installing node modules
+    //   - Using npm version `10.9.9`
+    filters.push((
+        r"(Using bundled npm version `)\d+\.\d+\.\d+(`\n- Installing node modules\n\s+- Using npm version `)\d+\.\d+\.\d+(`)",
+        "${1}<npm-bundled-version>${2}<npm-bundled-version>${3}",
+    ));
+    filters.push((
+        r"(Using bundled npm version `)\d+\.\d+\.\d+(`)",
+        "${1}<npm-bundled-version>${2}",
+    ));
+
     // [npm] Filter out the resolved npm version when `engines.npm` is set to `11.x` (latest).
     //       These tests break every time a new npm 11.x patch is released. The filters below
     //       anchor on "Resolved npm version `11.x`" so they only apply to builds requesting
@@ -424,5 +468,42 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
     filters
         .into_iter()
         .map(|(matcher, replacement)| (matcher.to_string(), replacement.to_string()))
+        .chain(nodejs_version_filters())
         .collect()
+}
+
+// [Node.js] Filter out the latest version of each Node.js major line in the inventory. These change
+//           on every inventory update, so they're replaced with a placeholder keyed on the major
+//           version. Any other version (e.g.; an exact pin, or a stale resolution) is left as-is,
+//           so a build that doesn't resolve to the latest version will still fail the snapshot. e.g.;
+// - Resolved Node.js version: `22.23.5`
+// - GET https://nodejs.org/download/release/v22.23.5/node-v22.23.5-<arch>.tar.gz
+// - Reusing Node.js 22.23.5 (<arch>)
+fn nodejs_version_filters() -> Vec<(String, String)> {
+    let inventory: NodejsInventory = toml::from_str(include_str!("../../../inventory/nodejs.toml"))
+        .expect("Inventory file should be valid");
+
+    let mut latest_versions: BTreeMap<u64, &Version> = BTreeMap::new();
+    for artifact in &inventory.artifacts {
+        let latest = latest_versions
+            .entry(artifact.version.major())
+            .or_insert(&artifact.version);
+        if artifact.version > **latest {
+            *latest = &artifact.version;
+        }
+    }
+
+    latest_versions
+        .into_iter()
+        .map(|(major, version)| {
+            (
+                format!(r"\b(v?){}\b", regex_escape(&version.to_string())),
+                format!("${{1}}<node-{major}-latest>"),
+            )
+        })
+        .collect()
+}
+
+fn regex_escape(value: &str) -> String {
+    value.replace('.', r"\.")
 }

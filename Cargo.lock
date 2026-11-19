@@ -3916,8 +3916,10 @@ dependencies = [
  "insta",
  "libcnb",
  "libcnb-test",
+ "nodejs-data",
  "serde_json",
  "tempfile",
+ "toml",
  "ureq",
 ]
 
