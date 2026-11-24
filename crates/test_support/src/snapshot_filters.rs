@@ -375,10 +375,14 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [pnpm] Supply-chain policy verification start line (pnpm 12+). The entry count reflects the
     //        number of lockfile entries being verified and changes as dependencies are added or
-    //        removed. e.g.;
+    //        removed. Since pnpm 12.23.0 the count is prefixed with the number of entries checked,
+    //        which is always 0 on the start line (intermediate progress lines are only rendered
+    //        to a TTY). A single entry is reported as "entry". e.g.;
     // - ? Verifying lockfile against supply-chain policies (85 entries)...
+    // - ? Verifying lockfile against supply-chain policies (0/2 entries)...
+    // - ? Verifying lockfile against supply-chain policies (0/1 entry)...
     filters.push((
-        r"Verifying lockfile against supply-chain policies \(\d+ entries\)",
+        r"Verifying lockfile against supply-chain policies \((?:\d+/)?\d+ entr(?:y|ies)\)",
         "Verifying lockfile against supply-chain policies (<N> entries)",
     ));
 
