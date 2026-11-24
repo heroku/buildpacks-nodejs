@@ -16,7 +16,7 @@ use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
     UncachedLayerDefinition,
 };
-use libcnb::layer_env::Scope;
+use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use nodejs_data::{Version, VersionCommandError, VersionRange};
 use serde::{Deserialize, Serialize};
 use std::os::unix::fs::PermissionsExt;
@@ -267,25 +267,55 @@ fn create_get_yarn_version_command_error(error: &VersionCommandError) -> ErrorMe
 
 pub(crate) fn install_dependencies(
     context: &BuildpackBuildContext,
-    env: &Env,
+    env: &mut Env,
     version: &Version,
 ) -> BuildpackResult<()> {
     print::bullet("Setting up yarn dependency cache");
-    ensure_global_cache_is_disabled(env, version)?;
+    // Yarn is configured with build env vars, which take precedence over any user configuration
+    // and don't modify the app's Yarn config files.
+    let mut yarn_env = LayerEnv::new();
+    if version.major() >= 2 {
+        // If enabled, the `cacheFolder` setting is ignored and packages are stored in the global
+        // cache (`$HOME/.yarn/berry/cache` by default), which isn't persisted into the build cache
+        // or the final image. Yarn 4.x enables the global cache by default.
+        yarn_env = yarn_env.chainable_insert(
+            Scope::Build,
+            ModificationBehavior::Override,
+            "YARN_ENABLE_GLOBAL_CACHE",
+            "false",
+        );
+    }
 
-    let yarn_cache = get_cache_folder_config(env, version)?;
+    let yarn_cache = get_cache_folder_config(&yarn_env.apply(Scope::Build, env), version)?;
     let zero_install_mode = is_yarn_zero_install_mode(&yarn_cache);
     if zero_install_mode {
         print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
     } else {
         let node_linker = get_node_linker_config(env, version)?;
         let cache_dir = create_cache_directory(context, version, node_linker.as_ref())?;
-        set_cache_folder_config(env, version, &cache_dir)?;
+        yarn_env = yarn_env.chainable_insert(
+            Scope::Build,
+            ModificationBehavior::Override,
+            "YARN_CACHE_FOLDER",
+            &cache_dir,
+        );
     }
+
+    *env = yarn_env.apply(Scope::Build, env);
+
+    context
+        .uncached_layer(
+            layer_name!("yarn_config"),
+            UncachedLayerDefinition {
+                build: true,
+                launch: false,
+            },
+        )?
+        .write_env(yarn_env)?;
 
     print::bullet("Installing dependencies");
     let mut yarn_install_command = Command::new("yarn");
-    yarn_install_command.envs(env);
+    yarn_install_command.envs(&*env);
     yarn_install_command.envs(node_gyp_env());
     yarn_install_command.arg("install");
     if version.major() == 1 {
@@ -310,36 +340,6 @@ pub(crate) fn install_dependencies(
     Ok(())
 }
 
-fn ensure_global_cache_is_disabled(env: &Env, version: &Version) -> Result<(), ErrorMessage> {
-    // Execute `yarn config set enableGlobalCache false`. This setting is
-    // only available on yarn >= 2. If set to `true`, the `cacheFolder` setting
-    // will be ignored, and cached dependencies will be stored in the global
-    // Yarn cache (`$HOME/.yarn/berry/cache` by default), which isn't
-    // persisted into the build cache or the final image. Yarn 2.x and 3.x have
-    // a default value to `false`. Yarn 4.x has a default value of `true`.
-    if version.major() >= 2 {
-        print::sub_stream_cmd(
-            Command::new("yarn")
-                .args(["config", "set", "enableGlobalCache", "false"])
-                .envs(env),
-        )
-        .map_err(|e| create_ensure_global_cache_is_disabled_error(&e))?;
-    }
-    Ok(())
-}
-
-fn create_ensure_global_cache_is_disabled_error(error: &fun_run::CmdError) -> ErrorMessage {
-    error_message()
-        .id("package_manager/yarn/ensure_global_cache_is_disabled")
-        .error_type(ErrorType::Internal)
-        .header("Failed to disable Yarn global cache")
-        .body(formatdoc! {"
-            The Heroku Node.js buildpack was unable to disable the Yarn global cache.
-        "})
-        .debug_info(error.to_string())
-        .create()
-}
-
 fn get_cache_folder_config(env: &Env, version: &Version) -> Result<PathBuf, ErrorMessage> {
     Command::new("yarn")
         .envs(env)
@@ -362,38 +362,6 @@ fn create_get_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessa
         .body(formatdoc! {"
             The Heroku Node.js buildpack was unable to read the configuration for the Yarn cache directory.
         "})
-        .debug_info(error.to_string())
-        .create()
-}
-
-fn set_cache_folder_config(
-    env: &Env,
-    version: &Version,
-    cache_dir: &Path,
-) -> Result<(), ErrorMessage> {
-    print::sub_stream_cmd(
-        Command::new("yarn")
-            .envs(env)
-            .arg("config")
-            .arg("set")
-            .arg(match version.major() {
-                1 => "cache-folder",
-                _ => "cacheFolder",
-            })
-            .arg(cache_dir.to_string_lossy().to_string()),
-    )
-    .map(|_| ())
-    .map_err(|e| create_set_cache_folder_config_error(&e))
-}
-
-fn create_set_cache_folder_config_error(error: &fun_run::CmdError) -> ErrorMessage {
-    error_message()
-        .id("package_manager/yarn/set_cache_folder_config")
-        .error_type(ErrorType::Internal)
-        .header("Failed to configure Yarn cache directory")
-        .body(formatdoc! {"
-            An unexpected error occurred while configuring the Yarn cache directory.
-        " })
         .debug_info(error.to_string())
         .create()
 }
@@ -738,23 +706,9 @@ mod tests {
     }
 
     #[test]
-    fn ensure_global_cache_is_disabled_error() {
-        assert_error_snapshot(&create_ensure_global_cache_is_disabled_error(
-            &create_cmd_error("yarn config set enableGlobalCache false"),
-        ));
-    }
-
-    #[test]
     fn get_cache_folder_config_error() {
         assert_error_snapshot(&create_get_cache_folder_config_error(&create_cmd_error(
             "yarn config get cacheFolder",
-        )));
-    }
-
-    #[test]
-    fn set_cache_folder_config_error() {
-        assert_error_snapshot(&create_set_cache_folder_config_error(&create_cmd_error(
-            "yarn config set cacheFolder /path/to/cache",
         )));
     }
 

@@ -82,6 +82,15 @@ fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+        // The buildpack configures Yarn with env vars, so the app's config is left unmodified
+        assert_eq!(
+            ctx.run_shell_command("cat /workspace/.yarnrc.yml").stdout,
+            indoc! {"
+                nodeLinker: pnp
+
+                yarnPath: .yarn/releases/yarn-4.0.0.cjs
+            "}
+        );
     });
 }
 

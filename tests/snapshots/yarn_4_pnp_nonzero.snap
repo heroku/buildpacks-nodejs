@@ -28,16 +28,6 @@ heroku/nodejs <buildpack-version>
   - Linking `yarn` to vendored `yarnPath`
   - Successfully configured `yarn@4.0.0`
 - Setting up yarn dependency cache
-  - Running `yarn config set enableGlobalCache false`
-
-      ➤ YN0000: Successfully set enableGlobalCache to false
-
-  - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs/yarn_cache`
-
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/yarn_cache'
-
-  - Done (<time_elapsed>)
 - Installing dependencies
   - Running `yarn install --immutable --inline-builds`
 

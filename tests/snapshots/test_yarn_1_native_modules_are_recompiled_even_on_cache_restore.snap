@@ -30,13 +30,6 @@ heroku/nodejs <buildpack-version>
   - Extracting ... (<time_elapsed>)
   - Successfully installed `yarn@1.22.22`
 - Setting up yarn dependency cache
-  - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`
-
-      yarn config v1.22.22
-      success Set "cache-folder" to "/layers/heroku_nodejs/yarn_cache".
-      Done in <time_elapsed>.
-
-  - Done (<time_elapsed>)
 - Installing dependencies
   - Running `yarn install "--production=false" --frozen-lockfile`
 
@@ -114,13 +107,6 @@ heroku/nodejs <buildpack-version>
   - Successfully installed `yarn@1.22.22`
 - Setting up yarn dependency cache
   - Restoring yarn dependency cache
-  - Running `yarn config set cache-folder /layers/heroku_nodejs/yarn_cache`
-
-      yarn config v1.22.22
-      success Set "cache-folder" to "/layers/heroku_nodejs/yarn_cache".
-      Done in <time_elapsed>.
-
-  - Done (<time_elapsed>)
 - Installing dependencies
   - Running `yarn install "--production=false" --frozen-lockfile`
 
