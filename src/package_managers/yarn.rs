@@ -485,11 +485,7 @@ fn create_cache_directory(
     version: &Version,
     node_linker: Option<&NodeLinker>,
 ) -> BuildpackResult<PathBuf> {
-    let new_metadata = YarnCacheDirectoryLayerMetadata {
-        layer_version: YARN_CACHE_DIRECTORY_LAYER_VERSION.to_string(),
-        cache_usage_count: 0.0,
-        yarn_major_version: version.major().to_string(),
-    };
+    let yarn_major_version = version.major().to_string();
 
     let yarn_cache_layer = context.cached_layer(
         layer_name!("yarn_cache"),
@@ -499,35 +495,56 @@ fn create_cache_directory(
             launch: matches!(node_linker, Some(NodeLinker::Pnp)),
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|old_metadata: &YarnCacheDirectoryLayerMetadata, _| {
-                let is_reusable = old_metadata.yarn_major_version
-                    == new_metadata.yarn_major_version
-                    && old_metadata.layer_version == new_metadata.layer_version
-                    && old_metadata.cache_usage_count < YARN_CACHE_DIRECTORY_MAX_CACHE_USAGE_COUNT;
-                if is_reusable {
-                    RestoredLayerAction::KeepLayer
-                } else {
-                    RestoredLayerAction::DeleteLayer
-                }
+                restored_cache_directory_action(old_metadata, &yarn_major_version)
             },
         },
     )?;
 
-    match yarn_cache_layer.state {
-        LayerState::Restored { .. } => {
+    let previous_cache_usage_count = match yarn_cache_layer.state {
+        LayerState::Restored {
+            cause: previous_cache_usage_count,
+        } => {
             print::sub_bullet("Restoring yarn dependency cache");
+            Some(previous_cache_usage_count)
         }
         LayerState::Empty { cause } => {
             if let EmptyLayerCause::RestoredLayerAction { .. } = cause {
                 print::sub_bullet("Clearing yarn dependency cache");
             }
-            yarn_cache_layer.write_metadata(YarnCacheDirectoryLayerMetadata {
-                cache_usage_count: new_metadata.cache_usage_count + 1.0,
-                ..new_metadata
-            })?;
+            None
         }
-    }
+    };
+
+    yarn_cache_layer.write_metadata(YarnCacheDirectoryLayerMetadata {
+        cache_usage_count: next_cache_usage_count(previous_cache_usage_count),
+        yarn_major_version,
+        layer_version: YARN_CACHE_DIRECTORY_LAYER_VERSION.to_string(),
+    })?;
 
     Ok(yarn_cache_layer.path())
+}
+
+/// Keeps a restored cache directory until it has been used for the maximum number of builds, so
+/// packages that are no longer needed don't accumulate in it forever. Returns the previous usage
+/// count alongside the action.
+fn restored_cache_directory_action(
+    old_metadata: &YarnCacheDirectoryLayerMetadata,
+    yarn_major_version: &str,
+) -> (RestoredLayerAction, f32) {
+    let is_reusable = old_metadata.yarn_major_version == yarn_major_version
+        && old_metadata.layer_version == YARN_CACHE_DIRECTORY_LAYER_VERSION
+        && old_metadata.cache_usage_count < YARN_CACHE_DIRECTORY_MAX_CACHE_USAGE_COUNT;
+    let action = if is_reusable {
+        RestoredLayerAction::KeepLayer
+    } else {
+        RestoredLayerAction::DeleteLayer
+    };
+    (action, old_metadata.cache_usage_count)
+}
+
+/// Increments the usage count of a restored cache directory, or starts a new one at 1.
+fn next_cache_usage_count(previous_cache_usage_count: Option<f32>) -> f32 {
+    previous_cache_usage_count.map_or(1.0, |count| count + 1.0)
 }
 
 const YARN_CACHE_DIRECTORY_MAX_CACHE_USAGE_COUNT: f32 = 150.0;
@@ -785,5 +802,60 @@ mod tests {
         assert_error_snapshot(&create_yarn_install_prune_plugin_error(
             &std::io::Error::other("Out of disk space"),
         ));
+    }
+
+    fn cache_directory_metadata(
+        cache_usage_count: f32,
+        yarn_major_version: &str,
+        layer_version: &str,
+    ) -> YarnCacheDirectoryLayerMetadata {
+        YarnCacheDirectoryLayerMetadata {
+            cache_usage_count,
+            yarn_major_version: yarn_major_version.to_string(),
+            layer_version: layer_version.to_string(),
+        }
+    }
+
+    #[test]
+    fn restored_cache_directory_is_kept_below_max_usage_count() {
+        for cache_usage_count in [1.0, 2.0, 149.0] {
+            let (action, previous_cache_usage_count) = restored_cache_directory_action(
+                &cache_directory_metadata(cache_usage_count, "4", "1"),
+                "4",
+            );
+            assert!(matches!(action, RestoredLayerAction::KeepLayer));
+            assert_eq!(previous_cache_usage_count, cache_usage_count);
+        }
+    }
+
+    #[test]
+    fn restored_cache_directory_is_deleted_at_max_usage_count() {
+        let (action, _) =
+            restored_cache_directory_action(&cache_directory_metadata(150.0, "4", "1"), "4");
+        assert!(matches!(action, RestoredLayerAction::DeleteLayer));
+    }
+
+    #[test]
+    fn restored_cache_directory_is_deleted_when_yarn_major_version_changes() {
+        let (action, _) =
+            restored_cache_directory_action(&cache_directory_metadata(1.0, "3", "1"), "4");
+        assert!(matches!(action, RestoredLayerAction::DeleteLayer));
+    }
+
+    #[test]
+    fn restored_cache_directory_is_deleted_when_layer_version_changes() {
+        let (action, _) =
+            restored_cache_directory_action(&cache_directory_metadata(1.0, "4", "0"), "4");
+        assert!(matches!(action, RestoredLayerAction::DeleteLayer));
+    }
+
+    #[test]
+    fn next_cache_usage_count_increments_restored_count() {
+        assert_eq!(next_cache_usage_count(Some(1.0)), 2.0);
+    }
+
+    #[test]
+    fn next_cache_usage_count_resets_for_new_cache_directory() {
+        assert_eq!(next_cache_usage_count(None), 1.0);
     }
 }
