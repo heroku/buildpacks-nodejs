@@ -3,7 +3,7 @@
 
 use indoc::indoc;
 use libcnb::data::buildpack_id;
-use libcnb_test::{BuildpackReference, assert_contains};
+use libcnb_test::{BuildpackReference, TestContext, assert_contains, assert_not_contains};
 use std::os::unix::fs::PermissionsExt;
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
@@ -53,8 +53,16 @@ fn yarn_2_pnp_zero() {
 #[ignore = "integration test"]
 fn yarn_2_modules_nonzero() {
     nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-2-modules-nonzero");
+        assert_yarn_berry_runtime(&ctx, Linker::NodeModules);
+
+        let config = ctx.config.clone();
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-2-modules-nonzero");
+            assert_yarn_berry_runtime(&ctx, Linker::NodeModules);
+        });
     });
 }
 
@@ -62,8 +70,17 @@ fn yarn_2_modules_nonzero() {
 #[ignore = "integration test"]
 fn yarn_3_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-3-pnp-nonzero");
+        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+
+        let mut config = ctx.config.clone();
+        config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-3-pnp-nonzero");
+            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+        });
     });
 }
 
@@ -80,7 +97,7 @@ fn yarn_3_modules_zero() {
 #[ignore = "integration test"]
 fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
-        create_build_snapshot(&ctx.pack_stdout).assert();
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
         // The buildpack configures Yarn with env vars, so the app's config is left unmodified
         assert_eq!(
@@ -91,7 +108,97 @@ fn yarn_4_pnp_nonzero() {
                 yarnPath: .yarn/releases/yarn-4.0.0.cjs
             "}
         );
+        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+        assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+
+        let mut config = ctx.config.clone();
+        config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+            assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+        });
     });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn yarn_4_pnp_prune_dev_dependencies_disabled() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-4-pnp-nonzero",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                std::fs::write(
+                    app_dir.join("project.toml"),
+                    indoc! { "
+                    [com.heroku.buildpacks.nodejs]
+                    actions.prune_dev_dependencies = false
+                " },
+                )
+                .unwrap();
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+            // dev dependencies are kept in the cache shipped at launch
+            let yarn_cache = ctx
+                .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
+                .stdout;
+            assert_contains!(yarn_cache, "express-npm-");
+            assert_contains!(yarn_cache, "dotenv-npm-");
+        },
+    );
+}
+
+/// Rebuilds with this registry only pass if every package is restored from the Yarn mirror.
+const UNREACHABLE_REGISTRY: (&str, &str) = ("YARN_NPM_REGISTRY_SERVER", "http://127.0.0.1:9");
+
+fn assert_yarn_4_pnp_nonzero_unplugged_packages(ctx: &TestContext) {
+    // `depd` (prod) and `picocolors` (dev) are unplugged with `dependenciesMeta`
+    let unplugged = ctx.run_shell_command("ls .yarn/unplugged").stdout;
+    assert_contains!(unplugged, "depd-npm-");
+    assert_not_contains!(unplugged, "picocolors-npm-");
+    // unplugged packages are loaded from `.yarn/unplugged` so their archives aren't needed at runtime
+    let yarn_cache = ctx
+        .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
+        .stdout;
+    assert_not_contains!(yarn_cache, "depd-npm-");
+    assert_not_contains!(yarn_cache, "picocolors-npm-");
+    ctx.run_shell_command("node --require ./.pnp.cjs -e \"require('depd')\"");
+}
+
+#[derive(Clone, Copy)]
+enum Linker {
+    Pnp,
+    NodeModules,
+}
+
+/// Guardrails for how the dependencies of a Yarn 2+ app that doesn't commit its cache are shipped
+/// at launch. Every Yarn fixture has `express` as a dependency and `dotenv` as a dev dependency.
+fn assert_yarn_berry_runtime(ctx: &TestContext, linker: Linker) {
+    // the mirror contains dev dependencies so it must only be available at build time
+    let launch_layers = ctx.run_shell_command("ls /layers/heroku_nodejs").stdout;
+    assert_not_contains!(launch_layers, "yarn_mirror");
+
+    match linker {
+        Linker::Pnp => {
+            // dev dependencies are removed from the cache Plug'n'Play loads packages from at launch
+            let yarn_cache = ctx
+                .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
+                .stdout;
+            assert_contains!(yarn_cache, "express-npm-");
+            assert_not_contains!(yarn_cache, "dotenv-npm-");
+        }
+        Linker::NodeModules => {
+            let node_modules = ctx.run_shell_command("ls node_modules").stdout;
+            assert_contains!(node_modules, "express");
+            assert_not_contains!(node_modules, "dotenv");
+            // packages are installed into `node_modules` so no package archives are needed at launch
+            assert_not_contains!(launch_layers, "yarn_cache");
+        }
+    }
 }
 
 #[test]

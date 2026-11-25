@@ -63,6 +63,8 @@ heroku/nodejs <buildpack-version>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
+  - Removed temporary Yarn data from the build cache
+  - Removed 3 package archives from the Yarn cache that aren't needed at runtime
   - Removed 1 Makefile artifact from the application directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
@@ -86,7 +88,7 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:yarn'
-Adding cache layer 'heroku/nodejs:yarn_cache'
+Adding cache layer 'heroku/nodejs:yarn_mirror'
 Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'
 
@@ -123,6 +125,7 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
+      ➤ YN0013: │ <LIST OF DOWNLOADED MODULES>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
@@ -148,6 +151,8 @@ heroku/nodejs <buildpack-version>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
+  - Removed temporary Yarn data from the build cache
+  - Removed 3 package archives from the Yarn cache that aren't needed at runtime
   - Removed 1 Makefile artifact from the application directory
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
@@ -171,6 +176,6 @@ Saving <image-name>...
       <image-name>
 Reusing cache layer 'heroku/nodejs:dist'
 Reusing cache layer 'heroku/nodejs:yarn'
-Reusing cache layer 'heroku/nodejs:yarn_cache'
+Reusing cache layer 'heroku/nodejs:yarn_mirror'
 Reusing cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

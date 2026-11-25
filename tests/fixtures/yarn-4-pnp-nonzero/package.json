@@ -6,9 +6,19 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "depd": "^2.0.0",
     "express": "^4.17.3"
   },
   "devDependencies": {
-    "dotenv": "^16.5.0"
+    "dotenv": "^16.5.0",
+    "picocolors": "^1.1.1"
+  },
+  "dependenciesMeta": {
+    "depd": {
+      "unplugged": true
+    },
+    "picocolors": {
+      "unplugged": true
+    }
   }
 }
