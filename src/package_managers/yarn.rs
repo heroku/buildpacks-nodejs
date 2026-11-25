@@ -11,6 +11,7 @@ use bullet_stream::style;
 use fun_run::CommandWithName;
 use indoc::formatdoc;
 use libcnb::Env;
+use libcnb::data::layer::LayerName;
 use libcnb::data::layer_name;
 use libcnb::layer::{
     CachedLayerDefinition, EmptyLayerCause, InvalidMetadataAction, LayerState, RestoredLayerAction,
@@ -18,7 +19,9 @@ use libcnb::layer::{
 };
 use libcnb::layer_env::{LayerEnv, ModificationBehavior, Scope};
 use nodejs_data::{Version, VersionCommandError, VersionRange};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -271,38 +274,130 @@ pub(crate) fn install_dependencies(
     version: &Version,
 ) -> BuildpackResult<()> {
     print::bullet("Setting up yarn dependency cache");
-    // Yarn is configured with build env vars, which take precedence over any user configuration
-    // and don't modify the app's Yarn config files.
-    let mut yarn_env = LayerEnv::new();
+    let yarn_env = disable_global_cache(version);
+    let cache_strategy = determine_cache_strategy(&yarn_env.apply(Scope::Build, env), version)?;
+    let yarn_env = configure_cache_layers(context, version, &cache_strategy, yarn_env)?;
+    *env = yarn_env.apply(Scope::Build, env);
+    write_config_layer(context, yarn_env)?;
+
+    print::bullet("Installing dependencies");
+    run_install(context, env, version, &cache_strategy)
+}
+
+/// How packages are cached between builds.
+enum CacheStrategy {
+    /// The app commits its cache, so it's installed from as-is.
+    ZeroInstall,
+    /// Yarn 1 uses a cached layer as its cache folder.
+    Classic,
+    /// Yarn 2+ mirrors packages into a cached layer, and the cache folder is a fresh layer each
+    /// build. In Plug'n'Play mode the cache folder is shipped at launch, so this lets archives that
+    /// aren't needed at runtime be removed from it without being downloaded again on the next build.
+    Mirrored { pnp: bool },
+}
+
+/// Yarn is configured with build env vars, which take precedence over any user configuration and
+/// don't modify the app's Yarn config files.
+fn disable_global_cache(version: &Version) -> LayerEnv {
+    let yarn_env = LayerEnv::new();
     if version.major() >= 2 {
         // If enabled, the `cacheFolder` setting is ignored and packages are stored in the global
         // cache (`$HOME/.yarn/berry/cache` by default), which isn't persisted into the build cache
         // or the final image. Yarn 4.x enables the global cache by default.
-        yarn_env = yarn_env.chainable_insert(
+        yarn_env.chainable_insert(
             Scope::Build,
             ModificationBehavior::Override,
             "YARN_ENABLE_GLOBAL_CACHE",
             "false",
-        );
+        )
+    } else {
+        yarn_env
     }
+}
 
-    let yarn_cache = get_cache_folder_config(&yarn_env.apply(Scope::Build, env), version)?;
-    let zero_install_mode = is_yarn_zero_install_mode(&yarn_cache);
-    if zero_install_mode {
-        print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+fn determine_cache_strategy(env: &Env, version: &Version) -> BuildpackResult<CacheStrategy> {
+    let yarn_cache = get_cache_folder_config(env, version)?;
+    Ok(if is_yarn_zero_install_mode(&yarn_cache) {
+        CacheStrategy::ZeroInstall
+    } else if version.major() == 1 {
+        CacheStrategy::Classic
     } else {
         let node_linker = get_node_linker_config(env, version)?;
-        let cache_dir = create_cache_directory(context, version, node_linker.as_ref())?;
-        yarn_env = yarn_env.chainable_insert(
-            Scope::Build,
-            ModificationBehavior::Override,
-            "YARN_CACHE_FOLDER",
-            &cache_dir,
-        );
+        CacheStrategy::Mirrored {
+            pnp: matches!(node_linker, Some(NodeLinker::Pnp)),
+        }
+    })
+}
+
+fn configure_cache_layers(
+    context: &BuildpackBuildContext,
+    version: &Version,
+    cache_strategy: &CacheStrategy,
+    yarn_env: LayerEnv,
+) -> BuildpackResult<LayerEnv> {
+    match cache_strategy {
+        CacheStrategy::ZeroInstall => {
+            print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+            Ok(yarn_env)
+        }
+        CacheStrategy::Classic => {
+            let cache_dir = create_cache_directory(context, version, layer_name!("yarn_cache"))?;
+            Ok(yarn_env.chainable_insert(
+                Scope::Build,
+                ModificationBehavior::Override,
+                "YARN_CACHE_FOLDER",
+                &cache_dir,
+            ))
+        }
+        CacheStrategy::Mirrored { pnp } => {
+            let mirror_dir = create_cache_directory(context, version, layer_name!("yarn_mirror"))?;
+            let cache_dir = context
+                .uncached_layer(
+                    layer_name!("yarn_cache"),
+                    UncachedLayerDefinition {
+                        build: true,
+                        // In Plug'n'Play mode, Yarn resolves packages directly from the cache so it must be present at launch
+                        launch: *pnp,
+                    },
+                )?
+                .path();
+
+            // Yarn also stores data other than the mirror in the global folder, which shouldn't
+            // accumulate in the cached layer.
+            context.register_cleanup(CleanupTask::YarnGlobalFolder(mirror_dir.clone()));
+
+            if *pnp && *version >= Version::new(2, 4, 1) {
+                context.register_cleanup(CleanupTask::YarnCache {
+                    app_dir: context.app_dir.clone(),
+                    cache_dir: cache_dir.clone(),
+                });
+            }
+
+            Ok(yarn_env
+                .chainable_insert(
+                    Scope::Build,
+                    ModificationBehavior::Override,
+                    "YARN_ENABLE_MIRROR",
+                    "true",
+                )
+                // Yarn stores the mirror in the `cache` folder of the global folder
+                .chainable_insert(
+                    Scope::Build,
+                    ModificationBehavior::Override,
+                    "YARN_GLOBAL_FOLDER",
+                    &mirror_dir,
+                )
+                .chainable_insert(
+                    Scope::Build,
+                    ModificationBehavior::Override,
+                    "YARN_CACHE_FOLDER",
+                    &cache_dir,
+                ))
+        }
     }
+}
 
-    *env = yarn_env.apply(Scope::Build, env);
-
+fn write_config_layer(context: &BuildpackBuildContext, yarn_env: LayerEnv) -> BuildpackResult<()> {
     context
         .uncached_layer(
             layer_name!("yarn_config"),
@@ -312,17 +407,24 @@ pub(crate) fn install_dependencies(
             },
         )?
         .write_env(yarn_env)?;
+    Ok(())
+}
 
-    print::bullet("Installing dependencies");
+fn run_install(
+    context: &BuildpackBuildContext,
+    env: &Env,
+    version: &Version,
+    cache_strategy: &CacheStrategy,
+) -> BuildpackResult<()> {
     let mut yarn_install_command = Command::new("yarn");
-    yarn_install_command.envs(&*env);
+    yarn_install_command.envs(env);
     yarn_install_command.envs(node_gyp_env());
     yarn_install_command.arg("install");
     if version.major() == 1 {
         yarn_install_command.args(["--production=false", "--frozen-lockfile"]);
     } else {
         yarn_install_command.args(["--immutable", "--inline-builds"]);
-        if zero_install_mode {
+        if matches!(cache_strategy, CacheStrategy::ZeroInstall) {
             yarn_install_command.arg("--immutable-cache");
         }
     }
@@ -451,16 +553,15 @@ fn create_unknown_node_linker_error(value: &str) -> ErrorMessage {
 fn create_cache_directory(
     context: &BuildpackBuildContext,
     version: &Version,
-    node_linker: Option<&NodeLinker>,
+    name: LayerName,
 ) -> BuildpackResult<PathBuf> {
     let yarn_major_version = version.major().to_string();
 
     let yarn_cache_layer = context.cached_layer(
-        layer_name!("yarn_cache"),
+        name,
         CachedLayerDefinition {
             build: true,
-            // In Plug'n'Play mode, Yarn resolves packages directly from the cache so it must be present at launch
-            launch: matches!(node_linker, Some(NodeLinker::Pnp)),
+            launch: false,
             invalid_metadata_action: &|_| InvalidMetadataAction::DeleteLayer,
             restored_layer_action: &|old_metadata: &YarnCacheDirectoryLayerMetadata, _| {
                 restored_cache_directory_action(old_metadata, &yarn_major_version)
@@ -580,6 +681,63 @@ pub(crate) fn prune_dev_dependencies(
     print::sub_stream_cmd(prune_command)
         .map(|_| ())
         .map_err(|e| on_prune_command_error(&e))
+}
+
+/// Reads the Plug'n'Play data Yarn writes to the runtime file, and to `.pnp.data.json` when
+/// `pnpEnableInlining` is disabled. Yarn 3+ always writes `.pnp.cjs`, but doesn't remove a
+/// `.pnp.js` left over from Yarn 2, so `.pnp.cjs` is read when both exist. Yarn 2 writes
+/// `.pnp.js`, or `.pnp.cjs` if the project's `type` is `module`, and removes the other one.
+pub(crate) fn read_pnp_data(app_dir: &Path) -> std::io::Result<String> {
+    let runtime = [".pnp.cjs", ".pnp.js"]
+        .map(|name| app_dir.join(name))
+        .into_iter()
+        .find(|path| path.exists())
+        .unwrap_or_else(|| app_dir.join(".pnp.cjs"));
+    let mut pnp_data = fs_err::read_to_string(runtime)?;
+    let data_file = app_dir.join(".pnp.data.json");
+    if data_file.exists() {
+        pnp_data.push_str(&fs_err::read_to_string(data_file)?);
+    }
+    Ok(pnp_data)
+}
+
+static PACKAGE_LOCATION: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#""packageLocation":\s*"([^"]*)""#).expect("Package location regex should be valid")
+});
+
+/// Lists the cache archives referenced by the package locations in the Plug'n'Play data, such as
+/// `../yarn_cache/debug-npm-4.3.4-4513954577-cedbec4529.zip/node_modules/debug/`.
+///
+/// Yarn doesn't document this format, so the result is only returned if it looks trustworthy.
+/// Listing too many archives is harmless, but listing too few would remove packages the app needs.
+pub(crate) fn get_pnp_package_archives(
+    pnp_data: &str,
+    cache_dir: &Path,
+) -> Result<HashSet<String>, String> {
+    let locations = PACKAGE_LOCATION
+        .captures_iter(pnp_data)
+        .map(|captures| captures[1].to_string())
+        .collect::<Vec<_>>();
+    if !locations.iter().any(|location| location == "./") {
+        return Err("the project's package location is missing from the Plug'n'Play data".into());
+    }
+    let archives = locations
+        .iter()
+        .flat_map(|location| location.split('/'))
+        .filter(|segment| {
+            Path::new(segment)
+                .extension()
+                .is_some_and(|ext| ext == "zip")
+        })
+        .map(String::from)
+        .collect::<HashSet<_>>();
+    if let Some(archive) = archives
+        .iter()
+        .find(|archive| !cache_dir.join(archive).is_file())
+    {
+        return Err(format!("{archive} isn't in the Yarn cache"));
+    }
+    Ok(archives)
 }
 
 const YARN_PRUNE_PLUGIN_SOURCE: &str = include_str!("@yarnpkg/plugin-prune-dev-dependencies.js");
@@ -703,6 +861,128 @@ mod tests {
             &PathBuf::from("/path/to/yarn"),
             &std::io::Error::other("Not found"),
         ));
+    }
+
+    // Archives that a fixture's Plug'n'Play data doesn't reference, added to the cache folder to
+    // check that they aren't listed or kept: dev dependencies, unplugged packages, and the original
+    // of a package patched by Yarn.
+    const UNUSED_ARCHIVES: [&str; 6] = [
+        "depd-npm-2.0.0-b6c51a4b43-58bd06ec20.zip",
+        "dotenv-npm-16.4.5-bcb20eb95d-48d9287007.zip",
+        "is-number-npm-7.0.0-060086935c-b4686d0d30.zip",
+        "local-pkg-file-448fc06f1b-3f47fc80e1.zip",
+        "picocolors-npm-1.1.1-4fede47cf1-e2e3e8170a.zip",
+        "resolve-npm-1.22.8-098f379dfe-07e179f437.zip",
+    ];
+
+    fn pnp_data_fixture(name: &str) -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/yarn-data")
+            .join(name)
+    }
+
+    /// The archives a fixture references after pruning dev dependencies, as listed by Yarn's
+    /// Plug'n'Play API when the fixture was generated. See `tests/fixtures/yarn-data/README.md`.
+    fn expected_archives(fixture: &str) -> Vec<String> {
+        std::fs::read_to_string(pnp_data_fixture(fixture).join("expected-archives.txt"))
+            .unwrap()
+            .lines()
+            .map(String::from)
+            .collect()
+    }
+
+    fn create_cache_dir<S: AsRef<str>>(files: &[S]) -> tempfile::TempDir {
+        let cache_dir = tempfile::tempdir().unwrap();
+        for file in files {
+            std::fs::write(cache_dir.path().join(file.as_ref()), "").unwrap();
+        }
+        cache_dir
+    }
+
+    fn with_unused_archives(archives: &[String]) -> Vec<String> {
+        archives
+            .iter()
+            .cloned()
+            .chain(UNUSED_ARCHIVES.map(String::from))
+            .collect()
+    }
+
+    fn assert_pnp_package_archives(fixture: &str) {
+        let expected = expected_archives(fixture);
+        let cache_dir = create_cache_dir(&with_unused_archives(&expected));
+        let pnp_data = read_pnp_data(&pnp_data_fixture(fixture)).unwrap();
+        assert_eq!(
+            get_pnp_package_archives(&pnp_data, cache_dir.path()).unwrap(),
+            expected.into_iter().collect()
+        );
+    }
+
+    #[test]
+    fn get_pnp_package_archives_yarn_2() {
+        assert_pnp_package_archives("yarn-2.4.1");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_yarn_3() {
+        assert_pnp_package_archives("yarn-3.8.7");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_yarn_4() {
+        assert_pnp_package_archives("yarn-4.19.0");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_with_inlining_disabled() {
+        assert_pnp_package_archives("yarn-4.19.0-no-inlining");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_with_only_unplugged_packages() {
+        assert_pnp_package_archives("yarn-4.19.0-unplugged-only");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_with_no_dependencies() {
+        assert_pnp_package_archives("yarn-4.19.0-no-dependencies");
+    }
+
+    #[test]
+    fn get_pnp_package_archives_without_project_location() {
+        let cache_dir = create_cache_dir(&expected_archives("yarn-4.19.0"));
+        let pnp_data = r#""packageLocation": "../yarn_cache/debug-npm-4.3.4-4513954577-cedbec4529.zip/node_modules/debug/""#;
+        assert_eq!(
+            get_pnp_package_archives(pnp_data, cache_dir.path()).unwrap_err(),
+            "the project's package location is missing from the Plug'n'Play data"
+        );
+    }
+
+    #[test]
+    fn get_pnp_package_archives_with_archive_missing_from_cache() {
+        let archives = expected_archives("yarn-4.19.0");
+        let cache_dir = create_cache_dir(&archives[1..]);
+        let pnp_data = read_pnp_data(&pnp_data_fixture("yarn-4.19.0")).unwrap();
+        assert_eq!(
+            get_pnp_package_archives(&pnp_data, cache_dir.path()).unwrap_err(),
+            format!("{} isn't in the Yarn cache", archives[0])
+        );
+    }
+
+    #[test]
+    fn read_pnp_data_prefers_pnp_cjs_over_leftover_pnp_js() {
+        let app_dir = tempfile::tempdir().unwrap();
+        std::fs::write(app_dir.path().join(".pnp.cjs"), "current").unwrap();
+        std::fs::write(app_dir.path().join(".pnp.js"), "leftover").unwrap();
+        assert_eq!(read_pnp_data(app_dir.path()).unwrap(), "current");
+    }
+
+    #[test]
+    fn read_pnp_data_without_pnp_runtime() {
+        let app_dir = tempfile::tempdir().unwrap();
+        assert_eq!(
+            read_pnp_data(app_dir.path()).unwrap_err().kind(),
+            std::io::ErrorKind::NotFound
+        );
     }
 
     #[test]

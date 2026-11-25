@@ -1,4 +1,5 @@
 use crate::BuildpackBuildContext;
+use crate::package_managers::yarn;
 use bullet_stream::global::print;
 use std::fmt::{Display, Formatter};
 use std::fs;
@@ -37,6 +38,33 @@ pub(crate) fn run_post_build_cleanup_tasks(context: &BuildpackBuildContext) {
                         }
                     }
                 }
+                CleanupTask::YarnGlobalFolder(global_folder) => {
+                    match remove_yarn_global_folder_data(&global_folder) {
+                        Ok(true) => task_statuses
+                            .push("Removed temporary Yarn data from the build cache".into()),
+                        Ok(false) => {}
+                        Err(e) => {
+                            task_statuses.push(format!("Error during cleanup: {e}"));
+                        }
+                    }
+                }
+                CleanupTask::YarnCache {
+                    app_dir,
+                    cache_dir,
+                } => match remove_unused_pnp_cache_archives(&app_dir, &cache_dir) {
+                    Ok(PnpCacheCleanup::Removed(0)) => {}
+                    Ok(PnpCacheCleanup::Removed(removed)) => task_statuses.push(format!(
+                        "Removed {removed} package {} from the Yarn cache that {} needed at runtime",
+                        if removed == 1 { "archive" } else { "archives" },
+                        if removed == 1 { "isn't" } else { "aren't" }
+                    )),
+                    Ok(PnpCacheCleanup::Skipped(reason)) => task_statuses.push(format!(
+                        "Kept every package archive in the Yarn cache because the archives used by Plug'n'Play couldn't be determined: {reason}"
+                    )),
+                    Err(e) => {
+                        task_statuses.push(format!("Error during cleanup: {e}"));
+                    }
+                },
                 CleanupTask::PnpmModulesYaml(base_path) => {
                     match remove_pnpm_modules_yaml(&base_path) {
                         Ok(true) => task_statuses
@@ -112,12 +140,79 @@ fn remove_pnpm_modules_yaml(app_dir: &Path) -> std::io::Result<bool> {
     }
 }
 
+/// Remove everything from Yarn's global folder except the mirror (`cache/`)
+///
+/// Yarn also stores data such as npm metadata and linker stores in the global folder. These used
+/// to be discarded with `$HOME` each build, but the global folder is now in a cached layer.
+fn remove_yarn_global_folder_data(global_folder: &Path) -> std::io::Result<bool> {
+    let mut removed = false;
+    if !global_folder.exists() {
+        return Ok(removed);
+    }
+    for entry in fs::read_dir(global_folder)? {
+        let entry = entry?;
+        if entry.file_name() == "cache" {
+            continue;
+        }
+        if entry.file_type()?.is_dir() {
+            fs::remove_dir_all(entry.path())?;
+        } else {
+            fs::remove_file(entry.path())?;
+        }
+        removed = true;
+    }
+    Ok(removed)
+}
+
+enum PnpCacheCleanup {
+    Removed(usize),
+    /// Every archive was kept because the ones Plug'n'Play uses couldn't be determined.
+    Skipped(String),
+}
+
+/// The cache folder holds an archive for every package Yarn installed, but Plug'n'Play only loads
+/// some of them at launch. Archives aren't needed for pruned dev dependencies, unplugged packages,
+/// or the originals of packages patched by Yarn.
+fn remove_unused_pnp_cache_archives(
+    app_dir: &Path,
+    cache_dir: &Path,
+) -> std::io::Result<PnpCacheCleanup> {
+    let pnp_data = yarn::read_pnp_data(app_dir)?;
+    let used_archives = match yarn::get_pnp_package_archives(&pnp_data, cache_dir) {
+        Ok(used_archives) => used_archives,
+        Err(reason) => return Ok(PnpCacheCleanup::Skipped(reason)),
+    };
+
+    let mut removed = 0;
+    for entry in fs_err::read_dir(cache_dir)? {
+        let path = entry?.path();
+        let is_unused_archive = path.extension().is_some_and(|ext| ext == "zip")
+            && path
+                .file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| !used_archives.contains(name));
+        if is_unused_archive {
+            fs_err::remove_file(&path)?;
+            removed += 1;
+        }
+    }
+    Ok(PnpCacheCleanup::Removed(removed))
+}
+
 #[derive(Debug, Clone)]
 pub(crate) enum CleanupTask {
     /// location contains native module builds with Makefiles
     NodeGypMakefiles(NodeGypArtifactLocation),
     /// pnpm `node_modules/.modules.yaml` (contains non-deterministic `prunedAt` timestamp)
     PnpmModulesYaml(PathBuf),
+    /// Yarn global folder (contains the mirror and data that shouldn't accumulate in the cache)
+    YarnGlobalFolder(PathBuf),
+    /// Yarn cache folder shipped at launch for Plug'n'Play, which holds archives that aren't needed
+    /// at runtime
+    YarnCache {
+        app_dir: PathBuf,
+        cache_dir: PathBuf,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -138,6 +233,7 @@ impl Display for NodeGypArtifactLocation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use indoc::indoc;
     use std::fs;
     use tempfile::TempDir;
 
@@ -179,6 +275,107 @@ mod tests {
         assert_eq!(removed, 1);
         assert!(!build_dir.join("Makefile").exists());
         assert!(build_dir.join("output.o").exists());
+    }
+
+    #[test]
+    fn test_remove_yarn_global_folder_data_keeps_mirror() {
+        let temp = TempDir::new().unwrap();
+        let global_folder = temp.path();
+        fs::create_dir_all(global_folder.join("cache")).unwrap();
+        fs::write(global_folder.join("cache/pkg-npm-1.0.0-abc-10c0.zip"), "").unwrap();
+        fs::create_dir_all(global_folder.join("metadata/npm")).unwrap();
+        fs::write(global_folder.join("metadata/npm/pkg.json"), "{}").unwrap();
+        fs::write(global_folder.join("telemetry.json"), "{}").unwrap();
+
+        assert!(remove_yarn_global_folder_data(global_folder).unwrap());
+        let mut entries = fs::read_dir(global_folder)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect::<Vec<_>>();
+        entries.sort();
+        assert_eq!(entries, ["cache"]);
+        assert!(
+            global_folder
+                .join("cache/pkg-npm-1.0.0-abc-10c0.zip")
+                .exists()
+        );
+
+        assert!(!remove_yarn_global_folder_data(global_folder).unwrap());
+    }
+
+    #[test]
+    fn test_remove_yarn_global_folder_data_missing_folder() {
+        let temp = TempDir::new().unwrap();
+        assert!(!remove_yarn_global_folder_data(&temp.path().join("missing")).unwrap());
+    }
+
+    /// Writes Plug'n'Play data that references `used-npm-1.0.0-abc.zip` and returns the app dir.
+    fn create_pnp_app() -> TempDir {
+        let app_dir = TempDir::new().unwrap();
+        fs::write(
+            app_dir.path().join(".pnp.cjs"),
+            indoc! {r#"
+                "packageLocation": "./"
+                "packageLocation": "../yarn_cache/used-npm-1.0.0-abc.zip/node_modules/used/"
+            "#},
+        )
+        .unwrap();
+        app_dir
+    }
+
+    fn create_cache_dir(files: &[&str]) -> TempDir {
+        let cache_dir = TempDir::new().unwrap();
+        for file in files {
+            fs::write(cache_dir.path().join(file), "").unwrap();
+        }
+        cache_dir
+    }
+
+    fn list_dir(dir: &Path) -> Vec<String> {
+        let mut entries = fs::read_dir(dir)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect::<Vec<_>>();
+        entries.sort();
+        entries
+    }
+
+    #[test]
+    fn test_remove_unused_pnp_cache_archives_removes_only_unused_archives() {
+        let app_dir = create_pnp_app();
+        let cache_dir = create_cache_dir(&[
+            "used-npm-1.0.0-abc.zip",
+            "unused-npm-1.0.0-def.zip",
+            ".gitignore",
+        ]);
+        assert!(matches!(
+            remove_unused_pnp_cache_archives(app_dir.path(), cache_dir.path()).unwrap(),
+            PnpCacheCleanup::Removed(1)
+        ));
+        assert_eq!(
+            list_dir(cache_dir.path()),
+            [".gitignore", "used-npm-1.0.0-abc.zip"]
+        );
+    }
+
+    #[test]
+    fn test_remove_unused_pnp_cache_archives_keeps_every_archive_when_untrusted() {
+        let app_dir = create_pnp_app();
+        // The referenced archive is missing, so the Plug'n'Play data can't be trusted
+        let cache_dir = create_cache_dir(&["unused-npm-1.0.0-def.zip"]);
+        assert!(matches!(
+            remove_unused_pnp_cache_archives(app_dir.path(), cache_dir.path()).unwrap(),
+            PnpCacheCleanup::Skipped(_)
+        ));
+        assert_eq!(list_dir(cache_dir.path()), ["unused-npm-1.0.0-def.zip"]);
+    }
+
+    #[test]
+    fn test_remove_unused_pnp_cache_archives_missing_pnp_data() {
+        let app_dir = TempDir::new().unwrap();
+        let cache_dir = create_cache_dir(&["unused-npm-1.0.0-def.zip"]);
+        assert!(remove_unused_pnp_cache_archives(app_dir.path(), cache_dir.path()).is_err());
+        assert_eq!(list_dir(cache_dir.path()), ["unused-npm-1.0.0-def.zip"]);
     }
 
     #[test]
