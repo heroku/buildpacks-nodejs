@@ -1,4 +1,5 @@
 [alias]
 integration-test = "nextest run --run-ignored only --locked"
+generate-yarn-fixtures = "run --package xtask-generate-yarn-fixtures"
 sync-yarn-plugin-changelog = "run --package xtask-sync-yarn-plugin-changelog -- ./CHANGELOG.md"
 update-nodejs-inventory = "run --locked --package xtask-update-nodejs-inventory -- ./inventory/nodejs.toml ./CHANGELOG.md"

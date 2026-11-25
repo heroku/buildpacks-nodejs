@@ -55,6 +55,7 @@ members = [
     "crates/available-parallelism",
     "crates/nodejs-data",
     "crates/test_support",
+    "crates/xtask-generate-yarn-fixtures",
     "crates/xtask-sync-yarn-plugin-changelog",
     "crates/xtask-update-nodejs-inventory"
 ]

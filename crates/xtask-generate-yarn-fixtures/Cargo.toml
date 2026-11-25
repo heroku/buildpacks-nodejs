@@ -1,0 +1,11 @@
+[package]
+name = "xtask-generate-yarn-fixtures"
+edition = "2024"
+
+[lints]
+workspace = true
+
+[dependencies]
+fs-err = "3"
+indoc = "2"
+tempfile = "3"
