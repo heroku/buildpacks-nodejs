@@ -743,7 +743,13 @@ pub(crate) fn prune_dev_dependencies(
             "--ignore-scripts",
             "--prefer-offline",
         ])
+    } else if version.major() >= 4 {
+        // Yarn's replacement for Yarn 1's `yarn install --production`, see:
+        // - https://yarnpkg.com/migration/guide#cli-changes
+        // - https://yarnpkg.com/cli/workspaces/focus
+        prune_command.args(["workspaces", "focus", "--all", "--production"])
     } else {
+        // Yarn 2 and 3 don't bundle the workspace-tools plugin that provides `yarn workspaces focus`
         let yarn_prune_plugin = install_yarn_prune_plugin()?;
         prune_command
             .env("YARN_PLUGINS", yarn_prune_plugin)
