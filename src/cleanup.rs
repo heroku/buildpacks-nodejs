@@ -56,35 +56,33 @@ pub(crate) fn run_post_build_cleanup_tasks(context: &BuildpackBuildContext) {
                 } => {
                     // Mirror archives are stale when they're missing from the cache folder, so the
                     // mirror is pruned before archives are removed from the cache folder.
-                    match remove_stale_yarn_mirror_archives(&app_dir, &mirror_cache_dir, &cache_dir)
-                    {
-                        Ok(0) => {}
-                        Ok(removed) => task_statuses.push(format!(
-                            "Removed {removed} unused package {} from the Yarn mirror",
-                            if removed == 1 { "archive" } else { "archives" }
-                        )),
-                        Err(e) => {
-                            task_statuses.push(format!("Error during cleanup: {e}"));
+                    if let Some(mirror_cache_dir) = &mirror_cache_dir {
+                        match remove_stale_yarn_mirror_archives(
+                            &app_dir,
+                            mirror_cache_dir,
+                            &cache_dir,
+                        ) {
+                            Ok(0) => {}
+                            Ok(removed) => task_statuses.push(format!(
+                                "Removed {removed} unused package {} from the Yarn mirror",
+                                if removed == 1 { "archive" } else { "archives" }
+                            )),
+                            Err(e) => {
+                                task_statuses.push(format!("Error during cleanup: {e}"));
+                            }
                         }
                     }
                     match omit {
-                        Omit::CacheDirContents => {}
-                        Omit::ArchivesUsedByPnp => {
-                            match remove_unused_pnp_cache_archives(&app_dir, &cache_dir) {
-                                Ok(PnpCacheCleanup::Removed(0)) => {}
-                                Ok(PnpCacheCleanup::Removed(removed)) => task_statuses.push(format!(
-                                    "Removed {removed} package {} from the Yarn cache that {} needed at runtime",
-                                    if removed == 1 { "archive" } else { "archives" },
-                                    if removed == 1 { "isn't" } else { "aren't" }
-                                )),
-                                Ok(PnpCacheCleanup::Skipped(reason)) => task_statuses.push(format!(
-                                    "Kept every package archive in the Yarn cache because the archives used by Plug'n'Play couldn't be determined: {reason}"
-                                )),
-                                Err(e) => {
-                                    task_statuses.push(format!("Error during cleanup: {e}"));
-                                }
-                            }
+                        Some(Omit::CacheDirContents) => {}
+                        Some(Omit::ArchivesUsedByPnp) => {
+                            task_statuses.extend(yarn_cache_cleanup_status(
+                                remove_unused_pnp_cache_archives(&app_dir, &cache_dir),
+                            ));
                         }
+                        None => task_statuses.extend(yarn_cache_cleanup_status(
+                            remove_all_yarn_cache_archives(&cache_dir)
+                                .map(PnpCacheCleanup::Removed),
+                        )),
                     }
                 }
                 CleanupTask::PnpmModulesYaml(base_path) => {
@@ -216,6 +214,21 @@ fn remove_stale_yarn_mirror_archives(
     Ok(stale_archives.len())
 }
 
+fn yarn_cache_cleanup_status(cleanup: std::io::Result<PnpCacheCleanup>) -> Option<String> {
+    match cleanup {
+        Ok(PnpCacheCleanup::Removed(0)) => None,
+        Ok(PnpCacheCleanup::Removed(removed)) => Some(format!(
+            "Removed {removed} package {} from the Yarn cache that {} needed at runtime",
+            if removed == 1 { "archive" } else { "archives" },
+            if removed == 1 { "isn't" } else { "aren't" }
+        )),
+        Ok(PnpCacheCleanup::Skipped(reason)) => Some(format!(
+            "Kept every package archive in the Yarn cache because the archives used by Plug'n'Play couldn't be determined: {reason}"
+        )),
+        Err(e) => Some(format!("Error during cleanup: {e}")),
+    }
+}
+
 enum PnpCacheCleanup {
     Removed(usize),
     /// Every archive was kept because the ones Plug'n'Play uses couldn't be determined.
@@ -251,6 +264,16 @@ fn remove_unused_pnp_cache_archives(
     Ok(PnpCacheCleanup::Removed(removed))
 }
 
+/// Packages are installed into `node_modules`, so none of the archives in the cache folder are
+/// needed at runtime.
+fn remove_all_yarn_cache_archives(cache_dir: &Path) -> std::io::Result<usize> {
+    let archives = yarn::list_package_archives(cache_dir)?;
+    for archive in &archives {
+        fs_err::remove_file(cache_dir.join(archive))?;
+    }
+    Ok(archives.len())
+}
+
 #[derive(Debug, Clone)]
 pub(crate) enum CleanupTask {
     /// location contains native module builds with Makefiles
@@ -259,14 +282,14 @@ pub(crate) enum CleanupTask {
     PnpmModulesYaml(PathBuf),
     /// Yarn global folder (contains the mirror and data that shouldn't accumulate in the cache)
     YarnGlobalFolder(PathBuf),
-    /// Yarn cache folder, and the mirror in the build cache it's populated from. The mirror keeps
-    /// archives of packages the app no longer uses.
+    /// Yarn cache folder, and the mirror in the build cache it's populated from (committed caches
+    /// have no mirror). The mirror keeps archives of packages the app no longer uses.
     YarnCache {
         app_dir: PathBuf,
         cache_dir: PathBuf,
-        mirror_cache_dir: PathBuf,
-        /// Cache folder contents left in place
-        omit: Omit,
+        mirror_cache_dir: Option<PathBuf>,
+        /// Cache folder contents left in place; every archive is removed when `None`
+        omit: Option<Omit>,
     },
 }
 

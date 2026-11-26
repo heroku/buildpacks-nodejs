@@ -59,7 +59,7 @@ heroku/nodejs <buildpack-version>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
-  - Nothing to cleanup
+  - Removed 63 package archives from the Yarn cache that aren't needed at runtime
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
