@@ -4,11 +4,13 @@
 use indoc::indoc;
 use libcnb::data::buildpack_id;
 use libcnb_test::{BuildpackReference, TestContext, assert_contains, assert_not_contains};
+use regex::Regex;
 use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
 use test_support::{
     add_build_script, assert_web_response, create_build_snapshot, custom_buildpack,
     integration_test_with_config, nodejs_integration_test, nodejs_integration_test_with_config,
-    print_build_env_buildpack,
+    print_build_env_buildpack, update_json_file,
 };
 
 #[test]
@@ -80,6 +82,19 @@ fn yarn_3_pnp_nonzero() {
             build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "yarn-3-pnp-nonzero");
             assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+
+            // the archive of the removed dev dependency is removed from the mirror
+            let mut config = ctx.config.clone();
+            config.app_dir_preprocessor(|app_dir| remove_dotenv_dependency(&app_dir));
+            ctx.rebuild(config, |ctx| {
+                assert_contains!(
+                    ctx.pack_stdout,
+                    "Removed 1 unused package archive from the Yarn mirror"
+                );
+                assert_contains!(ctx.pack_stdout, "Added 1/1 app layer(s)");
+                assert_web_response(&ctx, "yarn-3-pnp-nonzero");
+                assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+            });
         });
     });
 }
@@ -118,6 +133,20 @@ fn yarn_4_pnp_nonzero() {
             assert_web_response(&ctx, "yarn-4-pnp-nonzero");
             assert_yarn_berry_runtime(&ctx, Linker::Pnp);
             assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+
+            // the archive of the removed dev dependency is removed from the mirror
+            let mut config = ctx.config.clone();
+            config.app_dir_preprocessor(|app_dir| remove_dotenv_dependency(&app_dir));
+            ctx.rebuild(config, |ctx| {
+                assert_contains!(
+                    ctx.pack_stdout,
+                    "Removed 1 unused package archive from the Yarn mirror"
+                );
+                assert_contains!(ctx.pack_stdout, "Added 1/1 app layer(s)");
+                assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+                assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+                assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+            });
         });
     });
 }
@@ -170,6 +199,38 @@ fn yarn_4_pnp_workspaces() {
             assert_yarn_4_pnp_workspace_dependencies(&ctx);
         });
     });
+}
+
+/// Removes the `dotenv` dev dependency from the app, as `yarn remove dotenv` would. The buildpack
+/// installs with `--immutable`, so the edited lockfile must match what Yarn would write exactly.
+/// Deleting text only does that for a package with no dependencies, like `dotenv`, otherwise Yarn
+/// would also need to remove the transitive packages it no longer needs which is a much more
+/// complicated task.
+fn remove_dotenv_dependency(app_dir: &Path) {
+    update_json_file(&app_dir.join("package.json"), |json| {
+        json["devDependencies"]
+            .as_object_mut()
+            .expect("package.json should have dev dependencies")
+            .remove("dotenv")
+            .expect("dotenv should be a dev dependency");
+    });
+    let lockfile_path = app_dir.join("yarn.lock");
+    let mut lockfile =
+        std::fs::read_to_string(&lockfile_path).expect("yarn.lock should be readable");
+    for pattern in [
+        // the package entry
+        r#"(?m)^"dotenv@npm:\^16\.5\.0":\n(?: .*\n)*\n"#,
+        // the dependency in the workspace entry
+        r#"(?m)^    dotenv: "?(?:npm:)?\^16\.5\.0"?\n"#,
+    ] {
+        let regex = Regex::new(pattern).expect("regex should be valid");
+        assert!(
+            regex.is_match(&lockfile),
+            "{pattern} not found in yarn.lock"
+        );
+        lockfile = regex.replace(&lockfile, "").into_owned();
+    }
+    std::fs::write(&lockfile_path, lockfile).expect("yarn.lock should be writable");
 }
 
 /// Rebuilds with this registry only pass if every package is restored from the Yarn mirror.
