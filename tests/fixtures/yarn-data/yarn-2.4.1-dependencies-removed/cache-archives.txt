@@ -1,0 +1,8 @@
+@parcel-watcher-win32-x64-npm-2.6.0-603748a51f-0b89de4b1a.zip
+debug-npm-4.3.4-4513954577-7d71c93be2.zip
+depd-npm-2.0.0-b6c51a4b43-20726d843f.zip
+is-number-npm-7.0.0-060086935c-eec6e506c6.zip
+local-pkg-file-6b22e401f6-2a15a33c73.zip
+ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip
+ms-npm-2.1.3-81ff3cfac1-6e721e648a.zip
+picocolors-npm-1.1.1-4fede47cf1-d4d3ac853d.zip

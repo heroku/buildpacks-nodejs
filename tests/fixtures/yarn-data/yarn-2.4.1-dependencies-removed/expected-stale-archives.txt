@@ -1,0 +1,8 @@
+dotenv-npm-16.4.5-bcb20eb95d-7.zip
+function-bind-npm-1.1.2-7a55be9b03-7.zip
+hasown-npm-2.0.4-75e16c9c2a-7.zip
+is-core-module-npm-2.18.0-ad42e9be75-7.zip
+path-parse-npm-1.0.7-09564527b7-7.zip
+resolve-npm-1.22.8-098f379dfe-7.zip
+resolve-patch-6ba30f2f2c-7.zip
+supports-preserve-symlinks-flag-npm-1.0.0-f17c4d0028-7.zip
