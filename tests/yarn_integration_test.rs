@@ -152,6 +152,26 @@ fn yarn_4_pnp_prune_dev_dependencies_disabled() {
     );
 }
 
+#[test]
+#[ignore = "integration test"]
+fn yarn_4_pnp_workspaces() {
+    nodejs_integration_test("./fixtures/yarn-4-pnp-workspaces", |ctx| {
+        let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+        assert_web_response(&ctx, "Hello from yarn-4-pnp-workspaces");
+        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+        assert_yarn_4_pnp_workspace_dependencies(&ctx);
+
+        let mut config = ctx.config.clone();
+        config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
+        ctx.rebuild(config, |ctx| {
+            build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "Hello from yarn-4-pnp-workspaces");
+            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+            assert_yarn_4_pnp_workspace_dependencies(&ctx);
+        });
+    });
+}
+
 /// Rebuilds with this registry only pass if every package is restored from the Yarn mirror.
 const UNREACHABLE_REGISTRY: (&str, &str) = ("YARN_NPM_REGISTRY_SERVER", "http://127.0.0.1:9");
 
@@ -167,6 +187,15 @@ fn assert_yarn_4_pnp_nonzero_unplugged_packages(ctx: &TestContext) {
     assert_not_contains!(yarn_cache, "depd-npm-");
     assert_not_contains!(yarn_cache, "picocolors-npm-");
     ctx.run_shell_command("node --require ./.pnp.cjs -e \"require('depd')\"");
+}
+
+fn assert_yarn_4_pnp_workspace_dependencies(ctx: &TestContext) {
+    // the `greeting` workspace depends on `he` (prod) and `picocolors` (dev)
+    let yarn_cache = ctx
+        .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
+        .stdout;
+    assert_contains!(yarn_cache, "he-npm-");
+    assert_not_contains!(yarn_cache, "picocolors-npm-");
 }
 
 #[derive(Clone, Copy)]
