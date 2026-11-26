@@ -1,4 +1,4 @@
-use crate::cleanup::{CleanupTask, NodeGypArtifactLocation};
+use crate::cleanup::{CleanupTask, NodeGypArtifactLocation, Omit};
 use crate::o11y::*;
 use crate::utils::build_env::node_gyp_env;
 use crate::utils::error_handling::{
@@ -366,12 +366,19 @@ fn configure_cache_layers(
             // accumulate in the cached layer.
             context.register_cleanup(CleanupTask::YarnGlobalFolder(mirror_dir.clone()));
 
-            if *pnp && *version >= Version::new(2, 4, 1) {
-                context.register_cleanup(CleanupTask::YarnCache {
-                    app_dir: context.app_dir.clone(),
-                    cache_dir: cache_dir.clone(),
-                });
-            }
+            context.register_cleanup(CleanupTask::YarnCache {
+                app_dir: context.app_dir.clone(),
+                cache_dir: cache_dir.clone(),
+                // Yarn stores the mirror in the `cache` folder of the global folder
+                mirror_cache_dir: mirror_dir.join("cache"),
+                // The cache folder is only shipped at launch for Plug'n'Play, and the archives it
+                // uses can't be determined before Yarn 2.4.1
+                omit: if *pnp && *version >= Version::new(2, 4, 1) {
+                    Omit::ArchivesUsedByPnp
+                } else {
+                    Omit::CacheDirContents
+                },
+            });
 
             Ok(yarn_env
                 .chainable_insert(
@@ -395,6 +402,70 @@ fn configure_cache_layers(
                 ))
         }
     }
+}
+
+pub(crate) fn list_package_archives(folder: &Path) -> std::io::Result<Vec<String>> {
+    let mut archives = vec![];
+    for entry in fs_err::read_dir(folder)? {
+        let path = entry?.path();
+        if path.extension().is_some_and(|ext| ext == "zip")
+            && let Some(name) = path.file_name().and_then(|name| name.to_str())
+        {
+            archives.push(name.to_string());
+        }
+    }
+    Ok(archives)
+}
+
+/// Archives are named `<slug>-<suffix>.zip` in both the mirror and the cache folder. The slug
+/// identifies the package (name, protocol, version, and locator hash) and is what Yarn uses to find
+/// an archive in the mirror. The suffix is the cache key in the mirror and the cache key or checksum
+/// in the cache folder, so only the slug is compared.
+///
+/// When the cache key changes (e.g. a Yarn upgrade or a different `compressionLevel`), Yarn writes a
+/// new mirror archive for the same slug and leaves the old one behind. The mirror archive Yarn uses
+/// is the one with the lockfile's cache key, since the install writes the cache key from the same
+/// Yarn config to the lockfile (or fails, if it's immutable and Yarn won't update the cache key).
+/// Without a cache key, every archive for a used slug is kept.
+pub(crate) fn get_stale_mirror_archives<'a>(
+    cache_archives: &[String],
+    mirror_archives: &'a [String],
+    cache_key: Option<&str>,
+) -> Vec<&'a str> {
+    let used_slugs: HashSet<&str> = cache_archives
+        .iter()
+        .filter_map(|archive| get_package_archive_slug(archive))
+        .collect();
+    mirror_archives
+        .iter()
+        .filter(|archive| {
+            archive
+                .strip_suffix(".zip")
+                .and_then(|archive| archive.rsplit_once('-'))
+                .is_some_and(|(slug, suffix)| {
+                    !used_slugs.contains(slug) || cache_key.is_some_and(|key| suffix != key)
+                })
+        })
+        .map(String::as_str)
+        .collect()
+}
+
+/// Reads `cacheKey` from the lockfile's `__metadata` entry.
+pub(crate) fn get_lockfile_cache_key(lockfile: &str) -> Option<String> {
+    let docs = yaml_rust2::YamlLoader::load_from_str(lockfile).ok()?;
+    match &docs.first()?["__metadata"]["cacheKey"] {
+        yaml_rust2::Yaml::String(cache_key) => Some(cache_key.clone()),
+        // Cache keys without a compression level, like `8`, are parsed as integers
+        yaml_rust2::Yaml::Integer(cache_key) => Some(cache_key.to_string()),
+        _ => None,
+    }
+}
+
+fn get_package_archive_slug(archive: &str) -> Option<&str> {
+    archive
+        .strip_suffix(".zip")?
+        .rsplit_once('-')
+        .map(|(slug, _)| slug)
 }
 
 fn write_config_layer(context: &BuildpackBuildContext, yarn_env: LayerEnv) -> BuildpackResult<()> {
@@ -983,6 +1054,189 @@ mod tests {
             read_pnp_data(app_dir.path()).unwrap_err().kind(),
             std::io::ErrorKind::NotFound
         );
+    }
+
+    fn archives(names: &[&str]) -> Vec<String> {
+        names.iter().map(|name| (*name).to_string()).collect()
+    }
+
+    fn sorted_stale_mirror_archives<'a>(
+        cache_archives: &[String],
+        mirror_archives: &'a [String],
+        cache_key: Option<&str>,
+    ) -> Vec<&'a str> {
+        let mut stale = get_stale_mirror_archives(cache_archives, mirror_archives, cache_key);
+        stale.sort_unstable();
+        stale
+    }
+
+    #[test]
+    fn stale_mirror_archives_are_matched_by_slug() {
+        // Yarn 4 names cache folder archives with the checksum and mirror archives with the cache key
+        let cache_archives = archives(&[
+            "@types-node-npm-20.0.0-1234567890-abcdef0123.zip",
+            "express-npm-4.21.2-cb2e2a2f28-38168fd0a3.zip",
+            "resolve-patch-4254c24959-0b0f0e7a2a.zip",
+        ]);
+        let mirror_archives = archives(&[
+            "@types-node-npm-20.0.0-1234567890-10c0.zip",
+            "dotenv-npm-16.6.1-01334288ea-10c0.zip",
+            "express-npm-4.21.2-cb2e2a2f28-10c0.zip",
+            "express-npm-4.21.1-5a3d1e8b0c-10c0.zip",
+            "resolve-patch-4254c24959-10c0.zip",
+        ]);
+        assert_eq!(
+            sorted_stale_mirror_archives(&cache_archives, &mirror_archives, Some("10c0")),
+            [
+                "dotenv-npm-16.6.1-01334288ea-10c0.zip",
+                "express-npm-4.21.1-5a3d1e8b0c-10c0.zip"
+            ]
+        );
+    }
+
+    #[test]
+    fn stale_mirror_archives_with_cache_key_suffixes() {
+        // Archives without a checksum use the cache key in the cache folder too (e.g. Yarn 2 and 3)
+        let cache_archives = archives(&["accepts-npm-1.3.8-9a812371c9-8.zip"]);
+        let mirror_archives = archives(&[
+            "accepts-npm-1.3.8-9a812371c9-8.zip",
+            "ms-npm-2.1.3-81ff3cfac1-8.zip",
+        ]);
+        assert_eq!(
+            sorted_stale_mirror_archives(&cache_archives, &mirror_archives, Some("8")),
+            ["ms-npm-2.1.3-81ff3cfac1-8.zip"]
+        );
+    }
+
+    #[test]
+    fn stale_mirror_archives_after_cache_key_change() {
+        let cache_archives = archives(&["express-npm-4.21.2-cb2e2a2f28-38168fd0a3.zip"]);
+        let mirror_archives = archives(&[
+            "express-npm-4.21.2-cb2e2a2f28-10c0.zip",
+            "express-npm-4.21.2-cb2e2a2f28-10c9.zip",
+        ]);
+        assert_eq!(
+            sorted_stale_mirror_archives(&cache_archives, &mirror_archives, Some("10c9")),
+            ["express-npm-4.21.2-cb2e2a2f28-10c0.zip"]
+        );
+    }
+
+    #[test]
+    fn stale_mirror_archives_without_a_cache_key() {
+        let cache_archives = archives(&["express-npm-4.21.2-cb2e2a2f28-38168fd0a3.zip"]);
+        let mirror_archives = archives(&[
+            "dotenv-npm-16.6.1-01334288ea-10c0.zip",
+            "express-npm-4.21.2-cb2e2a2f28-10c0.zip",
+            "express-npm-4.21.2-cb2e2a2f28-10c9.zip",
+        ]);
+        assert_eq!(
+            sorted_stale_mirror_archives(&cache_archives, &mirror_archives, None),
+            ["dotenv-npm-16.6.1-01334288ea-10c0.zip"]
+        );
+    }
+
+    #[test]
+    fn stale_mirror_archives_ignores_unrecognized_files() {
+        let mirror_archives = archives(&["notes.txt", "archive.zip"]);
+        assert_eq!(
+            sorted_stale_mirror_archives(&[], &mirror_archives, Some("10c0")),
+            Vec::<&str>::new()
+        );
+    }
+
+    #[test]
+    fn lockfile_cache_key() {
+        let lockfile = indoc::indoc! {r#"
+            # This file is generated by running "yarn install" inside your project.
+            # Manual changes might be lost - proceed with caution!
+
+            __metadata:
+              version: 8
+              cacheKey: 10c0
+
+            "express@npm:4.21.2":
+              version: 4.21.2
+        "#};
+        assert_eq!(get_lockfile_cache_key(lockfile).as_deref(), Some("10c0"));
+    }
+
+    #[test]
+    fn lockfile_cache_key_quoted() {
+        let lockfile = "__metadata:\n  version: 4\n  cacheKey: \"7\"\n";
+        assert_eq!(get_lockfile_cache_key(lockfile).as_deref(), Some("7"));
+    }
+
+    #[test]
+    fn lockfile_cache_key_integer() {
+        let lockfile = "__metadata:\n  version: 6\n  cacheKey: 8\n";
+        assert_eq!(get_lockfile_cache_key(lockfile).as_deref(), Some("8"));
+    }
+
+    #[test]
+    fn lockfile_cache_key_missing() {
+        let lockfile = indoc::indoc! {r#"
+            __metadata:
+              version: 8
+
+            "express@npm:4.21.2":
+              cacheKey: 10c0
+        "#};
+        assert_eq!(get_lockfile_cache_key(lockfile), None);
+    }
+
+    /// See `tests/fixtures/yarn-data/README.md`.
+    fn assert_mirror_fixture_stale_archives(fixture: &str) {
+        let fixture_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures/yarn-data")
+            .join(fixture);
+        let read_lines = |file: &str| -> Vec<String> {
+            std::fs::read_to_string(fixture_dir.join(file))
+                .unwrap()
+                .lines()
+                .map(String::from)
+                .collect()
+        };
+        let lockfile = std::fs::read_to_string(fixture_dir.join("yarn.lock")).unwrap();
+        let cache_key =
+            get_lockfile_cache_key(&lockfile).expect("lockfile should have a cache key");
+        assert_eq!(
+            sorted_stale_mirror_archives(
+                &read_lines("cache-archives.txt"),
+                &read_lines("mirror-archives.txt"),
+                Some(&cache_key)
+            ),
+            read_lines("expected-stale-archives.txt")
+        );
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_2_dependencies_removed() {
+        assert_mirror_fixture_stale_archives("yarn-2.4.1-dependencies-removed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_2_cache_key_changed() {
+        assert_mirror_fixture_stale_archives("yarn-2.4.1-cache-key-changed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_3_dependencies_removed() {
+        assert_mirror_fixture_stale_archives("yarn-3.8.7-dependencies-removed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_3_cache_key_changed() {
+        assert_mirror_fixture_stale_archives("yarn-3.8.7-cache-key-changed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_4_dependencies_removed() {
+        assert_mirror_fixture_stale_archives("yarn-4.19.0-dependencies-removed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_4_cache_key_changed() {
+        assert_mirror_fixture_stale_archives("yarn-4.19.0-cache-key-changed");
     }
 
     #[test]
