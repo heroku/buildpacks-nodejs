@@ -38,18 +38,14 @@ heroku/nodejs <buildpack-version>
 - Installing dependencies
   - Running `pnpm install --frozen-lockfile`
 
-      ? Verifying lockfile against supply-chain policies (<N> entries)...
       Packages are hard linked from the content-addressable store to the virtual store.
         Content-addressable store is at: /layers/heroku_nodejs/addressable/v11
         Virtual store is at:             ../layers/heroku_nodejs/virtual/store
-      Packages: +2
-      ++
+      Packages: +2 (100% downloaded)
+      ↓↓
 
-      dependencies:
-      + dotenv 16.4.5
-
-      devDependencies:
-      + environment 1.1.0
+      ✓ Lockfile passes supply-chain policies
+      · Lockfile is up to date, resolution step is skipped
 
       Done in <time_elapsed> using pnpm v12.<minor>.<patch>
 
@@ -72,6 +68,9 @@ heroku/nodejs <buildpack-version>
 
       devDependencies:
       - environment 1.1.0
+
+      ✓ Lockfile passes supply-chain policies
+      · Lockfile is up to date, resolution step is skipped
 
       Done in <time_elapsed> using pnpm v12.<minor>.<patch>
 
