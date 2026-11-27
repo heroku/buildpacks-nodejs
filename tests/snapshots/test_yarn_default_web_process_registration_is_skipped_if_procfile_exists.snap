@@ -59,7 +59,7 @@ heroku/nodejs <buildpack-version>
   - Done (<time_elapsed>)
 - Skipping default web process (Procfile detected)
 - Removing non-deterministic build artifacts before export
-  - Nothing to cleanup
+  - Removed temporary Yarn data from the build cache
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'
@@ -82,6 +82,6 @@ Saving <image-name>...
       <image-name>
 Adding cache layer 'heroku/nodejs:dist'
 Adding cache layer 'heroku/nodejs:yarn'
-Adding cache layer 'heroku/nodejs:yarn_cache'
+Adding cache layer 'heroku/nodejs:yarn_mirror'
 Adding cache layer 'heroku/nodejs:yarnpkg_cli-dist_packument'
 Successfully built image '<image-name>'

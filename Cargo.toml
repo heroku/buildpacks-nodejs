@@ -27,6 +27,7 @@ libherokubuildpack = { workspace = true, features = [
 ] }
 nodejs-data.workspace = true
 retry = { version = "2", default-features = false }
+regex = "1"
 reqwest = { version = "0.13", default-features = false, features = ["blocking", "gzip", "rustls-no-provider"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 serde = "1"
@@ -43,7 +44,6 @@ walkdir = "2.5.0"
 [dev-dependencies]
 insta = "1"
 libcnb-test = { workspace = true }
-regex = "1"
 serde_json = "1"
 test_support.workspace = true
 tokio = { version = "1", default-features = false, features = ["rt"] }
@@ -55,6 +55,7 @@ members = [
     "crates/available-parallelism",
     "crates/nodejs-data",
     "crates/test_support",
+    "crates/xtask-generate-yarn-fixtures",
     "crates/xtask-sync-yarn-plugin-changelog",
     "crates/xtask-update-nodejs-inventory"
 ]

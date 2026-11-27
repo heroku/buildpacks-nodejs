@@ -1,0 +1,9 @@
+debug-npm-4.3.4-4513954577-7d71c93be2.zip
+function-bind-npm-1.1.2-7a55be9b03-0d0c3d1dbe.zip
+hasown-npm-2.0.4-75e16c9c2a-3a7736fae0.zip
+is-core-module-npm-2.18.0-ad42e9be75-eafe9275d1.zip
+ms-npm-2.1.2-ec0c1512ff-9b65fb709b.zip
+ms-npm-2.1.3-81ff3cfac1-6e721e648a.zip
+path-parse-npm-1.0.7-09564527b7-6de0bfa37b.zip
+resolve-patch-6ba30f2f2c-798a84fbca.zip
+supports-preserve-symlinks-flag-npm-1.0.0-f17c4d0028-a0f3140423.zip

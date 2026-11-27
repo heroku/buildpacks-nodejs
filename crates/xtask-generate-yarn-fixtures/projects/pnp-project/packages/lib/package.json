@@ -1,0 +1,11 @@
+{
+  "name": "lib",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "ms": "2.1.2"
+  },
+  "devDependencies": {
+    "picocolors": "1.1.1"
+  }
+}

@@ -4777,6 +4777,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "xtask-generate-yarn-fixtures"
+version = "0.0.0"
+dependencies = [
+ "fs-err",
+ "indoc",
+ "tempfile",
+]
+
+[[package]]
 name = "xtask-sync-yarn-plugin-changelog"
 version = "0.0.0"
 dependencies = [

@@ -1,0 +1,19 @@
+{
+  "name": "yarn-4-pnp-workspaces",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "yarn@4.19.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.3",
+    "greeting": "workspace:^"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0"
+  }
+}
