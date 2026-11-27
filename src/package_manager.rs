@@ -77,8 +77,18 @@ pub(crate) fn determine_package_manager(
     app_dir: &Path,
     package_json: &PackageJson,
 ) -> RequestedPackageManager {
-    // vendored Yarn should take highest priority
-    if let Some(Ok(yarnrc)) = yarn::read_yarnrc(app_dir)
+    // vendored Yarn should take highest priority, except for Yarn 6+ which ignores `yarnPath`
+    let package_manager_field = package_json.package_manager();
+    let requests_yarn_6_or_later = matches!(
+        &package_manager_field,
+        Some(Ok(PackageManagerField {
+            name: PackageManagerFieldPackageManager::Yarn,
+            version,
+            ..
+        })) if version.major() >= 6
+    );
+    if !requests_yarn_6_or_later
+        && let Some(Ok(yarnrc)) = yarn::read_yarnrc(app_dir)
         && let Some(yarn_path) = yarnrc.yarn_path()
         && let Ok(true) = yarn_path.try_exists()
     {
@@ -91,7 +101,7 @@ pub(crate) fn determine_package_manager(
     }
 
     // then the package manager field
-    if let Some(Ok(package_manager_field)) = package_json.package_manager() {
+    if let Some(Ok(package_manager_field)) = package_manager_field {
         tracing::info!({
             { PACKAGE_MANAGER_REQUESTED_SOURCE } = "packageManager field",
             { PACKAGE_MANAGER_REQUESTED_NAME } = package_manager_field.name.to_string(),
@@ -678,6 +688,45 @@ pub(crate) fn configure_default_processes(
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+
+    fn determine_for_app(package_manager: &str) -> RequestedPackageManager {
+        let app_dir = tempfile::tempdir().unwrap();
+        let yarn_release = app_dir.path().join("yarn-4.0.0.cjs");
+        std::fs::write(&yarn_release, "").unwrap();
+        std::fs::write(
+            app_dir.path().join(".yarnrc.yml"),
+            format!("yarnPath: {}", yarn_release.display()),
+        )
+        .unwrap();
+        std::fs::write(
+            app_dir.path().join("package.json"),
+            format!(r#"{{"packageManager": "{package_manager}"}}"#),
+        )
+        .unwrap();
+        let package_json = PackageJson::try_from(app_dir.path().join("package.json")).unwrap();
+        determine_package_manager(app_dir.path(), &package_json)
+    }
+
+    #[test]
+    fn vendored_yarn_takes_priority_over_package_manager_field() {
+        let requested = determine_for_app("yarn@4.0.0");
+        assert!(matches!(
+            requested,
+            RequestedPackageManager::YarnVendored(_)
+        ));
+    }
+
+    #[test]
+    fn yarn_6_package_manager_field_ignores_vendored_yarn() {
+        let requested = determine_for_app("yarn@6.0.0-rc.23");
+        assert!(matches!(
+            requested,
+            RequestedPackageManager::PackageManager(PackageManagerField {
+                name: PackageManagerFieldPackageManager::Yarn,
+                ..
+            })
+        ));
+    }
 
     #[test]
     fn run_script_error_message() {

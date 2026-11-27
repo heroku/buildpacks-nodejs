@@ -41,19 +41,51 @@ pub(crate) fn resolve_yarn_package_packument(
     context: &BuildpackBuildContext,
     requirement: &VersionRange,
 ) -> BuildpackResult<PackagePackument> {
-    let (yarn_layer_name, yarn_package_name) = if requirement.allows_any(&YARN_BERRY_RANGE) {
-        (
+    let packument = if requires_yarn_6_or_later(requirement) {
+        let package_name =
+            yarn_native_binary_package_name(&context.target.os, &context.target.arch)?;
+        packument_layer(layer_name!("yarn_native_packument"), context, &package_name)?
+    } else if requirement.allows_any(&YARN_BERRY_RANGE) {
+        packument_layer(
             layer_name!("yarnpkg_cli-dist_packument"),
+            context,
             "@yarnpkg/cli-dist",
-        )
+        )?
     } else {
-        (layer_name!("yarn_packument"), "yarn")
+        packument_layer(layer_name!("yarn_packument"), context, "yarn")?
     };
-    resolve_package_packument(
-        &packument_layer(yarn_layer_name, context, yarn_package_name)?,
-        requirement,
-    )
-    .map_err(Into::into)
+    resolve_package_packument(&packument, requirement).map_err(Into::into)
+}
+
+/// Yarn 6+ is only selected when the requirement can't be satisfied by an earlier major (e.g.; an
+/// exact `packageManager` pin) since it isn't a drop-in replacement for Yarn 2-4 projects.
+pub(crate) fn requires_yarn_6_or_later(requirement: &VersionRange) -> bool {
+    requirement
+        .min_version()
+        .is_some_and(|version| version.major() >= 6)
+}
+
+/// Yarn 6+ is a native binary that is only published as platform-specific packages. The binaries
+/// are statically linked against musl so they run on Heroku's glibc-based images.
+fn yarn_native_binary_package_name(os: &str, arch: &str) -> BuildpackResult<String> {
+    match (os, arch) {
+        ("linux", "amd64") => Ok("@yarnpkg/yarn-x86_64-unknown-linux-musl".to_string()),
+        ("linux", "arm64") => Ok("@yarnpkg/yarn-aarch64-unknown-linux-musl".to_string()),
+        _ => Err(create_yarn_unsupported_target_error(os, arch).into()),
+    }
+}
+
+fn create_yarn_unsupported_target_error(os: &str, arch: &str) -> ErrorMessage {
+    let target = style::value(format!("{os}-{arch}"));
+    error_message()
+        .id("package_manager/yarn/unsupported_native_binary_target")
+        .error_type(ErrorType::Internal)
+        .header("Unsupported Yarn target")
+        .body(formatdoc! { "
+            Yarn 6 and later ship their native binary as a platform-specific package, but the \
+            buildpack does not know which package to use for the current build target ({target}).
+        " })
+        .create()
 }
 
 pub(crate) fn install_yarn(
@@ -273,6 +305,25 @@ pub(crate) fn install_dependencies(
     env: &mut Env,
     version: &Version,
 ) -> BuildpackResult<()> {
+    if version.major() >= 6
+        && let Some(Ok(yarnrc)) = read_yarnrc(&context.app_dir)
+        && let Some(yarn_path) = yarnrc.yarn_path()
+    {
+        print::warning(formatdoc! { "
+            Warning: Ignoring {yarn_path} in {yarnrc}
+
+            Yarn 6 no longer supports the {yarn_path_setting} setting and uses the version declared \
+            in the {package_manager} field of {package_json} instead. Remove {yarn_path_setting} from \
+            {yarnrc} and delete the vendored Yarn release from your project.
+        ",
+            yarn_path = style::value(yarn_path.to_string_lossy()),
+            yarn_path_setting = style::value("yarnPath"),
+            yarnrc = file_value(Yarnrc::file_name()),
+            package_manager = style::value("packageManager"),
+            package_json = file_value("package.json"),
+        });
+    }
+
     print::bullet("Setting up yarn dependency cache");
     let yarn_env = disable_global_cache(version);
     let cache_strategy = determine_cache_strategy(&yarn_env.apply(Scope::Build, env), version)?;
@@ -869,6 +920,40 @@ fn create_yarn_install_prune_plugin_error(error: &std::io::Error) -> ErrorMessag
 mod tests {
     use super::*;
     use crate::utils::error_handling::test_util::{assert_error_snapshot, create_cmd_error};
+
+    #[test]
+    fn requires_yarn_6_or_later_only_for_yarn_6_requirements() {
+        for requirement in ["6.0.0-rc.23", "6.0.0", "6.x", "^6.1.0", ">=6"] {
+            assert!(
+                requires_yarn_6_or_later(&VersionRange::parse(requirement).unwrap()),
+                "expected {requirement} to require Yarn 6+"
+            );
+        }
+        for requirement in ["1.22.x", "4.0.0", ">=1.22.19", ">=4", "*", "latest"] {
+            assert!(
+                !requires_yarn_6_or_later(&VersionRange::parse(requirement).unwrap()),
+                "expected {requirement} not to require Yarn 6+"
+            );
+        }
+    }
+
+    #[test]
+    fn yarn_native_binary_package_name_for_supported_targets() {
+        assert_eq!(
+            yarn_native_binary_package_name("linux", "amd64").unwrap(),
+            "@yarnpkg/yarn-x86_64-unknown-linux-musl"
+        );
+        assert_eq!(
+            yarn_native_binary_package_name("linux", "arm64").unwrap(),
+            "@yarnpkg/yarn-aarch64-unknown-linux-musl"
+        );
+        assert!(yarn_native_binary_package_name("darwin", "arm64").is_err());
+    }
+
+    #[test]
+    fn unsupported_target_error() {
+        assert_error_snapshot(&create_yarn_unsupported_target_error("darwin", "arm64"));
+    }
 
     #[test]
     fn version_parse_error() {

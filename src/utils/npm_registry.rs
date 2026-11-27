@@ -468,6 +468,9 @@ pub(crate) fn link_package_bins(
     let bins = package_packument.bin.as_ref().ok_or_else(|| {
         InstallPackageLayerError::MissingBins(Box::new(package_packument.clone()))
     })?;
+    // Not every package tarball ships a `bin/` directory (e.g.; Yarn 6's native binary package).
+    std::fs::create_dir_all(layer_dir.join("bin"))
+        .map_err(|e| InstallPackageLayerError::WriteBin(Box::new(package_packument.clone()), e))?;
     for (name, script) in bins {
         let bin_path = layer_dir.join("bin").join(name);
         let script_path = layer_dir.join(script);

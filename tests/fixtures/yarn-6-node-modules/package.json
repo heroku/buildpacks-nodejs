@@ -1,0 +1,14 @@
+{
+  "name": "yarn-6-node-modules",
+  "version": "1.0.0",
+  "packageManager": "yarn@6.0.0-rc.23",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.3"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0"
+  }
+}

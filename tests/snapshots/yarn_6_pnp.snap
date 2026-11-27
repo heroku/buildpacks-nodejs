@@ -1,0 +1,148 @@
+---
+source: crates/test_support/src/lib.rs
+---
+===> ANALYZING
+Image with name "<image-name>" not found
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `26.x`
+  - Resolved Node.js version: `<node-26-latest>`
+- Installing Node.js distribution
+  - GET https://nodejs.org/download/release/v<node-26-latest>/node-v<node-26-latest>-<arch>.tar.gz ... (<time_elapsed>)
+  - Validating ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Verifying checksum
+  - Extracting Node.js `<node-26-latest> (<arch>)`
+  - Installing Node.js `<node-26-latest> (<arch>)` ... (<time_elapsed>)
+- Determining Yarn information
+  - Found `packageManager` set to `yarn@6.0.0-rc.23` in `package.json`
+  - GET https://registry.npmjs.org/@yarnpkg/yarn-x86_64-unknown-linux-musl ... (<time_elapsed>)
+  - Resolved yarn version `6.0.0-rc.23` to `6.0.0-rc.23`
+- Installing Yarn
+  - GET https://registry.npmjs.org/@yarnpkg/yarn-x86_64-unknown-linux-musl/-/yarn-x86_64-unknown-linux-musl-6.0.0-rc.23.tgz ... (<time_elapsed>)
+  - Extracting ... (<time_elapsed>)
+  - Successfully installed `yarn@6.0.0-rc.23`
+- Setting up yarn dependency cache
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ · Yarn 6.0.0-rc.23
+      ➤ ┌ Installing packages
+      ➤ │ Fetched 72 packages (2.43 MiB)
+      ➤ └ Completed
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn workspaces focus --all --production`
+
+      ➤ · Yarn 6.0.0-rc.23
+
+  - Done (<time_elapsed>)
+- Removing non-deterministic build artifacts before export
+  - Removed temporary Yarn data from the build cache
+  - Removed 1 package archive from the Yarn cache that isn't needed at runtime
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Adding layer 'heroku/nodejs:available_parallelism'
+Adding layer 'heroku/nodejs:dist'
+Adding layer 'heroku/nodejs:web_env'
+Adding layer 'heroku/nodejs:yarn'
+Adding layer 'heroku/nodejs:yarn_cache'
+Adding layer 'heroku/nodejs:z_node_module_bins'
+Adding layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Adding layer 'buildpacksio/lifecycle:launcher'
+Adding layer 'buildpacksio/lifecycle:config'
+Adding layer 'buildpacksio/lifecycle:process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
+Setting default process type 'web'
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Adding cache layer 'heroku/nodejs:dist'
+Adding cache layer 'heroku/nodejs:yarn'
+Adding cache layer 'heroku/nodejs:yarn_mirror'
+Adding cache layer 'heroku/nodejs:yarn_native_packument'
+Successfully built image '<image-name>'
+
+--------------------------------------------- REBUILD ---------------------------------------------
+===> ANALYZING
+Restoring data for SBOM from previous image
+===> DETECTING
+heroku/nodejs <buildpack-version>
+===> RESTORING
+<restoring-output>
+===> BUILDING
+
+## Heroku Node.js
+
+- Checking Node.js version
+  - Node.js version not specified, using `26.x`
+  - Resolved Node.js version: `<node-26-latest>`
+- Installing Node.js distribution
+  - Reusing Node.js <node-26-latest> (<arch>)
+- Determining Yarn information
+  - Found `packageManager` set to `yarn@6.0.0-rc.23` in `package.json`
+  - GET https://registry.npmjs.org/@yarnpkg/yarn-x86_64-unknown-linux-musl ... (Not Modified)
+  - Using cached packument for @yarnpkg/yarn-x86_64-unknown-linux-musl
+  - Resolved yarn version `6.0.0-rc.23` to `6.0.0-rc.23`
+- Installing Yarn
+  - Using cached version of @yarnpkg/yarn-x86_64-unknown-linux-musl
+  - Successfully installed `yarn@6.0.0-rc.23`
+- Setting up yarn dependency cache
+  - Restoring yarn dependency cache
+- Installing dependencies
+  - Running `yarn install --immutable --inline-builds`
+
+      ➤ · Yarn 6.0.0-rc.23
+
+  - Done (<time_elapsed>)
+- Running scripts
+  - No build scripts found
+- Pruning dev dependencies
+  - Running `yarn workspaces focus --all --production`
+
+      ➤ · Yarn 6.0.0-rc.23
+
+  - Done (<time_elapsed>)
+- Removing non-deterministic build artifacts before export
+  - Removed temporary Yarn data from the build cache
+  - Removed 1 package archive from the Yarn cache that isn't needed at runtime
+- Done (finished in <time_elapsed>)
+===> EXPORTING
+Reusing layer 'heroku/nodejs:available_parallelism'
+Reusing layer 'heroku/nodejs:dist'
+Reusing layer 'heroku/nodejs:web_env'
+Reusing layer 'heroku/nodejs:yarn'
+Reusing layer 'heroku/nodejs:yarn_cache'
+Reusing layer 'heroku/nodejs:z_node_module_bins'
+Reusing layer 'buildpacksio/lifecycle:launch.sbom'
+Added 1/1 app layer(s)
+Reusing layer 'buildpacksio/lifecycle:launcher'
+Reusing layer 'buildpacksio/lifecycle:config'
+Reusing layer 'buildpacksio/lifecycle:process-types'
+Adding label 'io.buildpacks.lifecycle.metadata'
+Adding label 'io.buildpacks.build.metadata'
+Adding label 'io.buildpacks.project.metadata'
+Adding label 'io.buildpacks.exec-env'
+Setting default process type 'web'
+Saving <image-name>...
+*** Images (<random-hex>):
+      <image-name>
+Reusing cache layer 'heroku/nodejs:dist'
+Reusing cache layer 'heroku/nodejs:yarn'
+Reusing cache layer 'heroku/nodejs:yarn_mirror'
+Reusing cache layer 'heroku/nodejs:yarn_native_packument'
+Successfully built image '<image-name>'

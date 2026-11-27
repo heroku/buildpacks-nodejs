@@ -368,6 +368,41 @@ fn yarn_4_modules_zero() {
 
 #[test]
 #[ignore = "integration test"]
+fn yarn_6_pnp() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-6-pnp",
+        |config| {
+            // the buildpack's cache configuration must take precedence over user configuration
+            config.env("YARN_ENABLE_MIRROR", "false");
+        },
+        |ctx| {
+            let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
+            assert_web_response(&ctx, "yarn-6-pnp");
+            assert_yarn_berry_runtime(&ctx, "yarn-6-pnp", Linker::Pnp, false);
+
+            let mut config = ctx.config.clone();
+            config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
+            ctx.rebuild(config, |ctx| {
+                build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
+                assert_web_response(&ctx, "yarn-6-pnp");
+                assert_yarn_berry_runtime(&ctx, "yarn-6-pnp", Linker::Pnp, false);
+            });
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
+fn yarn_6_node_modules() {
+    nodejs_integration_test("./fixtures/yarn-6-node-modules", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "yarn-6-node-modules");
+        assert_yarn_berry_runtime(&ctx, "yarn-6-node-modules", Linker::NodeModules, false);
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
 fn test_yarn_1_native_modules_are_recompiled_even_on_cache_restore() {
     nodejs_integration_test("./fixtures/yarn-1-project-with-native-module", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
