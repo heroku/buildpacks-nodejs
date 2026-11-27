@@ -1116,6 +1116,11 @@ mod tests {
     }
 
     #[test]
+    fn get_pnp_package_archives_yarn_6() {
+        assert_pnp_package_archives("yarn-6.0.0-rc.23");
+    }
+
+    #[test]
     fn get_pnp_package_archives_with_inlining_disabled() {
         assert_pnp_package_archives("yarn-4.19.0-no-inlining");
     }
@@ -1308,14 +1313,14 @@ mod tests {
                 .map(String::from)
                 .collect()
         };
+        // Yarn 6 lockfiles don't have a cache key
         let lockfile = std::fs::read_to_string(fixture_dir.join("yarn.lock")).unwrap();
-        let cache_key =
-            get_lockfile_cache_key(&lockfile).expect("lockfile should have a cache key");
+        let cache_key = get_lockfile_cache_key(&lockfile);
         assert_eq!(
             sorted_stale_mirror_archives(
                 &read_lines("cache-archives.txt"),
                 &read_lines("mirror-archives.txt"),
-                Some(&cache_key)
+                cache_key.as_deref()
             ),
             read_lines("expected-stale-archives.txt")
         );
@@ -1349,6 +1354,16 @@ mod tests {
     #[test]
     fn stale_mirror_archives_yarn_4_cache_key_changed() {
         assert_mirror_fixture_stale_archives("yarn-4.19.0-cache-key-changed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_6_dependencies_removed() {
+        assert_mirror_fixture_stale_archives("yarn-6.0.0-rc.23-dependencies-removed");
+    }
+
+    #[test]
+    fn stale_mirror_archives_yarn_6_cache_key_changed() {
+        assert_mirror_fixture_stale_archives("yarn-6.0.0-rc.23-cache-key-changed");
     }
 
     #[test]

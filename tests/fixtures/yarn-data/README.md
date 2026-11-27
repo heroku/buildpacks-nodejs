@@ -6,9 +6,9 @@ Data written by different Yarn versions for Plug'n'Play projects, used by the un
 
 Plug'n'Play data used by the unit tests for listing the package archives an app needs at runtime. Each file was generated with the cache outside the project, like
 the buildpack's `yarn_cache` layer, then dev dependencies were pruned with the buildpack's prune
-plugin. The Plug'n'Play runtime code that follows the data is omitted.
+plugin, or `yarn workspaces focus --all --production` for Yarn 6, which doesn't support plugins. The Plug'n'Play runtime code that follows the data is omitted.
 
-- `yarn-2.4.1`, `yarn-3.8.7`, `yarn-4.19.0`: a project with production dependencies that cover each
+- `yarn-2.4.1`, `yarn-3.8.7`, `yarn-4.19.0`, `yarn-6.0.0-rc.23`: a project with production dependencies that cover each
   way Plug'n'Play can locate a package: archives, virtual packages, unplugged packages, workspaces,
   portals, an alias, a package patched by Yarn, and an optional dependency skipped on this platform.
   Yarn 2 names the runtime `.pnp.js`.
@@ -44,7 +44,7 @@ Each fixture directory has:
   Yarn rather than by the buildpack: the changed app is installed into an empty mirror, and every
   archive in `mirror-archives.txt` that install didn't write is stale.
 - `yarn.lock`: the changed app's lockfile, whose `cacheKey` is the cache key of the mirror archives
-  Yarn uses.
+  Yarn uses. Yarn 6 lockfiles don't have a `cacheKey`.
 
 ## Regenerating
 
@@ -52,9 +52,10 @@ Each fixture directory has:
 cargo generate-yarn-fixtures
 ```
 
-This needs Node.js and Corepack. It runs `crates/xtask-generate-yarn-fixtures`, which installs the projects in that crate's
+This needs Node.js, Corepack, and Docker. Yarn 6 is run in a Linux container, since Corepack can't
+run it and it isn't built for every platform. It runs `crates/xtask-generate-yarn-fixtures`, which installs the projects in that crate's
 `projects/` directory with each Yarn version (through Corepack, so it needs network access),
-prunes dev dependencies with the buildpack's prune plugin, generates the mirror fixtures, and
+prunes dev dependencies, generates the mirror fixtures, and
 rewrites every fixture. Package
 versions are pinned, so only changes made by Yarn itself should show up in the diff. The
 `@parcel/watcher-win32-x64` optional dependency is only skipped on non-Windows machines.

@@ -21,7 +21,7 @@ struct Fixture {
     pnp_file: &'static str,
 }
 
-const FIXTURES: [Fixture; 6] = [
+const FIXTURES: [Fixture; 7] = [
     Fixture {
         name: "yarn-2.4.1",
         yarn_version: "2.4.1",
@@ -64,6 +64,13 @@ const FIXTURES: [Fixture; 6] = [
         pnp_inlining: true,
         pnp_file: ".pnp.cjs",
     },
+    Fixture {
+        name: "yarn-6.0.0-rc.23",
+        yarn_version: "6.0.0-rc.23",
+        project: "pnp-project",
+        pnp_inlining: true,
+        pnp_file: ".pnp.cjs",
+    },
 ];
 
 /// How the app changes between the build that fills the mirror and the build that is pruned.
@@ -82,7 +89,7 @@ struct MirrorFixture {
     change: MirrorChange,
 }
 
-const MIRROR_FIXTURES: [MirrorFixture; 6] = [
+const MIRROR_FIXTURES: [MirrorFixture; 8] = [
     MirrorFixture {
         name: "yarn-2.4.1-dependencies-removed",
         yarn_version: "2.4.1",
@@ -111,6 +118,16 @@ const MIRROR_FIXTURES: [MirrorFixture; 6] = [
     MirrorFixture {
         name: "yarn-4.19.0-cache-key-changed",
         yarn_version: "4.19.0",
+        change: MirrorChange::ChangeCacheKey,
+    },
+    MirrorFixture {
+        name: "yarn-6.0.0-rc.23-dependencies-removed",
+        yarn_version: "6.0.0-rc.23",
+        change: MirrorChange::RemoveDependencies,
+    },
+    MirrorFixture {
+        name: "yarn-6.0.0-rc.23-cache-key-changed",
+        yarn_version: "6.0.0-rc.23",
         change: MirrorChange::ChangeCacheKey,
     },
 ];
@@ -154,10 +171,20 @@ fn generate_pnp_fixtures(repo_root: &Path, projects_dir: &Path) {
         .expect("Should write the archive listing script");
         write_yarnrc(&app_dir, fixture.pnp_inlining);
 
-        let yarn = format!("yarn@{}", fixture.yarn_version);
-        run_yarn(&yarn, &app_dir, None, ["install"]);
-        run_yarn(&yarn, &app_dir, Some(&prune_plugin), ["heroku", "prune"]);
-        let archives = run_yarn(&yarn, &app_dir, None, ["node", "list-pnp-archives.cjs"]);
+        let yarn = fixture.yarn_version;
+        run_yarn(yarn, &app_dir, None, ["install"]);
+        if is_yarn_6_or_later(yarn) {
+            // Yarn 6 doesn't support plugins, and the buildpack prunes it with `workspaces focus`
+            run_yarn(
+                yarn,
+                &app_dir,
+                None,
+                ["workspaces", "focus", "--all", "--production"],
+            );
+        } else {
+            run_yarn(yarn, &app_dir, Some(&prune_plugin), ["heroku", "prune"]);
+        }
+        let archives = run_yarn(yarn, &app_dir, None, ["node", "list-pnp-archives.cjs"]);
 
         if output_dir.exists() {
             fs::remove_dir_all(&output_dir).expect("Should remove the old fixture");
@@ -194,14 +221,14 @@ fn generate_mirror_fixtures(repo_root: &Path, projects_dir: &Path) {
             "Generating {}",
             Path::new(FIXTURES_DIR).join(fixture.name).display()
         );
-        let yarn = format!("yarn@{}", fixture.yarn_version);
+        let yarn = fixture.yarn_version;
 
         // The first build fills the mirror.
         let build = tempfile::tempdir().expect("Should create a temporary directory");
         let app_dir = build.path().join("app");
         copy_dir(&projects_dir.join(MIRROR_PROJECT), &app_dir);
         write_yarnrc(&app_dir, true);
-        run_yarn(&yarn, &app_dir, None, ["install"]);
+        run_yarn(yarn, &app_dir, None, ["install"]);
 
         // The app is changed in a separate workspace with an empty mirror, so the mirror there
         // only holds what the changed app needs.
@@ -215,7 +242,7 @@ fn generate_mirror_fixtures(repo_root: &Path, projects_dir: &Path) {
         match fixture.change {
             MirrorChange::RemoveDependencies => {
                 run_yarn(
-                    &yarn,
+                    yarn,
                     &changed_app_dir,
                     None,
                     ["remove", "resolve", "dotenv"],
@@ -227,7 +254,7 @@ fn generate_mirror_fixtures(repo_root: &Path, projects_dir: &Path) {
                 let yarnrc = fs::read_to_string(&yarnrc_path).expect("Should read the Yarn config");
                 fs::write(&yarnrc_path, format!("{yarnrc}compressionLevel: 9\n"))
                     .expect("Should write the Yarn config");
-                run_yarn(&yarn, &changed_app_dir, None, ["install"]);
+                run_yarn(yarn, &changed_app_dir, None, ["install"]);
             }
         }
         let needed_mirror_archives = list_zip_files(&mirror_folder(&changed_app_dir));
@@ -239,7 +266,7 @@ fn generate_mirror_fixtures(repo_root: &Path, projects_dir: &Path) {
                 .expect("Should copy the changed app file");
         }
         fs::remove_dir_all(cache_folder(&app_dir)).expect("Should empty the cache folder");
-        run_yarn(&yarn, &app_dir, None, ["install"]);
+        run_yarn(yarn, &app_dir, None, ["install"]);
         let mirror_archives = list_zip_files(&mirror_folder(&app_dir));
         let cache_archives = list_zip_files(&cache_folder(&app_dir));
         let stale_archives = mirror_archives.difference(&needed_mirror_archives);
@@ -310,33 +337,55 @@ fn write_lines<'a>(path: &Path, lines: impl IntoIterator<Item = &'a String>) {
     fs::write(path, content).expect("Should write the archive listing");
 }
 
-/// Runs a specific Yarn version through Corepack and returns its stdout, exiting if it fails.
+/// Corepack can't run Yarn 6+, which is distributed as native binaries.
+fn is_yarn_6_or_later(yarn_version: &str) -> bool {
+    yarn_version
+        .split('.')
+        .next()
+        .and_then(|major| major.parse::<u64>().ok())
+        .is_some_and(|major| major >= 6)
+}
+
+/// Runs a specific Yarn version and returns its stdout, exiting if it fails. Yarn 6+ is run in a
+/// Linux container, since it isn't built for every platform the fixtures are generated on, and
+/// earlier versions are run through Corepack.
 fn run_yarn<const N: usize>(
-    yarn: &str,
+    yarn_version: &str,
     app_dir: &Path,
     plugin: Option<&Path>,
     args: [&str; N],
 ) -> String {
-    let mut command = Command::new("corepack");
-    command
-        .arg(yarn)
-        .args(args)
-        .current_dir(app_dir)
-        .env("COREPACK_ENABLE_DOWNLOAD_PROMPT", "0")
-        .env("COREPACK_ENABLE_AUTO_PIN", "0")
-        .env("YARN_ENABLE_IMMUTABLE_INSTALLS", "false")
+    let yarn_env = [
+        ("YARN_ENABLE_IMMUTABLE_INSTALLS", "false".into()),
         // Keeps the mirror in the workspace instead of the user's global folder
-        .env("YARN_GLOBAL_FOLDER", global_folder(app_dir))
-        .env_remove("YARN_PLUGINS");
-    if let Some(plugin) = plugin {
-        command.env("YARN_PLUGINS", plugin);
-    }
-    let output = command.output().expect("Should run corepack");
+        (
+            "YARN_GLOBAL_FOLDER",
+            global_folder(app_dir).to_string_lossy().into_owned(),
+        ),
+    ];
+    let mut command = if is_yarn_6_or_later(yarn_version) {
+        yarn_6_container_command(yarn_version, app_dir, &yarn_env)
+    } else {
+        let mut command = Command::new("corepack");
+        command
+            .arg(format!("yarn@{yarn_version}"))
+            .current_dir(app_dir)
+            .env("COREPACK_ENABLE_DOWNLOAD_PROMPT", "0")
+            .env("COREPACK_ENABLE_AUTO_PIN", "0")
+            .envs(yarn_env)
+            .env_remove("YARN_PLUGINS");
+        if let Some(plugin) = plugin {
+            command.env("YARN_PLUGINS", plugin);
+        }
+        command
+    };
+    command.args(args);
+    let output = command.output().expect("Should run Yarn");
     if !output.status.success() {
         eprintln!(
             "{}",
             formatdoc! {"
-                `corepack {yarn} {args}` failed: {status}
+                `yarn@{yarn_version} {args}` failed: {status}
                 {stdout}{stderr}",
                 args = args.join(" "),
                 status = output.status,
@@ -349,8 +398,70 @@ fn run_yarn<const N: usize>(
     String::from_utf8(output.stdout).expect("Yarn output should be UTF-8")
 }
 
-/// Yarn itself is run through Corepack, which downloads each Yarn version the fixtures need, so
-/// only Node.js and Corepack have to be installed. Exits if either is missing.
+/// The Node.js image Yarn 6+ is run in.
+const YARN_6_NODE_IMAGE: &str = "node:24";
+
+/// Runs Yarn 6+ from its Linux package for the container's architecture. The workspace holding the
+/// app, its cache folder, and its global folder is mounted at the same path, so paths are the same
+/// inside and outside the container.
+fn yarn_6_container_command(
+    yarn_version: &str,
+    app_dir: &Path,
+    yarn_env: &[(&str, String)],
+) -> Command {
+    let workspace = app_dir.parent().expect("App should be in a workspace");
+    let yarn_package = match std::env::consts::ARCH {
+        "aarch64" => "@yarnpkg/yarn-aarch64-unknown-linux-musl",
+        _ => "@yarnpkg/yarn-x86_64-unknown-linux-musl",
+    };
+    // Shared between runs so the Yarn package is only downloaded once
+    let npm_cache = std::env::temp_dir().join("xtask-generate-yarn-fixtures-npm-cache");
+    fs::create_dir_all(&npm_cache).expect("Should create the npm cache directory");
+
+    let mut command = Command::new("docker");
+    command
+        .args(["run", "--rm", "--user", &current_user()])
+        .arg("--volume")
+        .arg(format!("{0}:{0}", workspace.display()))
+        .arg("--volume")
+        .arg(format!("{0}:{0}", npm_cache.display()))
+        .arg("--workdir")
+        .arg(app_dir)
+        .args(["--env", "HOME=/tmp"])
+        .arg("--env")
+        .arg(format!("npm_config_cache={}", npm_cache.display()));
+    for (name, value) in yarn_env {
+        command.arg("--env").arg(format!("{name}={value}"));
+    }
+    command.args([
+        YARN_6_NODE_IMAGE,
+        "npx",
+        "--yes",
+        "--package",
+        &format!("{yarn_package}@{yarn_version}"),
+        "yarn",
+    ]);
+    command
+}
+
+/// The container runs as the current user so the files Yarn writes are owned by them.
+fn current_user() -> String {
+    let id = |flag: &str| {
+        let output = Command::new("id")
+            .arg(flag)
+            .output()
+            .expect("Should run id");
+        String::from_utf8(output.stdout)
+            .expect("id output should be UTF-8")
+            .trim()
+            .to_string()
+    };
+    format!("{}:{}", id("-u"), id("-g"))
+}
+
+/// Yarn itself is run through Corepack, or Docker for Yarn 6+, which download each Yarn version the
+/// fixtures need, so only Node.js, Corepack, and Docker have to be installed. Exits if any are
+/// missing.
 fn check_required_tools() {
     let missing = [
         ("node", "Install Node.js from https://nodejs.org/en/download"),
@@ -358,6 +469,7 @@ fn check_required_tools() {
             "corepack",
             "Corepack is bundled with Node.js < 25; for newer versions run `npm install -g corepack`",
         ),
+        ("docker", "Install Docker from https://docs.docker.com/get-docker/"),
     ]
     .into_iter()
     .filter(|(tool, _)| {
