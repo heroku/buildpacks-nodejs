@@ -1,8 +1,9 @@
-//! Regenerates the Plug'n'Play data fixtures in `tests/fixtures/yarn-data` and the
-//! `expected-archives.txt` next to each of them. See that directory's README.
+//! Regenerates the Plug'n'Play data fixtures, with the `expected-archives.txt` next to each of
+//! them, and the Yarn mirror fixtures in `tests/fixtures/yarn-data`. See its README.
 
 use fs_err as fs;
 use indoc::formatdoc;
+use std::collections::BTreeSet;
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -65,6 +66,58 @@ const FIXTURES: [Fixture; 6] = [
     },
 ];
 
+/// How the app changes between the build that fills the mirror and the build that is pruned.
+#[derive(Clone, Copy)]
+enum MirrorChange {
+    /// `yarn remove` a production dependency that has a package patched by Yarn among its
+    /// dependencies, and a dev dependency.
+    RemoveDependencies,
+    /// Change `compressionLevel`, which changes the cache key, and update the lockfile.
+    ChangeCacheKey,
+}
+
+struct MirrorFixture {
+    name: &'static str,
+    yarn_version: &'static str,
+    change: MirrorChange,
+}
+
+const MIRROR_FIXTURES: [MirrorFixture; 6] = [
+    MirrorFixture {
+        name: "yarn-2.4.1-dependencies-removed",
+        yarn_version: "2.4.1",
+        change: MirrorChange::RemoveDependencies,
+    },
+    MirrorFixture {
+        name: "yarn-2.4.1-cache-key-changed",
+        yarn_version: "2.4.1",
+        change: MirrorChange::ChangeCacheKey,
+    },
+    MirrorFixture {
+        name: "yarn-3.8.7-dependencies-removed",
+        yarn_version: "3.8.7",
+        change: MirrorChange::RemoveDependencies,
+    },
+    MirrorFixture {
+        name: "yarn-3.8.7-cache-key-changed",
+        yarn_version: "3.8.7",
+        change: MirrorChange::ChangeCacheKey,
+    },
+    MirrorFixture {
+        name: "yarn-4.19.0-dependencies-removed",
+        yarn_version: "4.19.0",
+        change: MirrorChange::RemoveDependencies,
+    },
+    MirrorFixture {
+        name: "yarn-4.19.0-cache-key-changed",
+        yarn_version: "4.19.0",
+        change: MirrorChange::ChangeCacheKey,
+    },
+];
+
+/// The project the mirror fixtures are generated from.
+const MIRROR_PROJECT: &str = "pnp-project";
+
 /// Relative to the repository root.
 const FIXTURES_DIR: &str = "tests/fixtures/yarn-data";
 
@@ -73,6 +126,11 @@ fn main() {
 
     let repo_root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let projects_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("projects");
+    generate_pnp_fixtures(&repo_root, &projects_dir);
+    generate_mirror_fixtures(&repo_root, &projects_dir);
+}
+
+fn generate_pnp_fixtures(repo_root: &Path, projects_dir: &Path) {
     let fixtures_dir = repo_root.join(FIXTURES_DIR);
     let prune_plugin = fs::canonicalize(
         repo_root.join("src/package_managers/@yarnpkg/plugin-prune-dev-dependencies.js"),
@@ -94,17 +152,7 @@ fn main() {
             LIST_PNP_ARCHIVES_SCRIPT,
         )
         .expect("Should write the archive listing script");
-        fs::write(
-            app_dir.join(".yarnrc.yml"),
-            formatdoc! {"
-                nodeLinker: pnp
-                enableGlobalCache: false
-                cacheFolder: ../yarn_cache
-                enableTelemetry: false
-                pnpEnableInlining: {}
-            ", fixture.pnp_inlining },
-        )
-        .expect("Should write the Yarn config");
+        write_yarnrc(&app_dir, fixture.pnp_inlining);
 
         let yarn = format!("yarn@{}", fixture.yarn_version);
         run_yarn(&yarn, &app_dir, None, ["install"]);
@@ -134,6 +182,134 @@ fn main() {
     }
 }
 
+/// Each mirror fixture records what the buildpack sees when it prunes the mirror: a build fills the
+/// mirror, the app changes, and the next build restores the mirror and installs into an empty
+/// cache folder. The archives that should be pruned are worked out by Yarn rather than by the
+/// buildpack's logic: the changed app is installed into an empty mirror, and every archive that
+/// install doesn't write is stale.
+fn generate_mirror_fixtures(repo_root: &Path, projects_dir: &Path) {
+    let fixtures_dir = repo_root.join(FIXTURES_DIR);
+    for fixture in &MIRROR_FIXTURES {
+        eprintln!(
+            "Generating {}",
+            Path::new(FIXTURES_DIR).join(fixture.name).display()
+        );
+        let yarn = format!("yarn@{}", fixture.yarn_version);
+
+        // The first build fills the mirror.
+        let build = tempfile::tempdir().expect("Should create a temporary directory");
+        let app_dir = build.path().join("app");
+        copy_dir(&projects_dir.join(MIRROR_PROJECT), &app_dir);
+        write_yarnrc(&app_dir, true);
+        run_yarn(&yarn, &app_dir, None, ["install"]);
+
+        // The app is changed in a separate workspace with an empty mirror, so the mirror there
+        // only holds what the changed app needs.
+        let changed = tempfile::tempdir().expect("Should create a temporary directory");
+        let changed_app_dir = changed.path().join("app");
+        copy_dir(&projects_dir.join(MIRROR_PROJECT), &changed_app_dir);
+        for file in ["package.json", "yarn.lock", ".yarnrc.yml"] {
+            fs::copy(app_dir.join(file), changed_app_dir.join(file))
+                .expect("Should copy the app file");
+        }
+        match fixture.change {
+            MirrorChange::RemoveDependencies => {
+                run_yarn(
+                    &yarn,
+                    &changed_app_dir,
+                    None,
+                    ["remove", "resolve", "dotenv"],
+                );
+            }
+            MirrorChange::ChangeCacheKey => {
+                // Differs from the default of every Yarn version (`mixed` before Yarn 4, `0` after)
+                let yarnrc_path = changed_app_dir.join(".yarnrc.yml");
+                let yarnrc = fs::read_to_string(&yarnrc_path).expect("Should read the Yarn config");
+                fs::write(&yarnrc_path, format!("{yarnrc}compressionLevel: 9\n"))
+                    .expect("Should write the Yarn config");
+                run_yarn(&yarn, &changed_app_dir, None, ["install"]);
+            }
+        }
+        let needed_mirror_archives = list_zip_files(&mirror_folder(&changed_app_dir));
+
+        // The next build restores the mirror and installs the changed app into an empty cache
+        // folder, like the buildpack's `yarn_cache` layer.
+        for file in ["package.json", "yarn.lock", ".yarnrc.yml"] {
+            fs::copy(changed_app_dir.join(file), app_dir.join(file))
+                .expect("Should copy the changed app file");
+        }
+        fs::remove_dir_all(cache_folder(&app_dir)).expect("Should empty the cache folder");
+        run_yarn(&yarn, &app_dir, None, ["install"]);
+        let mirror_archives = list_zip_files(&mirror_folder(&app_dir));
+        let cache_archives = list_zip_files(&cache_folder(&app_dir));
+        let stale_archives = mirror_archives.difference(&needed_mirror_archives);
+
+        let output_dir = fixtures_dir.join(fixture.name);
+        if output_dir.exists() {
+            fs::remove_dir_all(&output_dir).expect("Should remove the old fixture");
+        }
+        fs::create_dir_all(&output_dir).expect("Should create the fixture directory");
+        write_lines(&output_dir.join("mirror-archives.txt"), &mirror_archives);
+        write_lines(&output_dir.join("cache-archives.txt"), &cache_archives);
+        write_lines(
+            &output_dir.join("expected-stale-archives.txt"),
+            stale_archives,
+        );
+        fs::copy(app_dir.join("yarn.lock"), output_dir.join("yarn.lock"))
+            .expect("Should copy the lockfile");
+    }
+}
+
+/// Configures Yarn like the buildpack: the cache folder is outside the project and, with the
+/// global cache disabled, Yarn mirrors packages into the global folder set by [`run_yarn`].
+fn write_yarnrc(app_dir: &Path, pnp_inlining: bool) {
+    fs::write(
+        app_dir.join(".yarnrc.yml"),
+        formatdoc! {"
+            nodeLinker: pnp
+            enableGlobalCache: false
+            cacheFolder: ../yarn_cache
+            enableTelemetry: false
+            pnpEnableInlining: {pnp_inlining}
+        "},
+    )
+    .expect("Should write the Yarn config");
+}
+
+fn cache_folder(app_dir: &Path) -> PathBuf {
+    app_dir.join("../yarn_cache")
+}
+
+fn global_folder(app_dir: &Path) -> PathBuf {
+    app_dir.join("../yarn_global")
+}
+
+/// Yarn stores the mirror in the `cache` folder of the global folder.
+fn mirror_folder(app_dir: &Path) -> PathBuf {
+    global_folder(app_dir).join("cache")
+}
+
+fn list_zip_files(folder: &Path) -> BTreeSet<String> {
+    fs::read_dir(folder)
+        .expect("Should read the archive folder")
+        .map(|entry| entry.expect("Should read an archive folder entry").path())
+        .filter(|path| path.extension() == Some(OsStr::new("zip")))
+        .map(|path| {
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .expect("Archive name should be UTF-8")
+                .to_string()
+        })
+        .collect()
+}
+
+fn write_lines<'a>(path: &Path, lines: impl IntoIterator<Item = &'a String>) {
+    let content = lines
+        .into_iter()
+        .fold(String::new(), |content, line| content + line + "\n");
+    fs::write(path, content).expect("Should write the archive listing");
+}
+
 /// Runs a specific Yarn version through Corepack and returns its stdout, exiting if it fails.
 fn run_yarn<const N: usize>(
     yarn: &str,
@@ -149,6 +325,8 @@ fn run_yarn<const N: usize>(
         .env("COREPACK_ENABLE_DOWNLOAD_PROMPT", "0")
         .env("COREPACK_ENABLE_AUTO_PIN", "0")
         .env("YARN_ENABLE_IMMUTABLE_INSTALLS", "false")
+        // Keeps the mirror in the workspace instead of the user's global folder
+        .env("YARN_GLOBAL_FOLDER", global_folder(app_dir))
         .env_remove("YARN_PLUGINS");
     if let Some(plugin) = plugin {
         command.env("YARN_PLUGINS", plugin);

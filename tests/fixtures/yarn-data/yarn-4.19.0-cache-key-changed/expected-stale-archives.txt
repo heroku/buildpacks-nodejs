@@ -1,0 +1,15 @@
+debug-npm-4.3.4-4513954577-10c0.zip
+depd-npm-2.0.0-b6c51a4b43-10c0.zip
+dotenv-npm-16.4.5-bcb20eb95d-10c0.zip
+function-bind-npm-1.1.2-7a55be9b03-10c0.zip
+hasown-npm-2.0.4-75e16c9c2a-10c0.zip
+is-core-module-npm-2.18.0-ad42e9be75-10c0.zip
+is-number-npm-7.0.0-060086935c-10c0.zip
+local-pkg-file-564f0c8a8a-10c0.zip
+ms-npm-2.1.2-ec0c1512ff-10c0.zip
+ms-npm-2.1.3-81ff3cfac1-10c0.zip
+path-parse-npm-1.0.7-09564527b7-10c0.zip
+picocolors-npm-1.1.1-4fede47cf1-10c0.zip
+resolve-npm-1.22.8-098f379dfe-10c0.zip
+resolve-patch-49bde8f0be-10c0.zip
+supports-preserve-symlinks-flag-npm-1.0.0-f17c4d0028-10c0.zip

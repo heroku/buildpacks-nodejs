@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Yarn is now configured with build environment variables instead of `yarn config set`, so the app's `.yarnrc.yml` is no longer modified. ([#1512](https://github.com/heroku/buildpacks-nodejs/pull/1512))
 - Yarn 2+ apps that don't commit their Yarn cache now keep downloaded packages in a build-only mirror, and Plug'n'Play apps no longer ship package archives that aren't needed at runtime, such as dev dependencies and unplugged packages. ([#1513](https://github.com/heroku/buildpacks-nodejs/pull/1513))
+- Archives of packages that a Yarn 2+ app no longer depends on are now removed from the Yarn mirror in the build cache. ([#1514](https://github.com/heroku/buildpacks-nodejs/pull/1514))
 
 ### Fixed
 
