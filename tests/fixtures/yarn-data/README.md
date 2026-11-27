@@ -5,8 +5,9 @@ Data written by different Yarn versions for Plug'n'Play projects, used by the un
 ## Plug'n'Play data
 
 Plug'n'Play data used by the unit tests for listing the package archives an app needs at runtime. Each file was generated with the cache outside the project, like
-the buildpack's `yarn_cache` layer, then dev dependencies were pruned with the buildpack's prune
-plugin. The Plug'n'Play runtime code that follows the data is omitted.
+the buildpack's `yarn_cache` layer, then dev dependencies were pruned the way the buildpack prunes
+them: with `yarn workspaces focus --all --production` on Yarn 4+, and with the buildpack's prune
+plugin on Yarn 2 and 3. The Plug'n'Play runtime code that follows the data is omitted.
 
 - `yarn-2.4.1`, `yarn-3.8.7`, `yarn-4.19.0`: a project with production dependencies that cover each
   way Plug'n'Play can locate a package: archives, virtual packages, unplugged packages, workspaces,
@@ -54,7 +55,7 @@ cargo generate-yarn-fixtures
 
 This needs Node.js and Corepack. It runs `crates/xtask-generate-yarn-fixtures`, which installs the projects in that crate's
 `projects/` directory with each Yarn version (through Corepack, so it needs network access),
-prunes dev dependencies with the buildpack's prune plugin, generates the mirror fixtures, and
+prunes dev dependencies the same way the buildpack does, generates the mirror fixtures, and
 rewrites every fixture. Package
 versions are pinned, so only changes made by Yarn itself should show up in the diff. The
 `@parcel/watcher-win32-x64` optional dependency is only skipped on non-Windows machines.
