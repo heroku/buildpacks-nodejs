@@ -287,7 +287,7 @@ pub(crate) fn install_dependencies(
 /// How packages are cached between builds.
 enum CacheStrategy {
     /// The app commits its cache, so it's installed from as-is.
-    ZeroInstall,
+    ZeroInstall { cache_dir: PathBuf, pnp: bool },
     /// Yarn 1 uses a cached layer as its cache folder.
     Classic,
     /// Yarn 2+ mirrors packages into a cached layer, and the cache folder is a fresh layer each
@@ -317,15 +317,19 @@ fn disable_global_cache(version: &Version) -> LayerEnv {
 
 fn determine_cache_strategy(env: &Env, version: &Version) -> BuildpackResult<CacheStrategy> {
     let yarn_cache = get_cache_folder_config(env, version)?;
+    let is_pnp = || {
+        get_node_linker_config(env, version)
+            .map(|node_linker| matches!(node_linker, Some(NodeLinker::Pnp)))
+    };
     Ok(if is_yarn_zero_install_mode(&yarn_cache) {
-        CacheStrategy::ZeroInstall
+        CacheStrategy::ZeroInstall {
+            pnp: is_pnp()?,
+            cache_dir: yarn_cache,
+        }
     } else if version.major() == 1 {
         CacheStrategy::Classic
     } else {
-        let node_linker = get_node_linker_config(env, version)?;
-        CacheStrategy::Mirrored {
-            pnp: matches!(node_linker, Some(NodeLinker::Pnp)),
-        }
+        CacheStrategy::Mirrored { pnp: is_pnp()? }
     })
 }
 
@@ -336,8 +340,25 @@ fn configure_cache_layers(
     yarn_env: LayerEnv,
 ) -> BuildpackResult<LayerEnv> {
     match cache_strategy {
-        CacheStrategy::ZeroInstall => {
+        CacheStrategy::ZeroInstall { cache_dir, pnp } => {
             print::sub_bullet("Yarn zero-install detected. Skipping dependency cache.");
+            // The committed cache holds every package archive, including dev dependencies, and is
+            // shipped at launch with the app. Only archives in the app are removed.
+            if version.major() >= 2 && cache_dir.starts_with(&context.app_dir) {
+                context.register_cleanup(CleanupTask::YarnCache {
+                    app_dir: context.app_dir.clone(),
+                    cache_dir: cache_dir.clone(),
+                    mirror_cache_dir: None,
+                    // The archives Plug'n'Play uses can't be determined before Yarn 2.4.1
+                    omit: if !*pnp {
+                        None
+                    } else if *version >= Version::new(2, 4, 1) {
+                        Some(Omit::ArchivesUsedByPnp)
+                    } else {
+                        Some(Omit::CacheDirContents)
+                    },
+                });
+            }
             Ok(yarn_env)
         }
         CacheStrategy::Classic => {
@@ -370,14 +391,14 @@ fn configure_cache_layers(
                 app_dir: context.app_dir.clone(),
                 cache_dir: cache_dir.clone(),
                 // Yarn stores the mirror in the `cache` folder of the global folder
-                mirror_cache_dir: mirror_dir.join("cache"),
+                mirror_cache_dir: Some(mirror_dir.join("cache")),
                 // The cache folder is only shipped at launch for Plug'n'Play, and the archives it
                 // uses can't be determined before Yarn 2.4.1
-                omit: if *pnp && *version >= Version::new(2, 4, 1) {
+                omit: Some(if *pnp && *version >= Version::new(2, 4, 1) {
                     Omit::ArchivesUsedByPnp
                 } else {
                     Omit::CacheDirContents
-                },
+                }),
             });
 
             Ok(yarn_env
@@ -495,7 +516,7 @@ fn run_install(
         yarn_install_command.args(["--production=false", "--frozen-lockfile"]);
     } else {
         yarn_install_command.args(["--immutable", "--inline-builds"]);
-        if matches!(cache_strategy, CacheStrategy::ZeroInstall) {
+        if matches!(cache_strategy, CacheStrategy::ZeroInstall { .. }) {
             yarn_install_command.arg("--immutable-cache");
         }
     }
@@ -743,7 +764,13 @@ pub(crate) fn prune_dev_dependencies(
             "--ignore-scripts",
             "--prefer-offline",
         ])
+    } else if version.major() >= 4 {
+        // Yarn's replacement for Yarn 1's `yarn install --production`, see:
+        // - https://yarnpkg.com/migration/guide#cli-changes
+        // - https://yarnpkg.com/cli/workspaces/focus
+        prune_command.args(["workspaces", "focus", "--all", "--production"])
     } else {
+        // Yarn 2 and 3 don't bundle the workspace-tools plugin that provides `yarn workspaces focus`
         let yarn_prune_plugin = install_yarn_prune_plugin()?;
         prune_command
             .env("YARN_PLUGINS", yarn_prune_plugin)

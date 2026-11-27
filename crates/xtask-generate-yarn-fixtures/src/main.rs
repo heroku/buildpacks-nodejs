@@ -156,7 +156,17 @@ fn generate_pnp_fixtures(repo_root: &Path, projects_dir: &Path) {
 
         let yarn = format!("yarn@{}", fixture.yarn_version);
         run_yarn(&yarn, &app_dir, None, ["install"]);
-        run_yarn(&yarn, &app_dir, Some(&prune_plugin), ["heroku", "prune"]);
+        if is_yarn_4_or_later(fixture.yarn_version) {
+            // Mirror the buildpack, which prunes Yarn 4+ with the bundled `workspaces focus` command
+            run_yarn(
+                &yarn,
+                &app_dir,
+                None,
+                ["workspaces", "focus", "--all", "--production"],
+            );
+        } else {
+            run_yarn(&yarn, &app_dir, Some(&prune_plugin), ["heroku", "prune"]);
+        }
         let archives = run_yarn(&yarn, &app_dir, None, ["node", "list-pnp-archives.cjs"]);
 
         if output_dir.exists() {
@@ -311,6 +321,14 @@ fn write_lines<'a>(path: &Path, lines: impl IntoIterator<Item = &'a String>) {
 }
 
 /// Runs a specific Yarn version through Corepack and returns its stdout, exiting if it fails.
+fn is_yarn_4_or_later(yarn_version: &str) -> bool {
+    yarn_version
+        .split('.')
+        .next()
+        .and_then(|major| major.parse::<u64>().ok())
+        .is_some_and(|major| major >= 4)
+}
+
 fn run_yarn<const N: usize>(
     yarn: &str,
     app_dir: &Path,

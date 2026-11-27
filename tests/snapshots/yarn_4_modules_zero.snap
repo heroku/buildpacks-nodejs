@@ -45,8 +45,9 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `yarn heroku prune`
+  - Running `yarn workspaces focus --all --production`
 
+      ➤ YN0000: · Yarn 4.0.0
       ➤ YN0000: ┌ Resolution step
       ➤ YN0085: │ - dotenv@npm:16.6.1
       ➤ YN0000: └ Completed
@@ -54,11 +55,11 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Link step
       ➤ YN0000: └ Completed
-      ➤ YN0000: Done in <time_elapsed>
+      ➤ YN0000: · Done in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
-  - Nothing to cleanup
+  - Removed 63 package archives from the Yarn cache that aren't needed at runtime
 - Done (finished in <time_elapsed>)
 ===> EXPORTING
 Adding layer 'heroku/nodejs:available_parallelism'

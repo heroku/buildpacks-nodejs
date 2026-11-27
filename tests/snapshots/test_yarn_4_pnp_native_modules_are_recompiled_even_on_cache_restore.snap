@@ -50,8 +50,9 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `yarn heroku prune`
+  - Running `yarn workspaces focus --all --production`
 
+      ➤ YN0000: · Yarn 4.2.2
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
@@ -59,7 +60,7 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: ┌ Link step
       ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
       ➤ YN0000: └ Completed
-      ➤ YN0000: Done with warnings in <time_elapsed>
+      ➤ YN0000: · Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export
@@ -138,8 +139,9 @@ heroku/nodejs <buildpack-version>
 - Running scripts
   - No build scripts found
 - Pruning dev dependencies
-  - Running `yarn heroku prune`
+  - Running `yarn workspaces focus --all --production`
 
+      ➤ YN0000: · Yarn 4.2.2
       ➤ YN0000: ┌ Resolution step
       ➤ YN0000: └ Completed
       ➤ YN0000: ┌ Fetch step
@@ -147,7 +149,7 @@ heroku/nodejs <buildpack-version>
       ➤ YN0000: ┌ Link step
       ➤ YN0000: │ ESM support for PnP uses the experimental loader API and is therefore experimental
       ➤ YN0000: └ Completed
-      ➤ YN0000: Done with warnings in <time_elapsed>
+      ➤ YN0000: · Done with warnings in <time_elapsed>
 
   - Done (<time_elapsed>)
 - Removing non-deterministic build artifacts before export

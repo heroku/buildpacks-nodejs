@@ -48,6 +48,7 @@ fn yarn_2_pnp_zero() {
     nodejs_integration_test("./fixtures/yarn-2-pnp-zero", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-2-pnp-zero");
+        assert_yarn_berry_runtime(&ctx, "yarn-2-pnp-zero", Linker::Pnp, true);
     });
 }
 
@@ -57,13 +58,13 @@ fn yarn_2_modules_nonzero() {
     nodejs_integration_test("./fixtures/yarn-2-modules-nonzero", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-2-modules-nonzero");
-        assert_yarn_berry_runtime(&ctx, Linker::NodeModules);
+        assert_yarn_berry_runtime(&ctx, "yarn-2-modules-nonzero", Linker::NodeModules, false);
 
         let config = ctx.config.clone();
         ctx.rebuild(config, |ctx| {
             build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "yarn-2-modules-nonzero");
-            assert_yarn_berry_runtime(&ctx, Linker::NodeModules);
+            assert_yarn_berry_runtime(&ctx, "yarn-2-modules-nonzero", Linker::NodeModules, false);
         });
     });
 }
@@ -74,14 +75,14 @@ fn yarn_3_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-3-pnp-nonzero", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-3-pnp-nonzero");
-        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+        assert_yarn_berry_runtime(&ctx, "yarn-3-pnp-nonzero", Linker::Pnp, false);
 
         let mut config = ctx.config.clone();
         config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
         ctx.rebuild(config, |ctx| {
             build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "yarn-3-pnp-nonzero");
-            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+            assert_yarn_berry_runtime(&ctx, "yarn-3-pnp-nonzero", Linker::Pnp, false);
 
             // the archive of the removed dev dependency is removed from the mirror
             let mut config = ctx.config.clone();
@@ -93,7 +94,7 @@ fn yarn_3_pnp_nonzero() {
                 );
                 assert_contains!(ctx.pack_stdout, "Added 1/1 app layer(s)");
                 assert_web_response(&ctx, "yarn-3-pnp-nonzero");
-                assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+                assert_yarn_berry_runtime(&ctx, "yarn-3-pnp-nonzero", Linker::Pnp, false);
             });
         });
     });
@@ -105,6 +106,7 @@ fn yarn_3_modules_zero() {
     nodejs_integration_test("./fixtures/yarn-3-modules-zero", |ctx| {
         create_build_snapshot(&ctx.pack_stdout).assert();
         assert_web_response(&ctx, "yarn-3-modules-zero");
+        assert_yarn_berry_runtime(&ctx, "yarn-3-modules-zero", Linker::NodeModules, true);
     });
 }
 
@@ -114,25 +116,16 @@ fn yarn_4_pnp_nonzero() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-nonzero", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "yarn-4-pnp-nonzero");
-        // The buildpack configures Yarn with env vars, so the app's config is left unmodified
-        assert_eq!(
-            ctx.run_shell_command("cat /workspace/.yarnrc.yml").stdout,
-            indoc! {"
-                nodeLinker: pnp
-
-                yarnPath: .yarn/releases/yarn-4.0.0.cjs
-            "}
-        );
-        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
-        assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+        assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-nonzero", Linker::Pnp, false);
+        assert_yarn_4_unplugged_packages(&ctx, "/layers/heroku_nodejs/yarn_cache");
 
         let mut config = ctx.config.clone();
         config.env(UNREACHABLE_REGISTRY.0, UNREACHABLE_REGISTRY.1);
         ctx.rebuild(config, |ctx| {
             build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "yarn-4-pnp-nonzero");
-            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
-            assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+            assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-nonzero", Linker::Pnp, false);
+            assert_yarn_4_unplugged_packages(&ctx, "/layers/heroku_nodejs/yarn_cache");
 
             // the archive of the removed dev dependency is removed from the mirror
             let mut config = ctx.config.clone();
@@ -144,10 +137,21 @@ fn yarn_4_pnp_nonzero() {
                 );
                 assert_contains!(ctx.pack_stdout, "Added 1/1 app layer(s)");
                 assert_web_response(&ctx, "yarn-4-pnp-nonzero");
-                assert_yarn_berry_runtime(&ctx, Linker::Pnp);
-                assert_yarn_4_pnp_nonzero_unplugged_packages(&ctx);
+                assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-nonzero", Linker::Pnp, false);
+                assert_yarn_4_unplugged_packages(&ctx, "/layers/heroku_nodejs/yarn_cache");
             });
         });
+    });
+}
+
+#[test]
+#[ignore = "integration test"]
+fn yarn_4_pnp_zero() {
+    nodejs_integration_test("./fixtures/yarn-4-pnp-zero", |ctx| {
+        create_build_snapshot(&ctx.pack_stdout).assert();
+        assert_web_response(&ctx, "yarn-4-pnp-zero");
+        assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-zero", Linker::Pnp, true);
+        assert_yarn_4_unplugged_packages(&ctx, ".yarn/cache");
     });
 }
 
@@ -183,11 +187,36 @@ fn yarn_4_pnp_prune_dev_dependencies_disabled() {
 
 #[test]
 #[ignore = "integration test"]
+fn yarn_4_pnp_prune_reruns_postinstall() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-4-pnp-nonzero",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("package.json"), |json| {
+                    json["scripts"]["postinstall"] = "node -p \"try { require.resolve('dotenv'), 'with dev dependencies' } catch { 'without dev dependencies' }\" >> postinstall.log".into();
+                });
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+            // Removing dev dependencies changes the app's dependency tree, so Yarn runs its
+            // `postinstall` again when pruning, without dev dependencies
+            assert_eq!(
+                ctx.run_shell_command("cat postinstall.log").stdout,
+                "with dev dependencies\nwithout dev dependencies\n"
+            );
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn yarn_4_pnp_workspaces() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-workspaces", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
         assert_web_response(&ctx, "Hello from yarn-4-pnp-workspaces");
-        assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+        assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-workspaces", Linker::Pnp, false);
         assert_yarn_4_pnp_workspace_dependencies(&ctx);
 
         let mut config = ctx.config.clone();
@@ -195,7 +224,7 @@ fn yarn_4_pnp_workspaces() {
         ctx.rebuild(config, |ctx| {
             build_snapshot.rebuild_output(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "Hello from yarn-4-pnp-workspaces");
-            assert_yarn_berry_runtime(&ctx, Linker::Pnp);
+            assert_yarn_berry_runtime(&ctx, "yarn-4-pnp-workspaces", Linker::Pnp, false);
             assert_yarn_4_pnp_workspace_dependencies(&ctx);
         });
     });
@@ -236,15 +265,13 @@ fn remove_dotenv_dependency(app_dir: &Path) {
 /// Rebuilds with this registry only pass if every package is restored from the Yarn mirror.
 const UNREACHABLE_REGISTRY: (&str, &str) = ("YARN_NPM_REGISTRY_SERVER", "http://127.0.0.1:9");
 
-fn assert_yarn_4_pnp_nonzero_unplugged_packages(ctx: &TestContext) {
+fn assert_yarn_4_unplugged_packages(ctx: &TestContext, yarn_cache: &str) {
     // `depd` (prod) and `picocolors` (dev) are unplugged with `dependenciesMeta`
     let unplugged = ctx.run_shell_command("ls .yarn/unplugged").stdout;
     assert_contains!(unplugged, "depd-npm-");
     assert_not_contains!(unplugged, "picocolors-npm-");
     // unplugged packages are loaded from `.yarn/unplugged` so their archives aren't needed at runtime
-    let yarn_cache = ctx
-        .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
-        .stdout;
+    let yarn_cache = ctx.run_shell_command(format!("ls {yarn_cache}")).stdout;
     assert_not_contains!(yarn_cache, "depd-npm-");
     assert_not_contains!(yarn_cache, "picocolors-npm-");
     ctx.run_shell_command("node --require ./.pnp.cjs -e \"require('depd')\"");
@@ -265,21 +292,43 @@ enum Linker {
     NodeModules,
 }
 
-/// Guardrails for how the dependencies of a Yarn 2+ app that doesn't commit its cache are shipped
-/// at launch. Every Yarn fixture has `express` as a dependency and `dotenv` as a dev dependency.
-fn assert_yarn_berry_runtime(ctx: &TestContext, linker: Linker) {
+/// Guardrails for how the dependencies of a Yarn 2+ app are shipped at launch. Every Yarn fixture
+/// has `express` as a dependency and `dotenv` as a dev dependency.
+fn assert_yarn_berry_runtime(ctx: &TestContext, fixture: &str, linker: Linker, zero_install: bool) {
+    // the buildpack configures Yarn with build env vars instead of creating or modifying the app's
+    // `.yarnrc.yml`
+    let fixture_yarnrc = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(fixture)
+            .join(".yarnrc.yml"),
+    )
+    .unwrap_or_default();
+    assert_eq!(
+        ctx.run_shell_command("cat .yarnrc.yml 2>/dev/null || true")
+            .stdout,
+        fixture_yarnrc
+    );
+
     // the mirror contains dev dependencies so it must only be available at build time
     let launch_layers = ctx.run_shell_command("ls /layers/heroku_nodejs").stdout;
     assert_not_contains!(launch_layers, "yarn_mirror");
 
+    let zero_install_archives = ctx
+        .run_shell_command("find .yarn/cache -name '*.zip' 2>/dev/null || true")
+        .stdout;
     match linker {
         Linker::Pnp => {
             // dev dependencies are removed from the cache Plug'n'Play loads packages from at launch
-            let yarn_cache = ctx
-                .run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
-                .stdout;
-            assert_contains!(yarn_cache, "express-npm-");
-            assert_not_contains!(yarn_cache, "dotenv-npm-");
+            let archives = if zero_install {
+                assert_not_contains!(launch_layers, "yarn_cache");
+                zero_install_archives
+            } else {
+                ctx.run_shell_command("ls /layers/heroku_nodejs/yarn_cache")
+                    .stdout
+            };
+            assert_contains!(archives, "express-npm-");
+            assert_not_contains!(archives, "dotenv-npm-");
         }
         Linker::NodeModules => {
             let node_modules = ctx.run_shell_command("ls node_modules").stdout;
@@ -287,6 +336,7 @@ fn assert_yarn_berry_runtime(ctx: &TestContext, linker: Linker) {
             assert_not_contains!(node_modules, "dotenv");
             // packages are installed into `node_modules` so no package archives are needed at launch
             assert_not_contains!(launch_layers, "yarn_cache");
+            assert_eq!(zero_install_archives, "");
         }
     }
 }
@@ -311,6 +361,7 @@ fn yarn_4_modules_zero() {
         |ctx| {
             create_build_snapshot(&ctx.pack_stdout).assert();
             assert_web_response(&ctx, "yarn-4-modules-zero");
+            assert_yarn_berry_runtime(&ctx, "yarn-4-modules-zero", Linker::NodeModules, true);
         },
     );
 }
