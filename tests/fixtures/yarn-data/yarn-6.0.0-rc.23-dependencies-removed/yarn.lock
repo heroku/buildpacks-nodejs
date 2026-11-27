@@ -1,0 +1,118 @@
+{
+  "__metadata": {
+    "version": 10
+  },
+  "entries": {
+    "@parcel/watcher-win32-x64@npm:2.6.0": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "@parcel/watcher-win32-x64@npm:2.6.0",
+        "version": "2.6.0",
+        "requirements": {
+          "cpu": [
+            "x64"
+          ],
+          "os": [
+            "win32"
+          ]
+        }
+      }
+    },
+    "debug@npm:4.3.4": {
+      "checksum": "a47b201f33d1bce7a745aaf18a9be569c1eab8e1db9c5a2f989d8e54c4340a52e55e669b49572beb45a15aaaa9a193dbb4447c2c0650afaf1407c703532a5367",
+      "resolution": {
+        "resolution": "debug@npm:4.3.4",
+        "version": "4.3.4",
+        "dependencies": {
+          "ms": "2.1.2"
+        },
+        "peerDependencies": {
+          "supports-color": ">=0.0.0-0"
+        },
+        "optionalPeerDependencies": [
+          "supports-color"
+        ]
+      }
+    },
+    "depd@npm:2.0.0": {
+      "checksum": "090e8c63e113701e99a9b6deb67397d69a59fbfbac22a33890546f4adfca3a6ff3f0857499571cdc22e9d67cdc79bf0ed84aee9d854ae685c7a76074cea2cdc9",
+      "resolution": {
+        "resolution": "depd@npm:2.0.0",
+        "version": "2.0.0"
+      }
+    },
+    "is-number@npm:7.0.0": {
+      "checksum": "001012e57475db827573465e863b351f42b3ba43dfe329eb9f8d5291e49296fb257e98afae710cc2dddbe135946a81d87203fd5f82cf5fed153374ceb369fe9a",
+      "resolution": {
+        "resolution": "is-number@npm:7.0.0",
+        "version": "7.0.0"
+      }
+    },
+    "lib@workspace:^, lib@workspace:*": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "lib@workspace:lib",
+        "version": "1.0.0",
+        "dependencies": {
+          "ms": "2.1.2",
+          "picocolors": "1.1.1"
+        }
+      }
+    },
+    "local-pkg@./vendor/local-pkg::parent=pnp-project@workspace:pnp-project": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "local-pkg@file:./vendor/local-pkg#253de5d5b1e908c64d72af62517817e3bfbf7a4c3d310d94853053a5592e0fea358257a82f55421028a25612c90b737ca60283980a430639ce8812a7ce40e9e8::parent=pnp-project@workspace:pnp-project",
+        "version": "1.0.0"
+      }
+    },
+    "ms@npm:2.1.2": {
+      "checksum": "7e2d3d4fb74708c4dad8393414f404ded8b2664dd798653ac2cd7085da6687d4f730c504b0c41db58fb18788502a91df85fa2920df2f8b0d225f4b8867b8f660",
+      "resolution": {
+        "resolution": "ms@npm:2.1.2",
+        "version": "2.1.2"
+      }
+    },
+    "ms@npm:2.1.3, my-ms@npm:ms@2.1.3": {
+      "checksum": "6bbb3b34df198b189cdd89fd4374e887ce8884ffe478d2bc7f0f5c9041fe8112521c67a0c5984d6a04810755d46a9bf89a514ac9776c5828cba207bcd8802892",
+      "resolution": {
+        "resolution": "ms@npm:2.1.3",
+        "version": "2.1.3"
+      }
+    },
+    "picocolors@npm:1.1.1": {
+      "checksum": "a79e5e6df130fbb4aaeabe5b0f297f6a763f04b4bf95ab4298ef2ef9b776f793e87f0475778d6c567497126fc392f14941bcafe56c6ea18141425ce272dc7639",
+      "resolution": {
+        "resolution": "picocolors@npm:1.1.1",
+        "version": "1.1.1"
+      }
+    },
+    "pnp-project@workspace:^": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "pnp-project@workspace:pnp-project",
+        "version": "1.0.0",
+        "dependencies": {
+          "@parcel/watcher-win32-x64": "2.6.0",
+          "debug": "4.3.4",
+          "depd": "2.0.0",
+          "is-number": "7.0.0",
+          "lib": "workspace:*",
+          "local-pkg": "./vendor/local-pkg",
+          "my-ms": "npm:ms@2.1.3",
+          "portal-pkg": "portal:./vendor/portal-pkg"
+        },
+        "optionalDependencies": [
+          "@parcel/watcher-win32-x64"
+        ]
+      }
+    },
+    "portal-pkg@portal:./vendor/portal-pkg::parent=pnp-project@workspace:pnp-project": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "portal-pkg@portal:./vendor/portal-pkg#1c52f2586bf2eafa9cca427739219caab6f8562c41db7bd8ab6c8e965aea660837b729af032fe0dcc5daf31ab285ab24a56a93b017518fbbe9271685562b6344::parent=pnp-project@workspace:pnp-project",
+        "version": "1.0.0"
+      }
+    }
+  }
+}

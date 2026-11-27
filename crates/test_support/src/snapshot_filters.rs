@@ -102,10 +102,11 @@ pub(super) fn create_snapshot_filters() -> Vec<(String, String)> {
 
     // [Yarn] Step completion with timer shown during `yarn install`. e.g.;
     // - Done with warnings in 30s 9ms
+    // - Completed in 977ms
     //
     // NOTE: Sometimes Yarn just emits "Completed" with no timing so that simpler form
     //       is preferred as the replacement value here.
-    filters.push((r"Completed in \d+s \d+ms", "Completed"));
+    filters.push((r"Completed in (?:\d+s )?\d+ms", "Completed"));
 
     // [Yarn] Fetching modules not already in the cache. e.g.;
     // -       ➤ YN0000: ┌ Fetch step

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for Yarn 6. ([#1509](https://github.com/heroku/buildpacks-nodejs/pull/1509))
+
 ### Changed
 
 - Yarn is now configured with build environment variables instead of `yarn config set`, so the app's `.yarnrc.yml` is no longer modified. ([#1512](https://github.com/heroku/buildpacks-nodejs/pull/1512))

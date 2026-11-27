@@ -1,0 +1,201 @@
+{
+  "__metadata": {
+    "version": 10
+  },
+  "project": {
+    "dependencyOverrides": {
+      "function-bind": "1.1.2",
+      "hasown": "2.0.4",
+      "is-core-module": "2.18.0",
+      "path-parse": "1.0.7",
+      "supports-preserve-symlinks-flag": "1.0.0"
+    }
+  },
+  "entries": {
+    "@parcel/watcher-win32-x64@npm:2.6.0": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "@parcel/watcher-win32-x64@npm:2.6.0",
+        "version": "2.6.0",
+        "requirements": {
+          "cpu": [
+            "x64"
+          ],
+          "os": [
+            "win32"
+          ]
+        }
+      }
+    },
+    "debug@npm:4.3.4": {
+      "checksum": "8a064208fabc3cdb0de8b2caac2169168655a409c2f086bdccb376d3e69475cfbcfecd8c9c6a4e1081fa89e7bef58d60a5a70229c775519b28e1675de2ce9af0",
+      "resolution": {
+        "resolution": "debug@npm:4.3.4",
+        "version": "4.3.4",
+        "dependencies": {
+          "ms": "2.1.2"
+        },
+        "peerDependencies": {
+          "supports-color": ">=0.0.0-0"
+        },
+        "optionalPeerDependencies": [
+          "supports-color"
+        ]
+      }
+    },
+    "depd@npm:2.0.0": {
+      "checksum": "00585fa49f9739eac8b44c8be3c98ecc231893c03451f130a545a9305c5761322233b41cd1aa134a85844d06aeaa4aa577bc2e9efedc19aa1bc781ef17c74af8",
+      "resolution": {
+        "resolution": "depd@npm:2.0.0",
+        "version": "2.0.0"
+      }
+    },
+    "dotenv@npm:16.4.5": {
+      "checksum": "cbb5e100a7cfcc5f710908beeaa3ee8f3cb47c330414baf1b2c8f34bbfd4b70e13cb8c63bcc35a80dc6bf51f109fd6c2f38f55da56b15a92790cb95b88d8b2fc",
+      "resolution": {
+        "resolution": "dotenv@npm:16.4.5",
+        "version": "16.4.5"
+      }
+    },
+    "function-bind@npm:1.1.2": {
+      "checksum": "b5099926e3f0df0ccfcff82528d550bd57a9f64b1ca36c5cb9be8a64619c752d13a992c542307ead995032c69af0d3332e465d2e7eeebbb3bee1b20aaf5e7912",
+      "resolution": {
+        "resolution": "function-bind@npm:1.1.2",
+        "version": "1.1.2"
+      }
+    },
+    "hasown@npm:2.0.4": {
+      "checksum": "02a00dca7135653af1153d0c84775413b7708627fe089421366938d19c7701cbf571ad2d758dc191a69d991c848b8130c812eef243cbdf4b78b37242e394e018",
+      "resolution": {
+        "resolution": "hasown@npm:2.0.4",
+        "version": "2.0.4",
+        "dependencies": {
+          "function-bind": "^1.1.2"
+        }
+      }
+    },
+    "is-core-module@npm:2.18.0": {
+      "checksum": "217c53e479517fda03428eddae6a479c0c5f8182b554c154732dc50a1244681b9ce165e65798ccfd50eae0e5a4cfb5a3ddd1ad1a0c6368101691d1bbae5ae15a",
+      "resolution": {
+        "resolution": "is-core-module@npm:2.18.0",
+        "version": "2.18.0",
+        "dependencies": {
+          "hasown": "^2.0.4"
+        }
+      }
+    },
+    "is-number@npm:7.0.0": {
+      "checksum": "70d9cacc0bb5f459057c6e0adbd274ba59f4f95c3aa951f596b3f26ed9620bf27d089ac11e621eb351876e5fc6aea27ae4fa535352d4db699ebcd63b92751f8a",
+      "resolution": {
+        "resolution": "is-number@npm:7.0.0",
+        "version": "7.0.0"
+      }
+    },
+    "lib@workspace:^, lib@workspace:*": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "lib@workspace:lib",
+        "version": "1.0.0",
+        "dependencies": {
+          "ms": "2.1.2",
+          "picocolors": "1.1.1"
+        }
+      }
+    },
+    "local-pkg@./vendor/local-pkg::parent=pnp-project@workspace:pnp-project": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "local-pkg@file:./vendor/local-pkg#ba43f3de18150a900559eee16c8fc87983f8f63207d3e94aeb8d536c229d48ca800a441b5b01e089a6846c5bdaf12b3886764ca400521eea7f939285f962eb0a::parent=pnp-project@workspace:pnp-project",
+        "version": "1.0.0"
+      }
+    },
+    "ms@npm:2.1.2": {
+      "checksum": "f431dcc639dcd061939792023366a0e6edc0092e0839ff1d19caaa5c2c17e92978c3358b1b46cd7a4ce404ea6cef260719ac053260f5ed6ad5bbb154aa888a3a",
+      "resolution": {
+        "resolution": "ms@npm:2.1.2",
+        "version": "2.1.2"
+      }
+    },
+    "ms@npm:2.1.3, my-ms@npm:ms@2.1.3": {
+      "checksum": "a4937b2cc3b0cde4db2dc9f1067da93e3294ecc2f263b45e4a36f303fd8ebf408f2d08fe72ce4270c6f78f3810e81c7731022623571ee0d43d7a7f6ff01fa4a5",
+      "resolution": {
+        "resolution": "ms@npm:2.1.3",
+        "version": "2.1.3"
+      }
+    },
+    "path-parse@npm:1.0.7": {
+      "checksum": "01fd6dc1cd27d2c1dc8095f35cca24e120bf5d1c2d8fa76cfe29c40346b370b17e8c47d37bb4ed44b20f0ad57e0856474de684cf326b0301e99dd74b6aae18c9",
+      "resolution": {
+        "resolution": "path-parse@npm:1.0.7",
+        "version": "1.0.7"
+      }
+    },
+    "picocolors@npm:1.1.1": {
+      "checksum": "62072f51e4012b4e9914672ed44a5514838f8debe4f3a09bea6877e3c7f35424cfea2a97d8c29ff166ca995634a89127a04a16816191c61aac03c73e55d95498",
+      "resolution": {
+        "resolution": "picocolors@npm:1.1.1",
+        "version": "1.1.1"
+      }
+    },
+    "pnp-project@workspace:^": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "pnp-project@workspace:pnp-project",
+        "version": "1.0.0",
+        "dependencies": {
+          "@parcel/watcher-win32-x64": "2.6.0",
+          "debug": "4.3.4",
+          "depd": "2.0.0",
+          "dotenv": "16.4.5",
+          "is-number": "7.0.0",
+          "lib": "workspace:*",
+          "local-pkg": "./vendor/local-pkg",
+          "my-ms": "npm:ms@2.1.3",
+          "portal-pkg": "portal:./vendor/portal-pkg",
+          "resolve": "1.22.8"
+        },
+        "optionalDependencies": [
+          "@parcel/watcher-win32-x64"
+        ]
+      }
+    },
+    "portal-pkg@portal:./vendor/portal-pkg::parent=pnp-project@workspace:pnp-project": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "portal-pkg@portal:./vendor/portal-pkg#1c52f2586bf2eafa9cca427739219caab6f8562c41db7bd8ab6c8e965aea660837b729af032fe0dcc5daf31ab285ab24a56a93b017518fbbe9271685562b6344::parent=pnp-project@workspace:pnp-project",
+        "version": "1.0.0"
+      }
+    },
+    "resolve@npm:1.22.8": {
+      "checksum": "8ea6c4fff3540bc922aa4285224cd0dbab1faf5bac387c91742e4b4556a573298f167bccef1167c0de7c2cc8bc02d111435fcc556abb52a16d812cb79ed17674",
+      "resolution": {
+        "resolution": "resolve@npm:1.22.8",
+        "version": "1.22.8",
+        "dependencies": {
+          "is-core-module": "^2.13.0",
+          "path-parse": "^1.0.7",
+          "supports-preserve-symlinks-flag": "^1.0.0"
+        }
+      }
+    },
+    "resolve@patch:resolve%40npm%3A1.22.8#<builtin>": {
+      "checksum": null,
+      "resolution": {
+        "resolution": "resolve@patch:resolve%40npm%3A1.22.8#<builtin>&checksum=85eaa72caadee6a5622c928b1473f16d3507770cd417f35e56c48bcc9b50a1d71dfd49ad5a227767d79fdf331a578e26ef8045e83e3f7356f72a1412ae2be199",
+        "version": "1.22.8",
+        "dependencies": {
+          "is-core-module": "^2.13.0",
+          "path-parse": "^1.0.7",
+          "supports-preserve-symlinks-flag": "^1.0.0"
+        }
+      }
+    },
+    "supports-preserve-symlinks-flag@npm:1.0.0": {
+      "checksum": "338c3f52dda79f904a3472b246ac5ee82e21a3bcb92875bfd48c4c1b93751e8aadb7a19f197aad697b390cef41191af8bbdae375d2297d29425ffb6a2d27bad3",
+      "resolution": {
+        "resolution": "supports-preserve-symlinks-flag@npm:1.0.0",
+        "version": "1.0.0"
+      }
+    }
+  }
+}
