@@ -187,6 +187,31 @@ fn yarn_4_pnp_prune_dev_dependencies_disabled() {
 
 #[test]
 #[ignore = "integration test"]
+fn yarn_4_pnp_prune_reruns_postinstall() {
+    nodejs_integration_test_with_config(
+        "./fixtures/yarn-4-pnp-nonzero",
+        |config| {
+            config.app_dir_preprocessor(|app_dir| {
+                update_json_file(&app_dir.join("package.json"), |json| {
+                    json["scripts"]["postinstall"] = "node -p \"try { require.resolve('dotenv'), 'with dev dependencies' } catch { 'without dev dependencies' }\" >> postinstall.log".into();
+                });
+            });
+        },
+        |ctx| {
+            create_build_snapshot(&ctx.pack_stdout).assert();
+            assert_web_response(&ctx, "yarn-4-pnp-nonzero");
+            // Removing dev dependencies changes the app's dependency tree, so Yarn runs its
+            // `postinstall` again when pruning, without dev dependencies
+            assert_eq!(
+                ctx.run_shell_command("cat postinstall.log").stdout,
+                "with dev dependencies\nwithout dev dependencies\n"
+            );
+        },
+    );
+}
+
+#[test]
+#[ignore = "integration test"]
 fn yarn_4_pnp_workspaces() {
     nodejs_integration_test("./fixtures/yarn-4-pnp-workspaces", |ctx| {
         let build_snapshot = create_build_snapshot(&ctx.pack_stdout);
