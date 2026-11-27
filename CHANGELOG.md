@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Yarn is now configured with build environment variables instead of `yarn config set`, so the app's `.yarnrc.yml` is no longer modified. ([#1512](https://github.com/heroku/buildpacks-nodejs/pull/1512))
+
 ### Fixed
 
 - The Yarn dependency cache is now cleared after 150 builds as intended. Previously, its usage count was never incremented after the first build, so the cache was never cleared. ([#1511](https://github.com/heroku/buildpacks-nodejs/pull/1511))

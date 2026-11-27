@@ -30,16 +30,6 @@ heroku/nodejs <buildpack-version>
   - Extracting ... (<time_elapsed>)
   - Successfully installed `yarn@2.4.2`
 - Setting up yarn dependency cache
-  - Running `yarn config set enableGlobalCache false`
-
-      ➤ YN0000: Successfully set enableGlobalCache to false
-
-  - Done (<time_elapsed>)
-  - Running `yarn config set cacheFolder /layers/heroku_nodejs/yarn_cache`
-
-      ➤ YN0000: Successfully set cacheFolder to '/layers/heroku_nodejs/yarn_cache'
-
-  - Done (<time_elapsed>)
 - Installing dependencies
   - Running `yarn install --immutable --inline-builds`
 
